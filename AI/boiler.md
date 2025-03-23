@@ -1,4 +1,3 @@
-Create in this react app a simulation of a steam boiler.
 
 There should be a + and - button to simulate add or removing more or less heat as energy source to the boiler
 The energy supplied should heat the water over time
