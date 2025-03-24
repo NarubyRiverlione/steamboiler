@@ -204,6 +204,10 @@
   color: #f44336;
 }
 
+.debug {
+  background-color: #ffe0b2 !important;
+}
+
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .boiler-container {
