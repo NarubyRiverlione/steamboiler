@@ -1,28 +1,32 @@
+this is a simulation of a gas fueled closed system steam boiler
 
-There should be a + and - button to simulate add or removing more or less heat as energy source to the boiler
-The energy supplied should heat the water over time
-Show the amount of energy supplied
-By reducing the energy the boiler should naturally cool down at the rate of 1 degree every 10 seconds
-Use the Antoine equation for the water temperature and pressure
+There should be controls to add or removing the natural gas flow as energy source to the boiler
+show the amount of supply gas in liters/second 
+use 4 buttons: add or reduce the flow 0.5 or 0.25 l
+the gas should be converted to energy with a efficiency of 85%
+show to difference of energy per second
+without any gas flow the boiler should naturally cool down at the rate of 1 degree every 15 seconds
 
-Use degree Celsius for temperature unit and bar for pressure unit. Use Joules as energy unit
+Use degree Celsius for temperature unit and bar for pressure unit. Use kilo Joules as energy unit
 All readout should have be rounded to 1 decimal
 
-There should be a unit test with jest for the energy to temperature and pressure calculation
-
 The boiler should have a fill and drain valve for controlling the water content
+Filling and draining should be 0.5 % per second
 This water valves should change the boiler content over time
-Filling should be 0.5 % per second, draining 1% per second
+The energy should reflect the change of water mass
 
-The should be a gauge for the water level, temperature and pressure
+The total volume of the boiler is 100 liter
+And the start the boiler should be fill with 50 liters
 
-There should be a pressure release valve to reduce the pressure
+the water volume should expand according the temperature change
+converting the liquid to steam should reduce the energy and the water volume
+
+add a steam table with data between 80 and 300 degrees to determent the Enthalpy
+
+The should be a text readout for the water volume, temperature and pressure
+Also the steam generation in kg per second should be showed
 
 All valve are button that should there open or closed state
-Add an indication how much each valve is open
 
-The start pressure of the boiler should be 1 bar. The start temperature 90 degrees
-Adjust the start heat supplied to keep the 90 degrees
-The water content should be 50% at the start
-
-show the change of energy of the boiler per second
+The start the boiler should be at atmospheric pressure and 98 degrees
+The water should have the correct energy for this temperature
