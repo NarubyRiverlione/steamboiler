@@ -1,9 +1,9 @@
 import { ReactNode, useReducer, useEffect } from "react"
 import boilerReducer from "./BoilerReducer"
-import BoilerContext, { initialState } from "./BoilerContext"
+import { BoilerContext, initialState } from "./BoilerContext"
 
 // Provider
-export function BoilerProvider({ children }: { children: ReactNode }) {
+function BoilerProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(boilerReducer, initialState)
 
   // Simulation loop
@@ -54,3 +54,5 @@ export function BoilerProvider({ children }: { children: ReactNode }) {
     </BoilerContext.Provider>
   )
 }
+
+export default BoilerProvider

@@ -37,7 +37,7 @@ export const initialState: BoilerState = {
 }
 
 // Context
-const BoilerContext = createContext<BoilerContextType | undefined>(undefined)
+export const BoilerContext = createContext<BoilerContextType | undefined>(undefined)
 
 // Hook
 function useBoiler() {

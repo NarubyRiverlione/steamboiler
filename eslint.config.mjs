@@ -6,13 +6,13 @@ import tseslint from "typescript-eslint"
 import eslintConfigPrettier from "eslint-config-prettier/flat"
 
 export default tseslint.config(
-  // { ignores: ["dist"] },
+  { ignores: ["dist", "node_modules", "**/*.config.*", "jest.config.js"] },
 
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   {
-    // files: ["src/**/*.{ts,tsx}"],
+    files: ["**/*.{ts,tsx}"],  // This ensures all TS and TSX files are checked
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -29,6 +29,7 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      "no-undef": "error",
     },
   },
   eslintConfigPrettier,

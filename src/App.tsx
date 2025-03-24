@@ -1,6 +1,6 @@
-import { Boiler } from "./components/Boiler";
-import { BoilerProvider } from "./context/BoilerContext";
-import "./App.css";
+import  Boiler  from "./components/Boiler"
+import  BoilerProvider  from "./context/BoilerProvider"
+import "./App.css"
 
 function App() {
   return (
@@ -10,7 +10,7 @@ function App() {
         <Boiler />
       </BoilerProvider>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

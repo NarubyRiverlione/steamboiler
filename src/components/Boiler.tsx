@@ -1,8 +1,8 @@
 import useBoiler from "../context/BoilerContext"
-import { ATMOSPHERIC_PRESSURE } from "../utils/boilerCalculations"
+import { calculateBoilingPoint } from "../utils/boilerCalculations"
 import "./Boiler.css"
 
-export function Boiler() {
+function Boiler() {
   const { state, increaseGasFlow, decreaseGasFlow, toggleFillValve, toggleDrainValve } = useBoiler()
 
   return (
@@ -11,7 +11,7 @@ export function Boiler() {
         <div className="water-level" style={{ height: `${String(state.waterVolume)}%` }}>
           <div className="bubbles"></div>
         </div>
-        {state.temperature > 100 * Math.pow(state.pressure / ATMOSPHERIC_PRESSURE, 0.25) && (
+        {state.temperature > calculateBoilingPoint(state.pressure) && (
           <div className="steam">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="steam-particle"></div>
@@ -103,13 +103,11 @@ export function Boiler() {
         </div>
         <div className="readout-item">
           <span className="label">Boiling Point:</span>
-          <span className="value">{(100 * Math.pow(state.pressure / ATMOSPHERIC_PRESSURE, 0.25)).toFixed(1)} °C</span>
+          <span className="value">{calculateBoilingPoint(state.pressure).toFixed(1)} °C</span>
         </div>
-        <div className="readout-item debug">
+        <div className="readout-item">
           <span className="label">Above Boiling:</span>
-          <span className="value">
-            {(state.temperature - 100 * Math.pow(state.pressure / ATMOSPHERIC_PRESSURE, 0.25)).toFixed(1)} °C
-          </span>
+          <span className="value">{(state.temperature - calculateBoilingPoint(state.pressure)).toFixed(1)} °C</span>
         </div>
         <div className="readout-item">
           <span className="label">Energy:</span>
@@ -126,3 +124,5 @@ export function Boiler() {
     </div>
   )
 }
+
+export default Boiler

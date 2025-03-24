@@ -103,14 +103,29 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         newTemperature = Math.max(20, calculatedTemp)
       }
 
-      // Get new pressure from steam table
-      const steamData = getSteamData(newTemperature)
+      // Calculate new pressure
+      // Below 100°C: Pressure is based on the steam table (vapor pressure)
+      // Above 100°C: Pressure continues to rise with temperature
+      let newPressure;
+      const steamData = getSteamData(newTemperature);
+      
+      // Fixed atmospheric pressure for reference
+      const atmosphericPressure = CstPhysics.AtmosphericPressure;
+      
+      // If temperature is at or above 100°C (boiling at atmospheric pressure)
+      // then pressure should be at least atmospheric
+      if (newTemperature >= 100) {
+        newPressure = Math.max(atmosphericPressure, steamData.pressure);
+      } else {
+        // Below 100°C, use vapor pressure from steam table
+        newPressure = steamData.pressure;
+      }
 
       return {
         ...state,
         waterVolume: Number(newWaterVolume.toFixed(1)),
         temperature: Number(newTemperature.toFixed(1)),
-        pressure: Number(steamData.pressure.toFixed(1)),
+        pressure: Number(newPressure.toFixed(1)),
         steamRate: Number(steamRate.toFixed(1)),
         energy: Number(newEnergy.toFixed(1)),
         energyDelta: Number((energyChange / deltaTime).toFixed(1)),

@@ -34,6 +34,15 @@ export function calculateNewTemperature(waterMass: number, currentTemp: number, 
   return currentTemp + addedEnergy / (waterMass * specificHeat)
 }
 
+// Calculate boiling point based on pressure
+export function calculateBoilingPoint(pressure: number): number {
+  // Simple approximation: boiling temp increases with pressure
+  // At standard pressure (1.013 bar), water boils at 100°C
+  return pressure <= CstPhysics.AtmosphericPressure
+    ? 100
+    : 100 * Math.pow(pressure / CstPhysics.AtmosphericPressure, 0.25)
+}
+
 // Calculate steam generation rate
 export function calculateSteamGeneration(waterMass: number, temperature: number, pressure: number): number {
   // If there's no water, there can't be steam generation
@@ -41,22 +50,30 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
     return 0
   }
 
-  // Calculate boiling point based on pressure
-  // Simple approximation: boiling temp increases with pressure
-  // At standard pressure (1.013 bar), water boils at 100°C
-  const boilingPoint = 100 * Math.pow(pressure / CstPhysics.AtmosphericPressure, 0.25)
+  // Special case: If temperature is at or above 100°C and pressure is at or above atmospheric,
+  // we guarantee some steam generation to break the feedback loop
+  if (temperature >= 100) {
+    // Get boiling point for current pressure
+    const boilingPoint = calculateBoilingPoint(pressure)
 
-  // No steam generation below boiling point
-  if (temperature < boilingPoint) {
+    // Calculate excess temperature (how far above boiling point)
+    const excessTemp = Math.max(0, temperature - boilingPoint)
+
+    // Ensure some minimum steam generation at or above 100°C
+    const baseGeneration = temperature >= 100 ? 0.005 * waterMass : 0
+
+    // Add additional generation based on excess temperature
+    return baseGeneration + excessTemp * waterMass * 0.01
+  }
+
+  // Below 100°C, only generate steam if above the boiling point for the current pressure
+  const boilingPoint = calculateBoilingPoint(pressure)
+  if (temperature <= boilingPoint) {
     return 0
   }
 
-  // Simple model: excess energy above boiling point goes to steam generation
-  // This is a simplified model - in reality it depends on many factors
+  // Calculate based on excess temperature
   const excessTemp = Math.max(0, temperature - boilingPoint)
-
-  // Increase the factor significantly for more noticeable steam generation
-  // Original factor was 0.0005, which was too small
   return excessTemp * waterMass * 0.005
 }
 
