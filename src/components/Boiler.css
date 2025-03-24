@@ -1,0 +1,217 @@
+.boiler-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  /* max-width: 800px; */
+  margin: 0 auto;
+}
+
+/* Boiler visualization */
+.boiler-visualization {
+  position: relative;
+  width: 300px;
+  height: 400px;
+  background-color: #ddd;
+  border: 8px solid #999;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.water-level {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to bottom, #4fc3f7, #0288d1);
+  transition: height 0.5s ease-in-out;
+  overflow: hidden;
+}
+
+.bubbles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  animation: bubbling 2s infinite;
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.4) 0,
+    rgba(255, 255, 255, 0.1) 20%,
+    transparent 30%
+  );
+  background-size: 20px 20px;
+}
+
+@keyframes bubbling {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.valve-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.valve-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 120px;
+}
+
+.valve-button.open {
+  background-color: #4caf50;
+  color: white;
+}
+
+.valve-button.closed {
+  background-color: #f44336;
+  color: white;
+}
+
+.steam {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.steam-particle {
+  width: 20px;
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: steam 2s infinite ease-out;
+  opacity: 0;
+}
+
+@keyframes steam {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-50px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.steam-particle:nth-child(1) {
+  animation-delay: 0.2s;
+}
+.steam-particle:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.steam-particle:nth-child(3) {
+  animation-delay: 0.6s;
+}
+.steam-particle:nth-child(4) {
+  animation-delay: 0.8s;
+}
+.steam-particle:nth-child(5) {
+  animation-delay: 1s;
+}
+
+/* Controls panel */
+.controls-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 2rem;
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gas-controls h3,
+.water-controls h3,
+.readouts h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  border-bottom: 2px solid #0288d1;
+  padding-bottom: 0.5rem;
+}
+
+.gas-flow-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.gas-flow-buttons button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #0288d1;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.gas-flow-buttons button:hover {
+  background-color: #01579b;
+}
+
+.readouts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.readout-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.5rem;
+}
+
+.readout-item .label {
+  font-weight: bold;
+  color: #555;
+}
+
+.readout-item .value {
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+}
+
+.value.positive {
+  color: #4caf50;
+}
+
+.value.negative {
+  color: #f44336;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .boiler-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .controls-panel {
+    flex: 1;
+  }
+}

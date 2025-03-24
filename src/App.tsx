@@ -1,11 +1,14 @@
 import { Boiler } from "./components/Boiler";
+import { BoilerProvider } from "./context/BoilerContext";
 import "./App.css";
 
 function App() {
   return (
     <div className="app">
       <h1>Steam Boiler Simulation</h1>
-      <Boiler />
+      <BoilerProvider>
+        <Boiler />
+      </BoilerProvider>
     </div>
   );
 }
