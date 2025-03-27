@@ -79,6 +79,27 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       // Update total energy
       const newEnergy = Math.max(0, state.energy + energyChange)
 
+      // --- Steam Rate Averaging Logic ---
+      const now = Date.now()
+      const tenSecondsAgo = now - 10000 // 10 seconds in milliseconds
+
+      // Calculate instantaneous steam rate for history
+      const instantaneousSteamRate = steamRate // Use the already calculated steamRate
+
+      // Add new entry and filter old ones
+      const updatedHistory = [
+        ...state.steamRateHistory,
+        { timestamp: now, rate: instantaneousSteamRate },
+      ].filter((entry) => entry.timestamp >= tenSecondsAgo)
+
+      // Calculate the average steam rate over the relevant history
+      let averageSteamRate = 0
+      if (updatedHistory.length > 0) {
+        const sumOfRates = updatedHistory.reduce((sum, entry) => sum + entry.rate, 0)
+        averageSteamRate = sumOfRates / updatedHistory.length
+      }
+      // --- End Steam Rate Averaging Logic ---
+
       // Calculate new temperature based on energy changes
 
       let newTemperature
@@ -125,7 +146,8 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         waterVolume: Number(newWaterVolume.toFixed(1)),
         temperature: Number(newTemperature.toFixed(1)),
         pressure: Number(newPressure.toFixed(1)),
-        steamRate: Number(steamRate.toFixed(1)),
+        steamRate: Number(averageSteamRate.toFixed(1)), // Use the calculated average
+        steamRateHistory: updatedHistory, // Store the updated history
         energy: Number(newEnergy.toFixed(1)),
         energyDelta: Number((energyChange / deltaTime).toFixed(1)),
       }

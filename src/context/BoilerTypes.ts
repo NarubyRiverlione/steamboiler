@@ -3,7 +3,8 @@ type BoilerState = {
   temperature: number // Celsius
   pressure: number // bar
   gasFlow: number // liters/second
-  steamRate: number // kg/second
+  steamRate: number // kg/second - Average over last 10 seconds
+  steamRateHistory: { timestamp: number; rate: number }[] // History for averaging
   fillValveOpen: boolean
   drainValveOpen: boolean
   energy: number // kJ
