@@ -1,4 +1,5 @@
 import useBoiler from "../context/BoilerContext"
+import { CstSimulation } from "../context/const"
 import { calculateBoilingPoint } from "../utils/boilerCalculations"
 import "./Boiler.css"
 
@@ -26,33 +27,33 @@ function Boiler() {
           <div className="gas-flow-buttons">
             <button
               onClick={() => {
-                increaseGasFlow(0.5)
+                increaseGasFlow(CstSimulation.GasChangeRateFast)
               }}
             >
-              +0.5 L/s
+              +{CstSimulation.GasChangeRateFast} L/s
             </button>
             <button
               onClick={() => {
-                increaseGasFlow(0.25)
+                increaseGasFlow(CstSimulation.GasChangeRateSlow)
               }}
             >
-              +0.25 L/s
+              +{CstSimulation.GasChangeRateSlow} L/s
             </button>
           </div>
           <div className="gas-flow-buttons">
             <button
               onClick={() => {
-                decreaseGasFlow(0.25)
+                decreaseGasFlow(CstSimulation.GasChangeRateSlow)
               }}
             >
-              -0.25 L/s
+              -{CstSimulation.GasChangeRateSlow} L/s
             </button>
             <button
               onClick={() => {
-                decreaseGasFlow(0.5)
+                decreaseGasFlow(CstSimulation.GasChangeRateFast)
               }}
             >
-              -0.5 L/s
+              {CstSimulation.GasChangeRateFast} L/s
             </button>
           </div>
         </div>
@@ -75,6 +76,7 @@ function Boiler() {
           </div>
         </div>
       </div>
+
       <div className="readouts">
         <h3>Boiler Status</h3>
         <div className="readout-item">

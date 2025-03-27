@@ -7,6 +7,8 @@ export const CstSimulation = {
   BoilerTotalVolume: 100, // liters
   GasEfficiency: 0.85,
   CoolingRate: 1/15, // °C per second
+  GasChangeRateFast: 0.5, // °C per second
+  GasChangeRateSlow: 0.25, // °C per second
 }
 
 export const CstPhysics = {
