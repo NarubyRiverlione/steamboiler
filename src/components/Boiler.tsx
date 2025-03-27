@@ -36,14 +36,14 @@ function Boiler() {
                 increaseGasFlow(CstSimulation.GasChangeRateFast)
               }}
             >
-              +{CstSimulation.GasChangeRateFast} L/s
+              + {CstSimulation.GasChangeRateFast} L/s
             </button>
             <button
               onClick={() => {
                 increaseGasFlow(CstSimulation.GasChangeRateSlow)
               }}
             >
-              +{CstSimulation.GasChangeRateSlow} L/s
+              + {CstSimulation.GasChangeRateSlow} L/s
             </button>
           </div>
           <div className="gas-flow-buttons">
@@ -52,14 +52,14 @@ function Boiler() {
                 decreaseGasFlow(CstSimulation.GasChangeRateSlow)
               }}
             >
-              -{CstSimulation.GasChangeRateSlow} L/s
+              - {CstSimulation.GasChangeRateSlow} L/s
             </button>
             <button
               onClick={() => {
                 decreaseGasFlow(CstSimulation.GasChangeRateFast)
               }}
             >
-              {CstSimulation.GasChangeRateFast} L/s
+              - {CstSimulation.GasChangeRateFast} L/s
             </button>
           </div>
         </div>
