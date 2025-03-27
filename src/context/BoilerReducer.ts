@@ -1,7 +1,6 @@
 import { calculateGasEnergy, calculateSteamEnergyLoss, calculateSteamGeneration } from "../utils/boilerCalculations"
 import { getSteamData } from "../utils/steamTable"
-import { BoilerAction } from "./BoilerActions"
-import { BoilerState } from "./BoilerContext"
+import BoilerState, { BoilerAction } from "./BoilerTypes"
 import { CstPhysics, CstSimulation } from "./const"
 
 function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
@@ -106,19 +105,19 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       // Calculate new pressure
       // Below 100°C: Pressure is based on the steam table (vapor pressure)
       // Above 100°C: Pressure continues to rise with temperature
-      let newPressure;
-      const steamData = getSteamData(newTemperature);
-      
+      let newPressure
+      const steamData = getSteamData(newTemperature)
+
       // Fixed atmospheric pressure for reference
-      const atmosphericPressure = CstPhysics.AtmosphericPressure;
-      
+      const atmosphericPressure = CstPhysics.AtmosphericPressure
+
       // If temperature is at or above 100°C (boiling at atmospheric pressure)
       // then pressure should be at least atmospheric
       if (newTemperature >= 100) {
-        newPressure = Math.max(atmosphericPressure, steamData.pressure);
+        newPressure = Math.max(atmosphericPressure, steamData.pressure)
       } else {
         // Below 100°C, use vapor pressure from steam table
-        newPressure = steamData.pressure;
+        newPressure = steamData.pressure
       }
 
       return {

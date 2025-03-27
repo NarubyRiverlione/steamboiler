@@ -1,21 +1,9 @@
 import { createContext, useContext } from "react"
 import { getSteamData } from "../utils/steamTable"
 import { CstPhysics, CstSimulation } from "./const"
+import BoilerState from "./BoilerTypes"
 
-// Types
-export type BoilerState = {
-  waterVolume: number // liters
-  temperature: number // Celsius
-  pressure: number // bar
-  gasFlow: number // liters/second
-  steamRate: number // kg/second
-  fillValveOpen: boolean
-  drainValveOpen: boolean
-  energy: number // kJ
-  energyDelta: number // kJ/s
-}
-
-type BoilerContextType = {
+export type BoilerContextType = {
   state: BoilerState
   increaseGasFlow: (amount: number) => void
   decreaseGasFlow: (amount: number) => void
@@ -27,7 +15,7 @@ type BoilerContextType = {
 export const initialState: BoilerState = {
   waterVolume: CstSimulation.StartWaterVolume, // 50% filled
   temperature: CstSimulation.StartTemperature, // Celsius
-  pressure: 0.946, // bar (atmospheric pressure at 98°C)
+  pressure: 1, // bar (atmospheric pressure)
   gasFlow: 0, // No gas flow initially
   steamRate: 0, // No steam generation initially
   fillValveOpen: false,
