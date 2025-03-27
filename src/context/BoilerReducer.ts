@@ -1,4 +1,4 @@
-import { calculateGasEnergy, calculateSteamEnergyLoss, calculateSteamGeneration } from "../utils/boilerCalculations"
+import { calculateGasEnergy, calculateSteamEnergyLoss, calculateSteamGeneration, calculateWaterVolume } from "../utils/boilerCalculations"
 import { getSteamData, getWaterDensity, getWaterSpecificHeat } from "../utils/steamTable"
 import BoilerState, { BoilerAction } from "./BoilerTypes"
 import { CstPhysics, CstSimulation } from "./const"
@@ -64,22 +64,29 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       // Get temperature-dependent water density
       const waterDensity = state.temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(state.temperature)
       
-      // Calculate instantaneous steam rate (needed before waterMass calculation)
+      // Calculate water mass using density
+      const waterMassBeforeSteam = (newWaterVolume * waterDensity) / 1000
+      
+      // Calculate instantaneous steam rate
       const instantaneousSteamRate = calculateSteamGeneration(
-        (newWaterVolume * waterDensity) / 1000, // Use current volume estimate for rate calc with temperature-dependent density
+        waterMassBeforeSteam, // Use current mass estimate for rate calculation
         state.temperature,
         state.pressure
       )
+      
       // Steam generated in this tick (kg)
       const generatedSteamMass = instantaneousSteamRate * deltaTime
+      
       // Calculate the volume of liquid water lost to steam (Liters)
-      const liquidVolumeDecreaseLiters = (generatedSteamMass / waterDensity) * 1000
+      // Use the calculateWaterVolume function to get the correct volume based on temperature
+      const waterVolumePerKg = calculateWaterVolume(1, state.temperature) // Volume of 1kg of water at current temperature
+      const liquidVolumeDecreaseLiters = generatedSteamMass * waterVolumePerKg
+      
       // Adjust water volume *before* final mass calculation
       newWaterVolume = Math.max(0, newWaterVolume - liquidVolumeDecreaseLiters)
       // --- End Steam Mass Calculation (Early Part) ---
 
       // Water mass (kg) - Now calculated based on adjusted volume and temperature-dependent density
-      // waterDensity is already calculated above
       const waterMass = (newWaterVolume * waterDensity) / 1000
 
       // Add energy from gas

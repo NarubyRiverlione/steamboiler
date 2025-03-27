@@ -1,21 +1,34 @@
 // Constants and utility functions for boiler calculations
 import { CstPhysics, CstSimulation } from "../context/const"
-import { getWaterDensity, getWaterSpecificHeat, getLatentHeat } from "./steamTable"
+import { getSteamData, getWaterSpecificHeat, getLatentHeat } from "./steamTable"
 
-// Calculate water volume based on temperature (thermal expansion)
+// Calculate water volume based on temperature using specific volume data from steam table
 export function calculateWaterVolume(baseVolume: number, temperature: number): number {
-  // Use the density at reference temperature (20°C) and at the current temperature
-  // to calculate the volume change
-  const referenceTemp = 20 // Reference temperature
-  const referenceDensity = 998 // kg/m³ at 20°C (approximate)
+  // Reference conditions at 20°C
+  const referenceSpecificVolume = 0.001002; // Specific volume at 20°C (m³/kg)
   
-  // Get current density from the steam table (or use approximation for temps below 80°C)
-  const currentDensity = temperature < 80 ? 
-    referenceDensity * (1 - 0.0002 * (temperature - referenceTemp)) : // Simple approximation below 80°C
-    getWaterDensity(temperature); // Use steam table data above 80°C
+  // Get current specific volume from steam table or use approximation for temps below 80°C
+  let currentSpecificVolume;
   
-  // Volume is inversely proportional to density
-  return baseVolume * (referenceDensity / currentDensity);
+  if (temperature < 80) {
+    // Linear approximation for temperatures below 80°C
+    // Specific volume increases with temperature
+    const specificVolumeAt0C = 0.001000; // m³/kg at 0°C
+    const specificVolumeAt80C = 0.001029; // m³/kg at 80°C (from steam table)
+    const slope = (specificVolumeAt80C - specificVolumeAt0C) / 80;
+    currentSpecificVolume = specificVolumeAt0C + slope * temperature;
+  } else {
+    // Use steam table data for temperatures >= 80°C
+    const steamData = getSteamData(temperature);
+    currentSpecificVolume = steamData.specificVolume;
+  }
+  
+  // Calculate volume ratio based on specific volumes
+  // Volume is proportional to specific volume
+  const volumeRatio = currentSpecificVolume / referenceSpecificVolume;
+  
+  // Apply the volume ratio to the base volume
+  return baseVolume * volumeRatio;
 }
 
 // Calculate energy from gas flow
