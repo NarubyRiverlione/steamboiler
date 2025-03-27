@@ -9,6 +9,7 @@ type BoilerState = {
   drainValveOpen: boolean
   energy: number // kJ
   energyDelta: number // kJ/s
+  steamMass: number // kg - Mass of steam currently in the boiler
 }
 
 export type BoilerAction =

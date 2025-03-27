@@ -60,10 +60,10 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
     const excessTemp = Math.max(0, temperature - boilingPoint)
 
     // Ensure some minimum steam generation at or above 100°C
-    const baseGeneration = temperature >= 100 ? 0.005 * waterMass : 0
+    const baseGeneration = temperature >= 100 ? 0.01 * waterMass : 0 // Increased base rate (x20)
 
     // Add additional generation based on excess temperature
-    return baseGeneration + excessTemp * waterMass * 0.01
+    return baseGeneration + excessTemp * waterMass * 0.02 // Increased factor for excess temp (x20)
   }
 
   // Below 100°C, only generate steam if above the boiling point for the current pressure
@@ -74,7 +74,7 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
 
   // Calculate based on excess temperature
   const excessTemp = Math.max(0, temperature - boilingPoint)
-  return excessTemp * waterMass * 0.005
+  return excessTemp * waterMass * 0.01
 }
 
 // Calculate energy loss from steam generation

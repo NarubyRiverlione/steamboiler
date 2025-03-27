@@ -23,6 +23,7 @@ export const initialState: BoilerState = {
   energy: (50 * CstPhysics.Water_Density * getSteamData(CstSimulation.StartTemperature).enthalpy) / 1000, // Initial energy based on water volume and temperature
   energyDelta: 0,
   steamRateHistory: [],
+  steamMass: 0, // Initially no steam mass
 }
 
 // Context

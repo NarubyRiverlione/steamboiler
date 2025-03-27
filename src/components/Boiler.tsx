@@ -1,10 +1,16 @@
 import useBoiler from "../context/BoilerContext"
 import { CstSimulation } from "../context/const"
 import { calculateBoilingPoint } from "../utils/boilerCalculations"
+import { getSteamData } from "../utils/steamTable" // Import getSteamData
 import "./Boiler.css"
 
 function Boiler() {
   const { state, increaseGasFlow, decreaseGasFlow, toggleFillValve, toggleDrainValve } = useBoiler()
+
+  // Calculate vapor volume based on steam mass and specific volume
+  const steamData = getSteamData(state.temperature)
+  const specificVolume = steamData.specificVolume // m³/kg
+  const vaporVolumeLiters = state.steamMass * specificVolume * 1000 // Convert m³ to L
 
   return (
     <div className="boiler-container">
@@ -84,8 +90,12 @@ function Boiler() {
           <span className="value">{state.gasFlow.toFixed(1)} L/s</span>
         </div>
         <div className="readout-item">
-          <span className="label">Water Volume:</span>
+          <span className="label">Liquid Volume:</span> {/* Renamed */}
           <span className="value">{state.waterVolume.toFixed(1)} L</span>
+        </div>
+        <div className="readout-item">
+          <span className="label">Vapor Volume:</span> {/* Updated calculation */}
+          <span className="value">{vaporVolumeLiters.toFixed(1)} L</span>
         </div>
         <div className="readout-item">
           <span className="label">Temperature:</span>

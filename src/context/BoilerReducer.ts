@@ -60,7 +60,22 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         }
       }
 
-      // Water mass (kg)
+      // --- Steam Mass Calculation (Early for Volume Adjustment) ---
+      // Calculate instantaneous steam rate (needed before waterMass calculation)
+      const instantaneousSteamRate = calculateSteamGeneration(
+        (newWaterVolume * CstPhysics.Water_Density) / 1000, // Use current volume estimate for rate calc
+        state.temperature,
+        state.pressure
+      )
+      // Steam generated in this tick (kg)
+      const generatedSteamMass = instantaneousSteamRate * deltaTime
+      // Calculate the volume of liquid water lost to steam (Liters)
+      const liquidVolumeDecreaseLiters = (generatedSteamMass / CstPhysics.Water_Density) * 1000
+      // Adjust water volume *before* final mass calculation
+      newWaterVolume = Math.max(0, newWaterVolume - liquidVolumeDecreaseLiters)
+      // --- End Steam Mass Calculation (Early Part) ---
+
+      // Water mass (kg) - Now calculated based on adjusted volume
       const waterMass = (newWaterVolume * CstPhysics.Water_Density) / 1000
 
       // Add energy from gas
@@ -71,9 +86,9 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       const coolingEnergyLoss = waterMass * CstPhysics.Water_SpecificHeat * CstSimulation.CoolingRate * deltaTime
       energyChange -= coolingEnergyLoss
 
-      // Calculate steam generation
-      const steamRate = calculateSteamGeneration(waterMass, state.temperature, state.pressure)
-      const steamEnergyLoss = calculateSteamEnergyLoss(steamRate, state.temperature) * deltaTime
+      // Calculate steam generation (Use the already calculated instantaneous rate)
+      // const steamRate = calculateSteamGeneration(waterMass, state.temperature, state.pressure) // Already calculated above
+      const steamEnergyLoss = calculateSteamEnergyLoss(instantaneousSteamRate, state.temperature) * deltaTime
       energyChange -= steamEnergyLoss
 
       // Update total energy
@@ -83,8 +98,8 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       const now = Date.now()
       const tenSecondsAgo = now - 10000 // 10 seconds in milliseconds
 
-      // Calculate instantaneous steam rate for history
-      const instantaneousSteamRate = steamRate // Use the already calculated steamRate
+      // Calculate instantaneous steam rate for history (already done above)
+      // const instantaneousSteamRate = steamRate
 
       // Add new entry and filter old ones
       const updatedHistory = [
@@ -99,6 +114,11 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         averageSteamRate = sumOfRates / updatedHistory.length
       }
       // --- End Steam Rate Averaging Logic ---
+
+      // --- Steam Mass Accumulation ---
+      // Accumulate steam mass (using generatedSteamMass calculated earlier)
+      const newSteamMass = state.steamMass + generatedSteamMass
+      // --- End Steam Mass Accumulation ---
 
       // Calculate new temperature based on energy changes
 
@@ -148,6 +168,7 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         pressure: Number(newPressure.toFixed(1)),
         steamRate: Number(averageSteamRate.toFixed(1)), // Use the calculated average
         steamRateHistory: updatedHistory, // Store the updated history
+        steamMass: Number(newSteamMass.toFixed(6)), // Store updated steam mass with higher precision
         energy: Number(newEnergy.toFixed(1)),
         energyDelta: Number((energyChange / deltaTime).toFixed(1)),
       }
