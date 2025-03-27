@@ -12,8 +12,8 @@ export const CstSimulation = {
 }
 
 export const CstPhysics = {
-  Water_Density: 1000, // kg/m³
-  Water_SpecificHeat: 4.18, // kJ/kg°C
+  Water_Density: 1000, // kg/m³ (used as fallback for temperatures below 80°C)
+  Water_SpecificHeat: 4.18, // kJ/kg°C (used as fallback for temperatures below 80°C)
   GasEnergyDensity: 35000, // kJ/m³ (approximate energy density of natural gas)
   AtmosphericPressure: 1.013, // bar
 }

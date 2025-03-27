@@ -1,14 +1,21 @@
 // Constants and utility functions for boiler calculations
 import { CstPhysics, CstSimulation } from "../context/const"
+import { getWaterDensity, getWaterSpecificHeat } from "./steamTable"
 
 // Calculate water volume based on temperature (thermal expansion)
 export function calculateWaterVolume(baseVolume: number, temperature: number): number {
-  // Simple thermal expansion model (approximate)
-  // Coefficient of thermal expansion for water ~0.0002 per °C
-  const expansionCoefficient = 0.0002
+  // Use the density at reference temperature (20°C) and at the current temperature
+  // to calculate the volume change
   const referenceTemp = 20 // Reference temperature
-
-  return baseVolume * (1 + expansionCoefficient * (temperature - referenceTemp))
+  const referenceDensity = 998 // kg/m³ at 20°C (approximate)
+  
+  // Get current density from the steam table (or use approximation for temps below 80°C)
+  const currentDensity = temperature < 80 ? 
+    referenceDensity * (1 - 0.0002 * (temperature - referenceTemp)) : // Simple approximation below 80°C
+    getWaterDensity(temperature); // Use steam table data above 80°C
+  
+  // Volume is inversely proportional to density
+  return baseVolume * (referenceDensity / currentDensity);
 }
 
 // Calculate energy from gas flow
@@ -19,19 +26,26 @@ export function calculateGasEnergy(gasFlow: number): number {
 
 // Calculate energy needed to heat water
 export function calculateHeatingEnergy(waterMass: number, currentTemp: number, targetTemp: number): number {
-  // Specific heat capacity of water ~4.18 kJ/kg°C
-  const specificHeat = 4.18
-  return waterMass * specificHeat * (targetTemp - currentTemp)
+  // Use temperature-dependent specific heat
+  // For better accuracy, we should integrate the specific heat over the temperature range
+  // but for simplicity, we'll use the average specific heat in the range
+  const avgTemp = (currentTemp + targetTemp) / 2;
+  const specificHeat = getWaterSpecificHeat(avgTemp);
+  
+  return waterMass * specificHeat * (targetTemp - currentTemp);
 }
 
 // Calculate new temperature based on current energy and added energy
 export function calculateNewTemperature(waterMass: number, currentTemp: number, addedEnergy: number): number {
   // If no water, temperature doesn't change
-  if (waterMass <= 0) return currentTemp
+  if (waterMass <= 0) return currentTemp;
 
-  // Specific heat capacity of water ~4.18 kJ/kg°C
-  const specificHeat = 4.18
-  return currentTemp + addedEnergy / (waterMass * specificHeat)
+  // Use temperature-dependent specific heat
+  // This is an approximation since specific heat changes with temperature
+  // For small temperature changes, this approximation is reasonable
+  const specificHeat = getWaterSpecificHeat(currentTemp);
+  
+  return currentTemp + addedEnergy / (waterMass * specificHeat);
 }
 
 // Calculate boiling point based on pressure

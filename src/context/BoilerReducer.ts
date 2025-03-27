@@ -1,5 +1,5 @@
 import { calculateGasEnergy, calculateSteamEnergyLoss, calculateSteamGeneration } from "../utils/boilerCalculations"
-import { getSteamData } from "../utils/steamTable"
+import { getSteamData, getWaterDensity, getWaterSpecificHeat } from "../utils/steamTable"
 import BoilerState, { BoilerAction } from "./BoilerTypes"
 import { CstPhysics, CstSimulation } from "./const"
 
@@ -61,29 +61,34 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       }
 
       // --- Steam Mass Calculation (Early for Volume Adjustment) ---
+      // Get temperature-dependent water density
+      const waterDensity = state.temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(state.temperature)
+      
       // Calculate instantaneous steam rate (needed before waterMass calculation)
       const instantaneousSteamRate = calculateSteamGeneration(
-        (newWaterVolume * CstPhysics.Water_Density) / 1000, // Use current volume estimate for rate calc
+        (newWaterVolume * waterDensity) / 1000, // Use current volume estimate for rate calc with temperature-dependent density
         state.temperature,
         state.pressure
       )
       // Steam generated in this tick (kg)
       const generatedSteamMass = instantaneousSteamRate * deltaTime
       // Calculate the volume of liquid water lost to steam (Liters)
-      const liquidVolumeDecreaseLiters = (generatedSteamMass / CstPhysics.Water_Density) * 1000
+      const liquidVolumeDecreaseLiters = (generatedSteamMass / waterDensity) * 1000
       // Adjust water volume *before* final mass calculation
       newWaterVolume = Math.max(0, newWaterVolume - liquidVolumeDecreaseLiters)
       // --- End Steam Mass Calculation (Early Part) ---
 
-      // Water mass (kg) - Now calculated based on adjusted volume
-      const waterMass = (newWaterVolume * CstPhysics.Water_Density) / 1000
+      // Water mass (kg) - Now calculated based on adjusted volume and temperature-dependent density
+      // waterDensity is already calculated above
+      const waterMass = (newWaterVolume * waterDensity) / 1000
 
       // Add energy from gas
       const gasEnergy = calculateGasEnergy(state.gasFlow) * deltaTime
       energyChange += gasEnergy
 
-      // Natural cooling
-      const coolingEnergyLoss = waterMass * CstPhysics.Water_SpecificHeat * CstSimulation.CoolingRate * deltaTime
+      // Natural cooling - use temperature-dependent specific heat
+      const specificHeat = getWaterSpecificHeat(state.temperature)
+      const coolingEnergyLoss = waterMass * specificHeat * CstSimulation.CoolingRate * deltaTime
       energyChange -= coolingEnergyLoss
 
       // Calculate steam generation (Use the already calculated instantaneous rate)
@@ -133,8 +138,8 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         // Energy changes not related to water volume changes
         const nonVolumeEnergyChange = gasEnergy - coolingEnergyLoss - steamEnergyLoss
 
-        // Calculate temperature change from these energy changes
-        const tempDelta = waterMass > 0 ? nonVolumeEnergyChange / (waterMass * CstPhysics.Water_SpecificHeat) : 0
+        // Calculate temperature change from these energy changes - use temperature-dependent specific heat
+        const tempDelta = waterMass > 0 ? nonVolumeEnergyChange / (waterMass * specificHeat) : 0
 
         // Apply the temperature change to current temperature
         const calculatedTemp = state.temperature + tempDelta
