@@ -1,4 +1,10 @@
-import { calculateGasEnergy, calculateSteamEnergyLoss, calculateSteamGeneration, calculateWaterVolume } from "../utils/boilerCalculations"
+import { 
+  calculateGasEnergy, 
+  calculateSteamEnergyLoss, 
+  calculateSteamGeneration, 
+  calculateWaterVolume,
+  calculatePressureFromSteam
+} from "../utils/boilerCalculations"
 import { getSteamData, getWaterDensity, getWaterSpecificHeat } from "../utils/steamTable"
 import BoilerState, { BoilerAction } from "./BoilerTypes"
 import { CstPhysics, CstSimulation } from "./const"
@@ -155,22 +161,37 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         newTemperature = Math.max(20, calculatedTemp)
       }
 
-      // Calculate new pressure
-      // Below 100°C: Pressure is based on the steam table (vapor pressure)
-      // Above 100°C: Pressure continues to rise with temperature
-      let newPressure
-      const steamData = getSteamData(newTemperature)
-
+      // Calculate new pressure based on steam mass, temperature, and available volume
+      let newPressure;
+      
       // Fixed atmospheric pressure for reference
-      const atmosphericPressure = CstPhysics.AtmosphericPressure
-
-      // If temperature is at or above 100°C (boiling at atmospheric pressure)
-      // then pressure should be at least atmospheric
-      if (newTemperature >= 100) {
-        newPressure = Math.max(atmosphericPressure, steamData.pressure)
+      const atmosphericPressure = CstPhysics.AtmosphericPressure;
+      
+      // If there is no steam, keep pressure at atmospheric (1 bar)
+      if (newSteamMass < 0.001) {
+        newPressure = atmosphericPressure;
       } else {
-        // Below 100°C, use vapor pressure from steam table
-        newPressure = steamData.pressure
+        // For temperatures at or above 100°C, calculate pressure based on steam accumulation
+        // Get saturation pressure from steam table
+        const steamData = getSteamData(newTemperature);
+        const saturationPressure = steamData.pressure;
+        
+        // Calculate volume occupied by liquid water
+        const liquidWaterVolume = newWaterVolume;
+        
+        // Calculate volume available for steam
+        const availableVolumeForSteam = Math.max(0, CstSimulation.BoilerTotalVolume - liquidWaterVolume);
+        
+        // Calculate pressure based on steam mass, temperature, and available volume
+        const calculatedPressure = calculatePressureFromSteam(
+          newSteamMass,
+          newTemperature,
+          availableVolumeForSteam,
+          saturationPressure
+        );
+        
+        // Ensure pressure is at least atmospheric
+        newPressure = Math.max(atmosphericPressure, calculatedPressure);
       }
 
       return {

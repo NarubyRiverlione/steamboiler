@@ -110,3 +110,61 @@ export function getLatentHeat(temperature: number): number {
   const steamData = getSteamData(temperature);
   return steamData.latentHeat;
 }
+
+// Get boiling point of water based on pressure (°C)
+export function getBoilingPoint(pressure: number): number {
+  // For pressures below our table range, use the Antoine equation
+  if (pressure < steamTable[0].pressure) {
+    // Antoine equation: log10(P) = A - B/(C + T)
+    // Where P is pressure in mmHg, T is temperature in °C
+    // Constants for water: A = 8.07131, B = 1730.63, C = 233.426
+    // These are valid for 1-200 mmHg, which is about 0.0013-0.267 bar
+    
+    // Convert pressure from bar to mmHg
+    const pressureInMmHg = pressure * 750.062;
+    
+    // If pressure is too low, return a minimum temperature
+    if (pressureInMmHg < 1) {
+      return 0; // Minimum temperature
+    }
+    
+    // Calculate temperature using Antoine equation
+    const A = 8.07131;
+    const B = 1730.63;
+    const C = 233.426;
+    
+    const logP = Math.log10(pressureInMmHg);
+    const temperature = B / (A - logP) - C;
+    
+    return Math.max(0, temperature); // Ensure temperature is not negative
+  }
+  
+  // For pressures above our table range, use a simple extrapolation
+  if (pressure > steamTable[steamTable.length - 1].pressure) {
+    // Simple power law extrapolation
+    // T = T_ref * (P/P_ref)^0.25
+    const refData = steamTable[steamTable.length - 1];
+    return refData.temperature * Math.pow(pressure / refData.pressure, 0.25);
+  }
+  
+  // Find two closest data points
+  let lower = steamTable[0];
+  let upper = steamTable[steamTable.length - 1];
+  
+  for (let i = 0; i < steamTable.length - 1; i++) {
+    if (steamTable[i].pressure <= pressure && steamTable[i + 1].pressure >= pressure) {
+      lower = steamTable[i];
+      upper = steamTable[i + 1];
+      break;
+    }
+  }
+  
+  // If exact match, return the data point
+  if (lower.pressure === pressure) {
+    return lower.temperature;
+  }
+  
+  // Interpolate between the two points
+  const ratio = (pressure - lower.pressure) / (upper.pressure - lower.pressure);
+  return lower.temperature + ratio * (upper.temperature - lower.temperature);
+}

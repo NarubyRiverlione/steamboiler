@@ -15,7 +15,7 @@ export type BoilerContextType = {
 export const initialState: BoilerState = {
   waterVolume: CstSimulation.StartWaterVolume, // 50% filled
   temperature: CstSimulation.StartTemperature, // Celsius
-  pressure: 1, // bar (atmospheric pressure)
+  pressure: CstPhysics.AtmosphericPressure, // Always start at atmospheric pressure (1 bar)
   gasFlow: 0, // No gas flow initially
   steamRate: 0, // No steam generation initially
   fillValveOpen: false,

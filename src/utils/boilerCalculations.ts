@@ -1,6 +1,6 @@
 // Constants and utility functions for boiler calculations
 import { CstPhysics, CstSimulation } from "../context/const"
-import { getSteamData, getWaterSpecificHeat, getLatentHeat } from "./steamTable"
+import { getSteamData, getWaterSpecificHeat, getLatentHeat, getBoilingPoint } from "./steamTable"
 
 // Calculate water volume based on temperature using specific volume data from steam table
 export function calculateWaterVolume(baseVolume: number, temperature: number): number {
@@ -63,11 +63,73 @@ export function calculateNewTemperature(waterMass: number, currentTemp: number, 
 
 // Calculate boiling point based on pressure
 export function calculateBoilingPoint(pressure: number): number {
-  // Simple approximation: boiling temp increases with pressure
-  // At standard pressure (1.013 bar), water boils at 100°C
-  return pressure <= CstPhysics.AtmosphericPressure
-    ? 100
-    : 100 * Math.pow(pressure / CstPhysics.AtmosphericPressure, 0.25)
+  // Use the getBoilingPoint function from steamTable.ts
+  return getBoilingPoint(pressure);
+}
+
+// Calculate pressure based on steam mass, temperature, and available volume
+export function calculatePressureFromSteam(
+  steamMass: number,
+  temperature: number,
+  availableVolume: number,
+  saturationPressure: number
+): number {
+  // If no steam or no available volume, return saturation pressure
+  if (steamMass <= 0 || availableVolume <= 0) {
+    return saturationPressure;
+  }
+  
+  
+  // Convert available volume from liters to m³
+  const availableVolumeM3 = availableVolume / 1000;
+  
+  // Get specific volume of steam at current temperature and saturation pressure
+  // This is an approximation, as the specific volume also depends on pressure
+  const steamData = getSteamData(temperature);
+  
+  // Specific volume of saturated steam at this temperature (m³/kg)
+  // For superheated steam, this would be higher, but we'll use this as a lower bound
+  // The expansion factor is temperature-dependent
+  // At lower temperatures, the expansion factor is higher
+  let expansionFactor;
+  if (temperature < 100) {
+    expansionFactor = 1600; // Approximate factor for liquid to vapor expansion at lower temperatures
+  } else if (temperature < 150) {
+    expansionFactor = 1200; // Reduced expansion factor at higher temperatures
+  } else {
+    expansionFactor = 800; // Further reduced expansion factor at even higher temperatures
+  }
+  
+  const specificVolumeSteam = steamData.specificVolume * expansionFactor;
+  
+  // Calculate the volume that the steam would occupy at saturation pressure
+  const steamVolumeAtSaturation = steamMass * specificVolumeSteam;
+  
+  // If the steam volume at saturation is less than the available volume,
+  // then the pressure is just the saturation pressure
+  if (steamVolumeAtSaturation <= availableVolumeM3) {
+    return saturationPressure;
+  }
+  
+  // Otherwise, calculate the pressure using a simplified equation of state
+  // P1 * V1 = P2 * V2 (assuming constant temperature)
+  // P2 = P1 * (V1 / V2)
+  // Apply a damping factor to make pressure rise more gradually
+  const volumeRatio = steamVolumeAtSaturation / availableVolumeM3;
+  
+  // Apply a square root function to the volume ratio to make pressure rise more gradually
+  // This is a common approach in thermodynamics to model non-ideal gas behavior
+  // and to account for the fact that steam doesn't behave exactly like an ideal gas
+  const dampedRatio = Math.sqrt(volumeRatio);
+  
+  // Apply an additional damping factor to slow down pressure rise even more
+  const dampingFactor = 0.5; // Adjust this value to control how quickly pressure rises
+  const pressureFactor = 1 + (dampedRatio - 1) * dampingFactor;
+  
+  const calculatedPressure = saturationPressure * pressureFactor;
+  
+  // Return the calculated pressure, ensuring it's at least the saturation pressure
+  return Math.max(saturationPressure, calculatedPressure);
 }
 
 // Calculate steam generation rate
