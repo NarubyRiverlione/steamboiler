@@ -9,7 +9,9 @@
 }
 
 /* Boiler visualization */
-.boiler-visualization {
+.boiler-panel {
+  display: flex;
+  flex: 1;
   position: relative;
   width: 300px;
   height: 400px;
@@ -57,6 +59,7 @@
 
 .valve-buttons {
   display: flex;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
@@ -130,6 +133,7 @@
 /* Controls panel */
 .controls-panel {
   display: flex;
+  flex: 0.5;
   flex-direction: column;
   width: 100%;
   gap: 2rem;
@@ -141,7 +145,7 @@
 
 .gas-controls h3,
 .water-controls h3,
-.readouts h3 {
+.readouts-panel h3 {
   margin-top: 0;
   margin-bottom: 1rem;
   color: #333;
@@ -151,6 +155,7 @@
 
 .gas-flow-buttons {
   display: flex;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
@@ -170,10 +175,12 @@
   background-color: #01579b;
 }
 
-.readouts {
+.readouts-panel {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.5rem;
+  padding: 0 0.5rem;
 }
 
 .readout-item {

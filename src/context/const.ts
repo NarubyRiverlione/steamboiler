@@ -3,10 +3,10 @@ export const CstSimulation = {
   StartWaterVolume: 50, // liters
   MaxGasFlow: 10, // liters/second
   FillingRate: 0.005, // 0.5% per second
-  DrainingRate: 0.002, // 0.2% per second
+  DrainingRate: 0.005, // 0.5% per second
   BoilerTotalVolume: 100, // liters
   GasEfficiency: 0.85,
-  CoolingRate: 1/15, // °C per second
+  CoolingRate: 1 / 15, // °C per second
   GasChangeRateFast: 0.5, // °C per second
   GasChangeRateSlow: 0.25, // °C per second
 }

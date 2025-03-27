@@ -8,7 +8,7 @@ function Boiler() {
 
   return (
     <div className="boiler-container">
-      <div className="boiler-visualization">
+      <div className="boiler-panel">
         <div className="water-level" style={{ height: `${String(state.waterVolume)}%` }}>
           <div className="bubbles"></div>
         </div>
@@ -77,7 +77,7 @@ function Boiler() {
         </div>
       </div>
 
-      <div className="readouts">
+      <div className="readouts-panel">
         <h3>Boiler Status</h3>
         <div className="readout-item">
           <span className="label">Gas Flow:</span>
