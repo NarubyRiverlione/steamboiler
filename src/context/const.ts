@@ -1,5 +1,5 @@
 export const CstSimulation = {
-  StartTemperature: 98, // Celsius
+  StartTemperature: 80, // Celsius
   StartWaterVolume: 50, // liters
   MaxGasFlow: 10, // liters/second
   FillingRate: 0.005, // 0.5% per second
