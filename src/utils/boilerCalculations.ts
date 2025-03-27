@@ -1,6 +1,6 @@
 // Constants and utility functions for boiler calculations
 import { CstPhysics, CstSimulation } from "../context/const"
-import { getWaterDensity, getWaterSpecificHeat } from "./steamTable"
+import { getWaterDensity, getWaterSpecificHeat, getLatentHeat } from "./steamTable"
 
 // Calculate water volume based on temperature (thermal expansion)
 export function calculateWaterVolume(baseVolume: number, temperature: number): number {
@@ -95,11 +95,8 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
 export function calculateSteamEnergyLoss(steamRate: number, temperature: number): number {
   // Energy needed to convert water to steam
   // This is the latent heat of vaporization
-  // It decreases as temperature increases (approximation)
-  // At 100°C, it's about 2260 kJ/kg, decreasing to ~1700 kJ/kg at higher temperatures
-  const baseLatentHeat = 2260 // kJ/kg at 100°C
-  const temperatureFactor = Math.max(0, 1 - (temperature - 100) / 300)
-  const latentHeat = baseLatentHeat * temperatureFactor + 1700 * (1 - temperatureFactor)
+  // Get accurate latent heat from steam table data
+  const latentHeat = getLatentHeat(temperature);
 
-  return steamRate * latentHeat
+  return steamRate * latentHeat;
 }
