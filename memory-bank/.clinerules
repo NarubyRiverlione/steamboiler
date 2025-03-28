@@ -62,6 +62,11 @@
 3. When steam accumulates, pressure rises above saturation pressure
 4. Damping factors are applied for numerical stability
 
+### Water Volume Calculation
+1. Water volume is calculated using the `calculateWaterVolume` function.
+2. This function uses specific volume data from steam tables to account for thermal expansion.
+3. The water volume is updated in the reducer on each `SIMULATE_TICK` action.
+
 ## Known Challenges
 
 ### Numerical Stability

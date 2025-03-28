@@ -16,6 +16,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Boiling point calculation based on pressure
 - ✅ Water volume changes due to temperature (thermal expansion) and phase change
 - ✅ Energy tracking and calculation
+- ✅ Updated Water Volume Calculation: Water volume is now calculated using specific volume data from steam tables for more accurate thermal expansion modeling.
 
 ### User Interface
 

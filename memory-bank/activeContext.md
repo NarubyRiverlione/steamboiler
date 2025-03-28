@@ -2,11 +2,11 @@
 
 ## Current Work Focus
 
-The current focus of the Steam Boiler Simulation project is on improving the physical accuracy of the simulation while maintaining performance and stability. Based on the improvements.md file, several enhancements are being considered to make the simulation more realistic.
+The current focus of the Steam Boiler Simulation project is on improving the physical accuracy of the simulation while maintaining performance and stability. We have recently implemented several enhancements to make the simulation more realistic, including improved water property calculations, latent heat of vaporization, thermal expansion, and a main steam valve control.
 
 ## Recent Changes
 
-According to the improvements.md file, the following improvements have already been implemented:
+The following improvements have been implemented:
 
 1. **Water Properties**: Implemented temperature-dependent water density and specific heat using steam table data instead of constant values.
 
@@ -23,11 +23,7 @@ According to the improvements.md file, the following improvements have already b
 
 ## Active Development Areas
 
-The following areas are currently being worked on or considered for improvement:
-
-### 0. Steam Removal Mechanism
-
-The Main Steam Valve implementation provides a mechanism for removing steam from the system, which affects both the steam mass and energy balance. This feature enhances the realism of the simulation by allowing users to control steam output, similar to a real boiler system.
+The next major improvement is to implement a more physically accurate energy balance approach for steam generation.  Further improvements under consideration include:
 
 ### 1. Energy Balance Approach for Steam Generation
 
@@ -54,13 +50,13 @@ The plan is to better integrate the steam table data throughout the simulation t
 
 ## Next Steps
 
-Based on the improvements.md file, the following steps are planned:
+Based on the progress.md file, the following steps are planned:
 
 1. **Implement Energy Balance Approach**: Replace the current steam generation calculation with an energy balance approach.
 
 2. **Improve Boiling Point Determination**: Use steam table data to accurately determine the boiling point for a given pressure.
 
-3. **Update Water Volume Calculation**: Use specific volume data from steam tables for more accurate water volume calculations.
+3. **Update Water Volume Calculation**: Use specific volume data from steam tables for more accurate water volume calculations. (Already done, needs to be reflected in progress.md)
 
 4. **Add Heat Loss Model**: Implement a more realistic heat loss model.
 
