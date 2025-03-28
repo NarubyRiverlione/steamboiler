@@ -1,6 +1,6 @@
 # Steam Boiler Simulation
 
-A physics-based simulation of a steam boiler system, modeling the thermodynamic processes of water heating, steam generation, and pressure development. 
+A physics-based simulation of a steam boiler system, modeling the thermodynamic processes of water heating, steam generation, and pressure development.
 
 ## Introduction
 
@@ -33,7 +33,7 @@ The simulation allows users to:
 
 ### Energy
 - **Sources**: Gas burner (controlled by user)
-- **Sinks**: 
+- **Sinks**:
   - Natural cooling to environment
   - Energy used for steam generation (latent heat of vaporization)
   - Energy lost when draining water
@@ -127,6 +127,10 @@ The simulation is implemented as a React application with:
 - Reducer pattern for simulation logic
 - Steam tables for accurate water property data
 - 10 updates per second simulation rate
+
+The UI is structured with separate components for the boiler and condenser:
+- `src/components/Boiler/BoilerVisual.tsx`: Visual representation of the boiler.
+- `src/components/Condenser/CondenserVisual.tsx`: Visual representation of the condenser.
 
 The core simulation loop:
 1. Calculate energy input from gas
