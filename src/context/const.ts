@@ -1,5 +1,5 @@
 export const CstSimulation = {
-  StartTemperature: 80, // Celsius
+  StartTemperature: 98, // Celsius
   StartWaterVolume: 50, // liters
   MaxGasFlow: 10, // liters/second
   FillingRate: 0.005, // 0.5% per second
@@ -8,7 +8,12 @@ export const CstSimulation = {
   GasEfficiency: 0.85,
   CoolingRate: 1 / 15, // °C per second
   GasChangeRateFast: 0.5, // °C per second
-  GasChangeRateSlow: 0.25, // °C per second
+  GasChangeRateSlow: 0.25, // °C per second,
+  PressureDampingFactor: 0.05, // Damping factor for pressure calculation
+  // Steam expansion factors for different temperature ranges
+  SteamExpansionFactorLow: 1600, // For temperatures < 100°C
+  SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
+  SteamExpansionFactorHigh: 800, // For temperatures > 150°C
 }
 
 export const CstPhysics = {

@@ -10,9 +10,9 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Basic thermodynamic model with energy balance
 - ✅ Temperature-dependent water properties (density, specific heat)
 - ✅ Steam generation based on temperature and pressure
-- ✅ Pressure calculation based on steam accumulation
+- ✅ Pressure calculation based on steam accumulation with configurable parameters
 - ✅ Boiling point calculation based on pressure
-- ✅ Water volume changes due to temperature and phase change
+- ✅ Water volume changes due to temperature (thermal expansion) and phase change
 - ✅ Energy tracking and calculation
 
 ### User Interface

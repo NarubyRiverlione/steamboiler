@@ -93,11 +93,11 @@ export function calculatePressureFromSteam(
   // At lower temperatures, the expansion factor is higher
   let expansionFactor;
   if (temperature < 100) {
-    expansionFactor = 1600; // Approximate factor for liquid to vapor expansion at lower temperatures
+    expansionFactor = CstSimulation.SteamExpansionFactorLow; // For temperatures < 100°C
   } else if (temperature < 150) {
-    expansionFactor = 1200; // Reduced expansion factor at higher temperatures
+    expansionFactor = CstSimulation.SteamExpansionFactorMedium; // For temperatures 100-150°C
   } else {
-    expansionFactor = 800; // Further reduced expansion factor at even higher temperatures
+    expansionFactor = CstSimulation.SteamExpansionFactorHigh; // For temperatures > 150°C
   }
   
   const specificVolumeSteam = steamData.specificVolume * expansionFactor;
@@ -123,8 +123,8 @@ export function calculatePressureFromSteam(
   const dampedRatio = Math.sqrt(volumeRatio);
   
   // Apply an additional damping factor to slow down pressure rise even more
-  const dampingFactor = 0.5; // Adjust this value to control how quickly pressure rises
-  const pressureFactor = 1 + (dampedRatio - 1) * dampingFactor;
+  // Use the configurable damping factor from CstSimulation
+  const pressureFactor = 1 + (dampedRatio - 1) * CstSimulation.PressureDampingFactor;
   
   const calculatedPressure = saturationPressure * pressureFactor;
   

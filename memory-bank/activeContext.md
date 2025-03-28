@@ -12,6 +12,10 @@ According to the improvements.md file, the following improvements have already b
 
 2. **Latent Heat of Vaporization**: Replaced linear approximation with accurate values from steam tables.
 
+3. **Thermal Expansion of Water**: Implemented water volume adjustment based on temperature changes to model thermal expansion, using specific volume data from steam tables.
+
+4. **Pressure Calculation Parameters**: Moved pressure damping factor and steam expansion factors to configurable constants, making it easier to adjust the pressure increase rate.
+
 ## Active Development Areas
 
 The following areas are currently being worked on or considered for improvement:

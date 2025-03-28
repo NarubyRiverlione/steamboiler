@@ -23,6 +23,11 @@ Any remaining energy input is available for vaporization.
 Divide this remaining energy by the accurate latent heat of vaporization (from steam tables at the current pressure) to find the mass of water converted to steam.
 This ensures that steam is only generated when sufficient energy is provided after the water reaches boiling temperature.
 
+# DONE - Pressure Calculation Parameters:
+
+Current: Pressure calculation uses hardcoded damping factor and expansion factors.
+Change: Moved pressure damping factor and steam expansion factors to configurable constants in CstSimulation, making it easier to adjust the pressure increase rate without modifying calculation logic.
+
 # Heat Loss to Environment:
 
 Current: No explicit heat loss model seems to be present.
