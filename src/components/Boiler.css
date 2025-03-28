@@ -215,6 +215,40 @@
   background-color: #ffe0b2 !important;
 }
 
+/* Advanced section styling */
+.advanced-section {
+  margin-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.advanced-toggle {
+  cursor: pointer;
+  color: #0288d1;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.advanced-toggle:hover {
+  color: #01579b;
+}
+
+.advanced-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .boiler-container {

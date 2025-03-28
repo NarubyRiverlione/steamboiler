@@ -7,6 +7,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 ## What Works
 
 ### Core Simulation
+
 - ✅ Basic thermodynamic model with energy balance
 - ✅ Temperature-dependent water properties (density, specific heat)
 - ✅ Steam generation based on temperature and pressure
@@ -16,6 +17,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Energy tracking and calculation
 
 ### User Interface
+
 - ✅ Visual representation of boiler with water level
 - ✅ Gas flow controls with fine and coarse adjustments
 - ✅ Water valve controls (fill and drain)
@@ -23,6 +25,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Steam visualization when boiling occurs
 
 ### Technical Implementation
+
 - ✅ React component structure
 - ✅ Context API for state management
 - ✅ Reducer pattern for simulation logic
@@ -33,13 +36,8 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 Based on the improvements.md file, the following enhancements are planned:
 
-### Simulation Improvements
-- ⬜ Energy balance approach for steam generation
-- ⬜ More accurate boiling point calculation
-- ⬜ Realistic heat loss model
-- ⬜ Better integration of steam table data
-
 ### Potential Future Features
+
 - ⬜ Pressure safety valve
 - ⬜ Temperature and pressure gauges with historical data
 - ⬜ More detailed visualization of internal processes
@@ -49,15 +47,18 @@ Based on the improvements.md file, the following enhancements are planned:
 ## Known Issues
 
 ### Simulation Accuracy
+
 - The current steam generation model uses an empirical approach rather than a strict energy balance
 - Boiling point calculation uses a simplified power law
 - Heat loss model is simplified
 
 ### Edge Cases
+
 - Extreme conditions (very high temperatures or pressures) may not be modeled accurately
 - Rapid changes in inputs may cause unrealistic behavior
 
 ### User Interface
+
 - Limited visual feedback for some processes
 - No historical data visualization
 

@@ -8,7 +8,7 @@ Change: Water density and specific heat capacity vary non-linearly with temperat
 Current: Uses a simplified power law 100 \* Math.pow(pressure / CstPhysics.AtmosphericPressure, 0.25).
 Change: Implement a more accurate correlation like the Antoine equation, or better yet, use interpolated data directly from standard steam tables (which provide the precise saturation temperature for a given pressure). Let's check if steamTable.ts or steamTables.ts can provide this.
 
-# DONE L- atent Heat of Vaporization:
+# DONE Latent Heat of Vaporization:
 
 Current: Uses a linear approximation based on temperature (calculateSteamEnergyLoss).
 Change: Similar to the boiling point, use accurate values from steam tables. The latent heat of vaporization is a well-defined property that depends on temperature/pressure.
@@ -27,6 +27,11 @@ This ensures that steam is only generated when sufficient energy is provided aft
 
 Current: Pressure calculation uses hardcoded damping factor and expansion factors.
 Change: Moved pressure damping factor and steam expansion factors to configurable constants in CstSimulation, making it easier to adjust the pressure increase rate without modifying calculation logic.
+
+# Steam Rate Calculation:
+
+Current: Steam rate is calculated as an average over a 10-second history, which can mask rapid changes.
+Change: Simplify to use the current instantaneous steam rate directly, providing more immediate feedback on changes in the system.
 
 # Heat Loss to Environment:
 

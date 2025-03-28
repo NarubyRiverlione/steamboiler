@@ -1,3 +1,4 @@
+import { useState } from "react"
 import useBoiler from "../context/BoilerContext"
 import { CstSimulation } from "../context/const"
 import { calculateBoilingPoint } from "../utils/boilerCalculations"
@@ -5,6 +6,11 @@ import { getSteamData } from "../utils/steamTable" // Import getSteamData
 import "./Boiler.css"
 
 function Boiler() {
+  const [advancedExpanded, setAdvancedExpanded] = useState(false)
+  
+  const toggleAdvanced = () => {
+    setAdvancedExpanded(!advancedExpanded)
+  }
   const { state, increaseGasFlow, decreaseGasFlow, toggleFillValve, toggleDrainValve } = useBoiler()
 
   // Calculate vapor volume based on steam mass and specific volume
@@ -90,11 +96,11 @@ function Boiler() {
           <span className="value">{state.gasFlow.toFixed(1)} L/s</span>
         </div>
         <div className="readout-item">
-          <span className="label">Liquid Volume:</span> {/* Renamed */}
+          <span className="label">Liquid Volume:</span>
           <span className="value">{state.waterVolume.toFixed(1)} L</span>
         </div>
         <div className="readout-item">
-          <span className="label">Vapor Volume:</span> {/* Updated calculation */}
+          <span className="label">Vapor Volume:</span>
           <span className="value">{vaporVolumeLiters.toFixed(1)} L</span>
         </div>
         <div className="readout-item">
@@ -106,31 +112,42 @@ function Boiler() {
           <span className="value">{state.pressure.toFixed(1)} bar</span>
         </div>
         <div className="readout-item">
-          <span className="label">Steam Generation:</span>
-          <span className="value">{(state.steamRate * 1000).toFixed(1)} g/s</span>
-        </div>
-        <div className="readout-item">
-          <span className="label">Steam Production:</span>
-          <span className="value">{(state.steamRate * 3600).toFixed(1)} kg/h</span>
-        </div>
-        <div className="readout-item">
-          <span className="label">Boiling Point:</span>
-          <span className="value">{calculateBoilingPoint(state.pressure).toFixed(1)} °C</span>
-        </div>
-        <div className="readout-item">
-          <span className="label">Above Boiling:</span>
-          <span className="value">{(state.temperature - calculateBoilingPoint(state.pressure)).toFixed(1)} °C</span>
-        </div>
-        <div className="readout-item">
-          <span className="label">Energy:</span>
-          <span className="value">{state.energy.toFixed(1)} kJ</span>
-        </div>
-        <div className="readout-item">
           <span className="label">Energy Change:</span>
           <span className={`value ${state.energyDelta > 0 ? "positive" : state.energyDelta < 0 ? "negative" : ""}`}>
             {state.energyDelta > 0 ? "+" : ""}
             {state.energyDelta.toFixed(1)} kJ/s
           </span>
+        </div>
+        
+        <div className="advanced-section">
+          <h3 className="advanced-toggle" onClick={toggleAdvanced}>
+            Advanced {advancedExpanded ? "▼" : "▶"}
+          </h3>
+          
+          {advancedExpanded && (
+            <div className="advanced-content">
+              <div className="readout-item">
+                <span className="label">Steam Generation:</span>
+                <span className="value">{(state.steamRate * 1000).toFixed(1)} g/s</span>
+              </div>
+              <div className="readout-item">
+                <span className="label">Steam Production:</span>
+                <span className="value">{(state.steamRate * 3600).toFixed(1)} kg/h</span>
+              </div>
+              <div className="readout-item">
+                <span className="label">Energy:</span>
+                <span className="value">{state.energy.toFixed(1)} kJ</span>
+              </div>
+              <div className="readout-item">
+                <span className="label">Boiling Point:</span>
+                <span className="value">{calculateBoilingPoint(state.pressure).toFixed(1)} °C</span>
+              </div>
+              <div className="readout-item">
+                <span className="label">Above Boiling:</span>
+                <span className="value">{(state.temperature - calculateBoilingPoint(state.pressure)).toFixed(1)} °C</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
