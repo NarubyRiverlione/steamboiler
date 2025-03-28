@@ -14,7 +14,7 @@ export const CstSimulation = {
   SteamExpansionFactorLow: 1600, // For temperatures < 100°C
   SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
   SteamExpansionFactorHigh: 800, // For temperatures > 150°C
-  MaxSteamRemovalRate: 0.5, // kg/second when valve is fully open (about 1800 kg/hour)
+  MaxSteamRemovalRate: 0.1, // kg/second when valve is fully open (about 1800 kg/hour)
 }
 
 export const CstPhysics = {

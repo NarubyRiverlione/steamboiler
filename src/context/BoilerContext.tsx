@@ -26,6 +26,7 @@ export const initialState: BoilerState = {
   steamRateHistory: [],
   steamMass: 0, // Initially no steam mass
   mainSteamValvePosition: 0, // Initially closed
+  steamFlowOut: 0,
 }
 
 // Context

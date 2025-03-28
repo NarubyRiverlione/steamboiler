@@ -85,15 +85,6 @@
   color: white;
 }
 
-/* Steam valve controls */
-.steam-valve-controls {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-}
-
 .valve-status {
   display: flex;
   justify-content: space-between;
@@ -104,20 +95,6 @@
   display: flex;
   align-items: center;
   margin-top: 10px;
-}
-
-.valve-slider button {
-  padding: 0.5rem;
-  border: none;
-  border-radius: 5px;
-  background-color: #0288d1;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.valve-slider button:hover {
-  background-color: #01579b;
 }
 
 .valve-slider-container {
@@ -196,6 +173,7 @@
 
 .gas-controls h3,
 .water-controls h3,
+.steam-valve-controls h3,
 .readouts-panel h3 {
   margin-top: 0;
   margin-bottom: 1rem;
@@ -224,6 +202,22 @@
 
 .gas-flow-buttons button:hover {
   background-color: #01579b;
+}
+
+.steam-valve-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: lightgray;
+  color: black;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  cursor: pointer;
+  font-weight: bold;
+}
+.steam-valve-button button:hover {
+  background-color: gray;
+  color: white;
 }
 
 .readouts-panel {

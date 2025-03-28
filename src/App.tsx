@@ -1,5 +1,5 @@
-import  Boiler  from "./components/Boiler"
-import  BoilerProvider  from "./context/BoilerProvider"
+import Boiler from "./components/Boiler/Boiler"
+import BoilerProvider from "./context/BoilerProvider"
 import "./App.css"
 
 function App() {

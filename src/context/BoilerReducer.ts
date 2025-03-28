@@ -1,9 +1,9 @@
-import { 
-  calculateGasEnergy, 
-  calculateSteamEnergyLoss, 
-  calculateSteamGeneration, 
+import {
+  calculateGasEnergy,
+  calculateSteamEnergyLoss,
+  calculateSteamGeneration,
   calculateWaterVolume,
-  calculatePressureFromSteam
+  calculatePressureFromSteam,
 } from "../utils/boilerCalculations"
 import { getSteamData, getWaterDensity, getWaterSpecificHeat } from "../utils/steamTable"
 import BoilerState, { BoilerAction } from "./BoilerTypes"
@@ -34,15 +34,15 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         ...state,
         drainValveOpen: !state.drainValveOpen,
       }
-      
+
     case "ADJUST_MAIN_STEAM_VALVE": {
       // Ensure the valve position stays within 0-100%
-      const newPosition = Math.max(0, Math.min(100, state.mainSteamValvePosition + action.amount));
-      
+      const newPosition = Math.max(0, Math.min(100, state.mainSteamValvePosition + action.amount))
+
       return {
         ...state,
         mainSteamValvePosition: newPosition,
-      };
+      }
     }
 
     case "SIMULATE_TICK": {
@@ -81,25 +81,25 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       // --- Steam Mass Calculation (Early for Volume Adjustment) ---
       // Get temperature-dependent water density
       const waterDensity = state.temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(state.temperature)
-      
+
       // Calculate water mass using density
       const waterMassBeforeSteam = (newWaterVolume * waterDensity) / 1000
-      
+
       // Calculate instantaneous steam rate
       const instantaneousSteamRate = calculateSteamGeneration(
         waterMassBeforeSteam, // Use current mass estimate for rate calculation
         state.temperature,
-        state.pressure
+        state.pressure,
       )
-      
+
       // Steam generated in this tick (kg)
       const generatedSteamMass = instantaneousSteamRate * deltaTime
-      
+
       // Calculate the volume of liquid water lost to steam (Liters)
       // Use the calculateWaterVolume function to get the correct volume based on temperature
       const waterVolumePerKg = calculateWaterVolume(1, state.temperature) // Volume of 1kg of water at current temperature
       const liquidVolumeDecreaseLiters = generatedSteamMass * waterVolumePerKg
-      
+
       // Adjust water volume *before* final mass calculation
       newWaterVolume = Math.max(0, newWaterVolume - liquidVolumeDecreaseLiters)
       // --- End Steam Mass Calculation (Early Part) ---
@@ -132,10 +132,9 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       // const instantaneousSteamRate = steamRate
 
       // Add new entry and filter old ones
-      const updatedHistory = [
-        ...state.steamRateHistory,
-        { timestamp: now, rate: instantaneousSteamRate },
-      ].filter((entry) => entry.timestamp >= tenSecondsAgo)
+      const updatedHistory = [...state.steamRateHistory, { timestamp: now, rate: instantaneousSteamRate }].filter(
+        (entry) => entry.timestamp >= tenSecondsAgo,
+      )
 
       // Calculate the average steam rate over the relevant history
       let averageSteamRate = 0
@@ -148,23 +147,23 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       // --- Steam Removal Calculation ---
       // Only attempt to remove steam if there's steam and the valve is open
       if (state.mainSteamValvePosition > 0 && state.steamMass > 0) {
-        const steamRemovalRate = (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate;
-        removedSteamMass = Math.min(state.steamMass, steamRemovalRate * deltaTime);
-        
+        const steamRemovalRate = (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate
+        removedSteamMass = Math.min(state.steamMass, steamRemovalRate * deltaTime)
+
         // Calculate energy loss from steam removal
         // Steam carries both sensible heat (temperature) and latent heat
-        const steamData = getSteamData(state.temperature);
-        const steamEnthalpy = steamData.enthalpy + steamData.latentHeat; // Total enthalpy (kJ/kg)
-        steamRemovalEnergyLoss = removedSteamMass * steamEnthalpy;
-        
+        const steamData = getSteamData(state.temperature)
+        const steamEnthalpy = steamData.enthalpy + steamData.latentHeat // Total enthalpy (kJ/kg)
+        steamRemovalEnergyLoss = removedSteamMass * steamEnthalpy
+
         // Add this to the energy change calculation
-        energyChange -= steamRemovalEnergyLoss;
+        energyChange -= steamRemovalEnergyLoss
       }
       // --- End Steam Removal Calculation ---
-      
+
       // --- Steam Mass Accumulation ---
       // Accumulate steam mass (using generatedSteamMass calculated earlier and accounting for removed steam)
-      const newSteamMass = Math.max(0, state.steamMass + generatedSteamMass - removedSteamMass);
+      const newSteamMass = Math.max(0, state.steamMass + generatedSteamMass - removedSteamMass)
       // --- End Steam Mass Accumulation ---
 
       // Calculate new temperature based on energy changes
@@ -191,37 +190,41 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       }
 
       // Calculate new pressure based on steam mass, temperature, and available volume
-      let newPressure;
-      
+      let newPressure
+
       // Fixed atmospheric pressure for reference
-      const atmosphericPressure = CstPhysics.AtmosphericPressure;
-      
+      const atmosphericPressure = CstPhysics.AtmosphericPressure
+
       // If there is no steam, keep pressure at atmospheric (1 bar)
       if (newSteamMass < 0.001) {
-        newPressure = atmosphericPressure;
+        newPressure = atmosphericPressure
       } else {
         // For temperatures at or above 100°C, calculate pressure based on steam accumulation
         // Get saturation pressure from steam table
-        const steamData = getSteamData(newTemperature);
-        const saturationPressure = steamData.pressure;
-        
+        const steamData = getSteamData(newTemperature)
+        const saturationPressure = steamData.pressure
+
         // Calculate volume occupied by liquid water
-        const liquidWaterVolume = newWaterVolume;
-        
+        const liquidWaterVolume = newWaterVolume
+
         // Calculate volume available for steam
-        const availableVolumeForSteam = Math.max(0, CstSimulation.BoilerTotalVolume - liquidWaterVolume);
-        
+        const availableVolumeForSteam = Math.max(0, CstSimulation.BoilerTotalVolume - liquidWaterVolume)
+
         // Calculate pressure based on steam mass, temperature, and available volume
         const calculatedPressure = calculatePressureFromSteam(
           newSteamMass,
           newTemperature,
           availableVolumeForSteam,
-          saturationPressure
-        );
-        
+          saturationPressure,
+        )
+
         // Ensure pressure is at least atmospheric
-        newPressure = Math.max(atmosphericPressure, calculatedPressure);
+        newPressure = Math.max(atmosphericPressure, calculatedPressure)
       }
+
+      // steam flow out via the Steam Master Valve
+      const newSteamOutFlow =
+        newSteamMass > 0.1 ? (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 1000 : 0
 
       return {
         ...state,
@@ -233,6 +236,7 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         steamMass: Number(newSteamMass.toFixed(6)), // Store updated steam mass with higher precision
         energy: Number(newEnergy.toFixed(1)),
         energyDelta: Number((energyChange / deltaTime).toFixed(1)),
+        steamFlowOut: Number(newSteamOutFlow.toFixed(1)),
       }
     }
 
