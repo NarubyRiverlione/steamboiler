@@ -85,6 +85,57 @@
   color: white;
 }
 
+/* Steam valve controls */
+.steam-valve-controls {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.valve-status {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.valve-slider {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.valve-slider button {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #0288d1;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.valve-slider button:hover {
+  background-color: #01579b;
+}
+
+.valve-slider-container {
+  flex-grow: 1;
+  background-color: #eee;
+  height: 20px;
+  border-radius: 10px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+
+.valve-position-indicator {
+  height: 100%;
+  background: linear-gradient(to right, #3498db, #2980b9);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
 .steam {
   position: absolute;
   top: -20px;

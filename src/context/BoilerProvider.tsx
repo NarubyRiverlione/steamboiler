@@ -40,6 +40,10 @@ function BoilerProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "TOGGLE_DRAIN_VALVE" })
   }
 
+  const adjustMainSteamValve = (amount: number) => {
+    dispatch({ type: "ADJUST_MAIN_STEAM_VALVE", amount })
+  }
+
   return (
     <BoilerContext.Provider
       value={{
@@ -48,6 +52,7 @@ function BoilerProvider({ children }: { children: ReactNode }) {
         decreaseGasFlow,
         toggleFillValve,
         toggleDrainValve,
+        adjustMainSteamValve,
       }}
     >
       {children}

@@ -9,6 +9,7 @@ export type BoilerContextType = {
   decreaseGasFlow: (amount: number) => void
   toggleFillValve: () => void
   toggleDrainValve: () => void
+  adjustMainSteamValve: (amount: number) => void
 }
 
 // Initial state
@@ -24,6 +25,7 @@ export const initialState: BoilerState = {
   energyDelta: 0,
   steamRateHistory: [],
   steamMass: 0, // Initially no steam mass
+  mainSteamValvePosition: 0, // Initially closed
 }
 
 // Context

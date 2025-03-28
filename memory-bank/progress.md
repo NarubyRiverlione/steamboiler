@@ -11,6 +11,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Basic thermodynamic model with energy balance
 - ✅ Temperature-dependent water properties (density, specific heat)
 - ✅ Steam generation based on temperature and pressure
+- ✅ Steam removal mechanism with valve position control
 - ✅ Pressure calculation based on steam accumulation with configurable parameters
 - ✅ Boiling point calculation based on pressure
 - ✅ Water volume changes due to temperature (thermal expansion) and phase change
@@ -21,6 +22,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Visual representation of boiler with water level
 - ✅ Gas flow controls with fine and coarse adjustments
 - ✅ Water valve controls (fill and drain)
+- ✅ Main Steam Valve control with 10% increment adjustments
 - ✅ Real-time status readouts (temperature, pressure, etc.)
 - ✅ Steam visualization when boiling occurs
 
@@ -38,7 +40,7 @@ Based on the improvements.md file, the following enhancements are planned:
 
 ### Potential Future Features
 
-- ⬜ Pressure safety valve
+- ✅ Steam valve control (implemented as Main Steam Valve)
 - ⬜ Temperature and pressure gauges with historical data
 - ⬜ More detailed visualization of internal processes
 - ⬜ Scenario-based learning modules

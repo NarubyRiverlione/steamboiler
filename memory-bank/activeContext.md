@@ -16,9 +16,18 @@ According to the improvements.md file, the following improvements have already b
 
 4. **Pressure Calculation Parameters**: Moved pressure damping factor and steam expansion factors to configurable constants, making it easier to adjust the pressure increase rate.
 
+5. **Main Steam Valve**: Implemented a control for the Main Steam Valve that opens or closes in increments of 10%, allowing users to remove steam from the system. The implementation includes:
+   - A constant in CstSimulation for the maximum steam removal rate when the valve is fully open
+   - Steam removal logic that affects both steam mass and energy balance
+   - UI controls with visual feedback on valve position and steam flow rate
+
 ## Active Development Areas
 
 The following areas are currently being worked on or considered for improvement:
+
+### 0. Steam Removal Mechanism
+
+The Main Steam Valve implementation provides a mechanism for removing steam from the system, which affects both the steam mass and energy balance. This feature enhances the realism of the simulation by allowing users to control steam output, similar to a real boiler system.
 
 ### 1. Energy Balance Approach for Steam Generation
 

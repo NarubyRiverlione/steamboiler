@@ -11,7 +11,7 @@ function Boiler() {
   const toggleAdvanced = () => {
     setAdvancedExpanded(!advancedExpanded)
   }
-  const { state, increaseGasFlow, decreaseGasFlow, toggleFillValve, toggleDrainValve } = useBoiler()
+  const { state, increaseGasFlow, decreaseGasFlow, toggleFillValve, toggleDrainValve, adjustMainSteamValve } = useBoiler()
 
   // Calculate vapor volume based on steam mass and specific volume
   const steamData = getSteamData(state.temperature)
@@ -87,6 +87,32 @@ function Boiler() {
             </div>
           </div>
         </div>
+        
+        <div className="steam-valve-controls">
+          <h3>Main Steam Valve</h3>
+          <div className="valve-status">
+            <span className="label">Position:</span>
+            <span className="value">{state.mainSteamValvePosition}% Open</span>
+          </div>
+          
+          <div className="valve-status">
+            <span className="label">Steam Flow:</span>
+            <span className="value">
+              {((state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 1000).toFixed(1)} g/s
+            </span>
+          </div>
+          
+          <div className="valve-slider">
+            <button onClick={() => { adjustMainSteamValve(-10); }}>-10%</button>
+            <div className="valve-slider-container">
+              <div 
+                className="valve-position-indicator" 
+                style={{ width: `${state.mainSteamValvePosition.toString()}%` }}
+              ></div>
+            </div>
+            <button onClick={() => { adjustMainSteamValve(10); }}>+10%</button>
+          </div>
+        </div>
       </div>
 
       <div className="readouts-panel">
@@ -145,6 +171,12 @@ function Boiler() {
               <div className="readout-item">
                 <span className="label">Above Boiling:</span>
                 <span className="value">{(state.temperature - calculateBoilingPoint(state.pressure)).toFixed(1)} °C</span>
+              </div>
+              <div className="readout-item">
+                <span className="label">Steam Removal:</span>
+                <span className="value">
+                  {((state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 3600).toFixed(1)} kg/h
+                </span>
               </div>
             </div>
           )}

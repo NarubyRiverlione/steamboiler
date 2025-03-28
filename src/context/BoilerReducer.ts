@@ -34,11 +34,23 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         ...state,
         drainValveOpen: !state.drainValveOpen,
       }
+      
+    case "ADJUST_MAIN_STEAM_VALVE": {
+      // Ensure the valve position stays within 0-100%
+      const newPosition = Math.max(0, Math.min(100, state.mainSteamValvePosition + action.amount));
+      
+      return {
+        ...state,
+        mainSteamValvePosition: newPosition,
+      };
+    }
 
     case "SIMULATE_TICK": {
       const { deltaTime } = action
       let newWaterVolume = state.waterVolume
       let energyChange = 0
+      let removedSteamMass = 0
+      let steamRemovalEnergyLoss = 0
 
       // Handle filling and draining
       if (state.fillValveOpen) {
@@ -133,9 +145,26 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       }
       // --- End Steam Rate Averaging Logic ---
 
+      // --- Steam Removal Calculation ---
+      // Only attempt to remove steam if there's steam and the valve is open
+      if (state.mainSteamValvePosition > 0 && state.steamMass > 0) {
+        const steamRemovalRate = (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate;
+        removedSteamMass = Math.min(state.steamMass, steamRemovalRate * deltaTime);
+        
+        // Calculate energy loss from steam removal
+        // Steam carries both sensible heat (temperature) and latent heat
+        const steamData = getSteamData(state.temperature);
+        const steamEnthalpy = steamData.enthalpy + steamData.latentHeat; // Total enthalpy (kJ/kg)
+        steamRemovalEnergyLoss = removedSteamMass * steamEnthalpy;
+        
+        // Add this to the energy change calculation
+        energyChange -= steamRemovalEnergyLoss;
+      }
+      // --- End Steam Removal Calculation ---
+      
       // --- Steam Mass Accumulation ---
-      // Accumulate steam mass (using generatedSteamMass calculated earlier)
-      const newSteamMass = state.steamMass + generatedSteamMass
+      // Accumulate steam mass (using generatedSteamMass calculated earlier and accounting for removed steam)
+      const newSteamMass = Math.max(0, state.steamMass + generatedSteamMass - removedSteamMass);
       // --- End Steam Mass Accumulation ---
 
       // Calculate new temperature based on energy changes

@@ -10,6 +10,7 @@ type BoilerState = {
   energy: number // kJ
   energyDelta: number // kJ/s
   steamMass: number // kg - Mass of steam currently in the boiler
+  mainSteamValvePosition: number // 0-100% open
 }
 
 export type BoilerAction =
@@ -17,6 +18,7 @@ export type BoilerAction =
   | { type: "DECREASE_GAS_FLOW"; amount: number }
   | { type: "TOGGLE_FILL_VALVE" }
   | { type: "TOGGLE_DRAIN_VALVE" }
+  | { type: "ADJUST_MAIN_STEAM_VALVE"; amount: number }
   | { type: "SIMULATE_TICK"; deltaTime: number }
 
 export default BoilerState
