@@ -1,0 +1,109 @@
+# Cline Rules for Steam Boiler Simulation
+
+## Project Patterns
+
+### Naming Conventions
+- Constants use the `Cst` prefix (e.g., `CstPhysics`, `CstSimulation`)
+- React components use PascalCase (e.g., `Boiler`, `BoilerProvider`)
+- Utility functions use camelCase (e.g., `calculateWaterVolume`, `getSteamData`)
+- Types and interfaces use PascalCase (e.g., `BoilerState`, `BoilerAction`)
+
+### File Organization
+- Context-related files are in the `src/context` directory
+- Utility functions are in the `src/utils` directory
+- UI components are in the `src/components` directory
+- Each component has its own CSS file with the same name
+
+### Code Style
+- TypeScript is used throughout the project
+- Function components with hooks are preferred over class components
+- Explicit type annotations are used for function parameters and return types
+- Numbers are formatted with `toFixed()` for display in the UI
+
+## Implementation Patterns
+
+### Physics Calculations
+- Energy balance is the core principle for temperature changes
+- Water properties are retrieved from steam tables with interpolation
+- Simplifications are used where appropriate for performance and stability
+- Edge cases are handled with reasonable defaults or limits
+
+### State Management
+- The reducer pattern is used for state transitions
+- Actions are dispatched for user interactions and simulation updates
+- The simulation loop runs at 10 updates per second
+- State is immutable; all updates create new state objects
+
+### UI Updates
+- The UI is updated on each render based on the current state
+- Calculations for display are done in the component, not stored in state
+- CSS is used for visual effects (water level, steam particles)
+- Status readouts are formatted for readability
+
+## Critical Implementation Paths
+
+### Simulation Loop
+1. The simulation loop is initialized in `BoilerProvider.tsx`
+2. It dispatches a `SIMULATE_TICK` action 10 times per second
+3. The reducer processes this action in `BoilerReducer.ts`
+4. The state is updated based on physics calculations
+5. The UI re-renders with the new state
+
+### Steam Generation
+1. The `calculateSteamGeneration` function determines the steam rate
+2. This is based on water mass, temperature, and pressure
+3. The boiling point is calculated based on pressure
+4. Steam is generated when temperature exceeds the boiling point
+5. Energy is consumed for steam generation
+
+### Pressure Calculation
+1. Pressure is calculated based on steam mass and available volume
+2. The saturation pressure is determined from steam tables
+3. When steam accumulates, pressure rises above saturation pressure
+4. Damping factors are applied for numerical stability
+
+## Known Challenges
+
+### Numerical Stability
+- Phase changes can cause rapid changes in system properties
+- Pressure calculation needs damping to prevent oscillations
+- Small time steps are needed for accuracy during rapid changes
+
+### Edge Cases
+- Empty boiler (no water) requires special handling
+- Very high temperatures or pressures may exceed steam table ranges
+- Very low steam mass needs a minimum threshold to affect pressure
+
+### Performance Considerations
+- Interpolation in steam tables is computationally intensive
+- The simulation must run efficiently in a browser environment
+- Complex calculations are simplified where possible without sacrificing accuracy
+
+## User Preferences
+
+### Simulation Accuracy
+- Physical accuracy is important for educational value
+- Simplifications should be physically reasonable
+- The simulation should behave as expected based on real-world intuition
+
+### User Interface
+- Controls should be intuitive and responsive
+- Status readouts should provide clear information
+- Visual feedback should help understand the physical processes
+
+## Evolution of Project Decisions
+
+### Initial Implementation
+- Started with simplified physics models
+- Used constant values for water properties
+- Implemented basic UI with essential controls
+
+### Current Focus
+- Improving physical accuracy with better models
+- Using steam table data for accurate water properties
+- Enhancing the UI with more informative readouts
+
+### Future Direction
+- Implementing energy balance approach for steam generation
+- Adding more realistic heat loss model
+- Improving visualization of internal processes
