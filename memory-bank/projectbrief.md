@@ -4,7 +4,7 @@ A physics-based simulation of a steam boiler system, modeling the thermodynamic 
 
 ## Introduction
 
-This simulation models a steam boiler with a fixed volume containing water that can be heated by a gas burner. As energy is added to the system, the water temperature increases. When the temperature reaches the boiling point (which depends on the current pressure), water begins to convert to steam. As steam accumulates in the fixed volume, pressure increases according to thermodynamic principles.
+This simulation models a steam boiler and condenser system with a fixed volume containing water that can be heated by a gas burner. As energy is added to the system, the water temperature increases. When the temperature reaches the boiling point (which depends on the current pressure), water begins to convert to steam. As steam accumulates in the fixed volume, pressure increases according to thermodynamic principles. The system also includes a condenser to convert steam back to water and return it to the boiler.
 
 The simulation allows users to:
 - Control the gas flow rate to add heat to the system
@@ -115,6 +115,10 @@ These properties are obtained from steam tables with interpolation between data 
 - For pressures within the steam table range: Interpolation between data points
 - For pressures below the range: Antoine equation
 - For pressures above the range: Power law extrapolation
+
+## Project Goals
+- Create a realistic simulation of a steam boiler and condenser system.
+- Model the thermodynamic processes of water heating, steam generation, pressure development, steam condensation, and condensate return.
 
 ## Technical Implementation
 
