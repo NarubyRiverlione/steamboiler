@@ -37,15 +37,12 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ## What's Left to Build
 
-Based on the improvements.md file, the following enhancements are planned:
-
 ### Potential Future Features
 
+- ⬜ Implement Condenser described in condenser_implementation_plan.md
 - ✅ Steam valve control (implemented as Main Steam Valve)
 - ⬜ Temperature and pressure gauges with historical data
 - ⬜ More detailed visualization of internal processes
-- ⬜ Scenario-based learning modules
-- ⬜ Automatic control systems (PID controllers)
 
 ## Known Issues
 
