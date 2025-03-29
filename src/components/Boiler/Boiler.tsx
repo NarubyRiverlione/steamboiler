@@ -1,4 +1,4 @@
-import "./Boiler.css"
+import "./simulator.css"
 import BoilerVisual from "./BoilerVisual"
 import BoilerControlPanel from "./BoilerControlPanel"
 import BoilerReadouts from "./BoilerReadouts"
