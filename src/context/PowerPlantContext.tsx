@@ -9,11 +9,17 @@ export type PowerPlantContextType = {
   condenserState: CondenserState
   condenserDispatch: (action: CondenserAction) => void
 
+  // Boiler action creators
   increaseGasFlow: (amount: number) => void
   decreaseGasFlow: (amount: number) => void
   toggleFillValve: () => void
   toggleDrainValve: () => void
   adjustMainSteamValve: (amount: number) => void
+  
+  // Condenser action creators
+  toggleAirExtractionPump: () => void
+  toggleSjae: () => void
+  adjustSjaeValvePosition: (amount: number) => void
 }
 
 // Context
