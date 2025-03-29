@@ -6,12 +6,21 @@ The Steam Boiler Simulation is built using a React application with a clear sepa
 
 ```mermaid
 flowchart TD
-    UI[UI Components] --> Context[Context API]
-    Context --> Reducer[Reducer Logic]
-    Reducer --> Calculations[Calculation Utilities]
+    UI[UI Components] --> PowerPlantContext[PowerPlant Context API]
+    PowerPlantContext --> BoilerContext[Boiler Context]
+    PowerPlantContext --> CondenserContext[Condenser Context]
+    BoilerContext --> BoilerReducer[Boiler Reducer Logic]
+    CondenserContext --> CondenserReducer[Condenser Reducer Logic]
+    BoilerReducer --> Calculations[Calculation Utilities]
     Calculations --> SteamTables[Steam Tables]
-    Context --> Condenser[Condenser Logic]
 ```
+
+The PowerPlant architecture integrates both the Boiler and Condenser components into a cohesive system:
+
+1. **PowerPlantProvider**: Top-level provider that manages the overall power plant state
+2. **PowerPlantContext**: Provides access to both boiler and condenser states
+3. **Boiler Components**: Handle steam generation
+4. **Condenser Components**: Handle steam condensation back to water
 
 ## Core Design Patterns
 
@@ -19,9 +28,16 @@ flowchart TD
 
 The application uses React's Context API combined with the Reducer pattern to manage state and simulation logic:
 
-1. **BoilerContext**: Provides the state and action dispatchers to components
-2. **BoilerReducer**: Contains the core simulation logic and state transitions
-3. **BoilerProvider**: Sets up the simulation loop and connects the reducer to the context
+1. **PowerPlantContext**: Top-level context that provides access to the entire power plant state
+2. **PowerPlantProvider**: Sets up the simulation loop and connects the reducers to their contexts
+
+For the Boiler subsystem:
+1. **BoilerReducer**: Contains the core boiler simulation logic and state transitions
+2. **BoilerTick**: Handles time-based updates for the boiler
+
+For the Condenser subsystem:
+1. **CondenserReducer**: Contains the condenser simulation logic and state transitions
+2. **CondenserTypes**: Defines the state and action types for the condenser
 
 This pattern offers several benefits:
 - Centralized state management
@@ -60,14 +76,21 @@ This pattern:
 
 The simulation uses an energy balance approach to model the thermodynamic system:
 
+For the Boiler:
 ```
 Energy Change = Energy Input (gas) - Energy Output (cooling, steam generation, draining)
+```
+
+For the Condenser:
+```
+Energy Change = Energy Input (steam) - Energy Output (cooling, condensation)
 ```
 
 This pattern:
 - Ensures conservation of energy in the system
 - Provides a physically accurate basis for temperature and phase changes
 - Allows for realistic modeling of multiple energy flows
+- Creates a closed loop system where steam from the boiler is condensed back to water
 
 ## Component Relationships
 
@@ -106,6 +129,25 @@ flowchart TD
     PowerPlantContext --> State
     PowerPlantContext --> CondenserState
 ```
+
+### PowerPlant Integration
+
+The PowerPlant integrates the Boiler and Condenser subsystems:
+
+```mermaid
+flowchart TD
+    Boiler[Boiler] -->|Steam Output| Condenser[Condenser]
+    Condenser -->|Condensed Water| Boiler
+    PowerPlant[PowerPlant Provider] --> Boiler
+    PowerPlant --> Condenser
+    SimulationLoop[Simulation Loop] --> PowerPlant
+```
+
+This integration:
+- Creates a closed thermodynamic cycle
+- Allows for realistic simulation of a complete power generation system
+- Centralizes the simulation loop in the PowerPlantProvider
+- Enables communication between the Boiler and Condenser subsystems
 
 ## Key Technical Decisions
 

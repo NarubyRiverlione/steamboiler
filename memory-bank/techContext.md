@@ -28,18 +28,31 @@ steamboiler-web/
 ├── public/               # Static assets
 ├── src/
 │   ├── components/       # UI components
-│   │   ├── Boiler.tsx    # Main boiler component
-│   │   ├── Boiler.css    # Boiler styling
-│   │   ├── Condenser.tsx # Main condenser component
-│   │   └── Condenser.css # Condenser styling
+│   │   ├── simulator.css # Shared simulator styling
+│   │   ├── Boiler/       # Boiler components
+│   │   │   ├── Boiler.tsx             # Main boiler component
+│   │   │   ├── BoilerControlPanel.tsx # Control panel for boiler
+│   │   │   ├── BoilerGasControl.tsx   # Gas control for boiler
+│   │   │   ├── BoilerReadouts.tsx     # Readouts for boiler
+│   │   │   ├── BoilerSteamValveControl.tsx # Steam valve control
+│   │   │   ├── BoilerVisual.tsx       # Visual representation of boiler
+│   │   │   └── BoilerWaterControl.tsx # Water control for boiler
+│   │   └── Condenser/    # Condenser components
+│   │       ├── Condenser.tsx          # Main condenser component
+│   │       ├── CondenserControlPanel.tsx # Control panel for condenser
+│   │       ├── CondenserReadouts.tsx  # Readouts for condenser
+│   │       └── CondenserVisual.tsx    # Visual representation of condenser
 │   ├── context/          # State management
-│   │   ├── BoilerContext.tsx    # Context definition
-│   │   ├── BoilerProvider.tsx   # Context provider with simulation loop
-│   │   ├── BoilerReducer.ts     # Reducer with simulation logic
-│   │   ├── BoilerTypes.ts       # TypeScript types
-│   │   ├── CondenserReducer.ts  # Reducer for condenser
-│   │   ├── CondenserTypes.ts    # Types for condenser
-│   │   └── const.ts             # Constants
+│   │   ├── PowerPlantProvider.tsx # Context provider for the whole power plant
+│   │   ├── PowerPlantContext.tsx  # Context for the whole power plant
+│   │   ├── const.ts             # Constants
+│   │   ├── Boiler/      # Boiler state management
+│   │   │   ├── BoilerReducer.ts # Reducer with simulation logic
+│   │   │   ├── BoilerTick.ts    # Tick logic for boiler
+│   │   │   └── BoilerTypes.ts   # TypeScript types for boiler
+│   │   └── Condenser/   # Condenser state management
+│   │       ├── CondenserReducer.ts # Reducer for condenser
+│   │       └── CondenserTypes.ts   # Types for condenser
 │   ├── utils/            # Utility functions
 │   │   ├── boilerCalculations.ts # Physics calculations
 │   │   └── steamTable.ts         # Steam property data
