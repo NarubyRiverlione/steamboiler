@@ -1,10 +1,10 @@
-import useBoiler from "../../context/BoilerContext"
+import usePowerPlant from "../../context/PowerPlantContext"
 
 const BoilerSteamValveControl = () => {
   const {
-    state: { mainSteamValvePosition, steamFlowOut },
+    boilerState: { mainSteamValvePosition, steamFlowOut },
     adjustMainSteamValve,
-  } = useBoiler()
+  } = usePowerPlant()
 
   return (
     <div className="steam-valve-controls">

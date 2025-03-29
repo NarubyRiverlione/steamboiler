@@ -1,11 +1,11 @@
-import useBoiler from "../../context/BoilerContext"
+import usePowerPlant from "../../context/PowerPlantContext"
 
 const BoilerWaterControl = () => {
   const {
-    state: { fillValveOpen, drainValveOpen },
+    boilerState: { fillValveOpen, drainValveOpen },
     toggleFillValve,
     toggleDrainValve,
-  } = useBoiler()
+  } = usePowerPlant()
 
   return (
     <div className="water-controls">

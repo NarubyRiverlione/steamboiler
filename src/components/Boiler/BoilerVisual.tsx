@@ -1,10 +1,10 @@
-import useBoiler from "../../context/BoilerContext"
+import usePowerPlant from "../../context/PowerPlantContext"
 import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 
 const BoilerVisual = () => {
   const {
-    state: { waterVolume, temperature, pressure },
-  } = useBoiler()
+    boilerState: { waterVolume, temperature, pressure },
+  } = usePowerPlant()
 
   return (
     <div className="boiler-panel">

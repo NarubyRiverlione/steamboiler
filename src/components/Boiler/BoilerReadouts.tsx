@@ -1,11 +1,11 @@
 import { useState } from "react"
-import useBoiler from "../../context/BoilerContext"
+import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
 const BoilerReadouts = () => {
   const {
-    state: {
+    boilerState: {
       gasFlow,
       waterVolume,
       temperature,
@@ -16,7 +16,7 @@ const BoilerReadouts = () => {
       energy,
       mainSteamValvePosition,
     },
-  } = useBoiler()
+  } = usePowerPlant()
 
   // Calculate vapor volume based on steam mass and specific volume
   const steamData = getSteamData(temperature)
