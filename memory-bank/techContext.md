@@ -16,6 +16,11 @@ The Steam Boiler Simulation is built using the following technologies:
 ### Styling
 - **CSS**: Custom styling with CSS files
 
+### Condenser
+- **Condenser.tsx**: Component for condensing steam back into water.
+- **CondenserReducer.ts**: Manages the condenser's state.
+- **CondenserTypes.ts**: Defines the types used by the condenser.
+
 ## Project Structure
 
 ```
@@ -24,12 +29,16 @@ steamboiler-web/
 ├── src/
 │   ├── components/       # UI components
 │   │   ├── Boiler.tsx    # Main boiler component
-│   │   └── Boiler.css    # Boiler styling
+│   │   ├── Boiler.css    # Boiler styling
+│   │   ├── Condenser.tsx # Main condenser component
+│   │   └── Condenser.css # Condenser styling
 │   ├── context/          # State management
 │   │   ├── BoilerContext.tsx    # Context definition
 │   │   ├── BoilerProvider.tsx   # Context provider with simulation loop
 │   │   ├── BoilerReducer.ts     # Reducer with simulation logic
 │   │   ├── BoilerTypes.ts       # TypeScript types
+│   │   ├── CondenserReducer.ts  # Reducer for condenser
+│   │   ├── CondenserTypes.ts    # Types for condenser
 │   │   └── const.ts             # Constants
 │   ├── utils/            # Utility functions
 │   │   ├── boilerCalculations.ts # Physics calculations

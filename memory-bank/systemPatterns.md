@@ -10,6 +10,7 @@ flowchart TD
     Context --> Reducer[Reducer Logic]
     Reducer --> Calculations[Calculation Utilities]
     Calculations --> SteamTables[Steam Tables]
+    Context --> Condenser[Condenser Logic]
 ```
 
 ## Core Design Patterns
@@ -76,9 +77,15 @@ This pattern:
 flowchart TD
     App --> BoilerProvider
     BoilerProvider --> Boiler
+    App --> PowerPlantProvider
+    PowerPlantProvider --> Boiler
+    PowerPlantProvider --> Condenser
     Boiler --> Controls[Controls Section]
     Boiler --> Display[Visual Display]
     Boiler --> Readouts[Status Readouts]
+    Condenser --> CondenserControls[Condenser Controls]
+    Condenser --> CondenserDisplay[Condenser Visual]
+    Condenser --> CondenserReadouts[Condenser Readouts]
 ```
 
 ### State Management
@@ -87,11 +94,17 @@ flowchart TD
 flowchart TD
     UserActions[User Actions] --> ActionDispatchers[Action Dispatchers]
     ActionDispatchers --> Reducer[Boiler Reducer]
+    ActionDispatchers --> CondenserReducer[Condenser Reducer]
     Reducer --> State[Boiler State]
+    CondenserReducer --> CondenserState[Condenser State]
     State --> UI[UI Components]
+    CondenserState --> UI
     
     SimulationLoop[Simulation Loop] --> TickAction[SIMULATE_TICK Action]
     TickAction --> Reducer
+    PowerPlantProvider --> PowerPlantContext
+    PowerPlantContext --> State
+    PowerPlantContext --> CondenserState
 ```
 
 ## Key Technical Decisions
