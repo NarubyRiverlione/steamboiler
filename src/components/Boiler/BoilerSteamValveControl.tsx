@@ -7,7 +7,7 @@ const BoilerSteamValveControl = () => {
   } = usePowerPlant()
 
   return (
-    <div className="steam-valve-controls">
+    <div className="component-controls">
       <h3>Main Steam Valve</h3>
       <div className="valve-status">
         <span className="label">Position:</span>

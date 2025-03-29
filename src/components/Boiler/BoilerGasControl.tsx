@@ -4,7 +4,7 @@ import { CstSimulation } from "../../context/const"
 const BoilerGasControl = () => {
   const { increaseGasFlow, decreaseGasFlow } = usePowerPlant()
   return (
-    <div className="gas-controls">
+    <div className="component-controls">
       <h3>Gas Flow Control</h3>
       <div className="gas-flow-buttons">
         <button

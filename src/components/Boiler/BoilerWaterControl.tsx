@@ -8,7 +8,7 @@ const BoilerWaterControl = () => {
   } = usePowerPlant()
 
   return (
-    <div className="water-controls">
+    <div className="component-controls">
       <h3>Water Valve Control</h3>
       <div className="valve-buttons">
         <div>

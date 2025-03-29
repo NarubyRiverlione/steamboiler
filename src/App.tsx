@@ -1,6 +1,7 @@
 import Boiler from "./components/Boiler/Boiler"
 import PowerPlantProvider from "./context/PowerPlantProvider"
 import "./App.css"
+import Condenser from "./components/Condenser/Condenser"
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
       <h1>Powerplant Simulation</h1>
       <PowerPlantProvider>
         <Boiler />
+        <Condenser />
       </PowerPlantProvider>
     </div>
   )
