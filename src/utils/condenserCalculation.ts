@@ -63,7 +63,12 @@ const calcSJAEpressure = (
   return { newIsSjaeEnabled: true, pressureBySJAE: newPressure }
 }
 
-const decayVacuum = (isAirExtractionPumpEnabled: boolean, isSjaeEnabled: boolean, pressure: number, deltaTime: number) => {
+const decayVacuum = (
+  isAirExtractionPumpEnabled: boolean,
+  isSjaeEnabled: boolean,
+  pressure: number,
+  deltaTime: number,
+) => {
   let decayToPressure = pressure
 
   const {
@@ -92,7 +97,11 @@ export const calculatePressure = (
   boilerSteamFlow: number,
   deltaTime: number,
 ): { newPressure: number; newIsSjaeEnabled: boolean } => {
-  const pressureByCAR = calcCARpressure(condenserState.isAirExtractionPumpEnabled, condenserState.pressure, deltaTime)
+  const pressureByCAR = calcCARpressure(
+    condenserState.isAirExtractionPumpEnabled,
+    condenserState.pressure,
+    deltaTime,
+  )
 
   const { pressureBySJAE, newIsSjaeEnabled } = calcSJAEpressure(
     condenserState.isSjaeEnabled,
@@ -101,7 +110,12 @@ export const calculatePressure = (
     boilerSteamFlow,
     deltaTime,
   )
-  const pressureAfterDecay = decayVacuum(condenserState.isAirExtractionPumpEnabled, newIsSjaeEnabled, pressureBySJAE, deltaTime)
+  const pressureAfterDecay = decayVacuum(
+    condenserState.isAirExtractionPumpEnabled,
+    newIsSjaeEnabled,
+    pressureBySJAE,
+    deltaTime,
+  )
 
   return {
     newPressure: pressureAfterDecay,
@@ -116,24 +130,46 @@ export const calculatePressure = (
  * @param deltaTime Time elapsed since last tick (seconds)
  * @returns Changed steam volume
  */
-export function calculateSteamVolumeChange(boilerSteamFlow: number, intakeFlowRate: number, deltaTime: number): number {
+export function calculateSteamVolumeChange(
+  boilerSteamFlow: number,
+  intakeFlowRate: number,
+  deltaTime: number,
+): number {
   // Steam flow increases the steam volume, water flow decreases it
   return (boilerSteamFlow - intakeFlowRate) * deltaTime
 }
 
 /**
- * Calculates the flow rate from hotwell to condenser based on condenser pressure
- * @param hotwellLevel Current hotwell level
+ * Calculates the flow rate from turbine to condenser based on steam flow and condenser pressure
+ * @param boilerSteamFlow Steam flow from the boiler (kg/s)
  * @param condenserPressure Current condenser pressure (mBar)
- * @returns Flow rate from hotwell to condenser (kg/s)
+ * @returns Flow rate from turbine to condenser (kg/s)
  */
-export function calculateHotwellToCondenserFlowRate(hotwellLevel: number, condenserPressure: number): number {
-  // Flow only occurs when pressure is between 40 and 70 mBar
-  if (condenserPressure >= 40 && condenserPressure <= 70) {
-    // Flow rate is proportional to hotwell level, but capped at maximum
-    return Math.min(Math.max(hotwellLevel, 0), CstSimulation.Condenser.IntakeFlowRate)
+export function calculateIntakeFlowRate(boilerSteamFlow: number, condenserPressure: number): number {
+  // Define pressure ranges for optimal flow
+  const optimalPressureMin = 40 // mBar
+  const optimalPressureMax = 70 // mBar
+
+  // Calculate pressure efficiency factor (0-1)
+  let pressureEfficiency = 0
+
+  if (condenserPressure < optimalPressureMin) {
+    // Below optimal range - efficiency decreases as pressure gets too low
+    // This models the physical limitation when pressure is too low
+    pressureEfficiency = Math.max(0, condenserPressure / optimalPressureMin)
+  } else if (condenserPressure <= optimalPressureMax) {
+    // Within optimal range - full efficiency
+    pressureEfficiency = 1
+  } else {
+    // Above optimal range - efficiency decreases as pressure increases
+    // This models the reduced flow when condenser pressure is too high
+    const deltaPressureFactor = 1 / (condenserPressure - optimalPressureMax) / 10
+    pressureEfficiency = Math.max(0, deltaPressureFactor)
   }
-  return 0
+
+  // Calculate flow rate based on available steam and pressure efficiency
+  // Cap at maximum intake flow rate defined in constants
+  return Math.min(boilerSteamFlow * pressureEfficiency, CstSimulation.Condenser.IntakeMaxFlowRate)
 }
 
 /**

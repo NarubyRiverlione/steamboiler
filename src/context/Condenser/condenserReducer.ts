@@ -3,9 +3,9 @@ import { CondenserTick } from "./CondenserTick"
 import CondenserState, { CondenserAction } from "./CondenserTypes"
 
 export const initialCondenserState: CondenserState = {
-  temperature: 25,
+  // temperature: 25,
   pressure: CstPhysics.AtmosphericPressure * 1000, // mBar (initial atmospheric pressure)
-  waterVolume: 0,
+  hotwellWaterVolume: 0,
   steamVolume: 0, // Start at 0
   intakeFlowRate: 0,
   returnRate: 0,
@@ -15,37 +15,13 @@ export const initialCondenserState: CondenserState = {
   sjaeValvePosition: 0, // 0% open
   recirculationPumpFlowRate: 0,
   recirculationPumpValvePosition: 0, // 0% open
-  // condenserSteamVolume: 0,
-  // condenserLiquidVolume: 0,
 }
 
-const condenserReducer = (state: CondenserState = initialCondenserState, action: CondenserAction): CondenserState => {
+const condenserReducer = (
+  state: CondenserState = initialCondenserState,
+  action: CondenserAction,
+): CondenserState => {
   switch (action.type) {
-    // case "CONDENSE_STEAM":
-    //   return {
-    //     ...state,
-    //     waterVolume: state.waterVolume + action.payload,
-    //   }
-    // case "UPDATE_CONDENSER_TEMPERATURE":
-    //   return {
-    //     ...state,
-    //     temperature: action.payload,
-    //   }
-    // case "RETURN_CONDENSATE":
-    //   return {
-    //     ...state,
-    //     waterVolume: 0,
-    //   }
-    // case "SET_COOLING_RATE":
-    //   return {
-    //     ...state,
-    //     coolingRate: action.payload,
-    //   }
-    // case "SET_VACUUM":
-    //   return {
-    //     ...state,
-    //     pressure: action.payload,
-    //   }
     case "SET_AIR_EXTRACTION_PUMP_ENABLED":
       return {
         ...state,
@@ -66,31 +42,6 @@ const condenserReducer = (state: CondenserState = initialCondenserState, action:
         ...state,
         recirculationPumpValvePosition: action.payload,
       }
-    // case "UPDATE_HOTWELL_LEVEL":
-    //   return {
-    //     ...state,
-    //     steamVolume: action.payload,
-    //   }
-    // case "UPDATE_HOTWELL_TO_CONDENSER_FLOW_RATE":
-    //   return {
-    //     ...state,
-    //     intakeFlowRate: action.payload,
-    //   }
-    // case "UPDATE_RECIRCULATION_PUMP_FLOW_RATE":
-    //   return {
-    //     ...state,
-    //     recirculationPumpFlowRate: action.payload,
-    //   }
-    // case "UPDATE_CONDENSER_STEAM_VOLUME":
-    //   return {
-    //     ...state,
-    //     condenserSteamVolume: action.payload,
-    //   }
-    // case "UPDATE_CONDENSER_LIQUID_VOLUME":
-    //   return {
-    //     ...state,
-    //     condenserLiquidVolume: action.payload,
-    //   }
 
     case "SIMULATE_TICK": {
       const { boilerSteamFlow, deltaTime } = action.payload

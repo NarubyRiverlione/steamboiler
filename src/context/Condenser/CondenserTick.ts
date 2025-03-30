@@ -2,7 +2,7 @@ import { CondenserState } from "./CondenserTypes"
 import {
   calculateCondensation,
   calculateSteamVolumeChange,
-  calculateHotwellToCondenserFlowRate as calculateIntakeFlowRate,
+  calculateIntakeFlowRate,
   calculatePressure,
   calculateRecirculationPumpFlowRate,
 } from "../../utils/condenserCalculation"
@@ -15,11 +15,16 @@ import {
  * @param deltaTime Time elapsed since last tick (seconds)
  * @returns Action to update the condenser state
  */
-export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: number, deltaTime: number): CondenserState {
+export function CondenserTick(
+  condenserState: CondenserState,
+  boilerSteamFlow: number,
+  deltaTime: number,
+): CondenserState {
   // Calculate the pressure base on the CAR & SJAE
   const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, boilerSteamFlow, deltaTime)
 
-  // Calculate turbine to condenser flow rate based on condenser (vacuum) pressure
+  // Calculate turbine to condenser flow rate based on boiler steam flow and condenser vacuum pressure
+  // The vacuum pressure affects the efficiency of steam flow from turbine to condenser
   const newIntakeFlowRate = calculateIntakeFlowRate(boilerSteamFlow, newPressure)
 
   // Calculate steam volume change
@@ -27,12 +32,14 @@ export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: n
   const newSteamVolume = condenserState.steamVolume + steamVolumeChange
 
   // Calculate recirculation pump flow rate based on valve position
-  const newRecirculationPumpFlowRate = calculateRecirculationPumpFlowRate(condenserState.recirculationPumpValvePosition)
+  const newRecirculationPumpFlowRate = calculateRecirculationPumpFlowRate(
+    condenserState.recirculationPumpValvePosition,
+  )
 
   // Calculate water level based on recirculation pump flow rate
   const { steamVolumeAfterCondensation, waterVolumeAfterCondensation } = calculateCondensation(
     newSteamVolume,
-    condenserState.waterVolume,
+    condenserState.hotwellWaterVolume,
     newRecirculationPumpFlowRate,
     boilerSteamFlow,
     deltaTime,
@@ -45,6 +52,6 @@ export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: n
     intakeFlowRate: newIntakeFlowRate,
     recirculationPumpFlowRate: newRecirculationPumpFlowRate,
     steamVolume: steamVolumeAfterCondensation,
-    waterVolume: waterVolumeAfterCondensation,
+    hotwellWaterVolume: waterVolumeAfterCondensation,
   }
 }

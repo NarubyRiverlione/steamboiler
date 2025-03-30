@@ -5,7 +5,18 @@ import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
 const BoilerReadouts = () => {
   const {
-    boilerState: { gasFlow, waterVolume, temperature, pressure, energyDelta, steamMass, steamRate, energy, mainSteamValvePosition },
+    boilerState: {
+      gasFlow,
+      waterVolume,
+      steamFlowOut,
+      temperature,
+      pressure,
+      energyDelta,
+      steamMass,
+      steamRate,
+      energy,
+      mainSteamValvePosition,
+    },
   } = usePowerPlant()
 
   // Calculate vapor volume based on steam mass and specific volume
@@ -48,6 +59,10 @@ const BoilerReadouts = () => {
           {energyDelta.toFixed(1)} kJ/s
         </span>
       </div>
+      <div className="readout-item">
+        <span className="label">Steam flow</span>
+        <span className="value">{(steamFlowOut * 3.6).toFixed(1)} kg/h</span>
+      </div>
 
       <div className="advanced-section">
         <h3 className="advanced-toggle" onClick={toggleAdvanced}>
@@ -78,7 +93,9 @@ const BoilerReadouts = () => {
             </div>
             <div className="readout-item">
               <span className="label">Steam Removal</span>
-              <span className="value">{((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 3600).toFixed(1)} kg/h</span>
+              <span className="value">
+                {((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 3600).toFixed(1)} kg/h
+              </span>
             </div>
           </div>
         )}
