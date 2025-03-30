@@ -86,6 +86,14 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const adjustRecirculationPumpValvePosition = (amount: number) => {
+    const newPosition = Math.max(0, Math.min(1, condenserState.recirculationPumpValvePosition + amount / 100))
+    condenserDispatch({
+      type: "SET_RECIRCULATION_PUMP_VALVE_POSITION",
+      payload: newPosition,
+    })
+  }
+
   return (
     <PowerPlantContext.Provider
       value={{
@@ -101,6 +109,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         toggleAirExtractionPump,
         toggleSjae,
         adjustSjaeValvePosition,
+        adjustRecirculationPumpValvePosition,
       }}
     >
       {children}

@@ -35,6 +35,13 @@ The following improvements have been implemented:
    - Included labels for each indicator to clearly identify what they represent
    - Added hover tooltips for additional information
 
+8. **Hotwell Implementation**: Implemented the hotwell functionality to connect the boiler and condenser:
+   - Added hotwell-related state variables to `CondenserTypes.ts` (hotwellLevel, hotwellToCondenserFlowRate, etc.)
+   - Implemented calculations for hotwell level changes based on steam flow from the boiler
+   - Added a recirculation pump control with a valve slider to adjust the flow rate
+   - Implemented condensation calculations based on the recirculation pump flow rate
+   - Added readouts for hotwell level, flow rates, and condenser steam/liquid volumes
+
 ## Active Development Areas
 
 The next major improvement is to implement a more physically accurate energy balance approach for steam generation. Further improvements under consideration include:

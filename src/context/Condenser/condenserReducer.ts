@@ -11,6 +11,12 @@ export const initialCondenserState: CondenserState = {
   isAirExtractionPumpEnabled: false,
   isSjaeEnabled: false,
   sjaeValvePosition: 0, // 0% open
+  hotwellLevel: 0, // Start at 0
+  hotwellToCondenserFlowRate: 0,
+  recirculationPumpFlowRate: 0,
+  recirculationPumpValvePosition: 0, // 0% open
+  condenserSteamVolume: 0,
+  condenserLiquidVolume: 0
 }
 
 const condenserReducer = (state: CondenserState = initialCondenserState, action: CondenserAction): CondenserState => {
@@ -54,6 +60,36 @@ const condenserReducer = (state: CondenserState = initialCondenserState, action:
       return {
         ...state,
         sjaeValvePosition: action.payload,
+      }
+    case "SET_RECIRCULATION_PUMP_VALVE_POSITION":
+      return {
+        ...state,
+        recirculationPumpValvePosition: action.payload,
+      }
+    case "UPDATE_HOTWELL_LEVEL":
+      return {
+        ...state,
+        hotwellLevel: action.payload,
+      }
+    case "UPDATE_HOTWELL_TO_CONDENSER_FLOW_RATE":
+      return {
+        ...state,
+        hotwellToCondenserFlowRate: action.payload,
+      }
+    case "UPDATE_RECIRCULATION_PUMP_FLOW_RATE":
+      return {
+        ...state,
+        recirculationPumpFlowRate: action.payload,
+      }
+    case "UPDATE_CONDENSER_STEAM_VOLUME":
+      return {
+        ...state,
+        condenserSteamVolume: action.payload,
+      }
+    case "UPDATE_CONDENSER_LIQUID_VOLUME":
+      return {
+        ...state,
+        condenserLiquidVolume: action.payload,
       }
 
     case "SIMULATE_TICK": {

@@ -108,3 +108,77 @@ export const calculatePressure = (
     newIsSjaeEnabled,
   }
 }
+
+/**
+ * Calculates the change in hotwell level based on steam flow and water flow
+ *
+ * @param boilerSteamFlow Steam flow from the boiler (kg/s)
+ * @param hotwellToCondenserFlowRate Flow rate from hotwell to condenser (kg/s)
+ * @param deltaTime Time elapsed since last tick (seconds)
+ * @returns Change in hotwell level
+ */
+export function calculateHotwellLevelChange(boilerSteamFlow: number, hotwellToCondenserFlowRate: number, deltaTime: number): number {
+  // Steam flow increases the level, water flow decreases it
+  return (boilerSteamFlow - hotwellToCondenserFlowRate) * deltaTime
+}
+
+/**
+ * Calculates the flow rate from hotwell to condenser based on condenser pressure
+ *
+ * @param hotwellLevel Current hotwell level
+ * @param condenserPressure Current condenser pressure (mBar)
+ * @returns Flow rate from hotwell to condenser (kg/s)
+ */
+export function calculateHotwellToCondenserFlowRate(hotwellLevel: number, condenserPressure: number): number {
+  // Flow only occurs when pressure is between 40 and 70 mBar
+  if (condenserPressure >= 40 && condenserPressure <= 70) {
+    // Flow rate is proportional to hotwell level, but capped at maximum
+    return Math.min(Math.max(hotwellLevel, 0), CstSimulation.Condenser.Hotwell_toCondenserFlowRate)
+  }
+  return 0
+}
+
+/**
+ * Calculates the recirculation pump flow rate based on valve position
+ *
+ * @param valvePosition Valve position (0-1)
+ * @returns Recirculation pump flow rate (kg/s)
+ */
+export function calculateRecirculationPumpFlowRate(valvePosition: number): number {
+  // Flow rate is proportional to valve position
+  return valvePosition * CstSimulation.Condenser.RecirculationPump_MaxFlowRate
+}
+
+/**
+ * Calculates the condensation of steam based on recirculation pump flow rate
+ *
+ * @param currentSteamVolume Current steam volume in the condenser
+ * @param currentLiquidVolume Current liquid volume in the condenser
+ * @param recirculationPumpFlowRate Recirculation pump flow rate (kg/s)
+ * @param boilerSteamFlow Steam flow from the boiler (kg/s)
+ * @param deltaTime Time elapsed since last tick (seconds)
+ * @returns New steam and liquid volumes
+ */
+export function calculateCondensation(
+  currentSteamVolume: number,
+  currentLiquidVolume: number,
+  recirculationPumpFlowRate: number,
+  boilerSteamFlow: number,
+  deltaTime: number,
+): { newCondenserSteamVolume: number; newCondenserLiquidVolume: number } {
+  // Steam volume increases with boiler steam flow
+  const steamVolumeIncrease = boilerSteamFlow * deltaTime
+
+  // Condensation rate is proportional to recirculation pump flow rate
+  const condensationRate = recirculationPumpFlowRate * CstSimulation.Condenser.HeatTransferCoefficient
+  const condensedVolume = Math.min(currentSteamVolume + steamVolumeIncrease, condensationRate * deltaTime)
+
+  // Update steam and liquid volumes
+  const newSteamVolume = currentSteamVolume + steamVolumeIncrease - condensedVolume
+  const newLiquidVolume = currentLiquidVolume + condensedVolume
+
+  return {
+    newCondenserSteamVolume: Math.max(newSteamVolume, 0),
+    newCondenserLiquidVolume: Math.max(newLiquidVolume, 0),
+  }
+}

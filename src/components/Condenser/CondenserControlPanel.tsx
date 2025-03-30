@@ -3,10 +3,16 @@ import ValveSlider from "../ValveSlider"
 
 const CondenserControlPanel = () => {
   const {
-    condenserState: { isAirExtractionPumpEnabled, isSjaeEnabled, sjaeValvePosition },
+    condenserState: { 
+      isAirExtractionPumpEnabled, 
+      isSjaeEnabled, 
+      sjaeValvePosition,
+      recirculationPumpValvePosition
+    },
     toggleAirExtractionPump,
     toggleSjae,
     adjustSjaeValvePosition,
+    adjustRecirculationPumpValvePosition,
   } = usePowerPlant()
 
   return (
@@ -34,6 +40,17 @@ const CondenserControlPanel = () => {
           Position={sjaeValvePosition}
           Step={10}
           cbAdjust={adjustSjaeValvePosition}
+        />
+      </div>
+
+      {/* Recirculation Pump Controls */}
+      <div className="control-section">
+        <h4>Recirculation Pump</h4>
+        <ValveSlider
+          Label="Flow Rate:"
+          Position={recirculationPumpValvePosition * 100}
+          Step={10}
+          cbAdjust={adjustRecirculationPumpValvePosition}
         />
       </div>
     </div>
