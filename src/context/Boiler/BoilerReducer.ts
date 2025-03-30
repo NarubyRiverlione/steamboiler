@@ -7,8 +7,7 @@ export const initialBoilerState: BoilerState = {
   temperature: CstSimulation.StartTemperature, // Celsius
   pressure: 1, // bar
   gasFlow: 0, // liters/second
-  steamRate: 0, // kg/second - Average over last 10 seconds
-  steamRateHistory: [], // History for averaging
+  // steamRate: 0, // kg/second - Average over last 10 seconds
   fillValveOpen: false,
   drainValveOpen: false,
   energy: 0, // kJ

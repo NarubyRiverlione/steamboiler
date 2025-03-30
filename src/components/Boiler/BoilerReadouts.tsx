@@ -13,7 +13,7 @@ const BoilerReadouts = () => {
       pressure,
       energyDelta,
       steamMass,
-      steamRate,
+
       energy,
       mainSteamValvePosition,
     },
@@ -59,10 +59,6 @@ const BoilerReadouts = () => {
           {energyDelta.toFixed(1)} kJ/s
         </span>
       </div>
-      <div className="readout-item">
-        <span className="label">Steam flow</span>
-        <span className="value">{(steamFlowOut * 3.6).toFixed(1)} kg/h</span>
-      </div>
 
       <div className="advanced-section">
         <h3 className="advanced-toggle" onClick={toggleAdvanced}>
@@ -71,14 +67,6 @@ const BoilerReadouts = () => {
 
         {advancedExpanded && (
           <div className="advanced-content">
-            <div className="readout-item">
-              <span className="label">Steam Generation</span>
-              <span className="value">{(steamRate * 1000).toFixed(1)} g/s</span>
-            </div>
-            <div className="readout-item">
-              <span className="label">Steam Production</span>
-              <span className="value">{(steamRate * 3600).toFixed(1)} kg/h</span>
-            </div>
             <div className="readout-item">
               <span className="label">Energy</span>
               <span className="value">{energy.toFixed(1)} kJ</span>

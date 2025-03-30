@@ -13,7 +13,7 @@ const BoilerSteamValveControl = () => {
 
       <ValveSlider
         Label="Steam Flow"
-        Value={`${steamFlowOut.toFixed(1)} g/s`}
+        Value={`${(steamFlowOut / 1000).toFixed(1)} kg/s`}
         Position={mainSteamValvePosition}
         Step={10}
         cbAdjust={adjustMainSteamValve}

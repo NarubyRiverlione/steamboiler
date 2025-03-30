@@ -3,8 +3,7 @@ type BoilerState = {
   temperature: number // Celsius
   pressure: number // bar
   gasFlow: number // liters/second
-  steamRate: number // kg/second - Average over last 10 seconds
-  steamRateHistory: { timestamp: number; rate: number }[] // History for averaging
+  // steamRate: number // kg/second - Average over last 10 seconds
   fillValveOpen: boolean
   drainValveOpen: boolean
   energy: number // kJ
@@ -13,8 +12,6 @@ type BoilerState = {
   mainSteamValvePosition: number // 0-100% open
   steamFlowOut: number // g/s
 }
-
-
 
 export type BoilerAction =
   | { type: "INCREASE_GAS_FLOW"; amount: number }
