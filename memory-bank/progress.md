@@ -49,7 +49,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 1.  **Implement Condenser Vacuum Readout:** Add a `vacuum` state variable to `CondenserTypes.ts`, update `condenserReducer.ts` to manage the `vacuum` state, and display the `vacuum` value in `CondenserReadouts.tsx`.
 2.  **Implement Air Extraction Pump (CAR) Control:** Add `isAirExtractionPumpEnabled` state variable to `CondenserTypes.ts`. Add `airExtractionPumpMaxVacuum` and `airExtractionPumpTimeNeeded` constants to `src/context/const.ts`. Update `condenserReducer.ts` to handle actions for starting and stopping the air extraction pump. Add a toggle button in `CondenserControlPanel.tsx` to control the air extraction pump. Implement logic in `CondenserTick.ts` to gradually increase/decrease the vacuum.
 3.  **Implement Steam Jet Air Extraction (SJAE) Control:** Add `isSjaeEnabled` and `sjaeValvePosition` state variables to `CondenserTypes.ts`. Update `condenserReducer.ts` to handle actions for enabling/disabling the SJAE and adjusting the valve position. Add a toggle button and open/close buttons in `CondenserControlPanel.tsx` to control the SJAE. Implement logic in `CondenserTick.ts` to automatically disable the SJAE under certain conditions and to gradually increase the vacuum when the SJAE is enabled.
-4.  **Integrate with Simulator:** Create `CondenserTick.ts` and implement the simulation logic for the condenser vacuum.
+4.  **Integrate with Simulator:** The pressure calculation logic in `CondenserTick.ts` has been refactored into `condenserCalculation.ts`.
 
 ## Known Issues
 

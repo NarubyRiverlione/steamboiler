@@ -14,6 +14,8 @@ type BoilerState = {
   steamFlowOut: number // g/s
 }
 
+
+
 export type BoilerAction =
   | { type: "INCREASE_GAS_FLOW"; amount: number }
   | { type: "DECREASE_GAS_FLOW"; amount: number }

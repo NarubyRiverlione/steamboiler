@@ -1,4 +1,5 @@
 import usePowerPlant from "../../context/PowerPlantContext"
+import ValveSlider from "../ValveSlider"
 
 const BoilerSteamValveControl = () => {
   const {
@@ -14,32 +15,13 @@ const BoilerSteamValveControl = () => {
         <span className="value">{mainSteamValvePosition}% Open</span>
       </div>
 
-      <div className="valve-status">
-        <span className="label">Steam Flow:</span>
-        <span className="value">{steamFlowOut} g/s</span>
-      </div>
-
-      <div className="valve-slider">
-        <button
-          className="steam-valve-button"
-          onClick={() => {
-            adjustMainSteamValve(-10)
-          }}
-        >
-          Close
-        </button>
-        <div className="valve-slider-container">
-          <div className="valve-position-indicator" style={{ width: `${mainSteamValvePosition.toString()}%` }}></div>
-        </div>
-        <button
-          className="steam-valve-button"
-          onClick={() => {
-            adjustMainSteamValve(10)
-          }}
-        >
-          Open
-        </button>
-      </div>
+      <ValveSlider
+        Label="Steam Flow"
+        Value={steamFlowOut}
+        Position={mainSteamValvePosition}
+        Step={10}
+        cbAdjust={adjustMainSteamValve}
+      />
     </div>
   )
 }

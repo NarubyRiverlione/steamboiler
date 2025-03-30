@@ -11,6 +11,7 @@ flowchart TD
     PowerPlantContext --> CondenserContext[Condenser Context]
     BoilerContext --> BoilerReducer[Boiler Reducer Logic]
     CondenserContext --> CondenserReducer[Condenser Reducer Logic]
+    CondenserReducer --> CondenserCalculation[Condenser Calculation]
     BoilerReducer --> Calculations[Calculation Utilities]
     Calculations --> SteamTables[Steam Tables]
 ```

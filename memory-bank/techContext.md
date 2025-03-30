@@ -5,18 +5,22 @@
 The Steam Boiler Simulation is built using the following technologies:
 
 ### Frontend Framework
+
 - **React**: Core UI library
 - **TypeScript**: For type-safe code
 - **Vite**: Build tool and development server
 
 ### State Management
+
 - **React Context API**: For state management
 - **useReducer Hook**: For state transitions and simulation logic
 
 ### Styling
+
 - **CSS**: Custom styling with CSS files
 
 ### Condenser
+
 - **Condenser.tsx**: Component for condensing steam back into water.
 - **CondenserReducer.ts**: Manages the condenser's state.
 - **CondenserTypes.ts**: Defines the types used by the condenser.
@@ -55,6 +59,7 @@ steamboiler-web/
 │   │       └── CondenserTypes.ts   # Types for condenser
 │   ├── utils/            # Utility functions
 │   │   ├── boilerCalculations.ts # Physics calculations
+│   │   ├── condenserCalculation.ts # Condenser calculations
 │   │   └── steamTable.ts         # Steam property data
 │   ├── App.tsx           # Main application component
 │   ├── App.css           # Application styling
@@ -76,10 +81,12 @@ The project has minimal external dependencies, focusing on core React and TypeSc
 ## Development Environment
 
 ### Build System
+
 - **Vite**: Modern build tool that provides fast development server and optimized production builds
 - **TypeScript**: Configured with appropriate settings for React development
 
 ### Scripts
+
 - **dev**: Starts the development server
 - **build**: Creates a production build
 - **preview**: Serves the production build locally for testing
@@ -87,15 +94,18 @@ The project has minimal external dependencies, focusing on core React and TypeSc
 ## Technical Constraints
 
 ### Browser Compatibility
+
 - The application targets modern browsers with good support for ES6+ features
 - No explicit polyfills are included for older browsers
 
 ### Performance Considerations
+
 - The simulation runs at 10 updates per second (100ms interval)
 - Calculations are optimized to balance accuracy with performance
 - Numerical methods use simplifications where appropriate to ensure stability
 
 ### Data Storage
+
 - All state is maintained in memory during the session
 - No persistence layer is implemented
 - No backend or API dependencies
@@ -117,11 +127,12 @@ For temperatures below 80°C, linear approximations are used for water propertie
 ## Calculation Methods
 
 ### Interpolation
+
 Linear interpolation is used to calculate properties between data points in the steam table:
 
 ```typescript
 // Interpolate between the two points
-const ratio = (clampedTemp - lower.temperature) / (upper.temperature - lower.temperature);
+const ratio = (clampedTemp - lower.temperature) / (upper.temperature - lower.temperature)
 
 return {
   temperature: clampedTemp,
@@ -130,12 +141,18 @@ return {
   enthalpy: lower.enthalpy + ratio * (upper.enthalpy - lower.enthalpy),
   specificHeat: lower.specificHeat + ratio * (upper.specificHeat - lower.specificHeat),
   latentHeat: lower.latentHeat + ratio * (upper.latentHeat - lower.latentHeat),
-};
+}
 ```
 
 ### Extrapolation
+
 For values outside the steam table range, appropriate extrapolation methods are used:
 
 - **Antoine Equation**: For boiling points at low pressures
 - **Power Law**: For boiling points at high pressures
 - **Linear Extrapolation**: For latent heat at low temperatures
+
+### code style
+
+- preferable use deconstruction of constants
+- preferable use a separate function instead of the reassigning a value to a 'let'

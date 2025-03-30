@@ -64,7 +64,7 @@ Based on the condenser_implementation_plan.md file, the following steps are plan
 
 2. Modify BoilerVisual.tsx: In `src/components/Boiler/BoilerVisual.tsx`: Import and render the `<CondenserVisual />` component. The `BoilerVisual` component will now focus solely on the boiler's visual representation.
 
-3. Implement Condenser Calculations (if needed): In `src/utils/boilerCalculations.ts` or a new file `src/utils/condenserCalculations.ts`: Implement functions for condenser calculations (heat transfer, condensation rate, etc.) as needed by `condenserReducer`.
+3. Implement Condenser Calculations: The pressure calculation logic in `src/context/Condenser/CondenserTick.ts` has been moved to a new function `calculatePressure` in `src/utils/condenserCalculation.ts`.
 
 4. Update UI Components to use PowerPlantContext: Update all relevant UI components (e.g., `BoilerControlPanel.tsx`, `BoilerReadouts.tsx`, `BoilerSteamValveControl.tsx`, `BoilerVisual.tsx`, `CondenserVisual.tsx`, `CondenserReadouts.tsx`) to consume `PowerPlantContext` instead of `BoilerContext`. Ensure components correctly access both boiler and condenser state and dispatch functions from the `PowerPlantContext`.
 
