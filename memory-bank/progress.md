@@ -17,6 +17,10 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Water volume changes due to temperature (thermal expansion) and phase change
 - ✅ Energy tracking and calculation
 - ✅ Updated Water Volume Calculation: Water volume is now calculated using specific volume data from steam tables for more accurate thermal expansion modeling.
+- ✅ Condenser vacuum system with Air Extraction Pump (CAR) and Steam Jet Air Extraction (SJAE)
+- ✅ Vacuum decay mechanism when pumps are disabled
+- ✅ Automatic SJAE disabling based on steam flow and pressure conditions
+- ✅ Hotwell water collection and recirculation pump
 
 ### User Interface
 
@@ -26,6 +30,10 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Main Steam Valve control with 10% increment adjustments
 - ✅ Real-time status readouts (temperature, pressure, etc.)
 - ✅ Steam visualization when boiling occurs
+- ✅ Condenser pressure readout with high/low pressure indicators
+- ✅ Air Extraction Pump (CAR) toggle controls
+- ✅ Steam Jet Air Extraction (SJAE) toggle and valve position controls
+- ✅ Recirculation pump valve position control
 
 ### Technical Implementation
 
@@ -39,39 +47,16 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ### Potential Future Features
 
-- ✅ Implement Condenser described in condenser_implementation_plan.md
-- ✅ Steam valve control (implemented as Main Steam Valve)
-- ⬜ Temperature and pressure gauges with historical data
+- ⬜ Condensation pump to pull feed water from the condenser to the boiler
 - ⬜ More detailed visualization of internal processes
-
-### Condenser Implementation Plan
-
-1.  ✅ **Implement Condenser Pressure Indicators:** Added visual indicators to the condenser readouts that show when pressure is outside the acceptable range (above 70 mBar or below 40 mBar).
-2.  ✅**Implement Condenser Vacuum Readout:** Add a `vacuum` state variable to `CondenserTypes.ts`, update `condenserReducer.ts` to manage the `vacuum` state, and display the `vacuum` value in `CondenserReadouts.tsx`.
-3.  ✅**Implement Air Extraction Pump (CAR) Control:** Add `isAirExtractionPumpEnabled` state variable to `CondenserTypes.ts`. Add `airExtractionPumpMaxVacuum` and `airExtractionPumpTimeNeeded` constants to `src/context/const.ts`. Update `condenserReducer.ts` to handle actions for starting and stopping the air extraction pump. Add a toggle button in `CondenserControlPanel.tsx` to control the air extraction pump. Implement logic in `CondenserTick.ts` to gradually increase/decrease the vacuum.
-4.  ✅**Implement Steam Jet Air Extraction (SJAE) Control:** Add `isSjaeEnabled` and `sjaeValvePosition` state variables to `CondenserTypes.ts`. Update `condenserReducer.ts` to handle actions for enabling/disabling the SJAE and adjusting the valve position. Add a toggle button and open/close buttons in `CondenserControlPanel.tsx` to control the SJAE. Implement logic in `CondenserTick.ts` to automatically disable the SJAE under certain conditions and to gradually increase the vacuum when the SJAE is enabled.
-5.  ✅**Integrate with Simulator:** The pressure calculation logic in `CondenserTick.ts` has been refactored into `condenserCalculation.ts`.
-
-### Hotwell Implementation Plan
-
-✅ **Implemented Hotwell Functionality**: Added the hotwell component to connect the boiler and condenser:
-1.  ✅ Added hotwell-related state variables to `CondenserTypes.ts`:
-    *   `hotwellLevel`: A number representing the relative water level in the hotwell.
-    *   `hotwellToCondenserFlowRate`: A number representing the flow rate from the hotwell to the condenser.
-    *   `recirculationPumpFlowRate`: A number representing the flow rate of the recirculation pump.
-    *   `recirculationPumpValvePosition`: A number representing the position of the recirculation pump valve (0 to 1).
-    *   `condenserSteamVolume`: A number representing the volume of steam in the condenser.
-    *   `condenserLiquidVolume`: A number representing the volume of liquid in the condenser.
-2.  ✅ Updated `condenserReducer.ts` to manage these new state variables.
-3.  ✅ In `CondenserTick.ts`, implemented calculation of the change in hotwell level based on the steam flow from the boiler (`boilerState.steamFlowOut`) and the water flow to the condenser.
-4.  ✅ Added hotwell to condenser flow rate calculation based on condenser pressure (flow only occurs when pressure is between 40 and 70 mbar).
-5.  ✅ Added a `ValveSlider` component to `CondenserControlPanel.tsx` to control the recirculation pump.
-6.  ✅ Implemented recirculation pump flow rate calculation based on valve position.
-7.  ✅ Implemented condensation calculation based on recirculation pump flow rate.
-8.  ✅ Added readouts to `CondenserReadouts.tsx` to display hotwell level, flow rates, and condenser volumes.
-9.  ✅ Updated `PowerPlantContext.tsx` and `PowerPlantProvider.tsx` to include the new functionality.
+- ⬜ Toggle between simple and realistic calculations
+- ⬜ Toggle between small and big powerplant (boiler & pump capacity)
+- ⬜ Aerator between condenser and boiler
+- ⬜ Turbines for power generation
 
 ## Known Issues
+
+- Steam volume in condenser state should decrease according to the intakeFlowRate
 
 ### Simulation Accuracy
 
@@ -91,10 +76,14 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ## Next Milestone
 
-The next milestone is to implement the energy balance approach for steam generation, which will significantly improve the physical accuracy of the simulation. This involves:
+The next milestone is to implement the condensation pump and complete the water cycle in the system, followed by implementing the energy balance approach for steam generation. This involves:
 
-1. Calculating the energy needed to heat water to the boiling point
-2. Using remaining energy for steam generation
-3. Ensuring conservation of energy throughout the system
+1. Adding a condensation pump to pull feed water from the condenser to the boiler
+2. Implementing the energy balance approach for steam generation:
+   - Calculating the energy needed to heat water to the boiling point
+   - Using remaining energy for steam generation
+   - Ensuring conservation of energy throughout the system
+3. Adding an aerator between the condenser and the boiler
+4. Implementing turbines for power generation
 
-This improvement will make the simulation more realistic and educational, particularly for understanding the relationship between energy input and steam output.
+These improvements will make the simulation more realistic and educational, particularly for understanding the complete power generation cycle and the relationship between energy input and steam output.

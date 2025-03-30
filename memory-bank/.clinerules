@@ -27,6 +27,8 @@
 - Water properties are retrieved from steam tables with interpolation
 - Simplifications are used where appropriate for performance and stability
 - Edge cases are handled with reasonable defaults or limits
+- Vacuum systems use gradual pressure changes with time-based calculations
+- Condenser pressure affects steam flow efficiency with optimal pressure ranges
 
 ### State Management
 - The reducer pattern is used for state transitions
@@ -44,11 +46,12 @@
 ## Critical Implementation Paths
 
 ### Simulation Loop
-1. The simulation loop is initialized in `BoilerProvider.tsx`
-2. It dispatches a `SIMULATE_TICK` action 10 times per second
-3. The reducer processes this action in `BoilerReducer.ts`
-4. The state is updated based on physics calculations
-5. The UI re-renders with the new state
+1. The simulation loop is initialized in `PowerPlantProvider.tsx`
+2. It dispatches a `SIMULATE_TICK` action 10 times per second to both boiler and condenser
+3. The boiler reducer processes this action in `BoilerReducer.ts`
+4. The condenser reducer processes this action in `CondenserReducer.ts`
+5. The state is updated based on physics calculations
+6. The UI re-renders with the new state
 
 ### Steam Generation
 1. The `calculateSteamGeneration` function determines the steam rate
@@ -68,12 +71,23 @@
 2. This function uses specific volume data from steam tables to account for thermal expansion.
 3. The water volume is updated in the reducer on each `SIMULATE_TICK` action.
 
+### Condenser Vacuum Control
+1. The `CondenserTick` function in `CondenserTick.ts` is called on each simulation tick
+2. It calls `calculatePressure` from `condenserCalculation.ts` to determine the new pressure
+3. The pressure calculation checks the status of the Air Extraction Pump (CAR)
+4. If the CAR is enabled, it gradually increases the vacuum up to the maximum
+5. It then checks the status of the Steam Jet Air Extraction (SJAE)
+6. If the SJAE is enabled and conditions are met, it further increases the vacuum
+7. If neither system is enabled, vacuum gradually decays toward atmospheric pressure
+8. The calculated pressure affects the intake flow rate from the boiler to the condenser
+
 ## Known Challenges
 
 ### Numerical Stability
 - Phase changes can cause rapid changes in system properties
 - Pressure calculation needs damping to prevent oscillations
 - Small time steps are needed for accuracy during rapid changes
+- Vacuum creation and decay rates need careful tuning to prevent unrealistic behavior
 
 ### Edge Cases
 - Empty boiler (no water) requires special handling
@@ -91,6 +105,7 @@
 - Physical accuracy is important for educational value
 - Simplifications should be physically reasonable
 - The simulation should behave as expected based on real-world intuition
+- Condenser pressure should respond realistically to control inputs
 
 ### User Interface
 - Controls should be intuitive and responsive

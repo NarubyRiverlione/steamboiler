@@ -38,7 +38,9 @@ For the Boiler subsystem:
 
 For the Condenser subsystem:
 1. **CondenserReducer**: Contains the condenser simulation logic and state transitions
-2. **CondenserTypes**: Defines the state and action types for the condenser
+2. **CondenserTick**: Handles time-based updates for the condenser
+3. **CondenserTypes**: Defines the state and action types for the condenser
+4. **CondenserCalculation**: Contains utility functions for condenser-related calculations
 
 This pattern offers several benefits:
 - Centralized state management
@@ -86,6 +88,45 @@ For the Condenser:
 ```
 Energy Change = Energy Input (steam) - Energy Output (cooling, condensation)
 ```
+
+### Condenser Vacuum Control
+
+The condenser implements a dual vacuum control system:
+
+1. **Air Extraction Pump (CAR)**: Creates a base level vacuum
+   ```
+   if (isAirExtractionPumpEnabled) {
+     // Gradually increase vacuum up to CAR_MaxVacuum
+     newVacuum = Math.max(CAR_MaxVacuum, pressure - vacuumIncreaseRate * deltaTime)
+   }
+   ```
+
+2. **Steam Jet Air Extraction (SJAE)**: Enhances vacuum beyond CAR capabilities
+   ```
+   if (isSjaeEnabled && boilerSteamFlow > 0 && pressure <= minVacuumNeeded) {
+     // Calculate vacuum increase based on steam flow and valve position
+     const valveEffect = sjaeValvePosition / 100
+     const steamFlowEffect = Math.min(1, boilerSteamFlow / MaxSteamRemovalRate)
+     const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * valveEffect * steamFlowEffect
+     
+     // Apply vacuum increase
+     newPressure = Math.min(CAR_MaxVacuum, pressure - vacuumIncreaseRate * deltaTime)
+   }
+   ```
+
+3. **Vacuum Decay**: Models natural loss of vacuum when pumps are disabled
+   ```
+   if (!isSjaeEnabled && !isAirExtractionPumpEnabled) {
+     // Decay to atmospheric pressure
+     pressureAfterDecay = Math.min(AtmosphericPressure, pressure + VacuumDecayRate * deltaTime)
+   }
+   ```
+
+This pattern:
+- Models realistic vacuum behavior in industrial condensers
+- Creates dependencies between systems (SJAE requires steam flow)
+- Implements automatic safety controls (SJAE disables when pressure is too high)
+- Provides multiple control points for the user
 
 This pattern:
 - Ensures conservation of energy in the system
@@ -152,6 +193,22 @@ This integration:
 
 ## Key Technical Decisions
 
+### Condenser Pressure Calculation
+
+The condenser pressure calculation follows a multi-step process:
+
+1. **CAR Pressure Calculation**: Calculates pressure based on the Air Extraction Pump status
+2. **SJAE Pressure Calculation**: Further reduces pressure if the Steam Jet Air Extraction is enabled
+3. **Vacuum Decay**: Applies natural vacuum decay when pumps are disabled
+4. **Pressure Validation**: Ensures pressure stays within realistic bounds
+
+The implementation includes several key features:
+- **Automatic SJAE Disabling**: SJAE is automatically disabled when:
+  - There is no steam flow from the boiler
+  - The pressure is above a threshold relative to the CAR maximum vacuum
+- **Valve Position Effect**: The SJAE valve position affects the vacuum increase rate
+- **Steam Flow Dependency**: The SJAE effectiveness is proportional to the available steam flow
+
 ### Steam Table Implementation
 
 The simulation uses a data-driven approach with steam tables to ensure accurate thermodynamic properties:
@@ -185,5 +242,22 @@ Several simplifications are made to balance accuracy with performance:
 2. **Steam Volume Calculation**: Temperature-dependent expansion factors
 3. **Pressure Calculation**: Damping factors for gradual pressure changes
 4. **Fixed Constants**: For gas energy density, burner efficiency, cooling rate, etc.
+5. **Condenser Vacuum Behavior**: Simplified vacuum creation and decay rates
+6. **Intake Flow Rate Calculation**: Simplified model based on pressure ranges:
+   ```javascript
+   // Calculate pressure efficiency factor (0-1)
+   let pressureEfficiency = 0
+   if (condenserPressure < optimalPressureMin) {
+     // Below optimal range - efficiency decreases as pressure gets too low
+     pressureEfficiency = Math.max(0, condenserPressure / optimalPressureMin)
+   } else if (condenserPressure <= optimalPressureMax) {
+     // Within optimal range - full efficiency
+     pressureEfficiency = 1
+   } else {
+     // Above optimal range - efficiency decreases as pressure increases
+     const deltaPressureFactor = 1 / (condenserPressure - optimalPressureMax) / 10
+     pressureEfficiency = Math.max(0, deltaPressureFactor)
+   }
+   ```
 
 These simplifications maintain physical realism while ensuring the simulation runs smoothly in a browser environment.
