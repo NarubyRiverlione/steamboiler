@@ -5,17 +5,7 @@ import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
 const BoilerReadouts = () => {
   const {
-    boilerState: {
-      gasFlow,
-      waterVolume,
-      temperature,
-      pressure,
-      energyDelta,
-      steamMass,
-      steamRate,
-      energy,
-      mainSteamValvePosition,
-    },
+    boilerState: { gasFlow, waterVolume, temperature, pressure, energyDelta, steamMass, steamRate, energy, mainSteamValvePosition },
   } = usePowerPlant()
 
   // Calculate vapor volume based on steam mass and specific volume
@@ -32,27 +22,27 @@ const BoilerReadouts = () => {
     <div className="readouts-panel">
       <h3>Boiler Status</h3>
       <div className="readout-item">
-        <span className="label">Gas Flow:</span>
+        <span className="label">Gas Flow</span>
         <span className="value">{gasFlow.toFixed(1)} L/s</span>
       </div>
       <div className="readout-item">
-        <span className="label">Liquid Volume:</span>
+        <span className="label">Liquid Volume</span>
         <span className="value">{waterVolume.toFixed(1)} L</span>
       </div>
       <div className="readout-item">
-        <span className="label">Vapor Volume:</span>
+        <span className="label">Vapor Volume</span>
         <span className="value">{vaporVolumeLiters.toFixed(1)} L</span>
       </div>
       <div className="readout-item">
-        <span className="label">Temperature:</span>
+        <span className="label">Temperature</span>
         <span className="value">{temperature.toFixed(1)} °C</span>
       </div>
       <div className="readout-item">
-        <span className="label">Pressure:</span>
+        <span className="label">Pressure</span>
         <span className="value">{pressure.toFixed(1)} bar</span>
       </div>
       <div className="readout-item">
-        <span className="label">Energy Change:</span>
+        <span className="label">Energy Change</span>
         <span className={`value ${energyDelta > 0 ? "positive" : energyDelta < 0 ? "negative" : ""}`}>
           {energyDelta > 0 ? "+" : ""}
           {energyDelta.toFixed(1)} kJ/s
@@ -67,30 +57,28 @@ const BoilerReadouts = () => {
         {advancedExpanded && (
           <div className="advanced-content">
             <div className="readout-item">
-              <span className="label">Steam Generation:</span>
+              <span className="label">Steam Generation</span>
               <span className="value">{(steamRate * 1000).toFixed(1)} g/s</span>
             </div>
             <div className="readout-item">
-              <span className="label">Steam Production:</span>
+              <span className="label">Steam Production</span>
               <span className="value">{(steamRate * 3600).toFixed(1)} kg/h</span>
             </div>
             <div className="readout-item">
-              <span className="label">Energy:</span>
+              <span className="label">Energy</span>
               <span className="value">{energy.toFixed(1)} kJ</span>
             </div>
             <div className="readout-item">
-              <span className="label">Boiling Point:</span>
+              <span className="label">Boiling Point</span>
               <span className="value">{calculateBoilingPoint(pressure).toFixed(1)} °C</span>
             </div>
             <div className="readout-item">
-              <span className="label">Above Boiling:</span>
+              <span className="label">Above Boiling</span>
               <span className="value">{(temperature - calculateBoilingPoint(pressure)).toFixed(1)} °C</span>
             </div>
             <div className="readout-item">
-              <span className="label">Steam Removal:</span>
-              <span className="value">
-                {((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 3600).toFixed(1)} kg/h
-              </span>
+              <span className="label">Steam Removal</span>
+              <span className="value">{((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 3600).toFixed(1)} kg/h</span>
             </div>
           </div>
         )}

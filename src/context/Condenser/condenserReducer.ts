@@ -35,11 +35,11 @@ const condenserReducer = (state: CondenserState = initialCondenserState, action:
         ...state,
         coolingRate: action.payload,
       }
-    case "SET_VACUUM":
-      return {
-        ...state,
-        pressure: action.payload,
-      }
+    // case "SET_VACUUM":
+    //   return {
+    //     ...state,
+    //     pressure: action.payload,
+    //   }
     case "SET_AIR_EXTRACTION_PUMP_ENABLED":
       return {
         ...state,

@@ -10,14 +10,10 @@ const BoilerSteamValveControl = () => {
   return (
     <div className="component-controls">
       <h3>Main Steam Valve</h3>
-      <div className="valve-status">
-        <span className="label">Position:</span>
-        <span className="value">{mainSteamValvePosition}% Open</span>
-      </div>
 
       <ValveSlider
         Label="Steam Flow"
-        Value={steamFlowOut}
+        Value={`${steamFlowOut.toFixed(1)} g/s`}
         Position={mainSteamValvePosition}
         Step={10}
         cbAdjust={adjustMainSteamValve}

@@ -16,10 +16,7 @@ const CondenserControlPanel = () => {
       {/* Air Extraction Pump (CAR) Controls */}
       <div className="control-section">
         <h4>Air Extraction Pump (CAR)</h4>
-        <button
-          className={`toggle-button ${isAirExtractionPumpEnabled ? "enabled" : "disabled"}`}
-          onClick={toggleAirExtractionPump}
-        >
+        <button className={`toggle-button ${isAirExtractionPumpEnabled ? "enabled" : "disabled"}`} onClick={toggleAirExtractionPump}>
           {isAirExtractionPumpEnabled ? "STOP" : "START"}
         </button>
       </div>
@@ -32,7 +29,7 @@ const CondenserControlPanel = () => {
         </button>
 
         <ValveSlider
-          Label="StValve Position:"
+          Label="Position:"
           //  Value={steamFlowOut}
           Position={sjaeValvePosition}
           Step={10}

@@ -29,6 +29,12 @@ The following improvements have been implemented:
    - Created placeholder components for the condenser visual, readouts, and control panel.
    - Modified `BoilerVisual.tsx` to include the `CondenserVisual` component.
 
+7. **Condenser Pressure Indicators**: Added visual indicators to the condenser readouts that show when pressure is outside the acceptable range:
+   - Created a reusable `Indicator` component in `src/components/Indicator.tsx` that can be used throughout the application
+   - Added indicators for high pressure (above 70 mBar) and low pressure (below 40 mBar)
+   - Included labels for each indicator to clearly identify what they represent
+   - Added hover tooltips for additional information
+
 ## Active Development Areas
 
 The next major improvement is to implement a more physically accurate energy balance approach for steam generation. Further improvements under consideration include:
@@ -74,6 +80,4 @@ Based on the condenser_implementation_plan.md file, the following steps are plan
 
 7. Implement Condenser Calculations (if needed): In `src/utils/boilerCalculations.ts` or a new file `src/utils/condenserCalculations.ts`: Implement functions for condenser calculations (heat transfer, condensation rate, etc.) as needed by `condenserReducer`.
 
-8. Refine Component Communication: If the boiler and condenser components need to communicate directly (e.g., to indicate steam flow), ensure that the appropriate state variables and dispatch functions are passed through the `PowerPlantContext`.
-
-9. Testing and Refinement: After implementation, test the simulation thoroughly. Verify that the condenser functionality works as expected. Refine parameters (cooling rate, etc.) for realistic behavior. Check for any errors or unexpected behavior.
+8. Testing and Refinement: After implementation, test the simulation thoroughly. Verify that the condenser functionality works as expected. Refine parameters (cooling rate, etc.) for realistic behavior. Check for any errors or unexpected behavior.

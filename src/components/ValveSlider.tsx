@@ -1,6 +1,6 @@
 type ValveSliderProps = {
   Label: string
-  Value?: number // flow rate
+  Value?: string // flow rate
   Position: number // how much the valve is open/close
   Step: number
   cbAdjust: (step: number) => void
@@ -10,8 +10,13 @@ const ValveSlider = ({ Label, Value, Position, Step, cbAdjust }: ValveSliderProp
   return (
     <>
       <div className="valve-status">
-        <span className="label">{Label}</span>
-        {Value && <span className="value">{Value} g/s</span>}
+        <div className="valve-slider-readouts">
+          <span className="valve-slider-label">{Label}</span>
+          <div className="valve-slider-readout">
+            {Value && <span className="valve-slider-value">{Value}</span>}
+            <span className="valve-slider-value">{Position} % Open</span>
+          </div>
+        </div>
       </div>
 
       <div className="valve-slider">

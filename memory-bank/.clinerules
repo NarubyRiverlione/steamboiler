@@ -39,6 +39,7 @@
 - Calculations for display are done in the component, not stored in state
 - CSS is used for visual effects (water level, steam particles)
 - Status readouts are formatted for readability
+- Reusable UI components are created for common patterns (e.g., Indicator component for status indicators)
 
 ## Critical Implementation Paths
 

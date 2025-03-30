@@ -14,7 +14,7 @@ export type CondenserAction =
   | { type: "UPDATE_CONDENSER_TEMPERATURE"; payload: number }
   | { type: "RETURN_CONDENSATE" }
   | { type: "SET_COOLING_RATE"; payload: number }
-  | { type: "SET_VACUUM"; payload: number }
+  // | { type: "SET_VACUUM"; payload: number }
   | { type: "SET_AIR_EXTRACTION_PUMP_ENABLED"; payload: boolean }
   | { type: "SET_SJAE_ENABLED"; payload: boolean }
   | { type: "SET_SJAE_VALVE_POSITION"; payload: number }
