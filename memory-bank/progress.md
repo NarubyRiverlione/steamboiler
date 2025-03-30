@@ -53,6 +53,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ⬜ Toggle between small and big powerplant (boiler & pump capacity)
 - ⬜ Aerator between condenser and boiler
 - ⬜ Turbines for power generation
+- ⬜ Performance optimizations and monitoring (low priority) - see performance_enhancements.md
 
 ## Known Issues
 

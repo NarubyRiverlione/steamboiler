@@ -97,3 +97,10 @@ The next steps for the Steam Boiler Simulation project include:
 6. **Implement Turbines**: Add turbines to convert steam energy to mechanical/electrical energy, completing the power generation cycle.
 
 7. **Fix Known Issues**: Address the issue where steam volume in the condenser state should decrease according to the intake flow rate.
+
+8. **Performance Optimizations** (Low Priority): Implement performance monitoring and optimizations as documented in `performance_enhancements.md` if performance issues are observed. These include:
+   - Adding a performance monitoring component
+   - Memoizing expensive calculations
+   - Using React.memo for pure components
+   - Optimizing reducer logic
+   - Implementing dynamic simulation rate adjustment
