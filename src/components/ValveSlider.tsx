@@ -14,7 +14,7 @@ const ValveSlider = ({ Label, Value, Position, Step, cbAdjust }: ValveSliderProp
           <span className="valve-slider-label">{Label}</span>
           <div className="valve-slider-readout">
             {Value && <span className="valve-slider-value">{Value}</span>}
-            <span className="valve-slider-value">{Position} % Open</span>
+            <span className="valve-slider-value">{Position.toFixed(0)} % Open</span>
           </div>
         </div>
       </div>

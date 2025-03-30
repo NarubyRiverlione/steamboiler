@@ -20,10 +20,10 @@ export const CstSimulation = {
   Condenser: {
     VacuumDecayRate: 20, // mbar per second when pump is off
     CAR_MaxVacuum: 140, // mbar (negative pressure)
-    CAR_TimeNeeded: 10, // seconds to reach max vacuum
+    CAR_TimeNeeded: 1, // seconds to reach max vacuum
     SJAE_VacuumIncreaseRate: 1, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 10, // mbar above AirExtractionPump.MaxVacuum
-    Hotwell_toCondenserFlowRate: 1, // kg/s
+    IntakeFlowRate: 1, // kg/s
     RecirculationPump_MaxFlowRate: 2.0, // kg/s
     HeatTransferCoefficient: 0.1, // Condensation rate per unit of recirculation flow
   },

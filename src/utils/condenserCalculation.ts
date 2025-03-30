@@ -110,21 +110,19 @@ export const calculatePressure = (
 }
 
 /**
- * Calculates the change in hotwell level based on steam flow and water flow
- *
+ * Calculates the change in steam volume based on steam flow and water flow
  * @param boilerSteamFlow Steam flow from the boiler (kg/s)
- * @param hotwellToCondenserFlowRate Flow rate from hotwell to condenser (kg/s)
+ * @param intakeFlowRate Flow rate from turbine to condenser (kg/s)
  * @param deltaTime Time elapsed since last tick (seconds)
- * @returns Change in hotwell level
+ * @returns Changed steam volume
  */
-export function calculateHotwellLevelChange(boilerSteamFlow: number, hotwellToCondenserFlowRate: number, deltaTime: number): number {
-  // Steam flow increases the level, water flow decreases it
-  return (boilerSteamFlow - hotwellToCondenserFlowRate) * deltaTime
+export function calculateSteamVolumeChange(boilerSteamFlow: number, intakeFlowRate: number, deltaTime: number): number {
+  // Steam flow increases the steam volume, water flow decreases it
+  return (boilerSteamFlow - intakeFlowRate) * deltaTime
 }
 
 /**
  * Calculates the flow rate from hotwell to condenser based on condenser pressure
- *
  * @param hotwellLevel Current hotwell level
  * @param condenserPressure Current condenser pressure (mBar)
  * @returns Flow rate from hotwell to condenser (kg/s)
@@ -133,7 +131,7 @@ export function calculateHotwellToCondenserFlowRate(hotwellLevel: number, conden
   // Flow only occurs when pressure is between 40 and 70 mBar
   if (condenserPressure >= 40 && condenserPressure <= 70) {
     // Flow rate is proportional to hotwell level, but capped at maximum
-    return Math.min(Math.max(hotwellLevel, 0), CstSimulation.Condenser.Hotwell_toCondenserFlowRate)
+    return Math.min(Math.max(hotwellLevel, 0), CstSimulation.Condenser.IntakeFlowRate)
   }
   return 0
 }
@@ -165,7 +163,7 @@ export function calculateCondensation(
   recirculationPumpFlowRate: number,
   boilerSteamFlow: number,
   deltaTime: number,
-): { newCondenserSteamVolume: number; newCondenserLiquidVolume: number } {
+): { steamVolumeAfterCondensation: number; waterVolumeAfterCondensation: number } {
   // Steam volume increases with boiler steam flow
   const steamVolumeIncrease = boilerSteamFlow * deltaTime
 
@@ -178,7 +176,7 @@ export function calculateCondensation(
   const newLiquidVolume = currentLiquidVolume + condensedVolume
 
   return {
-    newCondenserSteamVolume: Math.max(newSteamVolume, 0),
-    newCondenserLiquidVolume: Math.max(newLiquidVolume, 0),
+    steamVolumeAfterCondensation: Math.max(newSteamVolume, 0),
+    waterVolumeAfterCondensation: Math.max(newLiquidVolume, 0),
   }
 }

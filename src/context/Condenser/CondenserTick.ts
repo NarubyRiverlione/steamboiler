@@ -1,8 +1,8 @@
 import { CondenserState } from "./CondenserTypes"
 import {
   calculateCondensation,
-  calculateHotwellLevelChange,
-  calculateHotwellToCondenserFlowRate,
+  calculateSteamVolumeChange,
+  calculateHotwellToCondenserFlowRate as calculateIntakeFlowRate,
   calculatePressure,
   calculateRecirculationPumpFlowRate,
 } from "../../utils/condenserCalculation"
@@ -16,23 +16,23 @@ import {
  * @returns Action to update the condenser state
  */
 export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: number, deltaTime: number): CondenserState {
+  // Calculate the pressure base on the CAR & SJAE
   const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, boilerSteamFlow, deltaTime)
 
-  // Calculate hotwell level change
-  // Hotwell level increases with steam flow from boiler and decreases with flow to condenser
-  const hotwellLevelChange = calculateHotwellLevelChange(boilerSteamFlow, condenserState.hotwellToCondenserFlowRate, deltaTime)
-  const newHotwellLevel = condenserState.hotwellLevel + hotwellLevelChange
+  // Calculate turbine to condenser flow rate based on condenser (vacuum) pressure
+  const newIntakeFlowRate = calculateIntakeFlowRate(boilerSteamFlow, newPressure)
 
-  // Calculate hotwell to condenser flow rate based on condenser pressure
-  const newHotwellToCondenserFlowRate = calculateHotwellToCondenserFlowRate(newHotwellLevel, newPressure)
+  // Calculate steam volume change
+  const steamVolumeChange = calculateSteamVolumeChange(boilerSteamFlow, newIntakeFlowRate, deltaTime)
+  const newSteamVolume = condenserState.steamVolume + steamVolumeChange
 
   // Calculate recirculation pump flow rate based on valve position
   const newRecirculationPumpFlowRate = calculateRecirculationPumpFlowRate(condenserState.recirculationPumpValvePosition)
 
-  // Calculate condensation based on recirculation pump flow rate
-  const { newCondenserSteamVolume, newCondenserLiquidVolume } = calculateCondensation(
-    condenserState.condenserSteamVolume,
-    condenserState.condenserLiquidVolume,
+  // Calculate water level based on recirculation pump flow rate
+  const { steamVolumeAfterCondensation, waterVolumeAfterCondensation } = calculateCondensation(
+    newSteamVolume,
+    condenserState.waterVolume,
     newRecirculationPumpFlowRate,
     boilerSteamFlow,
     deltaTime,
@@ -42,10 +42,9 @@ export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: n
     ...condenserState,
     pressure: newPressure,
     isSjaeEnabled: newIsSjaeEnabled,
-    hotwellLevel: newHotwellLevel,
-    hotwellToCondenserFlowRate: newHotwellToCondenserFlowRate,
+    intakeFlowRate: newIntakeFlowRate,
     recirculationPumpFlowRate: newRecirculationPumpFlowRate,
-    condenserSteamVolume: newCondenserSteamVolume,
-    condenserLiquidVolume: newCondenserLiquidVolume,
+    steamVolume: steamVolumeAfterCondensation,
+    waterVolume: waterVolumeAfterCondensation,
   }
 }
