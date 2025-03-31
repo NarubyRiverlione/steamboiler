@@ -11,6 +11,7 @@ export type CondenserState = {
   sjaeValvePosition: number // 0-100%
   recirculationPumpFlowRate: number // Flow rate of the recirculation pump
   recirculationPumpValvePosition: number // 0-1 (0-100%)
+  deltaWaterVolume: number
 }
 
 export type CondenserAction =

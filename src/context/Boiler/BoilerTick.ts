@@ -168,7 +168,7 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
 
   // steam flow out via the Steam Master Valve
   const newSteamOutFlow =
-    newSteamMass > 0.1 ? (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 1000 : 0
+    newSteamMass > 0.1 ? (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate : 0
 
   return {
     ...state,
@@ -180,6 +180,7 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
     energy: Number(newEnergy.toFixed(1)),
     energyDelta: Number((energyChange / deltaTime).toFixed(1)),
     steamFlowOut: Number(newSteamOutFlow.toFixed(1)),
+    deltaWaterVolume: newWaterVolume - state.waterVolume,
   }
 }
 

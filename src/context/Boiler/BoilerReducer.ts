@@ -15,6 +15,7 @@ export const initialBoilerState: BoilerState = {
   steamMass: 0, // kg - Mass of steam currently in the boiler
   mainSteamValvePosition: 0, // 0-100% open
   steamFlowOut: 0, // g/s
+  deltaWaterVolume: 0,
 }
 
 function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {

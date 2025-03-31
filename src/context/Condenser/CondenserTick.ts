@@ -53,5 +53,6 @@ export function CondenserTick(
     recirculationPumpFlowRate: newRecirculationPumpFlowRate,
     steamVolume: steamVolumeAfterCondensation,
     hotwellWaterVolume: waterVolumeAfterCondensation,
+    deltaWaterVolume: waterVolumeAfterCondensation - condenserState.hotwellWaterVolume,
   }
 }

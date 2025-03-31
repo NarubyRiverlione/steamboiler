@@ -15,6 +15,7 @@ export const initialCondenserState: CondenserState = {
   sjaeValvePosition: 0, // 0% open
   recirculationPumpFlowRate: 0,
   recirculationPumpValvePosition: 0, // 0% open
+  deltaWaterVolume: 0,
 }
 
 const condenserReducer = (

@@ -16,16 +16,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
     CondenserState,
     (action: CondenserAction) => void,
   ]
-  /*
-  useEffect(() => {
-    if (boilerState.mainSteamValvePosition > 0 && boilerState.steamMass > 0) {
-      const steamRemovalRate = (boilerState.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate
-      const removedSteamMass = Math.min(boilerState.steamMass, steamRemovalRate * 0.1) // Assuming deltaTime is 0.1
 
-      condenserDispatch({ type: "CONDENSE_STEAM", payload: removedSteamMass })
-    }
-  }, [boilerState.steamMass, boilerState.mainSteamValvePosition, condenserDispatch])
-*/
   // Simulation loop
   useEffect(() => {
     let lastTime = Date.now()

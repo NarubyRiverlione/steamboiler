@@ -8,14 +8,13 @@ const BoilerReadouts = () => {
     boilerState: {
       gasFlow,
       waterVolume,
-      steamFlowOut,
       temperature,
       pressure,
       energyDelta,
       steamMass,
-
       energy,
       mainSteamValvePosition,
+      deltaWaterVolume,
     },
   } = usePowerPlant()
 
@@ -56,7 +55,7 @@ const BoilerReadouts = () => {
         <span className="label">Energy Change</span>
         <span className={`value ${energyDelta > 0 ? "positive" : energyDelta < 0 ? "negative" : ""}`}>
           {energyDelta > 0 ? "+" : ""}
-          {energyDelta.toFixed(1)} kJ/s
+          {(energyDelta / 1000).toFixed(1)} MJ/s
         </span>
       </div>
 
@@ -69,7 +68,7 @@ const BoilerReadouts = () => {
           <div className="advanced-content">
             <div className="readout-item">
               <span className="label">Energy</span>
-              <span className="value">{energy.toFixed(1)} kJ</span>
+              <span className="value">{(energy / 1000).toFixed(1)} MJ</span>
             </div>
             <div className="readout-item">
               <span className="label">Boiling Point</span>
@@ -82,8 +81,12 @@ const BoilerReadouts = () => {
             <div className="readout-item">
               <span className="label">Steam Removal</span>
               <span className="value">
-                {((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate * 3600).toFixed(1)} kg/h
+                {((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate).toFixed(1)} kg/h
               </span>
+            </div>
+            <div className="readout-item">
+              <span className="label">Change water volume</span>
+              <span className="value">{deltaWaterVolume.toFixed(0)} l</span>
             </div>
           </div>
         )}

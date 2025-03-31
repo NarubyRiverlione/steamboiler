@@ -4,7 +4,7 @@ import Indicator from "../Indicator"
 const CondenserReadouts = () => {
   const {
     condenserState: {
-      temperature,
+      deltaWaterVolume,
       pressure,
       steamVolume,
       hotwellWaterVolume: waterVolume,
@@ -40,12 +40,17 @@ const CondenserReadouts = () => {
 
       <div className="readout-item">
         <span className="label">Intake flow</span>
-        <span className="value">{(intakeFlowRate * 3.6).toFixed(2)} kg/h</span>
+        <span className="value">{intakeFlowRate.toFixed(1)} kg/s</span>
       </div>
 
       <div className="readout-item">
         <span className="label">Hotwell Level</span>
-        <span className="value">{waterVolume.toFixed(2)}</span>
+        <span className="value">{waterVolume.toFixed(1)}</span>
+      </div>
+
+      <div className="readout-item">
+        <span className="label">Change water volume</span>
+        <span className="value">{deltaWaterVolume.toFixed(2)} l</span>
       </div>
 
       <div className="readout-item">

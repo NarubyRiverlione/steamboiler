@@ -200,15 +200,12 @@ export function calculateCondensation(
   boilerSteamFlow: number,
   deltaTime: number,
 ): { steamVolumeAfterCondensation: number; waterVolumeAfterCondensation: number } {
-  // Steam volume increases with boiler steam flow
-  const steamVolumeIncrease = boilerSteamFlow * deltaTime
-
   // Condensation rate is proportional to recirculation pump flow rate
   const condensationRate = recirculationPumpFlowRate * CstSimulation.Condenser.HeatTransferCoefficient
-  const condensedVolume = Math.min(currentSteamVolume + steamVolumeIncrease, condensationRate * deltaTime)
+  const condensedVolume = Math.min(currentSteamVolume, condensationRate * deltaTime)
 
   // Update steam and liquid volumes
-  const newSteamVolume = currentSteamVolume + steamVolumeIncrease - condensedVolume
+  const newSteamVolume = currentSteamVolume - condensedVolume
   const newLiquidVolume = currentLiquidVolume + condensedVolume
 
   return {

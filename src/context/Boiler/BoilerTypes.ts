@@ -11,6 +11,7 @@ type BoilerState = {
   steamMass: number // kg - Mass of steam currently in the boiler
   mainSteamValvePosition: number // 0-100% open
   steamFlowOut: number // g/s
+  deltaWaterVolume: number
 }
 
 export type BoilerAction =
