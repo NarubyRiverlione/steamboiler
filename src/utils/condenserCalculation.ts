@@ -146,26 +146,17 @@ export function calculateSteamVolumeChange(
  * @returns Flow rate from turbine to condenser (kg/s)
  */
 export function calculateIntakeFlowRate(boilerSteamFlow: number, condenserPressure: number): number {
-  // Define pressure ranges for optimal flow
-  const optimalPressureMin = 40 // mBar
-  const optimalPressureMax = 70 // mBar
+  // Define pressure parameters for bell curve
 
-  // Calculate pressure efficiency factor (0-1)
-  let pressureEfficiency = 0
-
-  if (condenserPressure < optimalPressureMin) {
-    // Below optimal range - efficiency decreases as pressure gets too low
-    // This models the physical limitation when pressure is too low
-    pressureEfficiency = Math.max(0, condenserPressure / optimalPressureMin)
-  } else if (condenserPressure <= optimalPressureMax) {
-    // Within optimal range - full efficiency
-    pressureEfficiency = 1
-  } else {
-    // Above optimal range - efficiency decreases as pressure increases
-    // This models the reduced flow when condenser pressure is too high
-    const deltaPressureFactor = 1 / (condenserPressure - optimalPressureMax) / 10
-    pressureEfficiency = Math.max(0, deltaPressureFactor)
-  }
+  // Calculate pressure efficiency factor using bell curve (0-1)
+  const pressureEfficiency = Math.exp(
+    -0.5 *
+      Math.pow(
+        (condenserPressure - CstSimulation.Condenser.OptimalPressure) /
+          (CstSimulation.Condenser.OptimalPressureBellWidth / 2),
+        2,
+      ),
+  )
 
   // Calculate flow rate based on available steam and pressure efficiency
   // Cap at maximum intake flow rate defined in constants
