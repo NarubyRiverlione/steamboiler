@@ -3,7 +3,7 @@ import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
-import ShowAverage from "../Condenser/ShowAverage"
+import ShowAverage from "../ShowAverage"
 const BoilerReadouts = () => {
   const {
     boilerState: {

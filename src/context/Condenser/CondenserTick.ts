@@ -41,7 +41,6 @@ export function CondenserTick(
     newSteamVolume,
     condenserState.hotwellWaterVolume,
     newRecirculationPumpFlowRate,
-    boilerSteamFlow,
     deltaTime,
   )
 

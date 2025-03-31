@@ -197,7 +197,6 @@ export function calculateCondensation(
   currentSteamVolume: number,
   currentLiquidVolume: number,
   recirculationPumpFlowRate: number,
-  boilerSteamFlow: number,
   deltaTime: number,
 ): { steamVolumeAfterCondensation: number; waterVolumeAfterCondensation: number } {
   // Condensation rate is proportional to recirculation pump flow rate
