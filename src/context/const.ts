@@ -23,8 +23,8 @@ export const CstSimulation = {
     CAR_TimeNeeded: 1, // seconds to reach max vacuum
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 10, // mbar above AirExtractionPump.MaxVacuum
-    IntakeMaxFlowRate: 400, // kg/s
-    RecirculationPump_MaxFlowRate: 500, // kg/s
+    IntakeMaxFlowRate: 250, // kg/s
+    RecirculationPump_MaxFlowRate: 1000, // kg/s
     HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow
   },
 }

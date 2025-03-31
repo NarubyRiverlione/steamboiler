@@ -3,6 +3,7 @@ import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
+import ShowAverage from "../Condenser/ShowAverage"
 const BoilerReadouts = () => {
   const {
     boilerState: {
@@ -27,7 +28,7 @@ const BoilerReadouts = () => {
   const toggleAdvanced = () => {
     setAdvancedExpanded(!advancedExpanded)
   }
-
+  const average = 100
   return (
     <div className="readouts-panel">
       <h3>Boiler Status</h3>
@@ -45,7 +46,9 @@ const BoilerReadouts = () => {
       </div>
       <div className="readout-item">
         <span className="label">Temperature</span>
-        <span className="value">{temperature.toFixed(1)} °C</span>
+        <span className="value">
+          <ShowAverage newValue={temperature} averageCount={average} /> °C
+        </span>
       </div>
       <div className="readout-item">
         <span className="label">Pressure</span>
@@ -55,7 +58,7 @@ const BoilerReadouts = () => {
         <span className="label">Energy Change</span>
         <span className={`value ${energyDelta > 0 ? "positive" : energyDelta < 0 ? "negative" : ""}`}>
           {energyDelta > 0 ? "+" : ""}
-          {(energyDelta / 1000).toFixed(1)} MJ/s
+          <ShowAverage newValue={energyDelta / 1000} averageCount={average} /> MJ/s
         </span>
       </div>
 
@@ -86,7 +89,9 @@ const BoilerReadouts = () => {
             </div>
             <div className="readout-item">
               <span className="label">Change water volume</span>
-              <span className="value">{deltaWaterVolume.toFixed(0)} l</span>
+              <span className="value">
+                <ShowAverage newValue={deltaWaterVolume} averageCount={average} /> l
+              </span>
             </div>
           </div>
         )}
