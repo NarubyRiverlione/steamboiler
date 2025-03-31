@@ -28,6 +28,7 @@ export const CstSimulation = {
     HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow
     OptimalPressure: 55, // mBar (center of bell curve)
     OptimalPressureBellWidth: 30, // Controls how quickly efficiency drops off
+    CondensationPump_MaxFlowRate: 200,
   },
 }
 

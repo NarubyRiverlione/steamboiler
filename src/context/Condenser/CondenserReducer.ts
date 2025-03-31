@@ -15,6 +15,7 @@ export const initialCondenserState: CondenserState = {
   sjaeValvePosition: 0, // 0% open
   recirculationPumpFlowRate: 0,
   recirculationPumpValvePosition: 0, // 0% open
+  condensationPumpValvePosition: 0,
   deltaWaterVolume: 0,
 }
 
@@ -43,7 +44,12 @@ const condenserReducer = (
         ...state,
         recirculationPumpValvePosition: action.payload,
       }
-
+    case "SET_CONDENSATION_PUMP_VALVE_POSITION": {
+      return {
+        ...state,
+        condensationPumpValvePosition: action.payload,
+      }
+    }
     case "SIMULATE_TICK": {
       const { boilerSteamFlow, deltaTime } = action.payload
       return CondenserTick(state, boilerSteamFlow, deltaTime)

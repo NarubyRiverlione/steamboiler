@@ -32,6 +32,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       // condenser vacuum
       const { steamFlowOut } = boilerState
       condenserDispatch({ type: "SIMULATE_TICK", payload: { boilerSteamFlow: steamFlowOut, deltaTime } })
+
+      // add condensation water to the boiler
+      boilerDispatch({ type: "ADD_CONDENSATION_WATER", amount: condenserState.returnRate })
     }, 100) // Update 10 times per second
 
     return () => {
@@ -76,11 +79,17 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       payload: newPosition,
     })
   }
-
   const adjustRecirculationPumpValvePosition = (amount: number) => {
     const newPosition = Math.max(0, Math.min(1, condenserState.recirculationPumpValvePosition + amount / 100))
     condenserDispatch({
       type: "SET_RECIRCULATION_PUMP_VALVE_POSITION",
+      payload: newPosition,
+    })
+  }
+  const adjustCondensationPumpValvePosition = (amount: number) => {
+    const newPosition = Math.max(0, Math.min(1, condenserState.condensationPumpValvePosition + amount / 100))
+    condenserDispatch({
+      type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
       payload: newPosition,
     })
   }
@@ -101,6 +110,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         toggleSjae,
         adjustSjaeValvePosition,
         adjustRecirculationPumpValvePosition,
+        adjustCondensationPumpValvePosition,
       }}
     >
       {children}

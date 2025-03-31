@@ -11,7 +11,6 @@ const CondenserReadouts = () => {
       hotwellWaterVolume: waterVolume,
       returnRate,
       intakeFlowRate,
-      recirculationPumpFlowRate,
     },
   } = usePowerPlant()
 
@@ -27,7 +26,7 @@ const CondenserReadouts = () => {
       <h3>Turbine</h3>
       <div className="readout-item">
         <span className="label">Steam volume</span>
-        <span className="value">{steamVolume.toFixed(1)} L</span>
+        <span className="value">{steamVolume.toFixed(1)} l</span>
       </div>
 
       <h3>Condenser Status</h3>
@@ -66,13 +65,7 @@ const CondenserReadouts = () => {
 
       <div className="readout-item">
         <span className="label">Return rate</span>
-        <span className="value">{returnRate.toFixed(1)} L/s</span>
-      </div>
-
-      <h3>Recirculation</h3>
-      <div className="readout-item">
-        <span className="label">Pump Flow Rate</span>
-        <span className="value">{recirculationPumpFlowRate.toFixed(2)} kg/s</span>
+        <span className="value">{returnRate.toFixed(1)} l/s</span>
       </div>
     </div>
   )

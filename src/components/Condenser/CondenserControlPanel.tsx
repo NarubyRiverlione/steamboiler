@@ -3,16 +3,19 @@ import ValveSlider from "../ValveSlider"
 
 const CondenserControlPanel = () => {
   const {
-    condenserState: { 
-      isAirExtractionPumpEnabled, 
-      isSjaeEnabled, 
+    condenserState: {
+      isAirExtractionPumpEnabled,
+      isSjaeEnabled,
       sjaeValvePosition,
-      recirculationPumpValvePosition
+      recirculationPumpValvePosition,
+      condensationPumpValvePosition,
+      recirculationPumpFlowRate,
     },
     toggleAirExtractionPump,
     toggleSjae,
     adjustSjaeValvePosition,
     adjustRecirculationPumpValvePosition,
+    adjustCondensationPumpValvePosition,
   } = usePowerPlant()
 
   return (
@@ -22,7 +25,10 @@ const CondenserControlPanel = () => {
       {/* Air Extraction Pump (CAR) Controls */}
       <div className="control-section">
         <h4>Air Extraction Pump (CAR)</h4>
-        <button className={`toggle-button ${isAirExtractionPumpEnabled ? "enabled" : "disabled"}`} onClick={toggleAirExtractionPump}>
+        <button
+          className={`toggle-button ${isAirExtractionPumpEnabled ? "enabled" : "disabled"}`}
+          onClick={toggleAirExtractionPump}
+        >
           {isAirExtractionPumpEnabled ? "STOP" : "START"}
         </button>
       </div>
@@ -49,8 +55,19 @@ const CondenserControlPanel = () => {
         <ValveSlider
           Label="Flow Rate:"
           Position={recirculationPumpValvePosition * 100}
+          Value={`${recirculationPumpFlowRate.toFixed(1)} l/s`}
           Step={10}
           cbAdjust={adjustRecirculationPumpValvePosition}
+        />
+      </div>
+      {/* Condensation Pump Controls */}
+      <div className="control-section">
+        <h4>Condensation Pump</h4>
+        <ValveSlider
+          Label="Flow Rate:"
+          Position={condensationPumpValvePosition * 100}
+          Step={10}
+          cbAdjust={adjustCondensationPumpValvePosition}
         />
       </div>
     </div>

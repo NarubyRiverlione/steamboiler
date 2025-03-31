@@ -21,6 +21,7 @@ export type PowerPlantContextType = {
   toggleSjae: () => void
   adjustSjaeValvePosition: (amount: number) => void
   adjustRecirculationPumpValvePosition: (amount: number) => void
+  adjustCondensationPumpValvePosition: (amount: number) => void
 }
 
 // Context

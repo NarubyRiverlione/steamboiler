@@ -3,7 +3,6 @@ type BoilerState = {
   temperature: number // Celsius
   pressure: number // bar
   gasFlow: number // liters/second
-  // steamRate: number // kg/second - Average over last 10 seconds
   fillValveOpen: boolean
   drainValveOpen: boolean
   energy: number // kJ
@@ -20,6 +19,7 @@ export type BoilerAction =
   | { type: "TOGGLE_FILL_VALVE" }
   | { type: "TOGGLE_DRAIN_VALVE" }
   | { type: "ADJUST_MAIN_STEAM_VALVE"; amount: number }
+  | { type: "ADD_CONDENSATION_WATER"; amount: number }
   | { type: "SIMULATE_TICK"; deltaTime: number }
 
 export default BoilerState

@@ -53,7 +53,12 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
         mainSteamValvePosition: newPosition,
       }
     }
-
+    case "ADD_CONDENSATION_WATER": {
+      return {
+        ...state,
+        waterVolume: state.waterVolume + action.amount,
+      }
+    }
     case "SIMULATE_TICK": {
       const { deltaTime } = action
       return BoilerTick(state, deltaTime)
