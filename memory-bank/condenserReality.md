@@ -16,11 +16,11 @@ The goal is to calculate the condenser vapor and liquid volumes by:
 2. **Compute Energy Absorbed by the Cold Water**  
    - **Mass Flow Rate:**  
      The mass flow rate of the recirculating cold water is calculated as:  
-     `massFlowRate = condensationPumpValvePosition * CstSimulation.condenser.RecirculationPump_MaxFlowRate`  
+     `massFlowRate = condensationPumpValvePosition * CstSimulation.CstCondenser.RecirculationPump_MaxFlowRate`  
      - *condensationPumpValvePosition* is a value between 0 and 1 from the condenser state.
    - **Temperature Difference (ΔT):**  
      Calculate the difference between the condenser outlet temperature and the intake temperature (defined as a constant):  
-     `ΔT = outletTemperature - CstSimulation.condenser.IntakeTemperature`
+     `ΔT = outletTemperature - CstSimulation.CstCondenser.IntakeTemperature`
    - **Energy Absorbed (Q):**  
      Use the formula:  
      `Q = massFlowRate * cp * ΔT`  
@@ -49,7 +49,7 @@ The goal is to calculate the condenser vapor and liquid volumes by:
   - Water Density (`Water_Density`)
 
 - **Simulation Constants:**  
-  Available under the `CstSimulation.condenser` section of `const.ts`:
+  Available under the `CstSimulation.CstCondenser` section of `const.ts`:
   - Maximum recirculation pump flow rate (`RecirculationPump_MaxFlowRate`)
   - Intake Temperature (`IntakeTemperature`)
 
