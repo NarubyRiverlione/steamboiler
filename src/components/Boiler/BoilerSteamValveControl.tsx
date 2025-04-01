@@ -1,6 +1,10 @@
+import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
 import ValveSlider from "../ValveSlider"
 
+const {
+  CstBoiler: { MainSteamValveStep },
+} = CstSimulation
 const BoilerSteamValveControl = () => {
   const {
     boilerState: { mainSteamValvePosition, steamFlowOut },
@@ -15,7 +19,7 @@ const BoilerSteamValveControl = () => {
         Label="Steam Flow"
         Value={`${steamFlowOut.toFixed(1)} kg/s`}
         Position={mainSteamValvePosition}
-        Step={10}
+        Step={MainSteamValveStep}
         cbAdjust={adjustMainSteamValve}
       />
     </div>

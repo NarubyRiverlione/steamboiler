@@ -1,5 +1,10 @@
+import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
 import ValveSlider from "../ValveSlider"
+
+const {
+  CstCondenser: { SJAE_ValveStep, RecirculationPump_Step, CondensationPump_Step },
+} = CstSimulation
 
 const CondenserControlPanel = () => {
   const {
@@ -44,7 +49,7 @@ const CondenserControlPanel = () => {
           Label="Position:"
           //  Value={steamFlowOut}
           Position={sjaeValvePosition}
-          Step={10}
+          Step={SJAE_ValveStep}
           cbAdjust={adjustSjaeValvePosition}
         />
       </div>
@@ -56,7 +61,7 @@ const CondenserControlPanel = () => {
           Label="Flow Rate:"
           Position={recirculationPumpValvePosition * 100}
           Value={`${recirculationPumpFlowRate.toFixed(1)} l/s`}
-          Step={10}
+          Step={RecirculationPump_Step}
           cbAdjust={adjustRecirculationPumpValvePosition}
         />
       </div>
@@ -66,7 +71,7 @@ const CondenserControlPanel = () => {
         <ValveSlider
           Label="Flow Rate:"
           Position={condensationPumpValvePosition * 100}
-          Step={10}
+          Step={CondensationPump_Step}
           cbAdjust={adjustCondensationPumpValvePosition}
         />
       </div>

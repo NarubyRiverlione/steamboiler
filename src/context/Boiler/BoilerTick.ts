@@ -8,28 +8,28 @@ import {
 import { getWaterDensity, getWaterSpecificHeat, getSteamData } from "../../utils/steamTable"
 import BoilerState from "./BoilerTypes"
 import { CstSimulation, CstPhysics } from "../const"
-
-function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
-  let newWaterVolume = state.waterVolume
+const { CstBoiler } = CstSimulation
+function BoilerTick(boilerState: BoilerState): BoilerState {
+  let newWaterVolume = boilerState.waterVolume
   let energyChange = 0
   let removedSteamMass = 0
   let steamRemovalEnergyLoss = 0
 
   // Handle filling and draining
-  if (state.fillValveOpen) {
-    const fillAmount = CstSimulation.BoilerTotalVolume * CstSimulation.FillingRate * deltaTime
-    newWaterVolume = Math.min(CstSimulation.BoilerTotalVolume, newWaterVolume + fillAmount)
+  if (boilerState.fillValveOpen) {
+    const fillAmount = CstBoiler.TotalVolume * CstBoiler.FillingRate * CstSimulation.DeltaTime
+    newWaterVolume = Math.min(CstBoiler.TotalVolume, newWaterVolume + fillAmount)
 
     // Adding water doesn't change total energy, just adds mass
     // The temperature will naturally decrease as the same energy is distributed
     // over a larger mass of water
   }
 
-  if (state.drainValveOpen) {
-    const drainAmount = CstSimulation.BoilerTotalVolume * CstSimulation.DrainingRate * deltaTime
+  if (boilerState.drainValveOpen) {
+    const drainAmount = CstBoiler.TotalVolume * CstBoiler.DrainingRate * CstSimulation.DeltaTime
 
     // Calculate the ratio of water being drained
-    const originalVolume = state.waterVolume
+    const originalVolume = boilerState.waterVolume
     newWaterVolume = Math.max(0, newWaterVolume - drainAmount)
 
     if (originalVolume > 0) {
@@ -37,13 +37,14 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
       // But total energy is reduced proportionally
       const drainRatio = drainAmount / originalVolume
       // Remove the same proportion of energy
-      energyChange -= state.energy * drainRatio
+      energyChange -= boilerState.energy * drainRatio
     }
   }
 
   // --- Steam Mass Calculation (Early for Volume Adjustment) ---
   // Get temperature-dependent water density
-  const waterDensity = state.temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(state.temperature)
+  const waterDensity =
+    boilerState.temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(boilerState.temperature)
 
   // Calculate water mass using density
   const waterMassBeforeSteam = (newWaterVolume * waterDensity) / 1000
@@ -51,16 +52,16 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
   // Calculate instantaneous steam rate
   const instantaneousSteamRate = calculateSteamGeneration(
     waterMassBeforeSteam, // Use current mass estimate for rate calculation
-    state.temperature,
-    state.pressure,
+    boilerState.temperature,
+    boilerState.pressure,
   )
 
   // Steam generated in this tick (kg)
-  const generatedSteamMass = instantaneousSteamRate * deltaTime
+  const generatedSteamMass = instantaneousSteamRate * CstSimulation.DeltaTime
 
   // Calculate the volume of liquid water lost to steam (Liters)
   // Use the calculateWaterVolume function to get the correct volume based on temperature
-  const waterVolumePerKg = calculateWaterVolume(1, state.temperature) // Volume of 1kg of water at current temperature
+  const waterVolumePerKg = calculateWaterVolume(1, boilerState.temperature) // Volume of 1kg of water at current temperature
   const liquidVolumeDecreaseLiters = generatedSteamMass * waterVolumePerKg
 
   // Adjust water volume *before* final mass calculation
@@ -71,32 +72,33 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
   const waterMass = (newWaterVolume * waterDensity) / 1000
 
   // Add energy from gas
-  const gasEnergy = calculateGasEnergy(state.gasFlow) * deltaTime
+  const gasEnergy = calculateGasEnergy(boilerState.gasFlow) * CstSimulation.DeltaTime
   energyChange += gasEnergy
 
   // Natural cooling - use temperature-dependent specific heat
-  const specificHeat = getWaterSpecificHeat(state.temperature)
-  const coolingEnergyLoss = waterMass * specificHeat * CstSimulation.CoolingRate * deltaTime
+  const specificHeat = getWaterSpecificHeat(boilerState.temperature)
+  const coolingEnergyLoss = waterMass * specificHeat * CstBoiler.CoolingRate * CstSimulation.DeltaTime
   energyChange -= coolingEnergyLoss
 
   // Calculate steam generation (Use the already calculated instantaneous rate)
   // const steamRate = calculateSteamGeneration(waterMass, state.temperature, state.pressure) // Already calculated above
-  const steamEnergyLoss = calculateSteamEnergyLoss(instantaneousSteamRate, state.temperature) * deltaTime
+  const steamEnergyLoss =
+    calculateSteamEnergyLoss(instantaneousSteamRate, boilerState.temperature) * CstSimulation.DeltaTime
   energyChange -= steamEnergyLoss
 
   // Update total energy
-  const newEnergy = Math.max(0, state.energy + energyChange)
+  const newEnergy = Math.max(0, boilerState.energy + energyChange)
 
   // --- Steam Removal Calculation ---
 
   // Only attempt to remove steam if there's steam and the valve is open
-  if (state.mainSteamValvePosition > 0 && state.steamMass > 0) {
-    const steamRemovalRate = (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate
-    removedSteamMass = Math.min(state.steamMass, steamRemovalRate * deltaTime)
+  if (boilerState.mainSteamValvePosition > 0 && boilerState.steamMass > 0) {
+    const steamRemovalRate = (boilerState.mainSteamValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
+    removedSteamMass = Math.min(boilerState.steamMass, steamRemovalRate * CstSimulation.DeltaTime)
 
     // Calculate energy loss from steam removal
     // Steam carries both sensible heat (temperature) and latent heat
-    const steamData = getSteamData(state.temperature)
+    const steamData = getSteamData(boilerState.temperature)
     const steamEnthalpy = steamData.enthalpy + steamData.latentHeat // Total enthalpy (kJ/kg)
     steamRemovalEnergyLoss = removedSteamMass * steamEnthalpy
 
@@ -107,7 +109,7 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
 
   // --- Steam Mass Accumulation ---
   // Accumulate steam mass (using generatedSteamMass calculated earlier and accounting for removed steam)
-  const newSteamMass = Math.max(0, state.steamMass + generatedSteamMass - removedSteamMass)
+  const newSteamMass = Math.max(0, boilerState.steamMass + generatedSteamMass - removedSteamMass)
   // --- End Steam Mass Accumulation ---
 
   // Calculate new temperature based on energy changes
@@ -115,7 +117,7 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
   let newTemperature
 
   if (waterMass <= 0) {
-    newTemperature = state.temperature
+    newTemperature = boilerState.temperature
   } else {
     // For temperature changes, consider only gas heating, cooling, and steam generation
     // When water amount changes (filling/draining), the temperature shouldn't be directly affected
@@ -127,7 +129,7 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
     const tempDelta = waterMass > 0 ? nonVolumeEnergyChange / (waterMass * specificHeat) : 0
 
     // Apply the temperature change to current temperature
-    const calculatedTemp = state.temperature + tempDelta
+    const calculatedTemp = boilerState.temperature + tempDelta
 
     // Apply reasonable limits (minimum temperature is 20°C - room temperature)
     newTemperature = Math.max(20, calculatedTemp)
@@ -152,7 +154,7 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
     const liquidWaterVolume = newWaterVolume
 
     // Calculate volume available for steam
-    const availableVolumeForSteam = Math.max(0, CstSimulation.BoilerTotalVolume - liquidWaterVolume)
+    const availableVolumeForSteam = Math.max(0, CstBoiler.TotalVolume - liquidWaterVolume)
 
     // Calculate pressure based on steam mass, temperature, and available volume
     const calculatedPressure = calculatePressureFromSteam(
@@ -168,19 +170,18 @@ function BoilerTick(state: BoilerState, deltaTime: number): BoilerState {
 
   // steam flow out via the Steam Master Valve
   const newSteamOutFlow =
-    newSteamMass > 0.1 ? (state.mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate : 0
+    newSteamMass > 0.1 ? (boilerState.mainSteamValvePosition / 100) * CstBoiler.MaxSteamRemovalRate : 0
 
   return {
-    ...state,
+    ...boilerState,
     waterVolume: Number(newWaterVolume.toFixed(1)),
     temperature: Number(newTemperature.toFixed(1)),
     pressure: Number(newPressure.toFixed(1)),
-    // steamRate: Number(steamRate.toFixed(1)), // Use the calculated average
     steamMass: Number(newSteamMass.toFixed(6)), // Store updated steam mass with higher precision
     energy: Number(newEnergy.toFixed(1)),
-    energyDelta: Number((energyChange / deltaTime).toFixed(1)),
+    energyDelta: Number((energyChange / CstSimulation.DeltaTime).toFixed(1)),
     steamFlowOut: Number(newSteamOutFlow.toFixed(1)),
-    deltaWaterVolume: newWaterVolume - state.waterVolume,
+    deltaWaterVolume: newWaterVolume - boilerState.waterVolume,
   }
 }
 

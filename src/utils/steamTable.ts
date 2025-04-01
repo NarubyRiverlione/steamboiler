@@ -46,6 +46,7 @@ export const steamTable: SteamData[] = [
   { temperature: 280, pressure: 57.92, specificVolume: 0.001320, enthalpy: 1236.8, specificHeat: 5.276, latentHeat: 1574 },
   { temperature: 290, pressure: 66.46, specificVolume: 0.001351, enthalpy: 1289.9, specificHeat: 5.422, latentHeat: 1516 },
   { temperature: 300, pressure: 75.89, specificVolume: 0.001387, enthalpy: 1344.8, specificHeat: 5.584, latentHeat: 1453 },
+  { temperature: 500, pressure: 230.9, specificVolume: 0.0015, enthalpy: 2380.8, specificHeat: 5.70, latentHeat: 0 },
 ];
 
 // Helper function to get steam data through interpolation

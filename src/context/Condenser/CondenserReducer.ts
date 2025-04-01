@@ -24,35 +24,38 @@ const condenserReducer = (
   action: CondenserAction,
 ): CondenserState => {
   switch (action.type) {
-    case "SET_AIR_EXTRACTION_PUMP_ENABLED":
+    case "SET_AIR_EXTRACTION_PUMP_ENABLED": {
+      const {
+        payload: { isAirExtractionPumpEnabled },
+      } = action
       return {
         ...state,
-        isAirExtractionPumpEnabled: action.payload,
+        isAirExtractionPumpEnabled,
       }
+    }
     case "SET_SJAE_ENABLED":
       return {
         ...state,
-        isSjaeEnabled: action.payload,
+        isSjaeEnabled: action.payload.isSjaeEnabled,
       }
     case "SET_SJAE_VALVE_POSITION":
       return {
         ...state,
-        sjaeValvePosition: action.payload,
+        sjaeValvePosition: action.payload.sjaeValvePosition,
       }
     case "SET_RECIRCULATION_PUMP_VALVE_POSITION":
       return {
         ...state,
-        recirculationPumpValvePosition: action.payload,
+        recirculationPumpValvePosition: action.payload.recirculationPumpValvePosition,
       }
     case "SET_CONDENSATION_PUMP_VALVE_POSITION": {
       return {
         ...state,
-        condensationPumpValvePosition: action.payload,
+        condensationPumpValvePosition: action.payload.condensationPumpValvePosition,
       }
     }
     case "SIMULATE_TICK": {
-      const { boilerSteamFlow, deltaTime } = action.payload
-      return CondenserTick(state, boilerSteamFlow, deltaTime)
+      return CondenserTick(state, action.payload.boilerSteamFlow)
     }
 
     default:

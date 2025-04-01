@@ -19,6 +19,9 @@ const BoilerReadouts = () => {
     },
   } = usePowerPlant()
 
+  const {
+    CstBoiler: { MaxSteamRemovalRate },
+  } = CstSimulation
   // Calculate vapor volume based on steam mass and specific volume
   const steamData = getSteamData(temperature)
   const specificVolume = steamData.specificVolume // m³/kg
@@ -36,29 +39,45 @@ const BoilerReadouts = () => {
         <span className="label">Gas Flow</span>
         <span className="value">{gasFlow.toFixed(1)} L/s</span>
       </div>
+
       <div className="readout-item">
         <span className="label">Liquid Volume</span>
         <span className="value">{waterVolume.toFixed(1)} L</span>
       </div>
+
       <div className="readout-item">
         <span className="label">Vapor Volume</span>
         <span className="value">{vaporVolumeLiters.toFixed(1)} L</span>
       </div>
+
       <div className="readout-item">
         <span className="label">Temperature</span>
         <span className="value">
           <ShowAverage newValue={temperature} averageCount={average} /> °C
         </span>
       </div>
+
       <div className="readout-item">
         <span className="label">Pressure</span>
-        <span className="value">{pressure.toFixed(1)} bar</span>
+        <span className="value">
+          {(pressure * 0.1).toFixed(2)} MPa - {pressure.toFixed(1)} bar
+        </span>
       </div>
+
       <div className="readout-item">
         <span className="label">Energy Change</span>
         <span className={`value ${energyDelta > 0 ? "positive" : energyDelta < 0 ? "negative" : ""}`}>
           {energyDelta > 0 ? "+" : ""}
-          <ShowAverage newValue={energyDelta / 1000} averageCount={average} /> MJ/s
+          {(energyDelta / 1e3).toFixed(1)} MJ/s
+        </span>
+      </div>
+
+      <div className="readout-item">
+        <span className="label">Change water volume</span>
+        <span
+          className={`value ${deltaWaterVolume > 0 ? "positive" : deltaWaterVolume < 0 ? "negative" : ""}`}
+        >
+          {deltaWaterVolume.toFixed(1)} l
         </span>
       </div>
 
@@ -71,7 +90,7 @@ const BoilerReadouts = () => {
           <div className="advanced-content">
             <div className="readout-item">
               <span className="label">Energy</span>
-              <span className="value">{(energy / 1000).toFixed(1)} MJ</span>
+              <span className="value">{(energy / 1e3).toFixed(1)} MJ</span>
             </div>
             <div className="readout-item">
               <span className="label">Boiling Point</span>
@@ -84,13 +103,7 @@ const BoilerReadouts = () => {
             <div className="readout-item">
               <span className="label">Steam Removal</span>
               <span className="value">
-                {((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate).toFixed(1)} kg/h
-              </span>
-            </div>
-            <div className="readout-item">
-              <span className="label">Change water volume</span>
-              <span className="value">
-                <ShowAverage newValue={deltaWaterVolume} averageCount={average} /> l
+                {((mainSteamValvePosition / 100) * MaxSteamRemovalRate).toFixed(1)} kg/h
               </span>
             </div>
           </div>

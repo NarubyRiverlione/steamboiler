@@ -2,6 +2,7 @@
 import { CstPhysics, CstSimulation } from "../context/const"
 import { getSteamData, getWaterSpecificHeat, getLatentHeat, getBoilingPoint } from "./steamTable"
 
+const { CstBoiler } = CstSimulation
 // Calculate water volume based on temperature using specific volume data from steam table
 export function calculateWaterVolume(baseVolume: number, temperature: number): number {
   // Reference conditions at 20°C
@@ -34,7 +35,7 @@ export function calculateWaterVolume(baseVolume: number, temperature: number): n
 // Calculate energy from gas flow
 export function calculateGasEnergy(gasFlow: number): number {
   // gasFlow in liters/second
-  return (gasFlow / 1000) * CstPhysics.GasEnergyDensity * CstSimulation.GasEfficiency
+  return (gasFlow / 1000) * CstPhysics.GasEnergyDensity * CstBoiler.GasEfficiency
 }
 
 // Calculate energy needed to heat water
@@ -92,11 +93,11 @@ export function calculatePressureFromSteam(
   // At lower temperatures, the expansion factor is higher
   let expansionFactor
   if (temperature < 100) {
-    expansionFactor = CstSimulation.SteamExpansionFactorLow // For temperatures < 100°C
+    expansionFactor = CstBoiler.SteamExpansionFactorLow // For temperatures < 100°C
   } else if (temperature < 150) {
-    expansionFactor = CstSimulation.SteamExpansionFactorMedium // For temperatures 100-150°C
+    expansionFactor = CstBoiler.SteamExpansionFactorMedium // For temperatures 100-150°C
   } else {
-    expansionFactor = CstSimulation.SteamExpansionFactorHigh // For temperatures > 150°C
+    expansionFactor = CstBoiler.SteamExpansionFactorHigh // For temperatures > 150°C
   }
 
   const specificVolumeSteam = steamData.specificVolume * expansionFactor
@@ -122,8 +123,8 @@ export function calculatePressureFromSteam(
   const dampedRatio = Math.sqrt(volumeRatio)
 
   // Apply an additional damping factor to slow down pressure rise even more
-  // Use the configurable damping factor from CstSimulation
-  const pressureFactor = 1 + (dampedRatio - 1) * CstSimulation.PressureDampingFactor
+  // Use the configurable damping factor from CstBoiler
+  const pressureFactor = 1 + (dampedRatio - 1) * CstBoiler.PressureDampingFactor
 
   const calculatedPressure = saturationPressure * pressureFactor
 
@@ -133,36 +134,26 @@ export function calculatePressureFromSteam(
 
 // Calculate steam generation rate
 export function calculateSteamGeneration(waterMass: number, temperature: number, pressure: number): number {
-  // If there's no water, there can't be steam generation
   if (waterMass <= 0) {
     return 0
   }
 
-  // Special case: If temperature is at or above 100°C and pressure is at or above atmospheric,
-  // we guarantee some steam generation to break the feedback loop
-  if (temperature >= 100) {
-    // Get boiling point for current pressure
-    const boilingPoint = calculateBoilingPoint(pressure)
-
-    // Calculate excess temperature (how far above boiling point)
-    const excessTemp = Math.max(0, temperature - boilingPoint)
-
-    // Ensure some minimum steam generation at or above 100°C
-    const baseGeneration = temperature >= 100 ? 0.01 * waterMass : 0 // Increased base rate (x20)
-
-    // Add additional generation based on excess temperature
-    return baseGeneration + excessTemp * waterMass * 0.02 // Increased factor for excess temp (x20)
-  }
-
-  // Below 100°C, only generate steam if above the boiling point for the current pressure
   const boilingPoint = calculateBoilingPoint(pressure)
   if (temperature <= boilingPoint) {
     return 0
   }
 
-  // Calculate based on excess temperature
-  const excessTemp = Math.max(0, temperature - boilingPoint)
-  return excessTemp * waterMass * 0.01
+  const excessTemp = temperature - boilingPoint
+  const avgTemp = (boilingPoint + temperature) / 2
+  const specificHeat = getWaterSpecificHeat(avgTemp)
+  const availableEnergy = waterMass * specificHeat * excessTemp
+  const latentHeat = getLatentHeat(boilingPoint)
+
+  const steamMassFromEnergy =
+    (availableEnergy * CstBoiler.SteamGenerationEfficiency * CstSimulation.DeltaTime) / latentHeat
+  const baselineGeneration = waterMass * 0.01
+
+  return steamMassFromEnergy + baselineGeneration
 }
 
 // Calculate energy loss from steam generation

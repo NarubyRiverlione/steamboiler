@@ -3,8 +3,8 @@ import BoilerState, { BoilerAction } from "./Boiler/BoilerTypes.ts"
 import boilerReducer, { initialBoilerState } from "./Boiler/BoilerReducer"
 import CondenserState, { CondenserAction } from "./Condenser/CondenserTypes.ts"
 import condenserReducer, { initialCondenserState } from "./Condenser/CondenserReducer.ts"
-// import { CstSimulation } from "./const"
 import { PowerPlantContext } from "./PowerPlantContext.tsx"
+import { CstSimulation } from "./const.ts"
 
 // Provider
 function PowerPlantProvider({ children }: { children: ReactNode }) {
@@ -19,23 +19,17 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
 
   // Simulation loop
   useEffect(() => {
-    let lastTime = Date.now()
-
     const simulationInterval = setInterval(() => {
-      const now = Date.now()
-      const deltaTime = (now - lastTime) / 1000 // Convert to seconds
-      lastTime = now
-
       //  boiler
-      boilerDispatch({ type: "SIMULATE_TICK", deltaTime })
+      boilerDispatch({ type: "SIMULATE_TICK" })
 
       // condenser vacuum
       const { steamFlowOut } = boilerState
-      condenserDispatch({ type: "SIMULATE_TICK", payload: { boilerSteamFlow: steamFlowOut, deltaTime } })
+      condenserDispatch({ type: "SIMULATE_TICK", payload: { boilerSteamFlow: steamFlowOut } })
 
       // add condensation water to the boiler
       boilerDispatch({ type: "ADD_CONDENSATION_WATER", amount: condenserState.returnRate })
-    }, 100) // Update 10 times per second
+    }, CstSimulation.DeltaTime * 1000) // delta in ms
 
     return () => {
       clearInterval(simulationInterval)
@@ -63,34 +57,40 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleAirExtractionPump = () => {
     condenserDispatch({
       type: "SET_AIR_EXTRACTION_PUMP_ENABLED",
-      payload: !condenserState.isAirExtractionPumpEnabled,
+      payload: { isAirExtractionPumpEnabled: !condenserState.isAirExtractionPumpEnabled },
     })
   }
   const toggleSjae = () => {
     condenserDispatch({
       type: "SET_SJAE_ENABLED",
-      payload: !condenserState.isSjaeEnabled,
+      payload: { isSjaeEnabled: !condenserState.isSjaeEnabled },
     })
   }
   const adjustSjaeValvePosition = (amount: number) => {
-    const newPosition = Math.max(0, Math.min(100, condenserState.sjaeValvePosition + amount))
+    const sjaeValvePosition = Math.max(0, Math.min(100, condenserState.sjaeValvePosition + amount))
     condenserDispatch({
       type: "SET_SJAE_VALVE_POSITION",
-      payload: newPosition,
+      payload: { sjaeValvePosition },
     })
   }
   const adjustRecirculationPumpValvePosition = (amount: number) => {
-    const newPosition = Math.max(0, Math.min(1, condenserState.recirculationPumpValvePosition + amount / 100))
+    const recirculationPumpValvePosition = Math.max(
+      0,
+      Math.min(1, condenserState.recirculationPumpValvePosition + amount / 100),
+    )
     condenserDispatch({
       type: "SET_RECIRCULATION_PUMP_VALVE_POSITION",
-      payload: newPosition,
+      payload: { recirculationPumpValvePosition },
     })
   }
   const adjustCondensationPumpValvePosition = (amount: number) => {
-    const newPosition = Math.max(0, Math.min(1, condenserState.condensationPumpValvePosition + amount / 100))
+    const condensationPumpValvePosition = Math.max(
+      0,
+      Math.min(1, condenserState.condensationPumpValvePosition + amount / 100),
+    )
     condenserDispatch({
       type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
-      payload: newPosition,
+      payload: { condensationPumpValvePosition },
     })
   }
 
