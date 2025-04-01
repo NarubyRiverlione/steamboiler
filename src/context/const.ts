@@ -1,10 +1,10 @@
 export const CstSimulation = {
   StartTemperature: 98, // Celsius
-  StartWaterVolume: 100000, // liters
-  MaxGasFlow: 650000000, // liters/second
+  StartWaterVolume: 50e3, // liters
+  MaxGasFlow: 6000, // liters/second
   FillingRate: 0.005, // 0.5% per second
   DrainingRate: 0.005, // 0.5% per second
-  BoilerTotalVolume: 200000, // liters
+  BoilerTotalVolume: 100e3, // liters
   GasEfficiency: 0.85,
   CoolingRate: 1 / 15, // °C per second
   GasChangeRateFast: 500, // °C per second
@@ -24,11 +24,11 @@ export const CstSimulation = {
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 10, // mbar above AirExtractionPump.MaxVacuum
     IntakeMaxFlowRate: 250, // kg/s
-    RecirculationPump_MaxFlowRate: 1000, // kg/s
+    RecirculationPump_MaxFlowRate: 12000, // l/s
     HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow
     OptimalPressure: 55, // mBar (center of bell curve)
     OptimalPressureBellWidth: 30, // Controls how quickly efficiency drops off
-    CondensationPump_MaxFlowRate: 200,
+    CondensationPump_MaxFlowRate: 250,
   },
 }
 
