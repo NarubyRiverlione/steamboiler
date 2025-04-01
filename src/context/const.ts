@@ -17,11 +17,12 @@ export const CstSimulation = {
     SteamExpansionFactorLow: 1600, // For temperatures < 100°C
     SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
     SteamExpansionFactorHigh: 800, // For temperatures > 150°C
-    MaxSteamRemovalRate: 100, // kg/second when valve is fully open (about 1800 kg/hour)
+    MaxSteamRemovalRate: 100, // kg/second when valve is fully open 
     MainSteamValveStep: 5,
   },
   // Condenser settings
   CstCondenser: {
+    MinimumPressure: 10, // mbar
     VacuumDecayRate: 20, // mbar per second when pump is off
     CAR_MaxVacuum: 140, // mbar (negative pressure)
     CAR_TimeNeeded: 1, // seconds to reach max vacuum

@@ -38,7 +38,7 @@ const calcSJAEpressure = (
 
   const {
     CstBoiler: { MaxSteamRemovalRate },
-    CstCondenser: { CAR_MaxVacuum, SJAE_MaxPressureDifference, SJAE_VacuumIncreaseRate },
+    CstCondenser: { CAR_MaxVacuum, SJAE_MaxPressureDifference, SJAE_VacuumIncreaseRate, MinimumPressure },
   } = CstSimulation
 
   // Calculate max allowed vacuum for SJAE
@@ -58,7 +58,10 @@ const calcSJAEpressure = (
   const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * valveEffect * steamFlowEffect
 
   // Apply vacuum increase (limited by max allowed vacuum)
-  const newPressure = Math.min(CAR_MaxVacuum, pressure - vacuumIncreaseRate * CstSimulation.DeltaTime)
+  const newPressure = Math.max(
+    MinimumPressure,
+    Math.min(CAR_MaxVacuum, pressure - vacuumIncreaseRate * CstSimulation.DeltaTime),
+  )
   return { newIsSjaeEnabled: true, pressureBySJAE: newPressure }
 }
 

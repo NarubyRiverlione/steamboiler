@@ -61,7 +61,7 @@ const BoilerReadouts = () => {
         <span className="label">Energy Change</span>
         <span className={`value ${energyDelta > 0 ? "positive" : energyDelta < 0 ? "negative" : ""}`}>
           {energyDelta > 0 ? "+" : ""}
-          <ShowAverage newValue={energyDelta / 1000} averageCount={average} /> MJ/s
+          <ShowAverage newValue={energyDelta / 1e3} averageCount={average} /> MJ/s
         </span>
       </div>
 
@@ -74,7 +74,7 @@ const BoilerReadouts = () => {
           <div className="advanced-content">
             <div className="readout-item">
               <span className="label">Energy</span>
-              <span className="value">{(energy / 1000).toFixed(1)} MJ</span>
+              <span className="value">{(energy / 1e3).toFixed(1)} MJ</span>
             </div>
             <div className="readout-item">
               <span className="label">Boiling Point</span>

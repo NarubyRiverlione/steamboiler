@@ -177,7 +177,6 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     waterVolume: Number(newWaterVolume.toFixed(1)),
     temperature: Number(newTemperature.toFixed(1)),
     pressure: Number(newPressure.toFixed(1)),
-    // steamRate: Number(steamRate.toFixed(1)), // Use the calculated average
     steamMass: Number(newSteamMass.toFixed(6)), // Store updated steam mass with higher precision
     energy: Number(newEnergy.toFixed(1)),
     energyDelta: Number((energyChange / CstSimulation.DeltaTime).toFixed(1)),

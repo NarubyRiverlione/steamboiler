@@ -1,6 +1,7 @@
 import BoilerState, { BoilerAction } from "./BoilerTypes"
 import { CstSimulation } from "../const"
 import BoilerTick from "./BoilerTick"
+import { calculateHeatingEnergy } from "../../utils/boilerCalculations"
 
 const { CstBoiler } = CstSimulation
 
@@ -9,10 +10,9 @@ export const initialBoilerState: BoilerState = {
   temperature: CstBoiler.StartTemperature, // Celsius
   pressure: 1, // bar
   gasFlow: 0, // liters/second
-  // steamRate: 0, // kg/second - Average over last 10 seconds
   fillValveOpen: false,
   drainValveOpen: false,
-  energy: 0, // kJ
+  energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, CstBoiler.StartTemperature), // kJ
   energyDelta: 0, // kJ/s
   steamMass: 0, // kg - Mass of steam currently in the boiler
   mainSteamValvePosition: 0, // 0-100% open
