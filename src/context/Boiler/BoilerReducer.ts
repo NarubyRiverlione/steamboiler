@@ -59,6 +59,7 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       return {
         ...state,
         waterVolume: state.waterVolume + action.amount,
+        deltaWaterVolume: state.deltaWaterVolume + action.amount,
       }
     }
     case "SIMULATE_TICK": {

@@ -17,7 +17,7 @@ export const CstSimulation = {
     SteamExpansionFactorLow: 1600, // For temperatures < 100°C
     SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
     SteamExpansionFactorHigh: 800, // For temperatures > 150°C
-    MaxSteamRemovalRate: 100, // kg/second when valve is fully open 
+    MaxSteamRemovalRate: 150, // kg/second when valve is fully open
     MainSteamValveStep: 5,
   },
   // Condenser settings

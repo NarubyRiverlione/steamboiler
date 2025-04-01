@@ -14,11 +14,10 @@ const CondenserReadouts = () => {
     },
   } = usePowerPlant()
 
-  // Determine if pressure indicators should be active
-  const highPressure =
-    CstSimulation.CstCondenser.OptimalPressure + CstSimulation.CstCondenser.OptimalPressureBellWidth
-  const lowPressure =
-    CstSimulation.CstCondenser.OptimalPressure - CstSimulation.CstCondenser.OptimalPressureBellWidth
+  const highPressureMPa =
+    (CstSimulation.CstCondenser.OptimalPressure + CstSimulation.CstCondenser.OptimalPressureBellWidth) * 0.1
+  const lowPressureMPa =
+    (CstSimulation.CstCondenser.OptimalPressure - CstSimulation.CstCondenser.OptimalPressureBellWidth) * 0.1
 
   return (
     <div className="readouts-panel">
@@ -36,13 +35,13 @@ const CondenserReadouts = () => {
         <span className="value">{pressure.toFixed(1)} mBar</span>
         <div className="indicators-container">
           <Indicator
-            isActive={pressure > highPressure}
-            title={`Pressure above ${highPressure.toFixed(0)} mBar`}
+            isActive={pressure > highPressureMPa}
+            title={`Pressure above ${highPressureMPa.toFixed(0)} mBar`}
             label="High"
           />
           <Indicator
-            isActive={pressure < lowPressure}
-            title={`Pressure below ${lowPressure.toFixed(0)} mBar`}
+            isActive={pressure < lowPressureMPa}
+            title={`Pressure below ${lowPressureMPa.toFixed(0)} mBar`}
             label="Low"
           />
         </div>
