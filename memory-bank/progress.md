@@ -34,6 +34,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Air Extraction Pump (CAR) toggle controls
 - ✅ Steam Jet Air Extraction (SJAE) toggle and valve position controls
 - ✅ Recirculation pump valve position control
+- ✅ Condensation pump to pull feed water from the condenser to the boiler
 
 ### Technical Implementation
 
@@ -47,17 +48,13 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ### Potential Future Features
 
-- ⬜ Condensation pump to pull feed water from the condenser to the boiler
 - ⬜ More detailed visualization of internal processes
 - ⬜ Toggle between simple and realistic calculations
-- ⬜ Toggle between small and big powerplant (boiler & pump capacity)
 - ⬜ Aerator between condenser and boiler
 - ⬜ Turbines for power generation
 - ⬜ Performance optimizations and monitoring (low priority) - see performance_enhancements.md
 
 ## Known Issues
-
-- Steam volume in condenser state should decrease according to the intakeFlowRate
 
 ### Simulation Accuracy
 
@@ -79,12 +76,11 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 The next milestone is to implement the condensation pump and complete the water cycle in the system, followed by implementing the energy balance approach for steam generation. This involves:
 
-1. Adding a condensation pump to pull feed water from the condenser to the boiler
-2. Implementing the energy balance approach for steam generation:
+1. Implementing the energy balance approach for steam generation:
    - Calculating the energy needed to heat water to the boiling point
    - Using remaining energy for steam generation
    - Ensuring conservation of energy throughout the system
-3. Adding an aerator between the condenser and the boiler
-4. Implementing turbines for power generation
+2. Adding an aerator between the condenser and the boiler
+3. Implementing turbines for power generation
 
 These improvements will make the simulation more realistic and educational, particularly for understanding the complete power generation cycle and the relationship between energy input and steam output.
