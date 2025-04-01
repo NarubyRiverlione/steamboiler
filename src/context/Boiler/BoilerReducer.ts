@@ -2,9 +2,11 @@ import BoilerState, { BoilerAction } from "./BoilerTypes"
 import { CstSimulation } from "../const"
 import BoilerTick from "./BoilerTick"
 
+const { CstBoiler } = CstSimulation
+
 export const initialBoilerState: BoilerState = {
-  waterVolume: CstSimulation.StartWaterVolume, // liters
-  temperature: CstSimulation.StartTemperature, // Celsius
+  waterVolume: CstBoiler.StartWaterVolume, // liters
+  temperature: CstBoiler.StartTemperature, // Celsius
   pressure: 1, // bar
   gasFlow: 0, // liters/second
   // steamRate: 0, // kg/second - Average over last 10 seconds
@@ -23,7 +25,7 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
     case "INCREASE_GAS_FLOW":
       return {
         ...state,
-        gasFlow: Math.min(CstSimulation.MaxGasFlow, state.gasFlow + action.amount), // Cap at 10 L/s
+        gasFlow: Math.min(CstBoiler.MaxGasFlow, state.gasFlow + action.amount), // Cap at 10 L/s
       }
 
     case "DECREASE_GAS_FLOW":
@@ -60,8 +62,7 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       }
     }
     case "SIMULATE_TICK": {
-      const { deltaTime } = action
-      return BoilerTick(state, deltaTime)
+      return BoilerTick(state)
     }
 
     default:

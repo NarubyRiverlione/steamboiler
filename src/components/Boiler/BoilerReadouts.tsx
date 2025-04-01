@@ -19,6 +19,9 @@ const BoilerReadouts = () => {
     },
   } = usePowerPlant()
 
+  const {
+    CstBoiler: { MaxSteamRemovalRate },
+  } = CstSimulation
   // Calculate vapor volume based on steam mass and specific volume
   const steamData = getSteamData(temperature)
   const specificVolume = steamData.specificVolume // m³/kg
@@ -84,7 +87,7 @@ const BoilerReadouts = () => {
             <div className="readout-item">
               <span className="label">Steam Removal</span>
               <span className="value">
-                {((mainSteamValvePosition / 100) * CstSimulation.MaxSteamRemovalRate).toFixed(1)} kg/h
+                {((mainSteamValvePosition / 100) * MaxSteamRemovalRate).toFixed(1)} kg/h
               </span>
             </div>
             <div className="readout-item">

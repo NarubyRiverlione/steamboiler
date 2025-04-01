@@ -1,5 +1,6 @@
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
+const { CstBoiler } = CstSimulation
 
 const BoilerGasControl = () => {
   const { increaseGasFlow, decreaseGasFlow } = usePowerPlant()
@@ -9,33 +10,33 @@ const BoilerGasControl = () => {
       <div className="gas-flow-buttons">
         <button
           onClick={() => {
-            increaseGasFlow(CstSimulation.GasChangeRateFast)
+            increaseGasFlow(CstBoiler.GasChangeRateFast)
           }}
         >
-          + {CstSimulation.GasChangeRateFast} L/s
+          + {CstBoiler.GasChangeRateFast} L/s
         </button>
         <button
           onClick={() => {
-            increaseGasFlow(CstSimulation.GasChangeRateSlow)
+            increaseGasFlow(CstBoiler.GasChangeRateSlow)
           }}
         >
-          + {CstSimulation.GasChangeRateSlow} L/s
+          + {CstBoiler.GasChangeRateSlow} L/s
         </button>
       </div>
       <div className="gas-flow-buttons">
         <button
           onClick={() => {
-            decreaseGasFlow(CstSimulation.GasChangeRateSlow)
+            decreaseGasFlow(CstBoiler.GasChangeRateSlow)
           }}
         >
-          - {CstSimulation.GasChangeRateSlow} L/s
+          - {CstBoiler.GasChangeRateSlow} L/s
         </button>
         <button
           onClick={() => {
-            decreaseGasFlow(CstSimulation.GasChangeRateFast)
+            decreaseGasFlow(CstBoiler.GasChangeRateFast)
           }}
         >
-          - {CstSimulation.GasChangeRateFast} L/s
+          - {CstBoiler.GasChangeRateFast} L/s
         </button>
       </div>
     </div>

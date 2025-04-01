@@ -5,8 +5,8 @@ import {
   calculateIntakeFlowRate,
   calculatePressure,
   calculateRecirculationPumpFlowRate,
+  CalculateCondensationFlow,
 } from "../../utils/condenserCalculation"
-import { CstSimulation } from "../../context/const"
 
 /**
  * Simulates the condenser vacuum behavior over time
@@ -16,20 +16,16 @@ import { CstSimulation } from "../../context/const"
  * @param deltaTime Time elapsed since last tick (seconds)
  * @returns Action to update the condenser state
  */
-export function CondenserTick(
-  condenserState: CondenserState,
-  boilerSteamFlow: number,
-  deltaTime: number,
-): CondenserState {
+export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: number): CondenserState {
   // Calculate the pressure based on the CAR & SJAE
-  const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, boilerSteamFlow, deltaTime)
+  const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, boilerSteamFlow)
 
   // Calculate turbine to condenser flow rate based on boiler steam flow and condenser vacuum pressure.
   // The vacuum pressure affects the efficiency of steam flow from turbine to condenser.
   const newIntakeFlowRate = calculateIntakeFlowRate(boilerSteamFlow, newPressure)
 
   // Calculate steam volume change.
-  const steamVolumeChange = calculateSteamVolumeChange(boilerSteamFlow, newIntakeFlowRate, deltaTime)
+  const steamVolumeChange = calculateSteamVolumeChange(boilerSteamFlow, newIntakeFlowRate)
   const newSteamVolume = condenserState.steamVolume + steamVolumeChange
 
   // Calculate recirculation pump flow rate based on valve position.
@@ -42,14 +38,13 @@ export function CondenserTick(
     newSteamVolume,
     condenserState.hotwellWaterVolume,
     newRecirculationPumpFlowRate,
-    deltaTime,
   )
 
   // Condensation pump transfer: remove water from hotwell based on pump valve setting.
-  const pumpFlowRate =
-    condenserState.condensationPumpValvePosition * CstSimulation.Condenser.CondensationPump_MaxFlowRate
-  const pumpVolume = pumpFlowRate * deltaTime
-  const newHotwellWaterVolume = Math.max(0, waterVolumeAfterCondensation - pumpVolume)
+  const { condensatePumpVolume, newHotwellWaterVolume } = CalculateCondensationFlow(
+    condenserState.condensationPumpValvePosition,
+    waterVolumeAfterCondensation,
+  )
 
   return {
     ...condenserState,
@@ -60,6 +55,6 @@ export function CondenserTick(
     steamVolume: steamVolumeAfterCondensation,
     hotwellWaterVolume: newHotwellWaterVolume,
     deltaWaterVolume: newHotwellWaterVolume - condenserState.hotwellWaterVolume,
-    returnRate: pumpVolume,
+    returnRate: condensatePumpVolume,
   }
 }

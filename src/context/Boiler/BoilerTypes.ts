@@ -20,6 +20,6 @@ export type BoilerAction =
   | { type: "TOGGLE_DRAIN_VALVE" }
   | { type: "ADJUST_MAIN_STEAM_VALVE"; amount: number }
   | { type: "ADD_CONDENSATION_WATER"; amount: number }
-  | { type: "SIMULATE_TICK"; deltaTime: number }
+  | { type: "SIMULATE_TICK" }
 
 export default BoilerState

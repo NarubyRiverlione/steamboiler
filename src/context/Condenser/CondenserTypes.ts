@@ -1,5 +1,4 @@
 export type CondenserState = {
-  // temperature: number
   pressure: number // in mBar (negative pressure)
   steamVolume: number
   hotwellWaterVolume: number
@@ -16,11 +15,11 @@ export type CondenserState = {
 }
 
 export type CondenserAction =
-  | { type: "SET_AIR_EXTRACTION_PUMP_ENABLED"; payload: boolean }
-  | { type: "SET_SJAE_ENABLED"; payload: boolean }
-  | { type: "SET_SJAE_VALVE_POSITION"; payload: number }
-  | { type: "SET_RECIRCULATION_PUMP_VALVE_POSITION"; payload: number }
-  | { type: "SET_CONDENSATION_PUMP_VALVE_POSITION"; payload: number }
-  | { type: "SIMULATE_TICK"; payload: { boilerSteamFlow: number; deltaTime: number } }
+  | { type: "SET_AIR_EXTRACTION_PUMP_ENABLED"; payload: { isAirExtractionPumpEnabled: boolean } }
+  | { type: "SET_SJAE_ENABLED"; payload: { isSjaeEnabled: boolean } }
+  | { type: "SET_SJAE_VALVE_POSITION"; payload: { sjaeValvePosition: number } }
+  | { type: "SET_RECIRCULATION_PUMP_VALVE_POSITION"; payload: { recirculationPumpValvePosition: number } }
+  | { type: "SET_CONDENSATION_PUMP_VALVE_POSITION"; payload: { condensationPumpValvePosition: number } }
+  | { type: "SIMULATE_TICK"; payload: { boilerSteamFlow: number } }
 
 export default CondenserState

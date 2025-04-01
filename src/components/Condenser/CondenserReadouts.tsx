@@ -16,9 +16,9 @@ const CondenserReadouts = () => {
 
   // Determine if pressure indicators should be active
   const highPressure =
-    CstSimulation.Condenser.OptimalPressure + CstSimulation.Condenser.OptimalPressureBellWidth
+    CstSimulation.CstCondenser.OptimalPressure + CstSimulation.CstCondenser.OptimalPressureBellWidth
   const lowPressure =
-    CstSimulation.Condenser.OptimalPressure - CstSimulation.Condenser.OptimalPressureBellWidth
+    CstSimulation.CstCondenser.OptimalPressure - CstSimulation.CstCondenser.OptimalPressureBellWidth
 
   return (
     <div className="readouts-panel">
