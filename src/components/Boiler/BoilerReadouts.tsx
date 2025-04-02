@@ -14,7 +14,7 @@ const BoilerReadouts = () => {
       energyDelta,
       steamMass,
       energy,
-      mainSteamValvePosition,
+      bypassValvePosition: BypassValvePosition,
       deltaWaterVolume,
     },
   } = usePowerPlant()
@@ -103,7 +103,7 @@ const BoilerReadouts = () => {
             <div className="readout-item">
               <span className="label">Steam Removal</span>
               <span className="value">
-                {((mainSteamValvePosition / 100) * MaxSteamRemovalRate).toFixed(1)} kg/h
+                {((BypassValvePosition / 100) * MaxSteamRemovalRate).toFixed(1)} kg/h
               </span>
             </div>
           </div>

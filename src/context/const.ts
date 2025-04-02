@@ -18,7 +18,9 @@ export const CstSimulation = {
     SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
     SteamExpansionFactorHigh: 800, // For temperatures > 150°C
     MaxSteamRemovalRate: 150, // kg/second when valve is fully open
-    MainSteamValveStep: 5,
+    BypassValveStep: 5, // % per click open/close
+    TurbineValveStep: 5, // % per click open/close
+    MainSteamValveMinimumPressure: 10, // bar = 1MPa
   },
   // Condenser settings
   CstCondenser: {

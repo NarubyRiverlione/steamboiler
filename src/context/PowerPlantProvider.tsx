@@ -24,7 +24,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       boilerDispatch({ type: "SIMULATE_TICK" })
 
       // condenser vacuum
-      const { steamFlowOut } = boilerState
+      const { bypassSteamFlowOut: steamFlowOut } = boilerState
       condenserDispatch({ type: "SIMULATE_TICK", payload: { boilerSteamFlow: steamFlowOut } })
 
       // add condensation water to the boiler
@@ -36,7 +36,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
     }
   }, [boilerState, condenserState, condenserDispatch])
 
-  // Boiler action creators
+  //#region  Boiler action creators
   const increaseGasFlow = (amount: number) => {
     boilerDispatch({ type: "INCREASE_GAS_FLOW", amount })
   }
@@ -49,11 +49,18 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleDrainValve = () => {
     boilerDispatch({ type: "TOGGLE_DRAIN_VALVE" })
   }
-  const adjustMainSteamValve = (amount: number) => {
-    boilerDispatch({ type: "ADJUST_MAIN_STEAM_VALVE", amount })
+  const adjustBypassValve = (amount: number) => {
+    boilerDispatch({ type: "ADJUST_STEAM_BYPASS_VALVE", amount })
   }
+  const toggleMainSteamValve = () => {
+    boilerDispatch({ type: "TOGGLE_MAIN_STEAM_VALVE" })
+  }
+  const adjustTurbineValve = (amount: number) => {
+    boilerDispatch({ type: "ADJUST_STEAM_TURBINE_VALVE", amount })
+  }
+  //#endregion
 
-  // Condenser action creators
+  //#region Condenser action creators
   const toggleAirExtractionPump = () => {
     condenserDispatch({
       type: "SET_AIR_EXTRACTION_PUMP_ENABLED",
@@ -93,19 +100,26 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       payload: { condensationPumpValvePosition },
     })
   }
+  //#endregion
 
   return (
     <PowerPlantContext.Provider
       value={{
+        // boiler reducer
         boilerState,
         boilerDispatch,
+        // condenser reducer
         condenserState,
         condenserDispatch,
+        // boiler actions
         increaseGasFlow,
         decreaseGasFlow,
         toggleFillValve,
         toggleDrainValve,
-        adjustMainSteamValve,
+        adjustBypassValve,
+        toggleMainSteamValve,
+        adjustTurbineValve,
+        // condenser actions
         toggleAirExtractionPump,
         toggleSjae,
         adjustSjaeValvePosition,

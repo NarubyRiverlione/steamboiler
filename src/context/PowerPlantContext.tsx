@@ -3,19 +3,20 @@ import BoilerState, { BoilerAction } from "./Boiler/BoilerTypes"
 import CondenserState, { CondenserAction } from "./Condenser/CondenserTypes"
 
 export type PowerPlantContextType = {
+  // Boiler reducer
   boilerState: BoilerState
   boilerDispatch: (action: BoilerAction) => void
-
+  // Condenser reducer
   condenserState: CondenserState
   condenserDispatch: (action: CondenserAction) => void
-
   // Boiler action creators
   increaseGasFlow: (amount: number) => void
   decreaseGasFlow: (amount: number) => void
   toggleFillValve: () => void
   toggleDrainValve: () => void
-  adjustMainSteamValve: (amount: number) => void
-  
+  adjustBypassValve: (amount: number) => void
+  toggleMainSteamValve: () => void
+  adjustTurbineValve: (amount: number) => void
   // Condenser action creators
   toggleAirExtractionPump: () => void
   toggleSjae: () => void

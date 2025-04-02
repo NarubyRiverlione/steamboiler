@@ -92,8 +92,8 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   // --- Steam Removal Calculation ---
 
   // Only attempt to remove steam if there's steam and the valve is open
-  if (boilerState.mainSteamValvePosition > 0 && boilerState.steamMass > 0) {
-    const steamRemovalRate = (boilerState.mainSteamValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
+  if (boilerState.bypassValvePosition > 0 && boilerState.steamMass > 0) {
+    const steamRemovalRate = (boilerState.bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
     removedSteamMass = Math.min(boilerState.steamMass, steamRemovalRate * CstSimulation.DeltaTime)
 
     // Calculate energy loss from steam removal
@@ -168,19 +168,24 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     newPressure = Math.max(atmosphericPressure, calculatedPressure)
   }
 
-  // steam flow out via the Steam Master Valve
-  const newSteamOutFlow =
-    newSteamMass > 0.1 ? (boilerState.mainSteamValvePosition / 100) * CstBoiler.MaxSteamRemovalRate : 0
+  // steam flow out via the Bypass  Valve
+  const newBypassOutFlow =
+    newSteamMass > 0.1 ? (boilerState.bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate : 0
+  // steam flow out via the Turbine Valve
+  const maxTurbineFlow = newSteamMass - newBypassOutFlow
+  const newTurbineOutFlow =
+    maxTurbineFlow > 0.1 ? (boilerState.turbineValvePosition / 100) * CstBoiler.MaxSteamRemovalRate : 0
 
   return {
     ...boilerState,
-    waterVolume: Number(newWaterVolume.toFixed(1)),
-    temperature: Number(newTemperature.toFixed(1)),
-    pressure: Number(newPressure.toFixed(1)),
-    steamMass: Number(newSteamMass.toFixed(6)), // Store updated steam mass with higher precision
-    energy: Number(newEnergy.toFixed(1)),
-    energyDelta: Number((energyChange / CstSimulation.DeltaTime).toFixed(1)),
-    steamFlowOut: Number(newSteamOutFlow.toFixed(1)),
+    waterVolume: newWaterVolume,
+    temperature: newTemperature,
+    pressure: newPressure,
+    steamMass: newSteamMass, // Store updated steam mass with higher precision
+    energy: newEnergy,
+    energyDelta: energyChange / CstSimulation.DeltaTime,
+    bypassSteamFlowOut: newBypassOutFlow,
+    turbineSteamFlowOut: newTurbineOutFlow,
     deltaWaterVolume: newWaterVolume - boilerState.waterVolume,
   }
 }
