@@ -22,20 +22,23 @@ export const CstSimulation = {
   },
   // Condenser settings
   CstCondenser: {
+    HotwellStartVolume: 10000, // liter
     MinimumPressure: 10, // mbar
     VacuumDecayRate: 20, // mbar per second when pump is off
+    OptimalPressure: 55, // mBar (center of bell curve)
+    OptimalPressureBellWidth: 30, // Controls how quickly efficiency drops off
     CAR_MaxVacuum: 140, // mbar (negative pressure)
     CAR_TimeNeeded: 1, // seconds to reach max vacuum
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 10, // mbar above AirExtractionPump.MaxVacuum
     SJAE_ValveStep: 10,
+    DampingFactor: 1, // Apply a damping factor to make temperature changes more gradual
     IntakeMaxFlowRate: 250, // kg/s
     RecirculationPump_MaxFlowRate: 12000, // l/s
-    HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow
-    OptimalPressure: 55, // mBar (center of bell curve)
-    OptimalPressureBellWidth: 30, // Controls how quickly efficiency drops off
-    CondensationPump_MaxFlowRate: 250,
     RecirculationPump_Step: 10,
+    RecirculationPump_IntakeTemperature: 10, // C temp of cooling water
+    HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow
+    CondensationPump_MaxFlowRate: 250,
     CondensationPump_Step: 10,
   },
 }

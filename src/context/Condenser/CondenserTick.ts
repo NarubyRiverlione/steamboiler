@@ -4,7 +4,6 @@ import {
   calculateSteamVolumeChange,
   calculateIntakeFlowRate,
   calculatePressure,
-  calculateRecirculationPumpFlowRate,
   CalculateCondensationFlow,
 } from "../../utils/condenserCalculation"
 
@@ -28,17 +27,15 @@ export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: n
   const steamVolumeChange = calculateSteamVolumeChange(boilerSteamFlow, newIntakeFlowRate)
   const newSteamVolume = condenserState.steamVolume + steamVolumeChange
 
-  // Calculate recirculation pump flow rate based on valve position.
-  const newRecirculationPumpFlowRate = calculateRecirculationPumpFlowRate(
-    condenserState.recirculationPumpValvePosition,
-  )
-
-  // Calculate water level based on recirculation pump flow rate.
-  const { steamVolumeAfterCondensation, waterVolumeAfterCondensation } = calculateCondensation(
-    newSteamVolume,
-    condenserState.hotwellWaterVolume,
-    newRecirculationPumpFlowRate,
-  )
+  // Calculate water level based on recirculation pump flow rate and update the temperature
+  // of the condensed water returning to the boiler.
+  const { steamVolumeAfterCondensation, waterVolumeAfterCondensation, newOutletTemperature } =
+    calculateCondensation(
+      newSteamVolume,
+      condenserState.hotwellWaterVolume,
+      condenserState.recirculationPumpValvePosition,
+      condenserState.outletTemperature,
+    )
 
   // Condensation pump transfer: remove water from hotwell based on pump valve setting.
   const { condensatePumpVolume, newHotwellWaterVolume } = CalculateCondensationFlow(
@@ -51,10 +48,11 @@ export function CondenserTick(condenserState: CondenserState, boilerSteamFlow: n
     pressure: newPressure,
     isSjaeEnabled: newIsSjaeEnabled,
     intakeFlowRate: newIntakeFlowRate,
-    recirculationPumpFlowRate: newRecirculationPumpFlowRate,
+    // recirculationPumpFlowRate: newRecirculationPumpFlowRate,
     steamVolume: steamVolumeAfterCondensation,
     hotwellWaterVolume: newHotwellWaterVolume,
     deltaWaterVolume: newHotwellWaterVolume - condenserState.hotwellWaterVolume,
     returnRate: condensatePumpVolume,
+    outletTemperature: newOutletTemperature,
   }
 }

@@ -29,6 +29,10 @@
 - Edge cases are handled with reasonable defaults or limits
 - Vacuum systems use gradual pressure changes with time-based calculations
 - Condenser pressure affects steam flow efficiency with optimal pressure ranges
+- Condenser calculations use energy balance to model steam condensation:
+  - Cold water absorbs energy based on mass flow rate and temperature difference
+  - Absorbed energy causes steam to condense based on latent heat
+  - Temperature of condensed water is tracked and updated based on energy transfer
 
 ### State Management
 - The reducer pattern is used for state transitions
@@ -81,6 +85,16 @@
 7. If neither system is enabled, vacuum gradually decays toward atmospheric pressure
 8. The calculated pressure affects the intake flow rate from the boiler to the condenser
 
+### Condenser Energy Balance
+1. The `calculateCondensation` function in `condenserCalculation.ts` implements the energy balance approach
+2. It calculates the mass flow rate of recirculating cold water based on valve position
+3. It determines the temperature difference between condensed water and cold intake water
+4. It calculates the energy absorbed by the cold water using Q = m * cp * ΔT
+5. It converts this energy to mass of steam condensed using the latent heat of vaporization
+6. It adjusts the steam and liquid volumes based on the condensed mass
+7. It calculates the new temperature of the condensed water based on energy transfer
+8. The temperature is tracked in the condenser state as `outletTemperature`
+
 ## Known Challenges
 
 ### Numerical Stability
@@ -125,6 +139,8 @@
 - Enhancing the UI with more informative readouts
 
 ### Future Direction
-- Implementing energy balance approach for steam generation
+- Implementing energy balance approach for steam generation (similar to condenser)
+- Adding an aerator between condenser and boiler
+- Implementing turbines for power generation
 - Adding more realistic heat loss model
-- Improving visualization of internal processes
+- Improving visualization of internal processes and temperature changes

@@ -21,6 +21,11 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Vacuum decay mechanism when pumps are disabled
 - ✅ Automatic SJAE disabling based on steam flow and pressure conditions
 - ✅ Hotwell water collection and recirculation pump
+- ✅ Energy balance approach for condenser calculations:
+  - Temperature tracking for condensed water returning to the boiler
+  - Calculation of energy absorbed by cold recirculation water
+  - Conversion of absorbed energy to condensed steam volume
+  - Dynamic temperature changes based on energy transfer
 
 ### User Interface
 
@@ -74,7 +79,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ## Next Milestone
 
-The next milestone is to implement the condensation pump and complete the water cycle in the system, followed by implementing the energy balance approach for steam generation. This involves:
+The next milestone is to implement the aerator between the condenser and the boiler, followed by implementing the energy balance approach for steam generation. This involves:
 
 1. Implementing the energy balance approach for steam generation:
    - Calculating the energy needed to heat water to the boiling point

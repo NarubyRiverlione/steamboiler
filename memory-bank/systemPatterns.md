@@ -89,6 +89,40 @@ For the Condenser:
 Energy Change = Energy Input (steam) - Energy Output (cooling, condensation)
 ```
 
+The condenser implements a detailed energy balance calculation for steam condensation:
+
+1. **Cold Water Energy Absorption**:
+   ```typescript
+   // Calculate energy absorbed by cold water (Q = m * cp * ΔT)
+   const energyAbsorbed = massFlowRate * CstPhysics.Water_SpecificHeat * deltaT * CstSimulation.DeltaTime
+   ```
+
+2. **Steam Condensation Calculation**:
+   ```typescript
+   // Calculate mass of steam condensed (m = Q / latentHeat)
+   const latentHeat = getLatentHeat(outletTemperature)
+   const massCondensed = energyAbsorbed / latentHeat
+   ```
+
+3. **Volume Conversion**:
+   ```typescript
+   // Convert condensed mass to volume using water density
+   const waterDensity = CstPhysics.Water_Density // kg/m³
+   const volumeCondensed = (massCondensed / waterDensity) * 1000 // Convert m³ to liters
+   ```
+
+4. **Temperature Calculation**:
+   ```typescript
+   // Calculate temperature change based on energy balance
+   const condensationEnergy = massCondensed * latentHeat
+   const coolingEffect = massFlowRate * CstPhysics.Water_SpecificHeat * 
+                         (outletTemperature - coldWaterIntakeTemperature)
+   
+   // Temperature rises due to condensation and falls due to cooling water
+   const temperatureChange = (condensationEnergy - coolingEffect) / 
+                            (newLiquidVolume * waterDensity / 1000 * CstPhysics.Water_SpecificHeat)
+   ```
+
 ### Condenser Vacuum Control
 
 The condenser implements a dual vacuum control system:

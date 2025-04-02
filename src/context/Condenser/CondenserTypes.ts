@@ -8,10 +8,10 @@ export type CondenserState = {
   isAirExtractionPumpEnabled: boolean
   isSjaeEnabled: boolean
   sjaeValvePosition: number // 0-100%
-  recirculationPumpFlowRate: number // Flow rate of the recirculation pump
   recirculationPumpValvePosition: number // 0-1 (0-100%)
   condensationPumpValvePosition: number // 0-1 (0-100%)
   deltaWaterVolume: number
+  outletTemperature: number // Temperature of the condensed water returning to the boiler (°C)
 }
 
 export type CondenserAction =

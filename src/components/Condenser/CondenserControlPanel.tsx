@@ -3,7 +3,12 @@ import usePowerPlant from "../../context/PowerPlantContext"
 import ValveSlider from "../ValveSlider"
 
 const {
-  CstCondenser: { SJAE_ValveStep, RecirculationPump_Step, CondensationPump_Step },
+  CstCondenser: {
+    SJAE_ValveStep,
+    RecirculationPump_Step,
+    CondensationPump_Step,
+    RecirculationPump_MaxFlowRate,
+  },
 } = CstSimulation
 
 const CondenserControlPanel = () => {
@@ -14,7 +19,6 @@ const CondenserControlPanel = () => {
       sjaeValvePosition,
       recirculationPumpValvePosition,
       condensationPumpValvePosition,
-      recirculationPumpFlowRate,
     },
     toggleAirExtractionPump,
     toggleSjae,
@@ -23,6 +27,7 @@ const CondenserControlPanel = () => {
     adjustCondensationPumpValvePosition,
   } = usePowerPlant()
 
+  const recirculationPumpFlowRate = (recirculationPumpValvePosition / 100) * RecirculationPump_MaxFlowRate
   return (
     <div className="controls-panel">
       <h3>Condenser Control</h3>

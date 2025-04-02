@@ -1,11 +1,11 @@
-import { CstPhysics } from "../const"
+import { CstPhysics, CstSimulation } from "../const"
 import { CondenserTick } from "./CondenserTick"
 import CondenserState, { CondenserAction } from "./CondenserTypes"
 
 export const initialCondenserState: CondenserState = {
-  // temperature: 25,
+  outletTemperature: 25, // Initial temperature of condensed water returning to boiler (°C)
   pressure: CstPhysics.AtmosphericPressure * 1000, // mBar (initial atmospheric pressure)
-  hotwellWaterVolume: 0,
+  hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
   steamVolume: 0, // Start at 0
   intakeFlowRate: 0,
   returnRate: 0,
@@ -13,7 +13,6 @@ export const initialCondenserState: CondenserState = {
   isAirExtractionPumpEnabled: false,
   isSjaeEnabled: false,
   sjaeValvePosition: 0, // 0% open
-  recirculationPumpFlowRate: 0,
   recirculationPumpValvePosition: 0, // 0% open
   condensationPumpValvePosition: 0,
   deltaWaterVolume: 0,

@@ -15,9 +15,9 @@ const CondenserReadouts = () => {
   } = usePowerPlant()
 
   const highPressureMPa =
-    (CstSimulation.CstCondenser.OptimalPressure + CstSimulation.CstCondenser.OptimalPressureBellWidth) * 0.1
+    CstSimulation.CstCondenser.OptimalPressure + CstSimulation.CstCondenser.OptimalPressureBellWidth
   const lowPressureMPa =
-    (CstSimulation.CstCondenser.OptimalPressure - CstSimulation.CstCondenser.OptimalPressureBellWidth) * 0.1
+    CstSimulation.CstCondenser.OptimalPressure - CstSimulation.CstCondenser.OptimalPressureBellWidth
 
   return (
     <div className="readouts-panel">
