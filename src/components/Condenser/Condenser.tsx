@@ -4,14 +4,11 @@ import CondenserVisual from "./CondenserVisual"
 
 const Condenser = () => {
   return (
-    <>
-      <h2>Condenser</h2>
-      <div className="component-container">
-        <CondenserVisual />
-        <CondenserControlPanel />
-        <CondenserReadouts />
-      </div>
-    </>
+    <div className="component-container">
+      <CondenserVisual />
+      <CondenserControlPanel />
+      <CondenserReadouts />
+    </div>
   )
 }
 

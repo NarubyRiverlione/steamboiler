@@ -4,11 +4,14 @@
 
 The Steam Boiler Simulation is built using the following technologies:
 
+Use pnpm as package manager instead of npm
+
 ### Frontend Framework
 
 - **React**: Core UI library
 - **TypeScript**: For type-safe code
 - **Vite**: Build tool and development server
+- **React Router**: For navigation and routing between components
 
 ### State Management
 
@@ -33,6 +36,9 @@ steamboiler-web/
 ├── src/
 │   ├── components/       # UI components
 │   │   ├── simulator.css # Shared simulator styling
+│   │   ├── Layout.tsx    # Layout component with header and tabs
+│   │   ├── TabNavigation.tsx # Tab navigation component
+│   │   ├── TabNavigation.css # Styling for tab navigation
 │   │   ├── Boiler/       # Boiler components
 │   │   │   ├── Boiler.tsx             # Main boiler component
 │   │   │   ├── BoilerControlPanel.tsx # Control panel for boiler
@@ -46,6 +52,8 @@ steamboiler-web/
 │   │       ├── CondenserControlPanel.tsx # Control panel for condenser
 │   │       ├── CondenserReadouts.tsx  # Readouts for condenser
 │   │       └── CondenserVisual.tsx    # Visual representation of condenser
+│   ├── routes/           # Routing configuration
+│   │   └── AppRoutes.tsx # Routes definition
 │   ├── context/          # State management
 │   │   ├── PowerPlantProvider.tsx # Context provider for the whole power plant
 │   │   ├── PowerPlantContext.tsx  # Context for the whole power plant
@@ -61,7 +69,7 @@ steamboiler-web/
 │   │   ├── boilerCalculations.ts # Physics calculations
 │   │   ├── condenserCalculation.ts # Condenser calculations
 │   │   └── steamTable.ts         # Steam property data
-│   ├── App.tsx           # Main application component
+│   ├── App.tsx           # Main application component with router setup
 │   ├── App.css           # Application styling
 │   ├── main.tsx          # Entry point
 │   └── index.css         # Global styles
@@ -76,6 +84,7 @@ The project has minimal external dependencies, focusing on core React and TypeSc
 
 - **React**: UI library
 - **React DOM**: React renderer for the web
+- **React Router DOM**: For routing and navigation
 - **TypeScript**: Static typing
 
 ## Development Environment

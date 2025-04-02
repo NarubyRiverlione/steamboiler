@@ -5,14 +5,11 @@ import BoilerReadouts from "./BoilerReadouts"
 
 function Boiler() {
   return (
-    <>
-      <h2>Boiler</h2>
-      <div className="component-container">
-        <BoilerVisual />
-        <BoilerControlPanel />
-        <BoilerReadouts />
-      </div>
-    </>
+    <div className="component-container">
+      <BoilerVisual />
+      <BoilerControlPanel />
+      <BoilerReadouts />
+    </div>
   )
 }
 

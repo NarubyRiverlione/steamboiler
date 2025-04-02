@@ -1,17 +1,15 @@
-import Boiler from "./components/Boiler/Boiler"
+import { BrowserRouter } from 'react-router-dom'
 import PowerPlantProvider from "./context/PowerPlantProvider"
+import AppRoutes from "./navigation/AppRoutes"
 import "./App.css"
-import Condenser from "./components/Condenser/Condenser"
 
 function App() {
   return (
-    <div className="app">
-      <h1>Powerplant Simulation</h1>
+    <BrowserRouter>
       <PowerPlantProvider>
-        <Boiler />
-        <Condenser />
+        <AppRoutes />
       </PowerPlantProvider>
-    </div>
+    </BrowserRouter>
   )
 }
 

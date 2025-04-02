@@ -116,3 +116,44 @@ button:focus-visible {
   outline: 2px solid #0288d1;
   outline-offset: 2px;
 }
+
+.componentView-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.mainStats-container {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border: 1px solid lightblue;
+  border-radius: 10px 10px 0 0;
+}
+
+.mainStats-component {
+  display: flex;
+}
+.mainStats-readout-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem;
+}
+
+.mainState-readout-item-label {
+  display: flex;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+.mainState-readout-item-value {
+  display: flex;
+  font-size: 0.75rem;
+}
+
+.component-container {
+  display: flex;
+  flex-direction: row;
+  align-items: start;
+  justify-content: start;
+  gap: 1rem;
+  padding: 1rem;
+}

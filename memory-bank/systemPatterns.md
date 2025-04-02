@@ -225,6 +225,40 @@ This integration:
 - Centralizes the simulation loop in the PowerPlantProvider
 - Enables communication between the Boiler and Condenser subsystems
 
+### Routing Pattern
+
+The application uses React Router for navigation between different components:
+
+```mermaid
+flowchart TD
+    App[App.tsx] --> Router[BrowserRouter]
+    Router --> PPP[PowerPlantProvider]
+    PPP --> AppRoutes[AppRoutes Component]
+    AppRoutes --> Routes[Routes Configuration]
+    Routes --> Layout[Layout Component]
+    Layout --> Header[Header with h1]
+    Layout --> Tabs[Tab Navigation]
+    Layout --> Outlet[Outlet for Routes]
+    Outlet --> BoilerRoute[Boiler Route]
+    Outlet --> CondenserRoute[Condenser Route]
+    Outlet --> DefaultRoute[Default Route]
+```
+
+The routing implementation follows these key patterns:
+
+1. **Centralized Routes**: All routes are defined in a separate `AppRoutes.tsx` file for better organization
+2. **Layout Component**: A shared layout component that includes the header and tab navigation
+3. **Tab Navigation**: A reusable component that provides navigation between different views
+4. **Outlet Pattern**: Uses React Router's Outlet component to render the active route's content
+5. **Default Route**: Redirects to the Boiler view by default
+
+This pattern offers several benefits:
+- Improved user experience with focused views
+- Maintained state across tab changes through the PowerPlantProvider
+- Cleaner UI with reduced vertical scrolling
+- URL-based navigation for bookmarking and sharing
+- Extensibility for adding more tabs in the future
+
 ## Key Technical Decisions
 
 ### Condenser Pressure Calculation
