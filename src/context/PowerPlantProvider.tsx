@@ -24,8 +24,10 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       boilerDispatch({ type: "SIMULATE_TICK" })
 
       // condenser vacuum
-      const { bypassSteamFlowOut: steamFlowOut } = boilerState
-      condenserDispatch({ type: "SIMULATE_TICK", payload: { boilerSteamFlow: steamFlowOut } })
+      const { bypassSteamFlowOut, temperature: steamTemp, pressure: steamPressure } = boilerState
+      // TODO also take turbineSteamFlowOUT in account
+      const steamFlow = bypassSteamFlowOut
+      condenserDispatch({ type: "SIMULATE_TICK", payload: { steamFlow, steamTemp, steamPressure } })
 
       // add condensation water to the boiler
       boilerDispatch({ type: "ADD_CONDENSATION_WATER", amount: condenserState.returnRate })

@@ -32,7 +32,6 @@ const CondenserReadouts = () => {
 
       <div className="readout-item">
         <span className="label">Pressure</span>
-        <span className="value">{pressure.toFixed(1)} mBar</span>
         <div className="indicators-container">
           <Indicator
             isActive={pressure > highPressureMPa}
@@ -45,8 +44,11 @@ const CondenserReadouts = () => {
             label="Low"
           />
         </div>
+        <br />
+        <div className="indicators-container">
+          <div className="value">{pressure.toFixed(1)} mBar</div>
+        </div>
       </div>
-
       <div className="readout-item">
         <span className="label">Intake flow</span>
         <span className="value">{intakeFlowRate.toFixed(1)} kg/s</span>

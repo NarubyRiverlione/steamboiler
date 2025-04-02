@@ -3,7 +3,6 @@ import { CondenserTick } from "./CondenserTick"
 import CondenserState, { CondenserAction } from "./CondenserTypes"
 
 export const initialCondenserState: CondenserState = {
-  outletTemperature: 25, // Initial temperature of condensed water returning to boiler (°C)
   pressure: CstPhysics.AtmosphericPressure * 1000, // mBar (initial atmospheric pressure)
   hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
   steamVolume: 0, // Start at 0
@@ -54,7 +53,8 @@ const condenserReducer = (
       }
     }
     case "SIMULATE_TICK": {
-      return CondenserTick(state, action.payload.boilerSteamFlow)
+      const { steamFlow, steamTemp, steamPressure } = action.payload
+      return CondenserTick(state, steamFlow, steamTemp, steamPressure)
     }
 
     default:

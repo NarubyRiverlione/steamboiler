@@ -27,7 +27,7 @@ const CondenserControlPanel = () => {
     adjustCondensationPumpValvePosition,
   } = usePowerPlant()
 
-  const recirculationPumpFlowRate = (recirculationPumpValvePosition / 100) * RecirculationPump_MaxFlowRate
+  const recirculationPumpFlowRate = recirculationPumpValvePosition * RecirculationPump_MaxFlowRate
   return (
     <div className="controls-panel">
       <div className="component-controls">

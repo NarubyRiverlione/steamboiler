@@ -3,7 +3,7 @@ export const CstSimulation = {
   CstBoiler: {
     StartTemperature: 98, // Celsius
     StartWaterVolume: 50e3, // liters
-    MaxGasFlow: 6000, // liters/second
+    MaxGasFlow: 8000, // liters/second
     FillingRate: 0.005, // 0.5% per second
     DrainingRate: 0.005, // 0.5% per second
     TotalVolume: 100e3, // liters
@@ -36,7 +36,7 @@ export const CstSimulation = {
     SJAE_ValveStep: 10,
     DampingFactor: 1, // Apply a damping factor to make temperature changes more gradual
     IntakeMaxFlowRate: 250, // kg/s
-    RecirculationPump_MaxFlowRate: 12000, // l/s
+    RecirculationPump_MaxFlowRate: 1200, // l/s
     RecirculationPump_Step: 10,
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water
     HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow

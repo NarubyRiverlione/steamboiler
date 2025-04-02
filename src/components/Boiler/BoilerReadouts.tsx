@@ -3,7 +3,7 @@ import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
-import ShowAverage from "../ShowAverage"
+// import ShowAverage from "../ShowAverage"
 const BoilerReadouts = () => {
   const {
     boilerState: {
@@ -31,7 +31,7 @@ const BoilerReadouts = () => {
   const toggleAdvanced = () => {
     setAdvancedExpanded(!advancedExpanded)
   }
-  const average = 100
+  // const average = 100
   return (
     <div className="readouts-panel">
       <h3>Boiler Status</h3>
@@ -52,9 +52,7 @@ const BoilerReadouts = () => {
 
       <div className="readout-item">
         <span className="label">Temperature</span>
-        <span className="value">
-          <ShowAverage newValue={temperature} averageCount={average} /> °C
-        </span>
+        <span className="value">{temperature.toFixed(1)} °C</span>
       </div>
 
       <div className="readout-item">

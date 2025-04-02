@@ -168,13 +168,20 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     newPressure = Math.max(atmosphericPressure, calculatedPressure)
   }
 
-  // steam flow out via the Bypass  Valve
-  const newBypassOutFlow =
-    newSteamMass > 0.1 ? (boilerState.bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate : 0
-  // steam flow out via the Turbine Valve
+  // steam flow out via the Bypass Valve - only if Main Steam valve is open
+  const newBypassOutFlow = !boilerState.mainSteamValve
+    ? 0
+    : newSteamMass > 0.1
+      ? (boilerState.bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
+      : 0
+  // steam flow out via the Turbine Valve  - only if Main Steam valve is open
+  // can only take the steam that's isn't already taken by the Bypass
   const maxTurbineFlow = newSteamMass - newBypassOutFlow
-  const newTurbineOutFlow =
-    maxTurbineFlow > 0.1 ? (boilerState.turbineValvePosition / 100) * CstBoiler.MaxSteamRemovalRate : 0
+  const newTurbineOutFlow = !boilerState.mainSteamValve
+    ? 0
+    : maxTurbineFlow > 0.1
+      ? (boilerState.turbineValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
+      : 0
 
   return {
     ...boilerState,

@@ -1,14 +1,16 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
+import Indicator from "../Indicator"
 import ValveSlider from "../ValveSlider"
 
 const {
-  CstBoiler: { BypassValveStep, TurbineValveStep },
+  CstBoiler: { BypassValveStep, TurbineValveStep, MainSteamValveMinimumPressure },
 } = CstSimulation
 const BoilerSteamValveControl = () => {
   const {
     boilerState: {
       bypassValvePosition,
+      pressure,
       turbineValvePosition,
       bypassSteamFlowOut,
       turbineSteamFlowOut,
@@ -24,14 +26,19 @@ const BoilerSteamValveControl = () => {
       <h3>Steam Flow</h3>
 
       <div className="valve-buttons">
-        <div>
-          <h4>Main Steam Valve</h4>
+        <h4>Main Steam Valve</h4>
+        <div style={{ display: "flex", flexDirection: "row", gap: "1rem" }}>
           <button
             className={`valve-button ${mainSteamValve ? "open" : "closed"}`}
             onClick={toggleMainSteamValve}
           >
             {mainSteamValve ? "Open" : "Closed"}
           </button>
+          <Indicator
+            isActive={pressure < MainSteamValveMinimumPressure}
+            label={"Opening not possible"}
+            title={`Main Steam Valve can only be opened if pressure is greater then ${(MainSteamValveMinimumPressure / 10).toFixed(1)} Mpa - ${MainSteamValveMinimumPressure.toFixed(0)} bar`}
+          />
         </div>
       </div>
 
