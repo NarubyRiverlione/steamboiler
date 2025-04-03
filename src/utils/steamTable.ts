@@ -4,7 +4,7 @@ import { SteamData, steamTable } from "../context/steamData";
 // Helper function to get steam data through interpolation
 export function getSteamData(temperature: number): SteamData {
   // Clamp temperature to valid range
-  const clampedTemp = Math.max(80, Math.min(300, temperature));
+  const clampedTemp = Math.max(80, Math.min(500, temperature));
   
   // Find two closest data points
   let lower = steamTable[0];
