@@ -13,6 +13,7 @@ const BoilerReadouts = () => {
       pressure,
       energyDelta,
       steamMass,
+      deltaSteamMass,
       energy,
       bypassValvePosition: BypassValvePosition,
       deltaWaterVolume,
@@ -41,15 +42,16 @@ const BoilerReadouts = () => {
       </div>
 
       <div className="readout-item">
-        <span className="label">Liquid Volume</span>
+        <span className="label">Water Volume</span>
         <span className="value">
           {waterVolume.toFixed(0)} L - {(waterVolume / TotalVolume).toFixed(2)}
         </span>
       </div>
 
       <div className="readout-item">
-        <span className="label">Vapor Volume</span>
+        <span className="label">Steam Volume</span>
         <span className="value">{vaporVolumeLiters.toFixed(0)} L</span>
+        <span className="value"> Δ {deltaSteamMass.toFixed(1)} kg/s</span>
       </div>
 
       <div className="readout-item">

@@ -20,6 +20,7 @@ export const initialBoilerState: BoilerState = {
   bypassSteamFlowOut: 0, // g/s
   turbineSteamFlowOut: 0, // g/s
   deltaWaterVolume: 0,
+  deltaSteamMass: 0,
   mainSteamValve: false, // closed
 }
 

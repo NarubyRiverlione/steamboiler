@@ -91,8 +91,8 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
 
   // --- Steam Removal Calculation ---
 
-  // Only attempt to remove steam if there's steam and the valve is open
-  if (boilerState.bypassValvePosition > 0 && boilerState.steamMass > 0) {
+  // Only attempt to remove steam if there's steam and the main steam valve is open
+  if (boilerState.mainSteamValve && boilerState.steamMass > 0) {
     const steamRemovalRate = (boilerState.bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
     removedSteamMass = Math.min(boilerState.steamMass, steamRemovalRate * CstSimulation.DeltaTime)
 
@@ -194,6 +194,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     bypassSteamFlowOut: newBypassOutFlow,
     turbineSteamFlowOut: newTurbineOutFlow,
     deltaWaterVolume: newWaterVolume - boilerState.waterVolume,
+    deltaSteamMass: (generatedSteamMass - removedSteamMass) / CstSimulation.DeltaTime,
   }
 }
 

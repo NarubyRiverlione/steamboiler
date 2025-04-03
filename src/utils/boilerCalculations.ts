@@ -48,7 +48,7 @@ export function calculateHeatingEnergy(waterMass: number, currentTemp: number, t
 
   return waterMass * specificHeat * (targetTemp - currentTemp)
 }
-
+/*
 // Calculate new temperature based on current energy and added energy
 export function calculateNewTemperature(waterMass: number, currentTemp: number, addedEnergy: number): number {
   // If no water, temperature doesn't change
@@ -61,7 +61,7 @@ export function calculateNewTemperature(waterMass: number, currentTemp: number, 
 
   return currentTemp + addedEnergy / (waterMass * specificHeat)
 }
-
+*/
 // Calculate boiling point based on pressure
 export function calculateBoilingPoint(pressure: number): number {
   // Use the getBoilingPoint function from steamTable.ts

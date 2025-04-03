@@ -1,19 +1,20 @@
 type BoilerState = {
+  gasFlow: number // liters/second
   waterVolume: number // liters
   deltaWaterVolume: number
   temperature: number // Celsius
   pressure: number // bar
-  gasFlow: number // liters/second
+  energy: number // kJ
+  steamMass: number // kg - Mass of steam currently in the boiler
+  deltaSteamMass: number // kg/s generated steam
+  energyDelta: number // kJ/s
   fillValveOpen: boolean
   drainValveOpen: boolean
-  energy: number // kJ
-  energyDelta: number // kJ/s
-  steamMass: number // kg - Mass of steam currently in the boiler
   mainSteamValve: boolean // open/close MSV
   bypassValvePosition: number // 0-100% open
-  bypassSteamFlowOut: number // g/s
+  bypassSteamFlowOut: number // kg/s
   turbineValvePosition: number // 0-100% open
-  turbineSteamFlowOut: number // g/s
+  turbineSteamFlowOut: number // kg/s
 }
 
 export type BoilerAction =
