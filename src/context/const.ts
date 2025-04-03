@@ -19,7 +19,7 @@ export const CstSimulation = {
     TurbineValveStep: 5, // % per click open/close
     MainSteamValveMinimumPressure: 2, //10, // bar = 1MPa
   },
-  // Condenser settings
+
   CstCondenser: {
     HotwellStartVolume: 10000, // liter
     MinimumPressure: 10, // mbar
@@ -40,6 +40,7 @@ export const CstSimulation = {
     CondensationPump_MaxFlowRate: 1000, // l/s (typical 160 - 270 l/s)
     CondensationPump_Step: 5,
   },
+  CstTurbine: {},
 }
 
 export const CstPhysics = {
