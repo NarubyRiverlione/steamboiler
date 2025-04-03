@@ -3,6 +3,7 @@ import { CstPhysics, CstSimulation } from "../context/const"
 import { getSteamData, getWaterSpecificHeat, getLatentHeat, getBoilingPoint } from "./steamTable"
 
 const { CstBoiler } = CstSimulation
+
 // Calculate water volume based on temperature using specific volume data from steam table
 export function calculateWaterVolume(baseVolume: number, temperature: number): number {
   // Reference conditions at 20°C
@@ -143,17 +144,28 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
     return 0
   }
 
-  const excessTemp = temperature - boilingPoint
-  const avgTemp = (boilingPoint + temperature) / 2
-  const specificHeat = getWaterSpecificHeat(avgTemp)
-  const availableEnergy = waterMass * specificHeat * excessTemp
+  // Calculate energy from gas flow
+  const gasEnergy = calculateGasEnergy(CstBoiler.MaxGasFlow) // Assuming max gas flow for calculation
+
+  // Calculate energy needed to heat water to boiling point
+  const heatingEnergy = calculateHeatingEnergy(waterMass, temperature, boilingPoint)
+
+  // Calculate heat loss
+  const heatLoss = gasEnergy * CstBoiler.HeatLossPercentage
+
+  // Determine the remaining energy available for steam generation
+  const availableEnergy = gasEnergy - heatingEnergy - heatLoss
+
+  if (availableEnergy <= 0) {
+    return 0
+  }
+
   const latentHeat = getLatentHeat(boilingPoint)
 
-  const steamMassFromEnergy =
-    (availableEnergy * CstBoiler.SteamGenerationEfficiency * CstSimulation.DeltaTime) / latentHeat
-  const baselineGeneration = waterMass * 0.01
+  // Calculate the steam generation rate
+  const steamMassFromEnergy = (availableEnergy * CstSimulation.DeltaTime) / latentHeat
 
-  return steamMassFromEnergy + baselineGeneration
+  return steamMassFromEnergy
 }
 
 // Calculate energy loss from steam generation

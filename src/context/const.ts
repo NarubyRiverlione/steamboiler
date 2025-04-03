@@ -8,11 +8,12 @@ export const CstSimulation = {
     DrainingRate: 0.005, // 0.5% per second
     TotalVolume: 100e3, // liters (typical  50,000 - 100,000 liters)
     GasEfficiency: 0.85,
-    SteamGenerationEfficiency: 0.75, // Fraction of available energy used for steam generation
+    SteamGenerationEfficiency: 0.5, // Fraction of available energy used for steam generation
     CoolingRate: 1 / 15, // °C per second
     GasChangeRateFast: 500, // °C per second
     GasChangeRateSlow: 250, // °C per second,
     PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
+    HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
     MaxSteamRemovalRate: 150, // kg/second when valve is fully open
     BypassValveStep: 5, // % per click open/close
     TurbineValveStep: 5, // % per click open/close
