@@ -3,8 +3,10 @@ import BoilerState, { BoilerAction } from "./Boiler/BoilerTypes.ts"
 import boilerReducer, { initialBoilerState } from "./Boiler/BoilerReducer"
 import CondenserState, { CondenserAction } from "./Condenser/CondenserTypes.ts"
 import condenserReducer, { initialCondenserState } from "./Condenser/CondenserReducer.ts"
-import { PowerPlantContext } from "./PowerPlantContext.tsx"
+import TurbineState, { TurbineAction } from "./Turbine/TurbineTypes.ts"
+import turbineReducer, { initialTurbineState } from "./Turbine/TurbineReducer.ts"
 import { CstSimulation } from "./const.ts"
+import { PowerPlantContext } from "./PowerPlantContext.tsx"
 
 // Provider
 function PowerPlantProvider({ children }: { children: ReactNode }) {
@@ -15,6 +17,10 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const [condenserState, condenserDispatch] = useReducer(condenserReducer, initialCondenserState) as [
     CondenserState,
     (action: CondenserAction) => void,
+  ]
+  const [turbineState, turbineDispatch] = useReducer(turbineReducer, initialTurbineState) as [
+    TurbineState,
+    (action: TurbineAction) => void,
   ]
 
   // Simulation loop
@@ -31,7 +37,13 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
 
       // add condensation water to the boiler
       boilerDispatch({ type: "ADD_CONDENSATION_WATER", amount: condenserState.returnRate })
-    }, CstSimulation.DeltaTime * 1000) // delta in ms
+
+      // Turbine
+      turbineDispatch({
+        type: "SIMULATE_TICK",
+        payload: { turbineValvePosition: boilerState.turbineValvePosition },
+      })
+    }, CstSimulation.DeltaTime * 1000) // DeltaTime is in sec
 
     return () => {
       clearInterval(simulationInterval)
@@ -113,6 +125,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         // condenser reducer
         condenserState,
         condenserDispatch,
+        // turbine reducer (added)
+        turbineState,
+        turbineDispatch,
         // boiler actions
         increaseGasFlow,
         decreaseGasFlow,

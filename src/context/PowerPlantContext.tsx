@@ -1,15 +1,19 @@
-import { createContext, useContext } from "react"
+import { Dispatch, createContext, useContext } from "react"
 import BoilerState, { BoilerAction } from "./Boiler/BoilerTypes"
-import CondenserState, { CondenserAction } from "./Condenser/CondenserTypes"
+import CondenserState, {CondenserAction } from "./Condenser/CondenserTypes"
+import TurbineState, { TurbineAction } from "./Turbine/TurbineTypes"
 
 export type PowerPlantContextType = {
-  // Boiler reducer
+  // Boiler reducer state and dispatch
   boilerState: BoilerState
-  boilerDispatch: (action: BoilerAction) => void
-  // Condenser reducer
+  boilerDispatch: Dispatch<BoilerAction>
+  // Condenser reducer state and dispatch
   condenserState: CondenserState
-  condenserDispatch: (action: CondenserAction) => void
-  // Boiler action creators
+  condenserDispatch: Dispatch<CondenserAction>
+  // Turbine reducer state and dispatch
+  turbineState: TurbineState
+  turbineDispatch: Dispatch<TurbineAction>
+  // Action creators
   increaseGasFlow: (amount: number) => void
   decreaseGasFlow: (amount: number) => void
   toggleFillValve: () => void
@@ -17,7 +21,6 @@ export type PowerPlantContextType = {
   adjustBypassValve: (amount: number) => void
   toggleMainSteamValve: () => void
   adjustTurbineValve: (amount: number) => void
-  // Condenser action creators
   toggleAirExtractionPump: () => void
   toggleSjae: () => void
   adjustSjaeValvePosition: (amount: number) => void

@@ -22,11 +22,8 @@ const CondenserReadouts = () => {
 
   return (
     <div className="readouts-panel">
-      {/* temporary visualization of steam in turbine */}
-      <h3>Turbine</h3>
-      <Readout title="Steam volume" value={steamVolume} unit="l" />
-
       <h3>Condenser Status</h3>
+      <Readout title="Steam volume" value={steamVolume} unit="l" />
 
       <div className="readout-container">
         <div className="readout-item">

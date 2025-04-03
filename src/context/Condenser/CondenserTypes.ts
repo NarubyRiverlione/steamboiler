@@ -1,4 +1,4 @@
-export type CondenserState = {
+type CondenserState = {
   pressure: number // in mBar (negative pressure)
   steamVolume: number
   hotwellWaterVolume: number

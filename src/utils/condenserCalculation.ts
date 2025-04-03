@@ -1,4 +1,4 @@
-import { CondenserState } from "../context/Condenser/CondenserTypes"
+import CondenserState from "../context/Condenser/CondenserTypes"
 import { CstPhysics, CstSimulation } from "../context/const"
 import { getLatentHeat } from "./steamTable"
 

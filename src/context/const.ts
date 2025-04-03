@@ -17,7 +17,7 @@ export const CstSimulation = {
     MaxSteamRemovalRate: 150, // kg/second when valve is fully open
     BypassValveStep: 5, // % per click open/close
     TurbineValveStep: 5, // % per click open/close
-    MainSteamValveMinimumPressure: 2, //10, // bar = 1MPa
+    MainSteamValveMinimumPressure: 10, // bar = 1MPa
   },
 
   CstCondenser: {
@@ -40,7 +40,10 @@ export const CstSimulation = {
     CondensationPump_MaxFlowRate: 1000, // l/s (typical 160 - 270 l/s)
     CondensationPump_Step: 5,
   },
-  CstTurbine: {},
+
+  CstTurbine: {
+    steamToElectricityEfficiency: 0.35, // Typical conversion ratio from steam energy to electrical energy (black-box approach)
+  },
 }
 
 export const CstPhysics = {

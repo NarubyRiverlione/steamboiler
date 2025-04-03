@@ -1,4 +1,4 @@
-import { CondenserState } from "./CondenserTypes"
+import CondenserState from "./CondenserTypes"
 import {
   calculateCondensation,
   calculateIntakeFlowRate,
