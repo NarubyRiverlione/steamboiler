@@ -25,7 +25,7 @@ const CondenserReadouts = () => {
       <h3>Turbine</h3>
       <div className="readout-item">
         <span className="label">Steam volume</span>
-        <span className="value">{steamVolume.toFixed(1)} l</span>
+        <span className="value">{steamVolume.toFixed(0)} l</span>
       </div>
 
       <h3>Condenser Status</h3>
@@ -46,7 +46,7 @@ const CondenserReadouts = () => {
         </div>
         <br />
         <div className="indicators-container">
-          <div className="value">{pressure.toFixed(1)} mBar</div>
+          <div className="value">{pressure.toFixed(0)} mBar</div>
         </div>
       </div>
       <div className="readout-item">
@@ -56,12 +56,12 @@ const CondenserReadouts = () => {
 
       <div className="readout-item">
         <span className="label">Hotwell Level</span>
-        <span className="value">{waterVolume.toFixed(1)}</span>
+        <span className="value">{waterVolume.toFixed(0)}</span>
       </div>
 
       <div className="readout-item">
         <span className="label">Change water volume</span>
-        <span className="value">{deltaWaterVolume.toFixed(2)} l</span>
+        <span className="value">{deltaWaterVolume.toFixed(1)} l</span>
       </div>
 
       <div className="readout-item">

@@ -20,7 +20,7 @@ const BoilerReadouts = () => {
   } = usePowerPlant()
 
   const {
-    CstBoiler: { MaxSteamRemovalRate },
+    CstBoiler: { MaxSteamRemovalRate, TotalVolume },
   } = CstSimulation
   // Calculate vapor volume based on steam mass and specific volume
   const steamData = getSteamData(temperature)
@@ -37,17 +37,19 @@ const BoilerReadouts = () => {
       <h3>Boiler Status</h3>
       <div className="readout-item">
         <span className="label">Gas Flow</span>
-        <span className="value">{gasFlow.toFixed(1)} L/s</span>
+        <span className="value">{gasFlow.toFixed(0)} L/s</span>
       </div>
 
       <div className="readout-item">
         <span className="label">Liquid Volume</span>
-        <span className="value">{waterVolume.toFixed(1)} L</span>
+        <span className="value">
+          {waterVolume.toFixed(0)} L - {(waterVolume / TotalVolume).toFixed(2)}
+        </span>
       </div>
 
       <div className="readout-item">
         <span className="label">Vapor Volume</span>
-        <span className="value">{vaporVolumeLiters.toFixed(1)} L</span>
+        <span className="value">{vaporVolumeLiters.toFixed(0)} L</span>
       </div>
 
       <div className="readout-item">
@@ -66,7 +68,7 @@ const BoilerReadouts = () => {
         <span className="label">Energy Change</span>
         <span className={`value ${energyDelta > 0 ? "positive" : energyDelta < 0 ? "negative" : ""}`}>
           {energyDelta > 0 ? "+" : ""}
-          {(energyDelta / 1e3).toFixed(1)} MJ/s
+          {(energyDelta / 1e3).toFixed(0)} MJ/s
         </span>
       </div>
 

@@ -33,6 +33,7 @@
 .mainStats-container {
   display: flex;
   flex-direction: column;
+  min-width: 120px;
   padding: 1rem;
   border: 1px solid lightblue;
   border-radius: 10px 10px 0 0;

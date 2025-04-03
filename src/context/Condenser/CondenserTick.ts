@@ -20,11 +20,10 @@ export function CondenserTick(
   condenserState: CondenserState,
   steamFlow: number,
   steamTemp: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   steamPressure: number,
 ): CondenserState {
   // Calculate the pressure based on the CAR & SJAE
-  const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, steamFlow)
+  const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, steamPressure)
 
   // Calculate turbine to condenser flow rate based on boiler steam flow and condenser vacuum pressure.
   // The vacuum pressure affects the efficiency of steam flow from turbine to condenser.

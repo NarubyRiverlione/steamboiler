@@ -26,14 +26,14 @@ const calcSJAEpressure = (
   isSjaeEnabled: boolean,
   sjaeValvePosition: number,
   pressure: number,
-  boilerSteamFlow: number,
+  boilerSteamPressure: number,
 ): { newIsSjaeEnabled: boolean; pressureBySJAE: number } => {
   // Check if SJAE is enabled, handle potential vacuum decay in separated function
   if (!isSjaeEnabled) return { newIsSjaeEnabled: false, pressureBySJAE: pressure }
 
   // Check if SJAE should be automatically disabled
-  if (boilerSteamFlow <= 0) {
-    // No steam flow, disable SJAE
+  if (boilerSteamPressure <= CstSimulation.CstBoiler.MainSteamValveMinimumPressure) {
+    // Not enough steam pressure to use  SJAE
     return { newIsSjaeEnabled: false, pressureBySJAE: pressure }
   }
 
@@ -53,7 +53,7 @@ const calcSJAEpressure = (
 
   // Calculate vacuum increase based on steam flow and valve position
   const valveEffect = sjaeValvePosition / 100 // 0-1 range
-  const steamFlowEffect = Math.min(1, boilerSteamFlow / MaxSteamRemovalRate)
+  const steamFlowEffect = Math.min(1, boilerSteamPressure / MaxSteamRemovalRate)
 
   // Combine effects for final vacuum increase
   const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * valveEffect * steamFlowEffect
