@@ -93,11 +93,11 @@ export function calculatePressureFromSteam(
   // At lower temperatures, the expansion factor is higher
   let expansionFactor
   if (temperature < 100) {
-    expansionFactor = CstBoiler.SteamExpansionFactorLow // For temperatures < 100°C
+    expansionFactor = CstPhysics.SteamExpansionFactorLow // For temperatures < 100°C
   } else if (temperature < 150) {
-    expansionFactor = CstBoiler.SteamExpansionFactorMedium // For temperatures 100-150°C
+    expansionFactor = CstPhysics.SteamExpansionFactorMedium // For temperatures 100-150°C
   } else {
-    expansionFactor = CstBoiler.SteamExpansionFactorHigh // For temperatures > 150°C
+    expansionFactor = CstPhysics.SteamExpansionFactorHigh // For temperatures > 150°C
   }
 
   const specificVolumeSteam = steamData.specificVolume * expansionFactor

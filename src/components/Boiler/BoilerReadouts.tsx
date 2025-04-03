@@ -1,7 +1,6 @@
 import { useState } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
-import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
 import Readout from "../Readout"
 // import ShowAverage from "../ShowAverage"
@@ -16,13 +15,11 @@ const BoilerReadouts = () => {
       steamMass,
       deltaSteamMass,
       energy,
-      bypassValvePosition: BypassValvePosition,
-      deltaWaterVolume,
     },
   } = usePowerPlant()
 
   const {
-    CstBoiler: { MaxSteamRemovalRate, TotalVolume },
+    CstBoiler: { TotalVolume },
   } = CstSimulation
   // Calculate vapor volume based on steam mass and specific volume
   const steamData = getSteamData(temperature)

@@ -3,20 +3,16 @@ export const CstSimulation = {
   CstBoiler: {
     StartTemperature: 98, // Celsius
     StartWaterVolume: 50e3, // liters
-    MaxGasFlow: 8000, // liters/second
+    MaxGasFlow: 8000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
     FillingRate: 0.005, // 0.5% per second
     DrainingRate: 0.005, // 0.5% per second
-    TotalVolume: 100e3, // liters
+    TotalVolume: 100e3, // liters (typical  50,000 - 100,000 liters)
     GasEfficiency: 0.85,
-    SteamGenerationEfficiency: 0.5, // Fraction of available energy used for steam generation
+    SteamGenerationEfficiency: 0.75, // Fraction of available energy used for steam generation
     CoolingRate: 1 / 15, // °C per second
     GasChangeRateFast: 500, // °C per second
     GasChangeRateSlow: 250, // °C per second,
-    PressureDampingFactor: 0.05, // Damping factor for pressure calculation
-    // Steam expansion factors for different temperature ranges
-    SteamExpansionFactorLow: 1600, // For temperatures < 100°C
-    SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
-    SteamExpansionFactorHigh: 800, // For temperatures > 150°C
+    PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     MaxSteamRemovalRate: 150, // kg/second when valve is fully open
     BypassValveStep: 5, // % per click open/close
     TurbineValveStep: 5, // % per click open/close
@@ -36,16 +32,19 @@ export const CstSimulation = {
     SJAE_ValveStep: 10,
     DampingFactor: 1, // Apply a damping factor to make temperature changes more gradual
     IntakeMaxFlowRate: 250, // kg/s
-    RecirculationPump_MaxFlowRate: 1800, // l/s
+    RecirculationPump_MaxFlowRate: 1800, // l/s (typical 9.000-12.000)
     RecirculationPump_Step: 5,
-    RecirculationPump_IntakeTemperature: 10, // C temp of cooling water
+    RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
     HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow
-    CondensationPump_MaxFlowRate: 1000,
+    CondensationPump_MaxFlowRate: 1000, // l/s (typical 160 - 270 l/s)
     CondensationPump_Step: 5,
   },
 }
 
 export const CstPhysics = {
+  SteamExpansionFactorLow: 1600, // For temperatures < 100°C
+  SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
+  SteamExpansionFactorHigh: 800, // For temperatures > 150°C
   Water_Density: 1000, // kg/m³ (used as fallback for temperatures below 80°C)
   Water_SpecificHeat: 4.18, // kJ/kg°C (used as fallback for temperatures below 80°C)
   GasEnergyDensity: 35000, // kJ/m³ (approximate energy density of natural gas)
