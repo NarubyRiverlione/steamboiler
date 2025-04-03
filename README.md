@@ -5,7 +5,7 @@ This project simulates the operation of a steam boiler system, integrating both 
 ## Project Overview
 
 Steamboiler Web is designed to:
-- Simulate key aspects of steam boiler and condenser operations.
+- Simulate key aspects of steam boiler and condenser operations, including an energy balance approach for steam generation.
 - Integrate simulation logic across multiple modules.
 - Provide interactive control panels and readouts for real-time simulation feedback.
 - Utilize robust context management to maintain and update system state.
@@ -14,16 +14,16 @@ Steamboiler Web is designed to:
 
 According to our latest memory bank update (active as of 2025-04-01 11:10:49 CET), the project is currently focused on:
 - Refinement of the simulation components.
-- Integration of Condenser and Boiler simulation logic.
+- Integration of Condenser and Boiler simulation logic, including the implementation of an energy balance approach for the boiler's steam generation.
 - Reviewing and enhancing utility functions (e.g., *condenserCalculation.ts* and *boilerCalculations.ts*) for accurate modeling.
 - Active improvements in context management, particularly within *PowerPlantProvider* and related context files.
 
 ## Next Steps
 
 Upcoming development efforts include:
-- Finalizing integration tests and performance tuning.
-- Consolidating simulation logic across modules.
-- Refining user interface components based on integration feedback.
+- Implementing the aerator between the condenser and the boiler.
+- Implementing turbines for power generation.
+- Reducing empirical approaches in calculations.
 
 ## Getting Started
 

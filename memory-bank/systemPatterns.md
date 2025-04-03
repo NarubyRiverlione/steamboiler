@@ -81,13 +81,45 @@ The simulation uses an energy balance approach to model the thermodynamic system
 
 For the Boiler:
 ```
-Energy Change = Energy Input (gas) - Energy Output (cooling, steam generation, draining)
+Energy Change = Energy Input (gas) - Energy Output (heating water, heat loss, steam generation, draining)
 ```
 
 For the Condenser:
 ```
 Energy Change = Energy Input (steam) - Energy Output (cooling, condensation)
 ```
+
+The boiler implements a detailed energy balance calculation for steam generation:
+
+1. **Energy Input Calculation**:
+   ```typescript
+   // Calculate energy from gas flow
+   const gasEnergy = calculateGasEnergy(CstBoiler.MaxGasFlow); // Assuming max gas flow for calculation
+   ```
+
+2. **Heating Energy Calculation**:
+   ```typescript
+   // Calculate energy needed to heat water to boiling point
+   const heatingEnergy = calculateHeatingEnergy(waterMass, temperature, boilingPoint);
+   ```
+
+3. **Heat Loss Calculation**:
+   ```typescript
+   // Calculate heat loss
+   const heatLoss = gasEnergy * CstBoiler.HeatLossPercentage;
+   ```
+
+4. **Available Energy Calculation**:
+   ```typescript
+   // Determine the remaining energy available for steam generation
+   const availableEnergy = gasEnergy - heatingEnergy - heatLoss;
+   ```
+
+5. **Steam Generation Calculation**:
+   ```typescript
+   // Calculate the steam generation rate
+   const steamMassFromEnergy = (availableEnergy * CstSimulation.DeltaTime) / latentHeat;
+   ```
 
 The condenser implements a detailed energy balance calculation for steam condensation:
 
@@ -329,3 +361,12 @@ Several simplifications are made to balance accuracy with performance:
    ```
 
 These simplifications maintain physical realism while ensuring the simulation runs smoothly in a browser environment.
+
+The remaining empirical approaches are:
+*   `calculateGasEnergy` uses `CstPhysics.GasEnergyDensity` and `CstBoiler.GasEfficiency`, where `GasEfficiency` might be an empirical factor.
+*   `calculatePressureFromSteam` uses `CstPhysics.SteamExpansionFactorLow`, `CstPhysics.SteamExpansionFactorMedium`, and `CstPhysics.SteamExpansionFactorHigh`, which might be empirical approximations.
+*   `calculateWaterVolume` uses linear approximation for temperatures below 80°C.
+*   `calcCARpressure` uses `CAR_MaxVacuum` and `CAR_TimeNeeded`, which might be empirical approximations.
+*   `calcSJAEpressure` uses `SJAE_MaxPressureDifference` and `SJAE_VacuumIncreaseRate`, which might be empirical approximations.
+*   `calculateIntakeFlowRate` uses a bell curve and `CstSimulation.CstCondenser.OptimalPressure` and `CstSimulation.CstCondenser.OptimalPressureBellWidth`, which might be empirical approximations.
+*   `calculateCondensation` uses `DampingFactor` which might be an empirical value.

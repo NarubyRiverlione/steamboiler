@@ -46,7 +46,7 @@ The simulation aims to provide:
 
 The simulation is successful if it:
 
-1. **Accurately Models Physics**: Correctly implements the thermodynamic relationships and physical laws governing steam generation.
+1. **Accurately Models Physics**: Correctly implements the thermodynamic relationships and physical laws governing steam generation, including an energy balance approach in the boiler calculations.
 
 2. **Provides Clear Visualization**: Makes the invisible processes of energy transfer and phase change visible and understandable.
 

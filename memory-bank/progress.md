@@ -26,6 +26,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
   - Calculation of energy absorbed by cold recirculation water
   - Conversion of absorbed energy to condensed steam volume
   - Dynamic temperature changes based on energy transfer
+- ✅ Energy balance approach for boiler calculations
 
 ### User Interface
 
@@ -54,17 +55,25 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 ### Potential Future Features
 
 - ⬜ More detailed visualization of internal processes
-- ⬜ Toggle between simple and realistic calculations
 - ⬜ Aerator between condenser and boiler
 - ⬜ Turbines for power generation
 - ⬜ Performance optimizations and monitoring (low priority) - see performance_enhancements.md
+- ⬜ Reduce empirical approaches in calculations:
+    *   Boiler:
+        *   `calculateGasEnergy` uses `CstPhysics.GasEnergyDensity` and `CstBoiler.GasEfficiency`, where `GasEfficiency` might be an empirical factor.
+        *   `calculatePressureFromSteam` uses `CstPhysics.SteamExpansionFactorLow`, `CstPhysics.SteamExpansionFactorMedium`, and `CstPhysics.SteamExpansionFactorHigh`, which might be empirical approximations.
+        *   `calculateWaterVolume` uses linear approximation for temperatures below 80°C.
+    *   Condenser:
+        *   `calcCARpressure` uses `CAR_MaxVacuum` and `CAR_TimeNeeded`, which might be empirical approximations.
+        *   `calcSJAEpressure` uses `SJAE_MaxPressureDifference` and `SJAE_VacuumIncreaseRate`, which might be empirical approximations.
+        *   `calculateIntakeFlowRate` uses a bell curve and `CstSimulation.CstCondenser.OptimalPressure` and `CstSimulation.CstCondenser.OptimalPressureBellWidth`, which might be empirical approximations.
+        *   `calculateCondensation` uses `DampingFactor` which might be an empirical value.
 
 ## Known Issues
 
 ### Simulation Accuracy
 
-- The current steam generation model uses an empirical approach rather than a strict energy balance
-- Boiling point calculation uses a simplified power law
+- Boiling point calculation uses a simplified power law for pressures above the steam table range
 - Heat loss model is simplified
 
 ### Edge Cases
@@ -79,13 +88,9 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ## Next Milestone
 
-The next milestone is to implement the aerator between the condenser and the boiler, followed by implementing the energy balance approach for steam generation. This involves:
+The next milestone is to implement the aerator between the condenser and the boiler. This involves:
 
-1. Implementing the energy balance approach for steam generation:
-   - Calculating the energy needed to heat water to the boiling point
-   - Using remaining energy for steam generation
-   - Ensuring conservation of energy throughout the system
-2. Adding an aerator between the condenser and the boiler
-3. Implementing turbines for power generation
+1. Adding an aerator between the condenser and the boiler
+2. Implementing turbines for power generation
 
 These improvements will make the simulation more realistic and educational, particularly for understanding the complete power generation cycle and the relationship between energy input and steam output.

@@ -18,7 +18,7 @@ Accurate calculations are central to the simulation and control processes. The c
   Located in `src/utils/boilerCalculations.ts`, these routines incorporate:
   - Thermal efficiency computations.
   - Heat transfer and energy balance equations.
-  - Dynamic modeling of fuel combustion and steam generation.
+  - Dynamic modeling of fuel combustion and steam generation using an energy balance approach.
   
 - **Condenser Calculations:**  
   Found in `src/utils/condenserCalculation.ts`, these functions include:

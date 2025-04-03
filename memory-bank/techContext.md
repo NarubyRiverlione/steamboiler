@@ -36,9 +36,6 @@ steamboiler-web/
 ├── src/
 │   ├── components/       # UI components
 │   │   ├── simulator.css # Shared simulator styling
-│   │   ├── Layout.tsx    # Layout component with header and tabs
-│   │   ├── TabNavigation.tsx # Tab navigation component
-│   │   ├── TabNavigation.css # Styling for tab navigation
 │   │   ├── Boiler/       # Boiler components
 │   │   │   ├── Boiler.tsx             # Main boiler component
 │   │   │   ├── BoilerControlPanel.tsx # Control panel for boiler
@@ -52,12 +49,18 @@ steamboiler-web/
 │   │       ├── CondenserControlPanel.tsx # Control panel for condenser
 │   │       ├── CondenserReadouts.tsx  # Readouts for condenser
 │   │       └── CondenserVisual.tsx    # Visual representation of condenser
+│   ├── navigation/           # Navigation components
+│   │   ├── ComponentView.tsx # Component View
+│   │   ├── Layout.tsx        # Layout component with header and tabs
+│   │   ├── MainStatsView.tsx # Main Stats View
+│   │   ├── TabNavigation.css # Styling for tab navigation
+│   │   └── TabNavigation.tsx # Tab navigation component
 │   ├── routes/           # Routing configuration
 │   │   └── AppRoutes.tsx # Routes definition
 │   ├── context/          # State management
 │   │   ├── PowerPlantProvider.tsx # Context provider for the whole power plant
 │   │   ├── PowerPlantContext.tsx  # Context for the whole power plant
-│   │   ├── const.ts             # Constants
+│   │   ├── const.ts             # Constants, including HeatLossPercentage
 │   │   ├── Boiler/      # Boiler state management
 │   │   │   ├── BoilerReducer.ts # Reducer with simulation logic
 │   │   │   ├── BoilerTick.ts    # Tick logic for boiler
@@ -74,8 +77,8 @@ steamboiler-web/
 │   ├── main.tsx          # Entry point
 │   └── index.css         # Global styles
 ├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-└── vite.config.ts        # Vite configuration
+├── tsconfig.json          # TypeScript configuration
+└── vite.config.ts         # Vite configuration
 ```
 
 ## Key Dependencies
@@ -147,7 +150,7 @@ return {
   temperature: clampedTemp,
   pressure: lower.pressure + ratio * (upper.pressure - lower.pressure),
   specificVolume: lower.specificVolume + ratio * (upper.specificVolume - lower.specificVolume),
-  enthalpy: lower.enthalpy + ratio * (upper.enthalpy - lower.enthalpy),
+  enthalpy: lower.enthalpy + ratio * (upper.enthalpy - upper.enthalpy),
   specificHeat: lower.specificHeat + ratio * (upper.specificHeat - lower.specificHeat),
   latentHeat: lower.latentHeat + ratio * (upper.latentHeat - lower.latentHeat),
 }
