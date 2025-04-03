@@ -20,7 +20,7 @@ export const CstSimulation = {
     MaxSteamRemovalRate: 150, // kg/second when valve is fully open
     BypassValveStep: 5, // % per click open/close
     TurbineValveStep: 5, // % per click open/close
-    MainSteamValveMinimumPressure: 10, // bar = 1MPa
+    MainSteamValveMinimumPressure: 2, //10, // bar = 1MPa
   },
   // Condenser settings
   CstCondenser: {

@@ -8,6 +8,7 @@ import {
 import { getWaterDensity, getWaterSpecificHeat, getSteamData } from "../../utils/steamTable"
 import BoilerState from "./BoilerTypes"
 import { CstSimulation, CstPhysics } from "../const"
+import averageTwo from "../../utils/average"
 const { CstBoiler } = CstSimulation
 function BoilerTick(boilerState: BoilerState): BoilerState {
   let newWaterVolume = boilerState.waterVolume
@@ -183,18 +184,22 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
       ? (boilerState.turbineValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
       : 0
 
+  // average the values for a better UX
   return {
     ...boilerState,
     waterVolume: newWaterVolume,
     temperature: newTemperature,
-    pressure: newPressure,
-    steamMass: newSteamMass, // Store updated steam mass with higher precision
+    pressure: averageTwo(boilerState.pressure, newPressure),
+    steamMass: averageTwo(boilerState.steamMass, newSteamMass),
     energy: newEnergy,
-    energyDelta: energyChange / CstSimulation.DeltaTime,
+    energyDelta: averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
     bypassSteamFlowOut: newBypassOutFlow,
     turbineSteamFlowOut: newTurbineOutFlow,
-    deltaWaterVolume: newWaterVolume - boilerState.waterVolume,
-    deltaSteamMass: (generatedSteamMass - removedSteamMass) / CstSimulation.DeltaTime,
+    deltaWaterVolume: averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
+    deltaSteamMass: averageTwo(
+      boilerState.deltaSteamMass,
+      (generatedSteamMass - removedSteamMass) / CstSimulation.DeltaTime,
+    ),
   }
 }
 

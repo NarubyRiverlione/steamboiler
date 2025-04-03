@@ -3,6 +3,7 @@ import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import { calculateBoilingPoint } from "../../utils/boilerCalculations"
 import { getSteamData } from "../../utils/steamTable"
+import Readout from "../Readout"
 // import ShowAverage from "../ShowAverage"
 const BoilerReadouts = () => {
   const {
@@ -36,65 +37,32 @@ const BoilerReadouts = () => {
   return (
     <div className="readouts-panel">
       <h3>Boiler Status</h3>
-      <div className="readout-item">
-        <span className="label">Gas Flow</span>
-        <span className="value">{gasFlow.toFixed(0)} L/s</span>
-      </div>
 
-      <div className="readout-item">
-        <span className="label">Water Volume</span>
-        <span className="value">
-          {waterVolume.toFixed(0)} L - {(waterVolume / TotalVolume).toFixed(2)}
-        </span>
-      </div>
+      <Readout title="Gas flow" value={gasFlow} unit="l/s" />
 
-      <div className="readout-item">
-        <span className="label">Steam Volume</span>
-        <span className="value">{vaporVolumeLiters.toFixed(0)} L</span>
-        <span className="value"> Δ {deltaSteamMass.toFixed(1)} kg/s</span>
-      </div>
+      <Readout
+        title="Water volume"
+        value={waterVolume}
+        unit={`l/s ${(waterVolume / TotalVolume).toFixed(2)}`}
+      />
 
-      <div className="readout-item">
-        <span className="label">Temperature</span>
-        <span className="value">{temperature.toFixed(1)} °C</span>
-      </div>
+      <Readout title="Temperature" value={temperature} unit="°C" fixed={1} />
 
-      <div className="readout-item">
-        <span className="label">Pressure</span>
-        <span className="value">
-          {(pressure * 0.1).toFixed(2)} MPa - {pressure.toFixed(1)} bar
-        </span>
-      </div>
+      <Readout title="Pressure" value={pressure * 0.1} unit="MPa" fixed={2} />
 
-      <div className="readout-item">
-        <span className="label">Energy Change</span>
-        <span className={`value ${energyDelta > 0 ? "positive" : energyDelta < 0 ? "negative" : ""}`}>
-          {energyDelta > 0 ? "+" : ""}
-          {(energyDelta / 1e3).toFixed(0)} MJ/s
-        </span>
-      </div>
-
-      <div className="readout-item">
-        <span className="label">Change water volume</span>
-        <span
-          className={`value ${deltaWaterVolume > 0 ? "positive" : deltaWaterVolume < 0 ? "negative" : ""}`}
-        >
-          {deltaWaterVolume.toFixed(1)} l
-        </span>
-      </div>
+      <Readout title="Energy Change" value={energyDelta / 1e3} unit="MJ/s" colored />
 
       <div className="advanced-section">
         <h3 className="advanced-toggle" onClick={toggleAdvanced}>
-          Advanced {advancedExpanded ? "▼" : "▶"}
+          {advancedExpanded ? "▼" : "▶"} Advanced
         </h3>
 
         {advancedExpanded && (
           <div className="advanced-content">
-            <div className="readout-item">
-              <span className="label">Energy</span>
-              <span className="value">{(energy / 1e3).toFixed(1)} MJ</span>
-            </div>
-            <div className="readout-item">
+            <Readout title="Steam Volume" value={vaporVolumeLiters} unit="L" delta={deltaSteamMass} />
+            <Readout title="Energy" value={energy / 1e3} unit="MJ" fixed={1} />
+
+            {/* <div className="readout-item">
               <span className="label">Boiling Point</span>
               <span className="value">{calculateBoilingPoint(pressure).toFixed(1)} °C</span>
             </div>
@@ -107,7 +75,7 @@ const BoilerReadouts = () => {
               <span className="value">
                 {((BypassValvePosition / 100) * MaxSteamRemovalRate).toFixed(1)} kg/h
               </span>
-            </div>
+            </div> */}
           </div>
         )}
       </div>

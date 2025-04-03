@@ -1,6 +1,7 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
 import Indicator from "../Indicator"
+import Readout from "../Readout"
 
 const CondenserReadouts = () => {
   const {
@@ -23,16 +24,13 @@ const CondenserReadouts = () => {
     <div className="readouts-panel">
       {/* temporary visualization of steam in turbine */}
       <h3>Turbine</h3>
-      <div className="readout-item">
-        <span className="label">Steam volume</span>
-        <span className="value">{steamVolume.toFixed(0)} l</span>
-      </div>
+      <Readout title="Steam volume" value={steamVolume} unit="l" />
 
       <h3>Condenser Status</h3>
 
-      <div className="readout-item">
-        <span className="label">Pressure</span>
-        <div className="indicators-container">
+      <div className="readout-container">
+        <div className="readout-item">
+          <span className="label">Pressure</span>
           <Indicator
             isActive={pressure > highPressureMPa}
             title={`Pressure above ${highPressureMPa.toFixed(0)} mBar`}
@@ -44,30 +42,23 @@ const CondenserReadouts = () => {
             label="Low"
           />
         </div>
-        <br />
-        <div className="indicators-container">
+        <div className="readout-right">
           <div className="value">{pressure.toFixed(0)} mBar</div>
         </div>
       </div>
-      <div className="readout-item">
-        <span className="label">Intake flow</span>
-        <span className="value">{intakeFlowRate.toFixed(1)} kg/s</span>
-      </div>
 
-      <div className="readout-item">
-        <span className="label">Hotwell Level</span>
-        <span className="value">{waterVolume.toFixed(0)}</span>
-      </div>
+      <Readout title="Intake flow" value={intakeFlowRate} unit="kg/s" fixed={1} />
 
-      <div className="readout-item">
-        <span className="label">Change water volume</span>
-        <span className="value">{deltaWaterVolume.toFixed(1)} l</span>
-      </div>
+      <Readout
+        title="Hotwell level"
+        value={waterVolume}
+        unit="l"
+        fixed={1}
+        delta={deltaWaterVolume}
+        deltaFixed={1}
+      />
 
-      <div className="readout-item">
-        <span className="label">Return rate</span>
-        <span className="value">{returnRate.toFixed(1)} l/s</span>
-      </div>
+      <Readout title="Return flow" value={returnRate} unit="l" fixed={1} />
     </div>
   )
 }
