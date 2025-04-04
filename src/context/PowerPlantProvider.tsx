@@ -26,23 +26,36 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   // Simulation loop
   useEffect(() => {
     const simulationInterval = setInterval(() => {
-      //  boiler
-      boilerDispatch({ type: "SIMULATE_TICK" })
+      //#region Condenser
+      const { pressure: boilerPressure, steamMass: previousSteamMass } = boilerState
 
-      // condenser vacuum
-      const { bypassSteamFlowOut, temperature: steamTemp, pressure: steamPressure } = boilerState
-      // TODO also take turbineSteamFlowOUT in account
-      const steamFlow = bypassSteamFlowOut
-      condenserDispatch({ type: "SIMULATE_TICK", payload: { steamFlow, steamTemp, steamPressure } })
-
+      const steamFromBypass = { temp: boilerState.temperature, flow: boilerState.bypassSteamFlowOut }
+      const steamFromTurbine = { temp: boilerState.temperature, flow: boilerState.turbineSteamFlowOut }
+      condenserDispatch({
+        type: "SIMULATE_TICK",
+        payload: { boilerPressure, steamFromBypass, steamFromTurbine },
+      })
+      // remove steam from bypass valve in the boiler
+      //  boilerRemoveSteam(boilerState.bypassValvePosition, "BYPASS")
       // add condensation water to the boiler
-      boilerDispatch({ type: "ADD_CONDENSATION_WATER", amount: condenserState.returnRate })
-
-      // Turbine
+      // boilerAddCondensationWater(condenserState.returnRate)
+      boilerDispatch({
+        type: "ADD_CONDENSATION_WATER",
+        payload: { condensationFlow: condenserState.returnRate },
+      })
+      //#endregion
+      //#region Turbine
       turbineDispatch({
         type: "SIMULATE_TICK",
         payload: { turbineValvePosition: boilerState.turbineValvePosition },
       })
+      // remove steam from turbine valve in the boiler
+      boilerRemoveSteam(boilerState.turbineValvePosition, "TURBINE")
+      //#endregion
+      //#region Boiler
+      boilerDispatch({ type: "SIMULATE_TICK", payload: { previousSteamMass } })
+
+      //#endregion
     }, CstSimulation.DeltaTime * 1000) // DeltaTime is in sec
 
     return () => {
@@ -71,6 +84,12 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   }
   const adjustTurbineValve = (amount: number) => {
     boilerDispatch({ type: "ADJUST_STEAM_TURBINE_VALVE", amount })
+  }
+  const boilerAddCondensationWater = (condensationFlow: number) => {
+    boilerDispatch({ type: "ADD_CONDENSATION_WATER", payload: { condensationFlow } })
+  }
+  const boilerRemoveSteam = (amount: number, removeBy: "BYPASS" | "TURBINE" | "VENT") => {
+    boilerDispatch({ type: "REMOVE_STEAM", payload: { removeSteam: amount, removeBy } })
   }
   //#endregion
 

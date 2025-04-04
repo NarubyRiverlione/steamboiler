@@ -19,6 +19,13 @@ export type CondenserAction =
   | { type: "SET_SJAE_VALVE_POSITION"; payload: { sjaeValvePosition: number } }
   | { type: "SET_RECIRCULATION_PUMP_VALVE_POSITION"; payload: { recirculationPumpValvePosition: number } }
   | { type: "SET_CONDENSATION_PUMP_VALVE_POSITION"; payload: { condensationPumpValvePosition: number } }
-  | { type: "SIMULATE_TICK"; payload: { steamFlow: number; steamTemp: number; steamPressure: number } }
+  | {
+      type: "SIMULATE_TICK"
+      payload: {
+        boilerPressure: number
+        steamFromBypass: { flow: number; temp: number }
+        steamFromTurbine: { flow: number; temp: number }
+      }
+    }
 
 export default CondenserState

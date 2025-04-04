@@ -21,6 +21,7 @@ const condenserReducer = (
   state: CondenserState = initialCondenserState,
   action: CondenserAction,
 ): CondenserState => {
+ 
   switch (action.type) {
     case "SET_AIR_EXTRACTION_PUMP_ENABLED": {
       const {
@@ -53,8 +54,8 @@ const condenserReducer = (
       }
     }
     case "SIMULATE_TICK": {
-      const { steamFlow, steamTemp, steamPressure } = action.payload
-      return CondenserTick(state, steamFlow, steamTemp, steamPressure)
+      const { boilerPressure, steamFromBypass, steamFromTurbine } = action.payload
+      return CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine)
     }
 
     default:

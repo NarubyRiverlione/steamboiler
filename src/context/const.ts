@@ -1,12 +1,12 @@
 export const CstSimulation = {
-  DeltaTime: 0.1, // Simulation tick duration in sec
+  DeltaTime: 0.2, // Simulation tick duration in sec
   CstBoiler: {
     StartTemperature: 98, // Celsius
-    StartWaterVolume: 50e3, // liters
-    MaxGasFlow: 8000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
+    StartWaterVolume: 50e3, // liters (60-70% water volume to keep space for steam)
+    TotalVolume: 100e3, // liters (typical  20-100m3)
+    MaxGasFlow: 12000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
     FillingRate: 0.005, // 0.5% per second
     DrainingRate: 0.005, // 0.5% per second
-    TotalVolume: 100e3, // liters (typical  50,000 - 100,000 liters)
     GasEfficiency: 0.85,
     SteamGenerationEfficiency: 0.5, // Fraction of available energy used for steam generation
     CoolingRate: 1 / 15, // °C per second
@@ -14,8 +14,8 @@ export const CstSimulation = {
     GasChangeRateSlow: 250, // °C per second,
     PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
-    MaxSteamRemovalRate: 150, // kg/second when valve is fully open
-    BypassValveStep: 5, // % per click open/close
+    MaxSteamRemovalRate: 200, // kg/second when valve is fully open
+    BypassValveStep: 1, // % per click open/close
     TurbineValveStep: 5, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa
   },
@@ -26,8 +26,8 @@ export const CstSimulation = {
     VacuumDecayRate: 20, // mbar per second when pump is off
     OptimalPressure: 55, // mBar (center of bell curve)
     OptimalPressureBellWidth: 30, // Controls how quickly efficiency drops off
-    CAR_MaxVacuum: 140, // mbar (negative pressure)
-    CAR_TimeNeeded: 1, // seconds to reach max vacuum
+    CAR_MaxVacuum: 850, // mbar (negative pressure)
+    CAR_TimeNeeded: 10, // seconds to reach max vacuum
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 10, // mbar above AirExtractionPump.MaxVacuum
     SJAE_ValveStep: 10,

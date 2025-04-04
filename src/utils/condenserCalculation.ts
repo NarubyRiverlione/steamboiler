@@ -14,7 +14,7 @@ const calcCARpressure = (isAirExtractionPumpEnabled: boolean, pressure: number) 
   if (pressure < CAR_MaxVacuum) return pressure
 
   // Calculate vacuum increase based on time needed to reach max vacuum
-  const vacuumIncreaseRate = Math.abs(CAR_MaxVacuum) / CAR_TimeNeeded // mbar per second
+  const vacuumIncreaseRate = Math.abs(CstPhysics.AtmosphericPressure * 1000 - CAR_MaxVacuum) / CAR_TimeNeeded // mbar per second
 
   // Gradually increase vacuum (more negative pressure)
   const newVacuum = Math.max(CAR_MaxVacuum, pressure - vacuumIncreaseRate * CstSimulation.DeltaTime)
@@ -26,13 +26,13 @@ const calcSJAEpressure = (
   isSjaeEnabled: boolean,
   sjaeValvePosition: number,
   pressure: number,
-  boilerSteamPressure: number,
+  boilerPressure: number,
 ): { newIsSjaeEnabled: boolean; pressureBySJAE: number } => {
   // Check if SJAE is enabled, handle potential vacuum decay in separated function
   if (!isSjaeEnabled) return { newIsSjaeEnabled: false, pressureBySJAE: pressure }
 
   // Check if SJAE should be automatically disabled
-  if (boilerSteamPressure <= CstSimulation.CstBoiler.MainSteamValveMinimumPressure) {
+  if (boilerPressure <= CstSimulation.CstBoiler.MainSteamValveMinimumPressure) {
     // Not enough steam pressure to use  SJAE
     return { newIsSjaeEnabled: false, pressureBySJAE: pressure }
   }
@@ -53,7 +53,7 @@ const calcSJAEpressure = (
 
   // Calculate vacuum increase based on steam flow and valve position
   const valveEffect = sjaeValvePosition / 100 // 0-1 range
-  const steamFlowEffect = Math.min(1, boilerSteamPressure / MaxSteamRemovalRate)
+  const steamFlowEffect = Math.min(1, boilerPressure / MaxSteamRemovalRate)
 
   // Combine effects for final vacuum increase
   const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * valveEffect * steamFlowEffect
@@ -92,7 +92,7 @@ const decayVacuum = (isAirExtractionPumpEnabled: boolean, isSjaeEnabled: boolean
 
 export const calculatePressure = (
   condenserState: CondenserState,
-  boilerSteamFlow: number,
+  boilerPressure: number,
 ): { newPressure: number; newIsSjaeEnabled: boolean } => {
   const pressureByCAR = calcCARpressure(condenserState.isAirExtractionPumpEnabled, condenserState.pressure)
 
@@ -100,7 +100,7 @@ export const calculatePressure = (
     condenserState.isSjaeEnabled,
     condenserState.sjaeValvePosition,
     pressureByCAR,
-    boilerSteamFlow,
+    boilerPressure,
   )
   const pressureAfterDecay = decayVacuum(
     condenserState.isAirExtractionPumpEnabled,

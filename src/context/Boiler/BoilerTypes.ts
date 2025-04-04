@@ -25,7 +25,8 @@ export type BoilerAction =
   | { type: "TOGGLE_MAIN_STEAM_VALVE" }
   | { type: "ADJUST_STEAM_BYPASS_VALVE"; amount: number }
   | { type: "ADJUST_STEAM_TURBINE_VALVE"; amount: number }
-  | { type: "ADD_CONDENSATION_WATER"; amount: number }
-  | { type: "SIMULATE_TICK" }
+  | { type: "ADD_CONDENSATION_WATER"; payload: { condensationFlow: number } }
+  | { type: "REMOVE_STEAM"; payload: { removeSteam: number; removeBy: "BYPASS" | "TURBINE" | "VENT" } }
+  | { type: "SIMULATE_TICK"; payload: { previousSteamMass: number } }
 
 export default BoilerState

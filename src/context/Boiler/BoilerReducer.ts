@@ -1,6 +1,6 @@
 import BoilerState, { BoilerAction } from "./BoilerTypes"
 import { CstSimulation } from "../const"
-import BoilerTick from "./BoilerTick"
+import BoilerTick, { BoilerRemoveSteam } from "./BoilerTick"
 import { calculateHeatingEnergy } from "../../utils/boilerCalculations"
 
 const { CstBoiler } = CstSimulation
@@ -55,30 +55,40 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
     case "ADJUST_STEAM_BYPASS_VALVE": {
       // Ensure the valve position stays within 0-100%
       const bypassValvePosition = Math.max(0, Math.min(100, state.bypassValvePosition + action.amount))
-
+      // const bypassSteamFlowOut = (bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
       return {
         ...state,
         bypassValvePosition,
+        // bypassSteamFlowOut,
       }
     }
     case "ADJUST_STEAM_TURBINE_VALVE": {
       // Ensure the valve position stays within 0-100%
       const turbineValvePosition = Math.max(0, Math.min(100, state.turbineValvePosition + action.amount))
-
+      // const turbineSteamFlowOut = (turbineValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
       return {
         ...state,
         turbineValvePosition,
+        // turbineSteamFlowOut,
       }
     }
     case "ADD_CONDENSATION_WATER": {
+        console.log("2")
+      const { condensationFlow } = action.payload
       return {
         ...state,
-        waterVolume: state.waterVolume + action.amount,
-        deltaWaterVolume: state.deltaWaterVolume + action.amount,
+        waterVolume: state.waterVolume + condensationFlow,
+        deltaWaterVolume: state.deltaWaterVolume + condensationFlow,
       }
     }
+
     case "SIMULATE_TICK": {
-      return BoilerTick(state)
+      const { previousSteamMass } = action.payload
+      return BoilerTick(state,previousSteamMass)
+    }
+    case "REMOVE_STEAM": {
+      const { removeSteam, removeBy } = action.payload
+      return BoilerRemoveSteam(state, removeSteam, removeBy)
     }
 
     default:

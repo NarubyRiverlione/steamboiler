@@ -45,9 +45,9 @@ export function calculateHeatingEnergy(waterMass: number, currentTemp: number, t
   // For better accuracy, we should integrate the specific heat over the temperature range
   // but for simplicity, we'll use the average specific heat in the range
   const avgTemp = (currentTemp + targetTemp) / 2
-  const specificHeat = getWaterSpecificHeat(avgTemp)
+  const specificHeat = getWaterSpecificHeat(avgTemp) // kJ/kg°C
 
-  return waterMass * specificHeat * (targetTemp - currentTemp)
+  return waterMass * specificHeat * (targetTemp - currentTemp) // kJ
 }
 /*
 // Calculate new temperature based on current energy and added energy
@@ -148,7 +148,7 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
   const gasEnergy = calculateGasEnergy(CstBoiler.MaxGasFlow) // Assuming max gas flow for calculation
 
   // Calculate energy needed to heat water to boiling point
-  const heatingEnergy = calculateHeatingEnergy(waterMass, temperature, boilingPoint)
+  const heatingEnergy = calculateHeatingEnergy(waterMass, temperature, boilingPoint) // kJ
 
   // Calculate heat loss
   const heatLoss = gasEnergy * CstBoiler.HeatLossPercentage
@@ -160,10 +160,10 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
     return 0
   }
 
-  const latentHeat = getLatentHeat(boilingPoint)
+  const latentHeat = getLatentHeat(boilingPoint) // kJ/kg
 
   // Calculate the steam generation rate
-  const steamMassFromEnergy = (availableEnergy * CstSimulation.DeltaTime) / latentHeat
+  const steamMassFromEnergy = (availableEnergy * CstSimulation.DeltaTime) / latentHeat //KJ / kJ/kg = kg/s
 
   return steamMassFromEnergy
 }

@@ -1,7 +1,6 @@
 import { useState } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
-import { getSteamData } from "../../utils/steamTable"
 import Readout from "../Readout"
 // import ShowAverage from "../ShowAverage"
 const BoilerReadouts = () => {
@@ -21,16 +20,12 @@ const BoilerReadouts = () => {
   const {
     CstBoiler: { TotalVolume },
   } = CstSimulation
-  // Calculate vapor volume based on steam mass and specific volume
-  const steamData = getSteamData(temperature)
-  const specificVolume = steamData.specificVolume // m³/kg
-  const vaporVolumeLiters = steamMass * specificVolume * 1000 // Convert m³ to L
 
   const [advancedExpanded, setAdvancedExpanded] = useState(false)
   const toggleAdvanced = () => {
     setAdvancedExpanded(!advancedExpanded)
   }
-  // const average = 100
+
   return (
     <div className="readouts-panel">
       <h3>Boiler Status</h3>
@@ -56,7 +51,14 @@ const BoilerReadouts = () => {
 
         {advancedExpanded && (
           <div className="advanced-content">
-            <Readout title="Steam Volume" value={vaporVolumeLiters} unit="L" delta={deltaSteamMass} />
+            <Readout
+              title="Steam Mass"
+              value={steamMass}
+              unit="kg"
+              delta={deltaSteamMass}
+              fixed={1}
+              deltaFixed={2}
+            />
             <Readout title="Energy" value={energy / 1e3} unit="MJ" fixed={1} />
 
             {/* <div className="readout-item">

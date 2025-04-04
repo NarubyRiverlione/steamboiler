@@ -9,6 +9,7 @@ import TurbineState from "./TurbineTypes"
  * @returns The updated turbine state.
  */
 function TurbineTick(turbineState: TurbineState, turbineValvePosition: number): TurbineState {
+    console.log("3")
   //  phase 1 black-box dummy
   const newElectricityOutput = calculateElectricityOutput(turbineValvePosition)
 

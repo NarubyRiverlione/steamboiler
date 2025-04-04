@@ -10,11 +10,12 @@ import BoilerState from "./BoilerTypes"
 import { CstSimulation, CstPhysics } from "../const"
 import averageTwo from "../../utils/average"
 const { CstBoiler } = CstSimulation
-function BoilerTick(boilerState: BoilerState): BoilerState {
+function BoilerTick(boilerState: BoilerState, previousSteamMass: number): BoilerState {
+  console.log("5")
   let newWaterVolume = boilerState.waterVolume
   let energyChange = 0
-  let removedSteamMass = 0
-  let steamRemovalEnergyLoss = 0
+  // let removedSteamMass = 0
+  // let steamRemovalEnergyLoss = 0
 
   // Handle filling and draining
   if (boilerState.fillValveOpen) {
@@ -50,7 +51,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   // Calculate water mass using density
   const waterMassBeforeSteam = (newWaterVolume * waterDensity) / 1000
 
-  // Calculate instantaneous steam rate
+  // Calculate instantaneous steam rate kg/s
   const instantaneousSteamRate = calculateSteamGeneration(
     waterMassBeforeSteam, // Use current mass estimate for rate calculation
     boilerState.temperature,
@@ -90,33 +91,15 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   // Update total energy
   const newEnergy = Math.max(0, boilerState.energy + energyChange)
 
-  // --- Steam Removal Calculation ---
-
-  // Only attempt to remove steam if there's steam and the main steam valve is open
-  if (boilerState.mainSteamValve && boilerState.steamMass > 0) {
-    const steamRemovalRate = (boilerState.bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
-    removedSteamMass = Math.min(boilerState.steamMass, steamRemovalRate * CstSimulation.DeltaTime)
-
-    // Calculate energy loss from steam removal
-    // Steam carries both sensible heat (temperature) and latent heat
-    const steamData = getSteamData(boilerState.temperature)
-    const steamEnthalpy = steamData.enthalpy + steamData.latentHeat // Total enthalpy (kJ/kg)
-    steamRemovalEnergyLoss = removedSteamMass * steamEnthalpy
-
-    // Add this to the energy change calculation
-    energyChange -= steamRemovalEnergyLoss
-  }
   // --- End Steam Removal Calculation ---
 
   // --- Steam Mass Accumulation ---
-  // Accumulate steam mass (using generatedSteamMass calculated earlier and accounting for removed steam)
-  const newSteamMass = Math.max(0, boilerState.steamMass + generatedSteamMass - removedSteamMass)
+  // Accumulate steam mass (using generatedSteamMass calculated earlier )
+  const newSteamMass = Math.max(0, boilerState.steamMass + generatedSteamMass)
   // --- End Steam Mass Accumulation ---
 
   // Calculate new temperature based on energy changes
-
   let newTemperature
-
   if (waterMass <= 0) {
     newTemperature = boilerState.temperature
   } else {
@@ -169,21 +152,6 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     newPressure = Math.max(atmosphericPressure, calculatedPressure)
   }
 
-  // steam flow out via the Bypass Valve - only if Main Steam valve is open
-  const newBypassOutFlow = !boilerState.mainSteamValve
-    ? 0
-    : newSteamMass > 0.1
-      ? (boilerState.bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
-      : 0
-  // steam flow out via the Turbine Valve  - only if Main Steam valve is open
-  // can only take the steam that's isn't already taken by the Bypass
-  const maxTurbineFlow = newSteamMass - newBypassOutFlow
-  const newTurbineOutFlow = !boilerState.mainSteamValve
-    ? 0
-    : maxTurbineFlow > 0.1
-      ? (boilerState.turbineValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
-      : 0
-
   // average the values for a better UX
   return {
     ...boilerState,
@@ -193,13 +161,48 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     steamMass: averageTwo(boilerState.steamMass, newSteamMass),
     energy: newEnergy,
     energyDelta: averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
-    bypassSteamFlowOut: newBypassOutFlow,
-    turbineSteamFlowOut: newTurbineOutFlow,
     deltaWaterVolume: averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
-    deltaSteamMass: averageTwo(
-      boilerState.deltaSteamMass,
-      (generatedSteamMass - removedSteamMass) / CstSimulation.DeltaTime,
-    ),
+    deltaSteamMass: generatedSteamMass, // averageTwo(boilerState.steamMass, newSteamMass) - previousSteamMass,
+  }
+}
+
+// --- Steam Removal Calculation ---
+export function BoilerRemoveSteam(
+  boilerState: BoilerState,
+  valvePosition: number, // 0-100% open
+  removeBy: "BYPASS" | "TURBINE" | "VENT",
+): BoilerState {
+  console.log("4")
+  // Only attempt to remove steam if there's steam and the main steam valve is open
+  if (!boilerState.mainSteamValve && boilerState.steamMass <= 0) {
+    return { ...boilerState }
+  }
+  // // check is the steam removal is possible by the position of the Valve
+  // if (removeBy === "BYPASS" && boilerState.bypassSteamFlowOut < removeSteam) {
+  //   return { ...boilerState }
+  // }
+  // if (removeBy === "TURBINE" && boilerState.turbineSteamFlowOut < removeSteam) {
+  //   return { ...boilerState }
+  // }
+
+  // prevent negative steam mass
+  const valveFlow = (valvePosition / 100) * CstBoiler.MaxSteamRemovalRate
+  const removedSteamMass = Math.min(boilerState.steamMass, valveFlow * CstSimulation.DeltaTime)
+
+  // Calculate energy loss from steam removal
+  // Steam carries both sensible heat (temperature) and latent heat
+  // const steamData = getSteamData(boilerState.temperature)
+  // const steamEnthalpy = steamData.enthalpy + steamData.latentHeat // Total enthalpy (kJ/kg)
+  // const steamRemovalEnergyLoss = removedSteamMass * steamEnthalpy
+  // Update the boiler state
+  return {
+    ...boilerState,
+    steamMass: boilerState.steamMass - removedSteamMass,
+    // energy: boilerState.energy - steamRemovalEnergyLoss,
+    // energyDelta: steamRemovalEnergyLoss,
+    // deltaSteamMass: -removedSteamMass,
+    turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : boilerState.turbineSteamFlowOut,
+    bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : boilerState.bypassSteamFlowOut,
   }
 }
 
