@@ -1,18 +1,10 @@
 import { Dispatch, createContext, useContext } from "react"
-import BoilerState, { BoilerAction } from "./Boiler/BoilerTypes"
-import CondenserState, {CondenserAction } from "./Condenser/CondenserTypes"
-import TurbineState, { TurbineAction } from "./Turbine/TurbineTypes"
+import PowerPlantState from "./PowerPlantState"
+import PowerPlantAction from "./PowerPlantActions"
 
 export type PowerPlantContextType = {
-  // Boiler reducer state and dispatch
-  boilerState: BoilerState
-  boilerDispatch: Dispatch<BoilerAction>
-  // Condenser reducer state and dispatch
-  condenserState: CondenserState
-  condenserDispatch: Dispatch<CondenserAction>
-  // Turbine reducer state and dispatch
-  turbineState: TurbineState
-  turbineDispatch: Dispatch<TurbineAction>
+  state: PowerPlantState
+  dispatch: Dispatch<PowerPlantAction>
   // Action creators
   increaseGasFlow: (amount: number) => void
   decreaseGasFlow: (amount: number) => void

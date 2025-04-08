@@ -7,7 +7,9 @@ const {
 } = CstSimulation
 const BoilerVisual = () => {
   const {
-    boilerState: { waterVolume, temperature, pressure },
+    state: {
+      Boiler: { waterVolume, temperature, pressure },
+    },
   } = usePowerPlant()
   const water = (100 * waterVolume) / TotalVolume
   return (

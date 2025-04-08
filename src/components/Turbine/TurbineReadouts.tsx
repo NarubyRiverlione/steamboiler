@@ -3,7 +3,9 @@ import Readout from "../Readout"
 
 const TurbineReadouts = () => {
   const {
-    turbineState: { electricOutput },
+    state: {
+      Turbine: { electricOutput },
+    },
   } = usePowerPlant()
   return (
     <div className="readouts-panel">

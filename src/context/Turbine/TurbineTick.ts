@@ -1,5 +1,5 @@
 import { calculateElectricityOutput } from "../../utils/turbineCalculations"
-import TurbineState from "./TurbineTypes"
+import { TurbineState } from "../PowerPlantState"
 
 /**
  * turbineTick - Updates the turbine state for each simulation tick.
@@ -9,7 +9,7 @@ import TurbineState from "./TurbineTypes"
  * @returns The updated turbine state.
  */
 function TurbineTick(turbineState: TurbineState, turbineValvePosition: number): TurbineState {
-    console.log("3")
+  // console.log("3")
   //  phase 1 black-box dummy
   const newElectricityOutput = calculateElectricityOutput(turbineValvePosition)
 

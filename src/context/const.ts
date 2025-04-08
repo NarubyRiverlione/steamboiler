@@ -1,22 +1,22 @@
 export const CstSimulation = {
   DeltaTime: 0.2, // Simulation tick duration in sec
   CstBoiler: {
-    StartTemperature: 98, // Celsius
+    StartTemperature: 200, // Celsius
     StartWaterVolume: 50e3, // liters (60-70% water volume to keep space for steam)
     TotalVolume: 100e3, // liters (typical  20-100m3)
     MaxGasFlow: 12000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
     FillingRate: 0.005, // 0.5% per second
     DrainingRate: 0.005, // 0.5% per second
     GasEfficiency: 0.85,
-    SteamGenerationEfficiency: 0.5, // Fraction of available energy used for steam generation
+    SteamGenerationEfficiency: 0.75, // Fraction of available energy used for steam generation
     CoolingRate: 1 / 15, // °C per second
     GasChangeRateFast: 500, // °C per second
     GasChangeRateSlow: 250, // °C per second,
     PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
-    MaxSteamRemovalRate: 200, // kg/second when valve is fully open
+    MaxSteamRemovalRate: 100, // kg/second when valve is fully open
     BypassValveStep: 1, // % per click open/close
-    TurbineValveStep: 5, // % per click open/close
+    TurbineValveStep: 1, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa
   },
 
@@ -28,17 +28,17 @@ export const CstSimulation = {
     OptimalPressureBellWidth: 30, // Controls how quickly efficiency drops off
     CAR_MaxVacuum: 850, // mbar (negative pressure)
     CAR_TimeNeeded: 10, // seconds to reach max vacuum
-    SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
+    SJAE_VacuumIncreaseRate: 20, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 10, // mbar above AirExtractionPump.MaxVacuum
     SJAE_ValveStep: 10,
     DampingFactor: 1, // Apply a damping factor to make temperature changes more gradual
     IntakeMaxFlowRate: 250, // kg/s
-    RecirculationPump_MaxFlowRate: 1800, // l/s (typical 9.000-12.000)
-    RecirculationPump_Step: 5,
+    RecirculationPump_MaxFlowRate: 500, // l/s (typical 9.000-12.000)
+    RecirculationPump_Step: 1,
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
-    HeatTransferCoefficient: 0.25, // Condensation rate per unit of recirculation flow
-    CondensationPump_MaxFlowRate: 1000, // l/s (typical 160 - 270 l/s)
-    CondensationPump_Step: 5,
+    HeatTransferCoefficient: 0.85, // Condensation rate per unit of recirculation flow
+    CondensationPump_MaxFlowRate: 500, // l/s (typical 160 - 270 l/s)
+    CondensationPump_Step: 1,
   },
 
   CstTurbine: {

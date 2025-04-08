@@ -2,18 +2,11 @@ import { useState } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import Readout from "../Readout"
-// import ShowAverage from "../ShowAverage"
+
 const BoilerReadouts = () => {
   const {
-    boilerState: {
-      gasFlow,
-      waterVolume,
-      temperature,
-      pressure,
-      energyDelta,
-      steamMass,
-      deltaSteamMass,
-      energy,
+    state: {
+      Boiler: { gasFlow, waterVolume, temperature, pressure, energyDelta, steamMass, deltaSteamMass, energy },
     },
   } = usePowerPlant()
 
@@ -40,7 +33,7 @@ const BoilerReadouts = () => {
 
       <Readout title="Temperature" value={temperature} unit="°C" fixed={1} />
 
-      <Readout title="Pressure" value={pressure * 0.1} unit="MPa" fixed={2} />
+      <Readout title="Pressure" value={pressure * 0.1} unit="MPa" fixed={1} />
 
       <Readout title="Energy Change" value={energyDelta / 1e3} unit="MJ/s" colored />
 

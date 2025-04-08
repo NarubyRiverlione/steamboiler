@@ -8,13 +8,15 @@ const {
 } = CstSimulation
 const BoilerSteamValveControl = () => {
   const {
-    boilerState: {
-      bypassValvePosition,
-      pressure,
-      turbineValvePosition,
-      bypassSteamFlowOut,
-      turbineSteamFlowOut,
-      mainSteamValve,
+    state: {
+      Boiler: {
+        bypassValvePosition,
+        pressure,
+        turbineValvePosition,
+        bypassSteamFlowOut,
+        turbineSteamFlowOut,
+        mainSteamValve,
+      },
     },
     adjustBypassValve,
     toggleMainSteamValve,

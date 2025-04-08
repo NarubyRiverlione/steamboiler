@@ -6,12 +6,11 @@ import {
   calculatePressureFromSteam,
 } from "../../utils/boilerCalculations"
 import { getWaterDensity, getWaterSpecificHeat, getSteamData } from "../../utils/steamTable"
-import BoilerState from "./BoilerTypes"
 import { CstSimulation, CstPhysics } from "../const"
-import averageTwo from "../../utils/average"
+import { BoilerState } from "../PowerPlantState"
 const { CstBoiler } = CstSimulation
-function BoilerTick(boilerState: BoilerState, previousSteamMass: number): BoilerState {
-  console.log("5")
+function BoilerTick(boilerState: BoilerState): BoilerState {
+  // console.log("5")
   let newWaterVolume = boilerState.waterVolume
   let energyChange = 0
   // let removedSteamMass = 0
@@ -157,11 +156,11 @@ function BoilerTick(boilerState: BoilerState, previousSteamMass: number): Boiler
     ...boilerState,
     waterVolume: newWaterVolume,
     temperature: newTemperature,
-    pressure: averageTwo(boilerState.pressure, newPressure),
-    steamMass: averageTwo(boilerState.steamMass, newSteamMass),
+    pressure: newPressure, //averageTwo(boilerState.pressure, newPressure),
+    steamMass: newSteamMass, // averageTwo(boilerState.steamMass, newSteamMass),
     energy: newEnergy,
-    energyDelta: averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
-    deltaWaterVolume: averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
+    energyDelta: energyChange / CstSimulation.DeltaTime, // averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
+    deltaWaterVolume: newWaterVolume - boilerState.waterVolume, // averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
     deltaSteamMass: generatedSteamMass, // averageTwo(boilerState.steamMass, newSteamMass) - previousSteamMass,
   }
 }
@@ -169,40 +168,61 @@ function BoilerTick(boilerState: BoilerState, previousSteamMass: number): Boiler
 // --- Steam Removal Calculation ---
 export function BoilerRemoveSteam(
   boilerState: BoilerState,
-  valvePosition: number, // 0-100% open
   removeBy: "BYPASS" | "TURBINE" | "VENT",
 ): BoilerState {
-  console.log("4")
+  // console.log("4")
+  const {
+    steamMass,
+    mainSteamValve,
+    waterVolume,
+    bypassValvePosition,
+    bypassSteamFlowOut,
+    turbineValvePosition,
+    turbineSteamFlowOut,
+    temperature,
+  } = boilerState
+  const valvePosition =
+    removeBy === "BYPASS" ? bypassValvePosition : removeBy === "TURBINE" ? turbineValvePosition : 0
+
   // Only attempt to remove steam if there's steam and the main steam valve is open
-  if (!boilerState.mainSteamValve && boilerState.steamMass <= 0) {
+  if (!mainSteamValve && steamMass <= 0) {
     return { ...boilerState }
   }
-  // // check is the steam removal is possible by the position of the Valve
-  // if (removeBy === "BYPASS" && boilerState.bypassSteamFlowOut < removeSteam) {
-  //   return { ...boilerState }
-  // }
-  // if (removeBy === "TURBINE" && boilerState.turbineSteamFlowOut < removeSteam) {
-  //   return { ...boilerState }
-  // }
 
   // prevent negative steam mass
   const valveFlow = (valvePosition / 100) * CstBoiler.MaxSteamRemovalRate
-  const removedSteamMass = Math.min(boilerState.steamMass, valveFlow * CstSimulation.DeltaTime)
+  const removedSteamMass = Math.min(steamMass, valveFlow * CstSimulation.DeltaTime)
 
-  // Calculate energy loss from steam removal
-  // Steam carries both sensible heat (temperature) and latent heat
-  // const steamData = getSteamData(boilerState.temperature)
-  // const steamEnthalpy = steamData.enthalpy + steamData.latentHeat // Total enthalpy (kJ/kg)
-  // const steamRemovalEnergyLoss = removedSteamMass * steamEnthalpy
-  // Update the boiler state
+  // Calculate new steam mass after removal
+  const newSteamMass = steamMass - removedSteamMass
+  if (newSteamMass < removedSteamMass)
+    return {
+      ...boilerState,
+      turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : turbineSteamFlowOut,
+      bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : bypassSteamFlowOut,
+    }
+
+  // Recalculate boiler pressure after steam removal
+  const atmosphericPressure = CstPhysics.AtmosphericPressure
+  let newPressure
+  if (newSteamMass < 0.001) {
+    newPressure = atmosphericPressure
+  } else {
+    const steamData = getSteamData(temperature)
+    const saturationPressure = steamData.pressure
+    const availableVolumeForSteam = Math.max(0, CstBoiler.TotalVolume - waterVolume)
+    newPressure = Math.max(
+      atmosphericPressure,
+      calculatePressureFromSteam(newSteamMass, temperature, availableVolumeForSteam, saturationPressure),
+    )
+  }
+
   return {
     ...boilerState,
-    steamMass: boilerState.steamMass - removedSteamMass,
-    // energy: boilerState.energy - steamRemovalEnergyLoss,
-    // energyDelta: steamRemovalEnergyLoss,
-    // deltaSteamMass: -removedSteamMass,
-    turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : boilerState.turbineSteamFlowOut,
-    bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : boilerState.bypassSteamFlowOut,
+    steamMass: newSteamMass,
+    pressure: newPressure,
+    turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : turbineSteamFlowOut,
+    bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : bypassSteamFlowOut,
   }
 }
 

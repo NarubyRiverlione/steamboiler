@@ -5,13 +5,15 @@ import Readout from "../Readout"
 
 const CondenserReadouts = () => {
   const {
-    condenserState: {
-      deltaWaterVolume,
-      pressure,
-      steamVolume,
-      hotwellWaterVolume: waterVolume,
-      returnRate,
-      intakeFlowRate,
+    state: {
+      Condenser: {
+        deltaWaterVolume,
+        pressure,
+        steamVolume,
+        hotwellWaterVolume: waterVolume,
+        returnRate,
+        intakeFlowRate,
+      },
     },
   } = usePowerPlant()
 

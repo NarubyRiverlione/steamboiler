@@ -2,7 +2,9 @@ import usePowerPlant from "../../context/PowerPlantContext"
 
 const BoilerWaterControl = () => {
   const {
-    boilerState: { fillValveOpen, drainValveOpen },
+    state: {
+      Boiler: { fillValveOpen, drainValveOpen },
+    },
     toggleFillValve,
     toggleDrainValve,
   } = usePowerPlant()

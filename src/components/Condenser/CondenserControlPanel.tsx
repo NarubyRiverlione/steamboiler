@@ -13,12 +13,14 @@ const {
 
 const CondenserControlPanel = () => {
   const {
-    condenserState: {
-      isAirExtractionPumpEnabled,
-      isSjaeEnabled,
-      sjaeValvePosition,
-      recirculationPumpValvePosition,
-      condensationPumpValvePosition,
+    state: {
+      Condenser: {
+        isAirExtractionPumpEnabled,
+        isSjaeEnabled,
+        sjaeValvePosition,
+        recirculationPumpValvePosition,
+        condensationPumpValvePosition,
+      },
     },
     toggleAirExtractionPump,
     toggleSjae,

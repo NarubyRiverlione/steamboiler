@@ -20,6 +20,12 @@ The steam flow from the turbine valve will be converted to electrical energy wit
 - add an intake path to the condenser so steam from the bypass valve is directly intake, without the need of reduced OptimalPressure
 - both intakes from the turbine & bypass should be added and used in the condenser calculations
 
+## todos
+- turbine valve cannot open if condenser pressure isn't inside the bell
+- CAR should be disable when SJAE is on, or steam is lost
+- steam volume in condenser should have impact on condenser pressure
+- recirculation = reduce steam volume = impact on pressure
+
 # phase 3: rpm & rollup
 
 - add a rpm value to the turbine and show it as readout

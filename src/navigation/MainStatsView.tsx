@@ -3,7 +3,9 @@ import usePowerPlant from "../context/PowerPlantContext"
 
 const MainStatsView = () => {
   const {
-    boilerState: { waterVolume, pressure, deltaWaterVolume },
+    state: {
+      Boiler: { waterVolume, pressure, deltaWaterVolume },
+    },
   } = usePowerPlant()
   const {
     CstBoiler: { TotalVolume },

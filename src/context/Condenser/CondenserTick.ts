@@ -1,4 +1,4 @@
-import CondenserState from "./CondenserTypes"
+import { CondenserState } from "../PowerPlantState"
 import {
   calculateCondensation,
   calculateIntakeFlowRate,
@@ -21,7 +21,7 @@ export function CondenserTick(
   steamFromBypass: { flow: number; temp: number },
   steamFromTurbine: { flow: number; temp: number },
 ): CondenserState {
-   console.log("1")
+  // console.log("1")
   // Calculate the pressure based on the CAR & SJAE
   const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, boilerPressure)
 

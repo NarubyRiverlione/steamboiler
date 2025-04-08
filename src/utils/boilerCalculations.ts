@@ -140,7 +140,7 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
   }
 
   const boilingPoint = calculateBoilingPoint(pressure)
-  if (temperature <= boilingPoint) {
+  if (temperature < boilingPoint) {
     return 0
   }
 
