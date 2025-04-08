@@ -33,7 +33,7 @@ const BoilerReadouts = () => {
 
       <Readout title="Temperature" value={temperature} unit="°C" fixed={1} />
 
-      <Readout title="Pressure" value={pressure * 0.1} unit="MPa" fixed={1} />
+      <Readout title="Pressure" value={pressure / 10} unit="MPa" fixed={1} />
 
       <Readout title="Energy Change" value={energyDelta / 1e3} unit="MJ/s" colored />
 

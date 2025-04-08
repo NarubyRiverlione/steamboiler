@@ -2,9 +2,11 @@ import { CondenserState } from "../PowerPlantState"
 import {
   calculateCondensation,
   calculateIntakeFlowRate,
-  calculatePressure,
+  calculateVacuumByReducers,
   CalculateCondensationFlow,
+  calculatePressureBySteam,
 } from "../../utils/condenserCalculation"
+import { CstPhysics, CstSimulation } from "../const"
 
 /**
  * Simulates the condenser vacuum behavior over time
@@ -19,11 +21,29 @@ export function CondenserTick(
   condenserState: CondenserState,
   boilerPressure: number,
   steamFromBypass: { flow: number; temp: number },
-  steamFromTurbine: { flow: number; temp: number },
+  steamFromTurbine: { flow: number; temp: number; pressure: number },
 ): CondenserState {
   // console.log("1")
+
   // Calculate the pressure based on the CAR & SJAE
-  const { newPressure, newIsSjaeEnabled } = calculatePressure(condenserState, boilerPressure)
+  const { vacuumByReducers, newIsSjaeEnabled } = calculateVacuumByReducers(condenserState, boilerPressure)
+  // Pressure change by steam volume
+  const pressureBySteam = calculatePressureBySteam(
+    condenserState.steamMass,
+    condenserState.hotwellWaterVolume,
+    steamFromTurbine.temp,
+    0,
+  )
+  const newPressure = CstPhysics.AtmosphericPressure_mBar + pressureBySteam - vacuumByReducers
+
+  // console.log(
+  //   "pressure " +
+  //     newPressure.toFixed(0) +
+  //     ": pressureBySteam " +
+  //     pressureBySteam.toFixed(0) +
+  //     ", vacuumByReducers " +
+  //     vacuumByReducers.toFixed(0),
+  // )
 
   // Calculate turbine to condenser flow rate based on boiler steam flow and condenser vacuum pressure.
   // The vacuum pressure affects the efficiency of steam flow from turbine to condenser.
@@ -33,7 +53,7 @@ export function CondenserTick(
   // Calculate steam volume change.
   // const steamVolumeChange = Math.min(steamFlow, totalIntakeRate)
   //calculateSteamVolumeChange(steamFlow, newIntakeFlowRate)
-  const newSteamVolume = condenserState.steamVolume + totalIntakeRate
+  const newSteamMass = condenserState.steamMass + totalIntakeRate * CstSimulation.DeltaTime
 
   // steam temp inside the condenser is combination of the steam from the bypass and the turbine
   //  take into account the flow(volume) of the steam
@@ -47,11 +67,10 @@ export function CondenserTick(
   // Calculate water level based on recirculation pump flow rate and update the temperature
   // of the condensed water returning to the boiler.
   const { steamVolumeAfterCondensation, waterVolumeAfterCondensation } = calculateCondensation(
-    newSteamVolume,
+    newSteamMass,
     condenserState.hotwellWaterVolume,
     condenserState.recirculationPumpValvePosition,
     steamTemp,
-    // steamPressure,
   )
 
   // Condensation pump transfer: remove water from hotwell based on pump valve setting.
@@ -66,7 +85,7 @@ export function CondenserTick(
     isSjaeEnabled: newIsSjaeEnabled,
     intakeFlowRate: totalIntakeRate,
     // recirculationPumpFlowRate: newRecirculationPumpFlowRate,
-    steamVolume: steamVolumeAfterCondensation,
+    steamMass: steamVolumeAfterCondensation,
     hotwellWaterVolume: newHotwellWaterVolume,
     deltaWaterVolume: newHotwellWaterVolume - condenserState.hotwellWaterVolume,
     returnRate: condensatePumpVolume,

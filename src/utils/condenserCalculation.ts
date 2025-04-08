@@ -1,54 +1,56 @@
 import { CondenserState } from "../context/PowerPlantState"
 import { CstPhysics, CstSimulation } from "../context/const"
+import { calculatePressureFromSteam } from "./boilerCalculations"
 import { getLatentHeat } from "./steamTable"
 
 // Air Extraction Pump (CAR) behavior
-const calcCARpressure = (isAirExtractionPumpEnabled: boolean, pressure: number) => {
+const calcCARvacuum = (isAirExtractionPumpEnabled: boolean, previousVacuum: number) => {
   // Check if air extraction pump is enabled, if not the potential vacuum decay is handled in a separated function
-  if (!isAirExtractionPumpEnabled) return pressure
+  if (!isAirExtractionPumpEnabled) return 0
 
   const {
     CstCondenser: { CAR_MaxVacuum, CAR_TimeNeeded },
   } = CstSimulation
-  // pressure already below CAR max (because of SJAE)
-  if (pressure < CAR_MaxVacuum) return pressure
+  // vacuum already below CAR max (because of SJAE)
+  if (previousVacuum > CAR_MaxVacuum) return 0
 
   // Calculate vacuum increase based on time needed to reach max vacuum
-  const vacuumIncreaseRate = Math.abs(CstPhysics.AtmosphericPressure * 1000 - CAR_MaxVacuum) / CAR_TimeNeeded // mbar per second
+  const vacuumIncreaseRate = (CAR_MaxVacuum / CAR_TimeNeeded) * CstSimulation.DeltaTime // mbar per second
 
   // Gradually increase vacuum (more negative pressure)
-  const newVacuum = Math.max(CAR_MaxVacuum, pressure - vacuumIncreaseRate * CstSimulation.DeltaTime)
-  return newVacuum
+  const limitedVacuum = Math.min(CAR_MaxVacuum, previousVacuum + vacuumIncreaseRate)
+  return limitedVacuum
 }
 
 // Steam Jet Air Extraction (SJAE) behavior
-const calcSJAEpressure = (
+const calcSJAEvacuum = (
   isSjaeEnabled: boolean,
   sjaeValvePosition: number,
-  pressure: number,
+  vacuumAfterCAR: number,
   boilerPressure: number,
-): { newIsSjaeEnabled: boolean; pressureBySJAE: number } => {
+  previousVacuum: number,
+): { newIsSjaeEnabled: boolean; vacuumAfterSJAE: number } => {
   // Check if SJAE is enabled, handle potential vacuum decay in separated function
-  if (!isSjaeEnabled) return { newIsSjaeEnabled: false, pressureBySJAE: pressure }
+  if (!isSjaeEnabled) return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
 
   // Check if SJAE should be automatically disabled
   if (boilerPressure <= CstSimulation.CstBoiler.MainSteamValveMinimumPressure) {
     // Not enough steam pressure to use  SJAE
-    return { newIsSjaeEnabled: false, pressureBySJAE: pressure }
+    return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
   }
 
   const {
     CstBoiler: { MaxSteamRemovalRate },
-    CstCondenser: { CAR_MaxVacuum, SJAE_MaxPressureDifference, SJAE_VacuumIncreaseRate, MinimumPressure },
+    CstCondenser: { CAR_MaxVacuum, SJAE_MaxPressureDifference, SJAE_VacuumIncreaseRate, MaxVacuum },
   } = CstSimulation
 
   // Calculate max allowed vacuum for SJAE
-  const minVacuumNeeded = CAR_MaxVacuum + SJAE_MaxPressureDifference
+  const minVacuumNeeded = CAR_MaxVacuum - SJAE_MaxPressureDifference
 
   // Check if pressure is too high for SJAE
-  if (pressure > minVacuumNeeded) {
+  if (previousVacuum < minVacuumNeeded) {
     // Pressure too high, disable SJAE
-    return { newIsSjaeEnabled: false, pressureBySJAE: pressure }
+    return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
   }
 
   // Calculate vacuum increase based on steam flow and valve position
@@ -59,61 +61,79 @@ const calcSJAEpressure = (
   const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * valveEffect * steamFlowEffect
 
   // Apply vacuum increase (limited by max allowed vacuum)
-  const newPressure = Math.max(
-    MinimumPressure,
-    Math.min(CAR_MaxVacuum, pressure - vacuumIncreaseRate * CstSimulation.DeltaTime),
-  )
-  return { newIsSjaeEnabled: true, pressureBySJAE: newPressure }
+  const vacuumAfterSJAE = Math.min(MaxVacuum, previousVacuum + vacuumIncreaseRate * CstSimulation.DeltaTime)
+  return { newIsSjaeEnabled: true, vacuumAfterSJAE }
 }
 
-const decayVacuum = (isAirExtractionPumpEnabled: boolean, isSjaeEnabled: boolean, pressure: number) => {
-  let decayToPressure = pressure
-
+const decayVacuum = (
+  isAirExtractionPumpEnabled: boolean,
+  isSjaeEnabled: boolean,
+  vacuumAfterSJAE: number,
+  previousVacuum: number,
+) => {
   const {
-    CstCondenser: { VacuumDecayRate, CAR_MaxVacuum },
+    DeltaTime,
+    CstCondenser: { VacuumDecayRate },
   } = CstSimulation
 
-  // without CAR & SJAE, decay pressure to atmospheric pressure
-  if (!isSjaeEnabled && !isAirExtractionPumpEnabled) {
-    decayToPressure = CstPhysics.AtmosphericPressure * 1000
-  }
+  if (vacuumAfterSJAE !== 0) return vacuumAfterSJAE
 
-  // without SJAE, with running CAR, decay pressure to CAR max vacuum
-  if (!isSjaeEnabled && isAirExtractionPumpEnabled) {
-    decayToPressure = CAR_MaxVacuum
-  }
-  // needs for decay ?
-  if (decayToPressure <= pressure) return pressure
+  if (isAirExtractionPumpEnabled && isSjaeEnabled) return previousVacuum
 
-  const pressureAfterDecay = Math.min(decayToPressure, pressure + VacuumDecayRate * CstSimulation.DeltaTime)
+  const vacuumDecay = VacuumDecayRate * DeltaTime // mbar per second
 
-  return pressureAfterDecay
+  const vacuumAfterDecay = Math.max(previousVacuum - vacuumDecay, 0)
+  return vacuumAfterDecay
 }
 
-export const calculatePressure = (
+/* Pressure below atmospheric by   CAR & SJAE behavior
+ * Vacuum decay is handled in a separated function
+ * @param condenserState Current state of the condenser
+ * @param boilerPressure Current pressure in the boiler (bar)
+ * @returns New pressure and SJAE status
+ */
+
+export function calculateVacuumByReducers(
   condenserState: CondenserState,
   boilerPressure: number,
-): { newPressure: number; newIsSjaeEnabled: boolean } => {
-  const pressureByCAR = calcCARpressure(condenserState.isAirExtractionPumpEnabled, condenserState.pressure)
+): { vacuumByReducers: number; newIsSjaeEnabled: boolean } {
+  const previousVacuum = CstPhysics.AtmosphericPressure_mBar - condenserState.pressure
 
-  const { pressureBySJAE, newIsSjaeEnabled } = calcSJAEpressure(
+  const vacuumAfterCAR = calcCARvacuum(condenserState.isAirExtractionPumpEnabled, previousVacuum)
+
+  const { vacuumAfterSJAE, newIsSjaeEnabled } = calcSJAEvacuum(
     condenserState.isSjaeEnabled,
     condenserState.sjaeValvePosition,
-    pressureByCAR,
+    vacuumAfterCAR,
     boilerPressure,
+    previousVacuum,
   )
-  const pressureAfterDecay = decayVacuum(
+  const vacuumAfterDecay = decayVacuum(
     condenserState.isAirExtractionPumpEnabled,
     newIsSjaeEnabled,
-    pressureBySJAE,
+    vacuumAfterSJAE,
+    previousVacuum,
   )
 
   return {
-    newPressure: pressureAfterDecay,
+    vacuumByReducers: vacuumAfterDecay, // mBar
     newIsSjaeEnabled,
   }
 }
 
+export function calculatePressureBySteam(
+  steamMass: number,
+  waterVolume: number,
+  temperature: number,
+  steamPressure: number,
+) {
+  const {
+    CstCondenser: { TotalVolume },
+  } = CstSimulation
+  const availableVolume = TotalVolume - waterVolume
+  const pressure = calculatePressureFromSteam(steamMass, temperature, availableVolume, steamPressure)
+  return pressure * 1000 // Convert to mBar
+}
 /**
  * Calculates the change in steam volume based on steam flow and water flow
  * @param boilerSteamFlow Steam flow from the boiler (kg/s)
@@ -133,20 +153,17 @@ export function calculateSteamVolumeChange(boilerSteamFlow: number, intakeFlowRa
  */
 export function calculateIntakeFlowRate(boilerSteamFlow: number, condenserPressure: number): number {
   // Define pressure parameters for bell curve
-
+  const {
+    CstCondenser: { OptimalPressure, OptimalPressureBellWidth, IntakeMaxFlowRate },
+  } = CstSimulation
   // Calculate pressure efficiency factor using bell curve (0-1)
   const pressureEfficiency = Math.exp(
-    -0.5 *
-      Math.pow(
-        (condenserPressure - CstSimulation.CstCondenser.OptimalPressure) /
-          (CstSimulation.CstCondenser.OptimalPressureBellWidth / 2),
-        2,
-      ),
+    -0.5 * Math.pow((condenserPressure - OptimalPressure) / (OptimalPressureBellWidth / 2), 2),
   )
 
   // Calculate flow rate based on available steam and pressure efficiency
   // Cap at maximum intake flow rate defined in constants
-  return Math.min(boilerSteamFlow * pressureEfficiency, CstSimulation.CstCondenser.IntakeMaxFlowRate)
+  return Math.min(boilerSteamFlow * pressureEfficiency, IntakeMaxFlowRate)
 }
 
 /**
@@ -163,19 +180,17 @@ export function calculateRecirculationPumpFlowRate(valvePosition: number): numbe
 /**
  * Calculates the condensation of steam based on energy balance approach
  *
- * @param currentSteamVolume Current steam volume in the condenser
- * @param currentLiquidVolume Current liquid volume in the condenser
+ * @param currentSteamMass kg, Current steam mass in the condenser
+ * @param currentLiquidVolume liter, Current liquid volume in the condenser
  * @param recirculationPumpValvePosition Valve position of the recirculation pump (0-1)
  * @param steamTemp  temperature in intake steam (°C)
- * @param steamPressure  pressure in intake steam (bar)
  * @returns New steam and liquid volumes, and new outlet temperature
  */
 export function calculateCondensation(
-  currentSteamVolume: number,
+  currentSteamMass: number,
   currentLiquidVolume: number,
   recirculationPumpValvePosition: number,
   steamTemp: number,
-  // steamPressure: number,
 ): {
   steamVolumeAfterCondensation: number
   waterVolumeAfterCondensation: number
@@ -204,8 +219,8 @@ export function calculateCondensation(
   const volumeCondensed = (massCondensed / waterDensity) * 1000 // Convert m³ to liters
 
   // 6. Adjust vapor and liquid volumes
-  const condensedVolume = Math.min(currentSteamVolume, volumeCondensed)
-  const newSteamVolume = currentSteamVolume - condensedVolume
+  const condensedVolume = Math.min(currentSteamMass, volumeCondensed)
+  const newSteamVolume = currentSteamMass - condensedVolume
   const newLiquidVolume = currentLiquidVolume + condensedVolume
 
   // 7. Calculate new temperature of the condensed water returning to the boiler

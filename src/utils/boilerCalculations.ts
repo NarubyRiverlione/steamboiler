@@ -49,20 +49,7 @@ export function calculateHeatingEnergy(waterMass: number, currentTemp: number, t
 
   return waterMass * specificHeat * (targetTemp - currentTemp) // kJ
 }
-/*
-// Calculate new temperature based on current energy and added energy
-export function calculateNewTemperature(waterMass: number, currentTemp: number, addedEnergy: number): number {
-  // If no water, temperature doesn't change
-  if (waterMass <= 0) return currentTemp
 
-  // Use temperature-dependent specific heat
-  // This is an approximation since specific heat changes with temperature
-  // For small temperature changes, this approximation is reasonable
-  const specificHeat = getWaterSpecificHeat(currentTemp)
-
-  return currentTemp + addedEnergy / (waterMass * specificHeat)
-}
-*/
 // Calculate boiling point based on pressure
 export function calculateBoilingPoint(pressure: number): number {
   // Use the getBoilingPoint function from steamTable.ts
@@ -73,7 +60,7 @@ export function calculateBoilingPoint(pressure: number): number {
 export function calculatePressureFromSteam(
   steamMass: number,
   temperature: number,
-  availableVolume: number,
+  availableVolume: number, // Liters
   saturationPressure: number,
 ): number {
   // If no steam or no available volume, return saturation pressure
@@ -140,10 +127,10 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
   }
 
   const boilingPoint = calculateBoilingPoint(pressure)
+//  console.debug(boilingPoint.toFixed(1))
   if (temperature < boilingPoint) {
     return 0
   }
-
   // Calculate energy from gas flow
   const gasEnergy = calculateGasEnergy(CstBoiler.MaxGasFlow) // Assuming max gas flow for calculation
 

@@ -2,14 +2,16 @@ import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
 import Indicator from "../Indicator"
 import Readout from "../Readout"
-
+const {
+  CstCondenser: { OptimalPressure, OptimalPressureBellWidth },
+} = CstSimulation
 const CondenserReadouts = () => {
   const {
     state: {
       Condenser: {
         deltaWaterVolume,
-        pressure,
-        steamVolume,
+        pressure, // mbar
+        steamMass: steamVolume,
         hotwellWaterVolume: waterVolume,
         returnRate,
         intakeFlowRate,
@@ -17,10 +19,8 @@ const CondenserReadouts = () => {
     },
   } = usePowerPlant()
 
-  const highPressureMPa =
-    CstSimulation.CstCondenser.OptimalPressure + CstSimulation.CstCondenser.OptimalPressureBellWidth
-  const lowPressureMPa =
-    CstSimulation.CstCondenser.OptimalPressure - CstSimulation.CstCondenser.OptimalPressureBellWidth
+  const highPressure_mPa = OptimalPressure + OptimalPressureBellWidth
+  const lowPressure_mPa = OptimalPressure - OptimalPressureBellWidth
 
   return (
     <div className="readouts-panel">
@@ -31,13 +31,13 @@ const CondenserReadouts = () => {
         <div className="readout-item">
           <span className="label">Pressure</span>
           <Indicator
-            isActive={pressure > highPressureMPa}
-            title={`Pressure above ${highPressureMPa.toFixed(0)} mBar`}
+            isActive={pressure > highPressure_mPa}
+            title={`Pressure above ${highPressure_mPa.toFixed(0)} mBar`}
             label="High"
           />
           <Indicator
-            isActive={pressure < lowPressureMPa}
-            title={`Pressure below ${lowPressureMPa.toFixed(0)} mBar`}
+            isActive={pressure < lowPressure_mPa}
+            title={`Pressure below ${lowPressure_mPa.toFixed(0)} mBar`}
             label="Low"
           />
         </div>
@@ -52,7 +52,7 @@ const CondenserReadouts = () => {
         title="Hotwell level"
         value={waterVolume}
         unit="l"
-        fixed={1}
+        fixed={0}
         delta={deltaWaterVolume}
         deltaFixed={1}
       />

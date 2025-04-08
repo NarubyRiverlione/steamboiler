@@ -25,9 +25,9 @@ export const initialPowerPlantState: PowerPlantState = {
     mainSteamValve: false, // closed
   },
   Condenser: {
-    pressure: CstPhysics.AtmosphericPressure * 1000, // mBar (initial atmospheric pressure)
+    pressure: CstPhysics.AtmosphericPressure_mBar, // mBar (initial atmospheric pressure)
     hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
-    steamVolume: 0, // Start at 0
+    steamMass: 0, // Start at 0
     intakeFlowRate: 0,
     returnRate: 0,
     coolingRate: 1,
@@ -94,15 +94,8 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
     case "ADJUST_STEAM_BYPASS_VALVE": {
       // Ensure the valve position stays within 0-100%
       const bypassValvePosition = Math.max(0, Math.min(100, state.Boiler.bypassValvePosition + action.amount))
-      // const bypassSteamFlowOut = (bypassValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
-      return {
-        ...state,
-        Boiler: {
-          ...state.Boiler,
-          bypassValvePosition,
-        },
-        // bypassSteamFlowOut,
-      }
+
+      return { ...state, Boiler: { ...state.Boiler, bypassValvePosition } }
     }
     case "ADJUST_STEAM_TURBINE_VALVE": {
       // Ensure the valve position stays within 0-100%
@@ -110,15 +103,7 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
         0,
         Math.min(100, state.Boiler.turbineValvePosition + action.amount),
       )
-      // const turbineSteamFlowOut = (turbineValvePosition / 100) * CstBoiler.MaxSteamRemovalRate
-      return {
-        ...state,
-        Boiler: {
-          ...state.Boiler,
-          turbineValvePosition,
-          // turbineSteamFlowOut,
-        },
-      }
+      return { ...state, Boiler: { ...state.Boiler, turbineValvePosition } }
     }
     //#endregion
     //#region Condenser

@@ -121,12 +121,9 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   // Calculate new pressure based on steam mass, temperature, and available volume
   let newPressure
 
-  // Fixed atmospheric pressure for reference
-  const atmosphericPressure = CstPhysics.AtmosphericPressure
-
   // If there is no steam, keep pressure at atmospheric (1 bar)
   if (newSteamMass < 0.001) {
-    newPressure = atmosphericPressure
+    newPressure = CstPhysics.AtmosphericPressure_mBar / 1e3
   } else {
     // For temperatures at or above 100°C, calculate pressure based on steam accumulation
     // Get saturation pressure from steam table
@@ -148,7 +145,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     )
 
     // Ensure pressure is at least atmospheric
-    newPressure = Math.max(atmosphericPressure, calculatedPressure)
+    newPressure = Math.max(CstPhysics.AtmosphericPressure_mBar / 1e3, calculatedPressure)
   }
 
   // average the values for a better UX
@@ -185,37 +182,32 @@ export function BoilerRemoveSteam(
     removeBy === "BYPASS" ? bypassValvePosition : removeBy === "TURBINE" ? turbineValvePosition : 0
 
   // Only attempt to remove steam if there's steam and the main steam valve is open
-  if (!mainSteamValve && steamMass <= 0) {
-    return { ...boilerState }
+  if (!mainSteamValve || steamMass <= 0) {
+    return { ...boilerState, turbineSteamFlowOut: 0, bypassSteamFlowOut: 0 }
   }
 
-  // prevent negative steam mass
   const valveFlow = (valvePosition / 100) * CstBoiler.MaxSteamRemovalRate
   const removedSteamMass = Math.min(steamMass, valveFlow * CstSimulation.DeltaTime)
 
   // Calculate new steam mass after removal
   const newSteamMass = steamMass - removedSteamMass
-  if (newSteamMass < removedSteamMass)
+  // prevent negative steam mass
+  if (newSteamMass < 0.001) {
+    // newPressure = atmosphericPressure
     return {
       ...boilerState,
-      turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : turbineSteamFlowOut,
-      bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : bypassSteamFlowOut,
+      turbineSteamFlowOut: removeBy === "TURBINE" ? steamMass : turbineSteamFlowOut,
+      bypassSteamFlowOut: removeBy === "BYPASS" ? steamMass : bypassSteamFlowOut,
     }
-
-  // Recalculate boiler pressure after steam removal
-  const atmosphericPressure = CstPhysics.AtmosphericPressure
-  let newPressure
-  if (newSteamMass < 0.001) {
-    newPressure = atmosphericPressure
-  } else {
-    const steamData = getSteamData(temperature)
-    const saturationPressure = steamData.pressure
-    const availableVolumeForSteam = Math.max(0, CstBoiler.TotalVolume - waterVolume)
-    newPressure = Math.max(
-      atmosphericPressure,
-      calculatePressureFromSteam(newSteamMass, temperature, availableVolumeForSteam, saturationPressure),
-    )
   }
+  // Recalculate boiler pressure after steam removal
+  const steamData = getSteamData(temperature)
+  const saturationPressure = steamData.pressure
+  const availableVolumeForSteam = Math.max(0, CstBoiler.TotalVolume - waterVolume)
+  const newPressure = Math.max(
+    CstPhysics.AtmosphericPressure_mBar / 1000,
+    calculatePressureFromSteam(newSteamMass, temperature, availableVolumeForSteam, saturationPressure),
+  )
 
   return {
     ...boilerState,

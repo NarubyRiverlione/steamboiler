@@ -18,7 +18,7 @@ export type BoilerState = {
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)
-  steamVolume: number
+  steamMass: number // kg
   hotwellWaterVolume: number
   intakeFlowRate: number // g/s Flow rate from turbine to condenser
   returnRate: number
