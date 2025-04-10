@@ -54,20 +54,22 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ### Potential Future Features
 
+- ⬜ turbine valve cannot open if condenser pressure isn't inside the bell
 - ⬜ More detailed visualization of internal processes
 - ⬜ Aerator between condenser and boiler
-- ⬜ Turbines for power generation
+- ⬜ Turbines for power generation (Phases 1 & 2 completed; Phase 3-5 planned)
+- ⬜ Enhance valve control responsiveness in control panels (continuous firing behavior for valve buttons with ~150ms interval)
 - ⬜ Performance optimizations and monitoring (low priority) - see performance_enhancements.md
 - ⬜ Reduce empirical approaches in calculations:
-    *   Boiler:
-        *   `calculateGasEnergy` uses `CstPhysics.GasEnergyDensity` and `CstBoiler.GasEfficiency`, where `GasEfficiency` might be an empirical factor.
-        *   `calculatePressureFromSteam` uses `CstPhysics.SteamExpansionFactorLow`, `CstPhysics.SteamExpansionFactorMedium`, and `CstPhysics.SteamExpansionFactorHigh`, which might be empirical approximations.
-        *   `calculateWaterVolume` uses linear approximation for temperatures below 80°C.
-    *   Condenser:
-        *   `calcCARpressure` uses `CAR_MaxVacuum` and `CAR_TimeNeeded`, which might be empirical approximations.
-        *   `calcSJAEpressure` uses `SJAE_MaxPressureDifference` and `SJAE_VacuumIncreaseRate`, which might be empirical approximations.
-        *   `calculateIntakeFlowRate` uses a bell curve and `CstSimulation.CstCondenser.OptimalPressure` and `CstSimulation.CstCondenser.OptimalPressureBellWidth`, which might be empirical approximations.
-        *   `calculateCondensation` uses `DampingFactor` which might be an empirical value.
+  - Boiler:
+    - `calculateGasEnergy` uses `CstPhysics.GasEnergyDensity` and `CstBoiler.GasEfficiency`, where `GasEfficiency` might be an empirical factor.
+    - `calculatePressureFromSteam` uses `CstPhysics.SteamExpansionFactorLow`, `CstPhysics.SteamExpansionFactorMedium`, and `CstPhysics.SteamExpansionFactorHigh`, which might be empirical approximations.
+    - `calculateWaterVolume` uses linear approximation for temperatures below 80°C.
+  - Condenser:
+    - `calcCARpressure` uses `CAR_MaxVacuum` and `CAR_TimeNeeded`, which might be empirical approximations.
+    - `calcSJAEpressure` uses `SJAE_MaxPressureDifference` and `SJAE_VacuumIncreaseRate`, which might be empirical approximations.
+    - `calculateIntakeFlowRate` uses a bell curve and `CstSimulation.CstCondenser.OptimalPressure` and `CstSimulation.CstCondenser.OptimalPressureBellWidth`, which might be empirical approximations.
+    - `calculateCondensation` uses `DampingFactor` which might be an empirical value.
 
 ## Known Issues
 

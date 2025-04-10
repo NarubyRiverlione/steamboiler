@@ -1,34 +1,26 @@
-# Steamboiler Web Simulation
+# PowerPlant Simulator
 
-This project simulates the operation of a steam boiler system, integrating both boiler and condenser components to accurately model power plant simulations.
+PowerPlant Simulator is a comprehensive simulation of a steam power plant system. It models the thermodynamic processes involved in water heating, steam generation, condensation, and energy management to provide a realistic and educational experience.
 
-## Project Overview
+## Overview
 
-Steamboiler Web is designed to:
-- Simulate key aspects of steam boiler and condenser operations, including an energy balance approach for steam generation.
-- Integrate simulation logic across multiple modules.
-- Provide interactive control panels and readouts for real-time simulation feedback.
-- Utilize robust context management to maintain and update system state.
+The project, formerly known as Steamboiler, has evolved to more accurately reflect the complete power plant cycle. It leverages modern web technologies including React, TypeScript, and the Context API with a centralized reducer pattern to ensure a robust and maintainable codebase.
 
-## Current Focus
+## Key Features
 
-According to our latest memory bank update (active as of 2025-04-01 11:10:49 CET), the project is currently focused on:
-- Refinement of the simulation components.
-- Integration of Condenser and Boiler simulation logic, including the implementation of an energy balance approach for the boiler's steam generation.
-- Reviewing and enhancing utility functions (e.g., *condenserCalculation.ts* and *boilerCalculations.ts*) for accurate modeling.
-- Active improvements in context management, particularly within *PowerPlantProvider* and related context files.
-
-## Next Steps
-
-Upcoming development efforts include:
-- Implementing the aerator between the condenser and the boiler.
-- Implementing turbines for power generation.
-- Reducing empirical approaches in calculations.
+- **Realistic Thermodynamics:** Simulates water heating, steam generation, and condensation dynamics.
+- **Centralized State Management:** Uses a single PowerPlantProvider and PowerPlantReducer for predictable state updates.
+- **Modular Architecture:** Organized into reusable components for simulation visualization and control panels.
+- **Responsive UI:** Provides real-time readouts and control interfaces for manipulating simulation parameters.
 
 ## Getting Started
 
-1. Install dependencies using your preferred package manager.
-2. Run the development server (e.g., using `npm run dev` or `pnpm dev`).
-3. Explore the simulation panels and monitoring dashboards to understand the system operation.
+1. **Installation:** Clone the repository and run the setup commands as detailed in the documentation.
+2. **Development:** Use the provided scripts to run the simulation locally using modern build tools like Vite.
+3. **Deployment:** Follow the deployment guidelines to build a production-ready version of the simulator.
 
-For further details, refer to the documentation within the memory bank files and source code comments.
+## Future Enhancements
+
+- Integration of additional simulation modules such as turbine power generation.
+- Continuous improvements in simulation accuracy and performance optimization.
+- Expansion of user interface features to include detailed visualization and historical data tracking.

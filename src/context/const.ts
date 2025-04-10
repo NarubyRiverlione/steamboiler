@@ -14,9 +14,9 @@ export const CstSimulation = {
     GasChangeRateSlow: 250, // °C per second,
     PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
-    MaxSteamRemovalRate: 100, // kg/second when valve is fully open
-    BypassValveStep: 1, // % per click open/close
-    TurbineValveStep: 1, // % per click open/close
+    MaxSteamRemovalRate: 200, // kg/second when valve is fully open
+    BypassValveStep: 10, // % per click open/close
+    TurbineValveStep: 10, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa
   },
 
@@ -42,6 +42,7 @@ export const CstSimulation = {
     CondensationPump_Step: 1,
     PressureMultiplier: 0.8, // steam volume adds pressure
     SteamVolumeBaseLine: 1000,
+    LeakingRate: 0.01, // kg/s (typical 0.005 to 0.015 kg/s )
   },
 
   CstTurbine: {

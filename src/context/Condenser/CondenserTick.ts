@@ -28,22 +28,18 @@ export function CondenserTick(
   // Calculate the pressure based on the CAR & SJAE
   const { vacuumByReducers, newIsSjaeEnabled } = calculateVacuumByReducers(condenserState, boilerPressure)
   // Pressure change by steam volume
-  const pressureBySteam = calculatePressureBySteam(
-    condenserState.steamMass,
-    condenserState.hotwellWaterVolume,
-    steamFromTurbine.temp,
-    0,
-  )
+  // const pressureBySteam = calculatePressureBySteam(
+  //   condenserState.steamMass,
+  //   condenserState.hotwellWaterVolume,
+  //   steamFromTurbine.temp,
+  //   0,
+  // )
+  const pressureBySteam = condenserState.steamMass / 1000
   const newPressure = CstPhysics.AtmosphericPressure_mBar + pressureBySteam - vacuumByReducers
 
-  // console.log(
-  //   "pressure " +
-  //     newPressure.toFixed(0) +
-  //     ": pressureBySteam " +
-  //     pressureBySteam.toFixed(0) +
-  //     ", vacuumByReducers " +
-  //     vacuumByReducers.toFixed(0),
-  // )
+  console.log(
+    "pressureBySteam " + pressureBySteam.toFixed(1) + ", vacuumByReducers " + vacuumByReducers.toFixed(0),
+  )
 
   // Calculate turbine to condenser flow rate based on boiler steam flow and condenser vacuum pressure.
   // The vacuum pressure affects the efficiency of steam flow from turbine to condenser.

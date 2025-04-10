@@ -1,170 +1,44 @@
-# Technical Context
+# Tech Context
 
-## Technology Stack
+## Technologies and Tools
+- **React:** Utilized for building the user interface with a component-based architecture.
+- **Context API & Reducer Pattern:** Employed for state management across the application.
+- **TypeScript:** Provides static typing to enhance code quality and maintainability.
+- **Modern Web Packaging:** Tools like Vite (or similar) for a fast development and build process.
+- **CSS & Styling:** Custom styles are applied for simulation visualization and control panels.
 
-The Steam Boiler Simulation is built using the following technologies:
-
-Use pnpm as package manager instead of npm
-
-### Frontend Framework
-
-- **React**: Core UI library
-- **TypeScript**: For type-safe code
-- **Vite**: Build tool and development server
-- **React Router**: For navigation and routing between components
-
-### State Management
-
-- **React Context API**: For state management
-- **useReducer Hook**: For state transitions and simulation logic
-
-### Styling
-
-- **CSS**: Custom styling with CSS files
-
-### Condenser
-
-- **Condenser.tsx**: Component for condensing steam back into water.
-- **CondenserReducer.ts**: Manages the condenser's state.
-- **CondenserTypes.ts**: Defines the types used by the condenser.
+## State Management and Architecture
+- The application now features a **centralized state management** approach.
+- A single reducer (`PowerPlantReducer`) coupled with a single provider (`PowerPlantProvider`) is used across the application.
+- This unified setup replaces the previous design that used multiple reducers and providers in different parts of the application.
+- **Benefits of the Updated Approach:**
+  - **Simplicity:** A single source of truth simplifies debugging and state updates.
+  - **Maintainability:** Code becomes easier to modify and extend with a streamlined state management system.
+  - **Performance:** Reduced redundancy and optimized state updates contribute to overall performance improvements.
 
 ## Project Structure
+The project is structured to leverage the centralized state management provided by the PowerPlant Context:
 
-```
-steamboiler-web/
-├── public/               # Static assets
-├── src/
-│   ├── components/       # UI components
-│   │   ├── simulator.css # Shared simulator styling
-│   │   ├── Boiler/       # Boiler components
-│   │   │   ├── Boiler.tsx             # Main boiler component
-│   │   │   ├── BoilerControlPanel.tsx # Control panel for boiler
-│   │   │   ├── BoilerGasControl.tsx   # Gas control for boiler
-│   │   │   ├── BoilerReadouts.tsx     # Readouts for boiler
-│   │   │   ├── BoilerSteamValveControl.tsx # Steam valve control
-│   │   │   ├── BoilerVisual.tsx       # Visual representation of boiler
-│   │   │   └── BoilerWaterControl.tsx # Water control for boiler
-│   │   └── Condenser/    # Condenser components
-│   │       ├── Condenser.tsx          # Main condenser component
-│   │       ├── CondenserControlPanel.tsx # Control panel for condenser
-│   │       ├── CondenserReadouts.tsx  # Readouts for condenser
-│   │       └── CondenserVisual.tsx    # Visual representation of condenser
-│   ├── navigation/           # Navigation components
-│   │   ├── ComponentView.tsx # Component View
-│   │   ├── Layout.tsx        # Layout component with header and tabs
-│   │   ├── MainStatsView.tsx # Main Stats View
-│   │   ├── TabNavigation.css # Styling for tab navigation
-│   │   └── TabNavigation.tsx # Tab navigation component
-│   ├── routes/           # Routing configuration
-│   │   └── AppRoutes.tsx # Routes definition
-│   ├── context/          # State management
-│   │   ├── PowerPlantProvider.tsx # Context provider for the whole power plant
-│   │   ├── PowerPlantContext.tsx  # Context for the whole power plant
-│   │   ├── const.ts             # Constants, including HeatLossPercentage
-│   │   ├── Boiler/      # Boiler state management
-│   │   │   ├── BoilerReducer.ts # Reducer with simulation logic
-│   │   │   ├── BoilerTick.ts    # Tick logic for boiler
-│   │   │   └── BoilerTypes.ts   # TypeScript types for boiler
-│   │   └── Condenser/   # Condenser state management
-│   │       ├── CondenserReducer.ts # Reducer for condenser
-│   │       └── CondenserTypes.ts   # Types for condenser
-│   ├── utils/            # Utility functions
-│   │   ├── boilerCalculations.ts # Physics calculations
-│   │   ├── condenserCalculation.ts # Condenser calculations
-│   │   └── steamTable.ts         # Steam property data
-│   ├── App.tsx           # Main application component with router setup
-│   ├── App.css           # Application styling
-│   ├── main.tsx          # Entry point
-│   └── index.css         # Global styles
-├── package.json          # Dependencies and scripts
-├── tsconfig.json          # TypeScript configuration
-└── vite.config.ts         # Vite configuration
+### Schematic Representation
+```mermaid
+flowchart TD
+    A[PowerPlantProvider (src/context/PowerPlantProvider.tsx)]
+    B[PowerPlantReducer (src/context/PowerPlantReducer.ts)]
+    C[UI Components]
+    A --> B
+    A --> C
 ```
 
-## Key Dependencies
+- **PowerPlantProvider:** Located in the context layer (e.g., `src/context/PowerPlantProvider.tsx`); it encapsulates the global state and supplies it to the entire application.
+- **PowerPlantReducer:** Centralizes all state transitions, ensuring a predictable update cycle.
+- **UI Components:** All components consume state via the unified PowerPlant Context, ensuring consistency in state access and updates throughout the application.
 
-The project has minimal external dependencies, focusing on core React and TypeScript functionality:
+## Development and Deployment
+- The project is organized for modularity, allowing individual components to be developed and tested in isolation.
+- Integration of modern tooling ensures rapid iterations during development and efficient production builds.
+- Continuous testing and performance monitoring are in place to maintain code quality as new features are added.
 
-- **React**: UI library
-- **React DOM**: React renderer for the web
-- **React Router DOM**: For routing and navigation
-- **TypeScript**: Static typing
-
-## Development Environment
-
-### Build System
-
-- **Vite**: Modern build tool that provides fast development server and optimized production builds
-- **TypeScript**: Configured with appropriate settings for React development
-
-### Scripts
-
-- **dev**: Starts the development server
-- **build**: Creates a production build
-- **preview**: Serves the production build locally for testing
-
-## Technical Constraints
-
-### Browser Compatibility
-
-- The application targets modern browsers with good support for ES6+ features
-- No explicit polyfills are included for older browsers
-
-### Performance Considerations
-
-- The simulation runs at 10 updates per second (100ms interval)
-- Calculations are optimized to balance accuracy with performance
-- Numerical methods use simplifications where appropriate to ensure stability
-
-### Data Storage
-
-- All state is maintained in memory during the session
-- No persistence layer is implemented
-- No backend or API dependencies
-
-## Steam Table Implementation
-
-The simulation relies on accurate thermodynamic data for water and steam properties:
-
-- **Temperature Range**: 80°C to 300°C
-- **Properties Tracked**:
-  - Pressure (bar)
-  - Specific Volume (m³/kg)
-  - Enthalpy (kJ/kg)
-  - Specific Heat (kJ/kg°C)
-  - Latent Heat (kJ/kg)
-
-For temperatures below 80°C, linear approximations are used for water properties.
-
-## Calculation Methods
-
-### Interpolation
-
-Linear interpolation is used to calculate properties between data points in the steam table:
-
-```typescript
-// Interpolate between the two points
-const ratio = (clampedTemp - lower.temperature) / (upper.temperature - lower.temperature)
-
-return {
-  temperature: clampedTemp,
-  pressure: lower.pressure + ratio * (upper.pressure - lower.pressure),
-  specificVolume: lower.specificVolume + ratio * (upper.specificVolume - lower.specificVolume),
-  enthalpy: lower.enthalpy + ratio * (upper.enthalpy - upper.enthalpy),
-  specificHeat: lower.specificHeat + ratio * (upper.specificHeat - lower.specificHeat),
-  latentHeat: lower.latentHeat + ratio * (upper.latentHeat - lower.latentHeat),
-}
-```
-
-### Extrapolation
-
-For values outside the steam table range, appropriate extrapolation methods are used:
-
-- **Antoine Equation**: For boiling points at low pressures
-- **Power Law**: For boiling points at high pressures
-- **Linear Extrapolation**: For latent heat at low temperatures
-
-### code style
-
-- preferable use deconstruction of constants
-- preferable use a separate function instead of the reassigning a value to a 'let'
+## Future Considerations
+- Explore custom hooks for more granular control over specific simulation tasks.
+- Monitor performance and evaluate further optimizations as the simulation grows in complexity.
+- Consider integrating additional state management tools if the application scope expands significantly.

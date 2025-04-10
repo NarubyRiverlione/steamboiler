@@ -158,7 +158,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     energy: newEnergy,
     energyDelta: energyChange / CstSimulation.DeltaTime, // averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
     deltaWaterVolume: newWaterVolume - boilerState.waterVolume, // averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
-    deltaSteamMass: generatedSteamMass, // averageTwo(boilerState.steamMass, newSteamMass) - previousSteamMass,
+    deltaSteamMass: generatedSteamMass / CstSimulation.DeltaTime, // Converted to kg/s
   }
 }
 

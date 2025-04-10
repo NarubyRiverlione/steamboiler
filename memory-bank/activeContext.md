@@ -1,26 +1,18 @@
 # Active Context
 
-**Updated:** 2025-04-02 14:00:00 CET
+## Current Work Focus
 
-## Current Focus
-- Implementation of routing with tabs for Boiler and Condenser components.
-- Implementation of energy balance approach for condenser calculations.
-- Implementation of energy balance approach for the boiler's steam generation.
-- Enhanced modeling of steam condensation based on cold water recirculation.
-- Temperature tracking for condensed water returning to the boiler.
-- Refinement of utility functions (condenserCalculation.ts) for more accurate thermodynamic modeling.
+- Refining the steam boiler simulation with an emphasis on precise thermodynamic modeling and improved user interaction.
 
-## Open Files (Active Session)
-- Routing: App.tsx, Layout.tsx, TabNavigation.tsx, AppRoutes.tsx
-- Boiler: src/utils/boilerCalculations.ts
-- Condenser: CondenserTypes.ts, CondenserTick.ts, condenserReducer.ts
-- Utilities: condenserCalculation.ts, steamTable.ts
-- Constants: src/context/const.ts
+## Recent Changes
+
+- A proposal to enhance valve control responsiveness has been added to the todo list (see progress.md). The plan involves implementing a continuous auto-fire mechanism in the ValveSlider component, enabling the valve's adjustment to fire repeatedly (approximately every 150ms) while a control button is held down.
+- Turbine development has advanced with Phases 1 & 2 completed; Phase 3 to 5 is now planned and in design.
+- Core simulation features continue to perform reliably, and overall UI functionality remains stable.
 
 ## Next Steps
-- Test the energy balance implementation for the condenser.
-- Test the energy balance implementation for the boiler's steam generation.
-- Add visualization components to represent the temperature of condensed water.
-- Implement the aerator between condenser and boiler as mentioned in progress.md.
-- Consider adding more tabs for future components (e.g., Turbine, Aerator).
-- Reduce empirical approaches in calculations as mentioned in progress.md.
+
+- Evaluate the UX impact of the proposed ValveSlider enhancement once sufficient user feedback is gathered.
+- Proceed with integration of additional features, such as an aerator between the condenser and the boiler.
+- Begin design and planning for Turbine Phase 3 development.
+- Perform further updates to other memory bank documents as the project scope evolves.

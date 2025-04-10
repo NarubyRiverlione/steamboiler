@@ -216,7 +216,7 @@ export function calculateCondensation(
 
   // 5. Convert condensed mass to volume using water density
   const waterDensity = CstPhysics.Water_Density // kg/m³
-  const volumeCondensed = (massCondensed / waterDensity) * 1000 // Convert m³ to liters
+  const volumeCondensed = (massCondensed / waterDensity) * 1000 * 10 // Convert m³ to liters
 
   // 6. Adjust vapor and liquid volumes
   const condensedVolume = Math.min(currentSteamMass, volumeCondensed)

@@ -150,7 +150,7 @@ export function calculateSteamGeneration(waterMass: number, temperature: number,
   const latentHeat = getLatentHeat(boilingPoint) // kJ/kg
 
   // Calculate the steam generation rate
-  const steamMassFromEnergy = (availableEnergy * CstSimulation.DeltaTime) / latentHeat //KJ / kJ/kg = kg/s
+  const steamMassFromEnergy = availableEnergy / latentHeat //KJ / kJ/kg = kg/s
 
   return steamMassFromEnergy
 }
