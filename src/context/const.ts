@@ -15,8 +15,8 @@ export const CstSimulation = {
     PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
     MaxSteamRemovalRate: 200, // kg/second when valve is fully open
-    BypassValveStep: 10, // % per click open/close
-    TurbineValveStep: 10, // % per click open/close
+    BypassValveStep: 5, // % per click open/close
+    TurbineValveStep: 1, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa
   },
 

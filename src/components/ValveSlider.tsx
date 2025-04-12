@@ -29,7 +29,10 @@ const ValveSlider = ({ Label, Value, Position, Step, cbAdjust }: ValveSliderProp
           Close
         </button>
         <div className="valve-slider-container">
-          <div className="valve-position-indicator" style={{ width: `${Position.toString()}%` }}></div>
+          <div
+            className="valve-position-indicator"
+            style={{ width: `${(Position * 100).toString()}%` }}
+          ></div>
         </div>
         <button
           className="steam-valve-button"
