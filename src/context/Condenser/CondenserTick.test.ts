@@ -29,10 +29,10 @@ describe("CondenserTick", () => {
   })
 
   // Test with various turbine valve positions
-  const testCases = [0, 1, 5, 10, 50, 100]
+  const testCases = [0, 0.1, 0.25, 0.5, 0.75, 1]
 
   testCases.forEach((turbineValvePosition) => {
-    it(`Convert steam to water with a turbine valve at ${String(turbineValvePosition)}%`, () => {
+    it(`Convert steam to water with a turbine valve at ${String(turbineValvePosition / 100)}%`, () => {
       // open turbine valve
       const boilerStateTurbineValve: BoilerState = {
         ...initialPowerPlantState.Boiler,
@@ -43,14 +43,15 @@ describe("CondenserTick", () => {
       // get turbine steam intake from turbine valve position
       const boilerSteamRemovedState = BoilerRemoveSteam(boilerStateTurbineValve, "TURBINE")
       const { turbineSteamFlowOut } = boilerSteamRemovedState
-      const expectedSteamFlow =
-        (turbineValvePosition / 100) * CstSimulation.CstBoiler.MaxSteamRemovalRate * CstSimulation.DeltaTime
+      const expectedSteamFlow = Math.min(
+        boilerStateTurbineValve.steamMass,
+        turbineValvePosition * CstSimulation.CstBoiler.MaxSteamRemovalRate,
+      )
+      expect(turbineSteamFlowOut).toBeCloseTo(expectedSteamFlow)
 
       // expect complete conversion of steam to water
       const expectedWaterDelta = turbineSteamFlowOut * CstSimulation.DeltaTime
 
-      // it(`should add ${String(expectedWaterDelta)} kg/s water when turbine valve is at ${String(turbineValvePosition)}% = flow is ${String(turbineSteamFlowOut)} kg/s`, () => {
-      expect(turbineSteamFlowOut).toBeCloseTo(expectedSteamFlow)
       const boilerPressure = 100 // bar, must be above MSV opening
       const state = { ...initialState }
       // For simplicity, use turbine steam as the sole input.
@@ -68,9 +69,10 @@ describe("CondenserTick", () => {
       expect(newState.deltaWaterVolume).toBeCloseTo(expectedWaterDelta)
     })
   })
+
   const testTicks = 100
   it(`Convert for ${String(testTicks)} Ticks steam to water with a turbine valve at 100% and condensation pump not running`, () => {
-    const turbineValvePosition = 100
+    const turbineValvePosition = 1
     // open turbine valve
     const boilerStateTurbineValve: BoilerState = {
       ...initialPowerPlantState.Boiler,
@@ -81,14 +83,14 @@ describe("CondenserTick", () => {
     // get turbine steam intake from turbine valve position
     const boilerSteamRemovedState = BoilerRemoveSteam(boilerStateTurbineValve, "TURBINE")
     const { turbineSteamFlowOut } = boilerSteamRemovedState
-    const expectedSteamFlow =
-      (turbineValvePosition / 100) * CstSimulation.CstBoiler.MaxSteamRemovalRate * CstSimulation.DeltaTime
-
+    const expectedSteamFlow = Math.min(
+      boilerStateTurbineValve.steamMass,
+      turbineValvePosition * CstSimulation.CstBoiler.MaxSteamRemovalRate,
+    )
+    expect(turbineSteamFlowOut).toBeCloseTo(expectedSteamFlow)
     // expect complete conversion of steam to water
     const expectedWaterDelta = turbineSteamFlowOut * CstSimulation.DeltaTime
 
-    // it(`should add ${String(expectedWaterDelta)} kg/s water when turbine valve is at ${String(turbineValvePosition)}% = flow is ${String(turbineSteamFlowOut)} kg/s`, () => {
-    expect(turbineSteamFlowOut).toBeCloseTo(expectedSteamFlow)
     const boilerPressure = 100 // bar, must be above MSV opening
     let state = { ...initialState }
     // For simplicity, use turbine steam as the sole input.
@@ -119,7 +121,7 @@ describe("CondenserTick", () => {
     vi.runAllTimers()
   })
   it(`Convert for ${String(testTicks)} Ticks steam to water with a turbine valve at 100% and condensation pump 100% running`, () => {
-    const turbineValvePosition = 100
+    const turbineValvePosition = 1
     // open turbine valve
     const boilerStateTurbineValve: BoilerState = {
       ...initialPowerPlantState.Boiler,
