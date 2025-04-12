@@ -56,8 +56,8 @@ const CondenserControlPanel = () => {
           <ValveSlider
             Label="Position:"
             //  Value={steamFlowOut}
-            Position={sjaeValvePosition}
-            Step={SJAE_ValveStep}
+            Position={sjaeValvePosition }
+            Step={SJAE_ValveStep }
             cbAdjust={adjustSjaeValvePosition}
           />
         </div>
@@ -69,9 +69,9 @@ const CondenserControlPanel = () => {
         <div className="control-section">
           <ValveSlider
             Label="Flow Rate:"
-            Position={recirculationPumpValvePosition * 100}
+            Position={recirculationPumpValvePosition }
             Value={`${recirculationPumpFlowRate.toFixed(1)} l/s`}
-            Step={RecirculationPump_Step}
+            Step={RecirculationPump_Step }
             cbAdjust={adjustRecirculationPumpValvePosition}
           />
         </div>
@@ -82,8 +82,8 @@ const CondenserControlPanel = () => {
           <h3>Condensation Pump</h3>
           <ValveSlider
             Label="Flow Rate:"
-            Position={condensationPumpValvePosition * 100}
-            Step={CondensationPump_Step}
+            Position={condensationPumpValvePosition }
+            Step={CondensationPump_Step }
             cbAdjust={adjustCondensationPumpValvePosition}
           />
         </div>

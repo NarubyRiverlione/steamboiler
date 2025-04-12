@@ -5,37 +5,6 @@ import BoilerTick, { BoilerRemoveSteam } from "./Boiler/BoilerTick"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import { CstSimulation } from "./const"
 
-/*
-  //#region Condenser
-      const { pressure: boilerPressure, steamMass: previousSteamMass } = boilerState
-
-      const steamFromBypass = { temp: boilerState.temperature, flow: boilerState.bypassSteamFlowOut }
-      const steamFromTurbine = { temp: boilerState.temperature, flow: boilerState.turbineSteamFlowOut }
-      powerPlantDispatch({
-        type: "SIMULATE_TICK",
-        payload: { boilerPressure, steamFromBypass, steamFromTurbine },
-      })
-      // remove steam from bypass valve in the boiler
-      //  boilerRemoveSteam(boilerState.bypassValvePosition, "BYPASS")
-      // add condensation water to the boiler
-      // boilerAddCondensationWater(condenserState.returnRate)
-      powerPlantDispatch({
-        type: "ADD_CONDENSATION_WATER",
-        payload: { condensationFlow: condenserState.returnRate },
-      })
-      //#endregion
-      //#region Turbine
-      turbineDispatch({
-        type: "SIMULATE_TICK",
-        payload: { turbineValvePosition: boilerState.turbineValvePosition },
-      })
-      // remove steam from turbine valve in the boiler
-      boilerRemoveSteam(boilerState.turbineValvePosition, "TURBINE")
-      //#endregion
-      //#region Boiler
-      powerPlantDispatch({ type: "SIMULATE_TICK", payload: { previousSteamMass } })
-*/
-
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
   // Condenser
   const steamFromBypass = { temp: state.Boiler.temperature, flow: state.Boiler.bypassSteamFlowOut }

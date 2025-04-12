@@ -186,7 +186,7 @@ export function BoilerRemoveSteam(
     return { ...boilerState, turbineSteamFlowOut: 0, bypassSteamFlowOut: 0 }
   }
 
-  const valveFlow = (valvePosition / 100) * CstBoiler.MaxSteamRemovalRate
+  const valveFlow = valvePosition  * CstBoiler.MaxSteamRemovalRate
   const removedSteamMass = Math.min(steamMass, valveFlow * CstSimulation.DeltaTime)
 
   // Calculate new steam mass after removal

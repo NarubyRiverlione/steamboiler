@@ -38,7 +38,7 @@ export const CstSimulation = {
     RecirculationPump_Step: 1,
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
     HeatTransferCoefficient: 0.85, // Condensation rate per unit of recirculation flow
-    CondensationPump_MaxFlowRate: 500, // l/s (typical 160 - 270 l/s)
+    CondensationPump_MaxFlowRate: 300, // l/s (typical 160 - 270 l/s)
     CondensationPump_Step: 1,
     PressureMultiplier: 0.8, // steam volume adds pressure
     SteamVolumeBaseLine: 1000,

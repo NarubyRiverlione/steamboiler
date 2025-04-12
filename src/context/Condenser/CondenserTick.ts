@@ -4,7 +4,6 @@ import {
   calculateIntakeFlowRate,
   calculateVacuumByReducers,
   CalculateCondensationFlow,
-  calculatePressureBySteam,
 } from "../../utils/condenserCalculation"
 import { CstPhysics, CstSimulation } from "../const"
 
@@ -37,9 +36,9 @@ export function CondenserTick(
   const pressureBySteam = condenserState.steamMass / 1000
   const newPressure = CstPhysics.AtmosphericPressure_mBar + pressureBySteam - vacuumByReducers
 
-  console.log(
-    "pressureBySteam " + pressureBySteam.toFixed(1) + ", vacuumByReducers " + vacuumByReducers.toFixed(0),
-  )
+  // console.log(
+  //   "pressureBySteam " + pressureBySteam.toFixed(1) + ", vacuumByReducers " + vacuumByReducers.toFixed(0),
+  // )
 
   // Calculate turbine to condenser flow rate based on boiler steam flow and condenser vacuum pressure.
   // The vacuum pressure affects the efficiency of steam flow from turbine to condenser.

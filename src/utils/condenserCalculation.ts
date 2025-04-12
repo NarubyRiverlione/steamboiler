@@ -54,11 +54,10 @@ const calcSJAEvacuum = (
   }
 
   // Calculate vacuum increase based on steam flow and valve position
-  const valveEffect = sjaeValvePosition / 100 // 0-1 range
   const steamFlowEffect = Math.min(1, boilerPressure / MaxSteamRemovalRate)
 
   // Combine effects for final vacuum increase
-  const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * valveEffect * steamFlowEffect
+  const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * sjaeValvePosition * steamFlowEffect
 
   // Apply vacuum increase (limited by max allowed vacuum)
   const vacuumAfterSJAE = Math.min(MaxVacuum, previousVacuum + vacuumIncreaseRate * CstSimulation.DeltaTime)
@@ -205,7 +204,7 @@ export function calculateCondensation(
   const massFlowRate = recirculationPumpValvePosition * RecirculationPump_MaxFlowRate
 
   // 2. Calculate temperature difference between condensed water and cold recirculation water
-  const deltaTemp = steamTemp - RecirculationPump_IntakeTemperature
+  const deltaTemp = Math.max(0, steamTemp - RecirculationPump_IntakeTemperature)
 
   // 3. Calculate energy absorbed by cold water (Q = m * cp * ΔT)
   const energyAbsorbed = massFlowRate * CstPhysics.Water_SpecificHeat * deltaTemp * DeltaTime

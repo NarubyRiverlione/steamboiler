@@ -31,14 +31,14 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleDrainValve = () => {
     dispatch({ type: "TOGGLE_DRAIN_VALVE" })
   }
-  const adjustBypassValve = (amount: number) => {
-    dispatch({ type: "ADJUST_STEAM_BYPASS_VALVE", amount })
+  const adjustBypassValve = (position: number) => {
+    dispatch({ type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: position } })
   }
   const toggleMainSteamValve = () => {
     dispatch({ type: "TOGGLE_MAIN_STEAM_VALVE" })
   }
-  const adjustTurbineValve = (amount: number) => {
-    dispatch({ type: "ADJUST_STEAM_TURBINE_VALVE", amount })
+  const adjustTurbineValve = (position: number) => {
+    dispatch({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: position } })
   }
   //#endregion
 
@@ -55,31 +55,22 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       payload: { isSjaeEnabled: !state.Condenser.isSjaeEnabled },
     })
   }
-  const adjustSjaeValvePosition = (amount: number) => {
-    const sjaeValvePosition = Math.max(0, Math.min(100, state.Condenser.sjaeValvePosition + amount))
+  const adjustSjaeValvePosition = (position: number) => {
     dispatch({
       type: "SET_SJAE_VALVE_POSITION",
-      payload: { sjaeValvePosition },
+      payload: { sjaeValvePosition: position },
     })
   }
-  const adjustRecirculationPumpValvePosition = (amount: number) => {
-    const recirculationPumpValvePosition = Math.max(
-      0,
-      Math.min(1, state.Condenser.recirculationPumpValvePosition + amount / 100),
-    )
+  const adjustRecirculationPumpValvePosition = (position: number) => {
     dispatch({
       type: "SET_RECIRCULATION_PUMP_VALVE_POSITION",
-      payload: { recirculationPumpValvePosition },
+      payload: { recirculationPumpValvePosition: position },
     })
   }
-  const adjustCondensationPumpValvePosition = (amount: number) => {
-    const condensationPumpValvePosition = Math.max(
-      0,
-      Math.min(1, state.Condenser.condensationPumpValvePosition + amount / 100),
-    )
+  const adjustCondensationPumpValvePosition = (position: number) => {
     dispatch({
       type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
-      payload: { condensationPumpValvePosition },
+      payload: { condensationPumpValvePosition: position },
     })
   }
   //#endregion

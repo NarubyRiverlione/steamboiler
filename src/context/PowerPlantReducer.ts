@@ -92,16 +92,16 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
         },
       }
     case "ADJUST_STEAM_BYPASS_VALVE": {
-      // Ensure the valve position stays within 0-100%
-      const bypassValvePosition = Math.max(0, Math.min(100, state.Boiler.bypassValvePosition + action.amount))
-
+      const bypassValvePosition = Math.max(
+        0,
+        Math.min(1, state.Boiler.bypassValvePosition + action.payload.bypassValvePosition),
+      )
       return { ...state, Boiler: { ...state.Boiler, bypassValvePosition } }
     }
     case "ADJUST_STEAM_TURBINE_VALVE": {
-      // Ensure the valve position stays within 0-100%
       const turbineValvePosition = Math.max(
         0,
-        Math.min(100, state.Boiler.turbineValvePosition + action.amount),
+        Math.min(1, state.Boiler.turbineValvePosition + action.payload.turbineValvePosition),
       )
       return { ...state, Boiler: { ...state.Boiler, turbineValvePosition } }
     }
@@ -127,28 +127,48 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
           isSjaeEnabled: action.payload.isSjaeEnabled,
         },
       }
-    case "SET_SJAE_VALVE_POSITION":
+    case "SET_SJAE_VALVE_POSITION": {
+      const sjaeValvePosition = Math.max(
+        0,
+        Math.min(1, state.Condenser.sjaeValvePosition + action.payload.sjaeValvePosition),
+      )
       return {
         ...state,
         Condenser: {
           ...state.Condenser,
-          sjaeValvePosition: action.payload.sjaeValvePosition,
+          sjaeValvePosition,
         },
       }
-    case "SET_RECIRCULATION_PUMP_VALVE_POSITION":
+    }
+    case "SET_RECIRCULATION_PUMP_VALVE_POSITION": {
+      const recirculationPumpValvePosition = Math.max(
+        0,
+        Math.min(
+          1,
+          state.Condenser.recirculationPumpValvePosition + action.payload.recirculationPumpValvePosition,
+        ),
+      )
       return {
         ...state,
         Condenser: {
           ...state.Condenser,
-          recirculationPumpValvePosition: action.payload.recirculationPumpValvePosition,
+          recirculationPumpValvePosition,
         },
       }
+    }
     case "SET_CONDENSATION_PUMP_VALVE_POSITION": {
+      const condensationPumpValvePosition = Math.max(
+        0,
+        Math.min(
+          1,
+          state.Condenser.condensationPumpValvePosition + action.payload.condensationPumpValvePosition,
+        ),
+      )
       return {
         ...state,
         Condenser: {
           ...state.Condenser,
-          condensationPumpValvePosition: action.payload.condensationPumpValvePosition,
+          condensationPumpValvePosition,
         },
       }
     }

@@ -11,9 +11,9 @@ export type BoilerState = {
   fillValveOpen: boolean
   drainValveOpen: boolean
   mainSteamValve: boolean // open/close MSV
-  bypassValvePosition: number // 0-100% open
+  bypassValvePosition: number // 0-1 (0-100%) open
   bypassSteamFlowOut: number // kg/s
-  turbineValvePosition: number // 0-100% open
+  turbineValvePosition: number // 0-1 (0-100%) open
   turbineSteamFlowOut: number // kg/s
 }
 export type CondenserState = {
@@ -25,9 +25,9 @@ export type CondenserState = {
   coolingRate: number
   isAirExtractionPumpEnabled: boolean
   isSjaeEnabled: boolean
-  sjaeValvePosition: number // 0-100%
-  recirculationPumpValvePosition: number // 0-1 (0-100%)
-  condensationPumpValvePosition: number // 0-1 (0-100%)
+  sjaeValvePosition: number // 0-1 (0-100%) open
+  recirculationPumpValvePosition: number // 0-1 (0-100%) open
+  condensationPumpValvePosition: number // 0-1 (0-100%) open
   deltaWaterVolume: number
 }
 export type TurbineState = {
