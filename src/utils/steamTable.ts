@@ -1,4 +1,4 @@
-import { SteamData, steamTable } from "../context/steamData";
+import { SteamData, steamTable } from "./steamData";
 
 
 // Helper function to get steam data through interpolation
