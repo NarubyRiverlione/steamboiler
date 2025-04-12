@@ -1,5 +1,5 @@
 export const CstSimulation = {
-  DeltaTime: 0.2, // Simulation tick duration in sec
+  DeltaTime: 0.1, // Simulation tick duration in sec
   CstBoiler: {
     StartTemperature: 250, // Celsius
     StartWaterVolume: 50e3, // liters (60-70% water volume to keep space for steam)
@@ -21,7 +21,7 @@ export const CstSimulation = {
   },
 
   CstCondenser: {
-    TotalVolume: 15e3, // liters
+    TotalVolume: 20e3, // liters
     HotwellStartVolume: 10e3, // liter
     MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
     VacuumDecayRate: 5, // mbar per second when pump is off

@@ -1,9 +1,10 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
+import useEMA from "../../utils/useEMA"
 import Indicator from "../Indicator"
 import Readout from "../Readout"
 const {
-  CstCondenser: { OptimalPressure, OptimalPressureBellWidth },
+  CstCondenser: { TotalVolume, OptimalPressure, OptimalPressureBellWidth },
 } = CstSimulation
 const CondenserReadouts = () => {
   const {
@@ -11,8 +12,8 @@ const CondenserReadouts = () => {
       Condenser: {
         deltaWaterVolume,
         pressure, // mbar
-        steamMass: steamVolume,
-        hotwellWaterVolume: waterVolume,
+        steamMass,
+        hotwellWaterVolume,
         returnRate,
         intakeFlowRate,
       },
@@ -25,7 +26,7 @@ const CondenserReadouts = () => {
   return (
     <div className="readouts-panel">
       <h3>Condenser Status</h3>
-      <Readout title="Steam volume" value={steamVolume} unit="l" />
+      <Readout title="Steam volume" value={steamMass} unit="l" />
 
       <div className="readout-container">
         <div className="readout-item">
@@ -46,14 +47,14 @@ const CondenserReadouts = () => {
         </div>
       </div>
 
-      <Readout title="Intake flow" value={intakeFlowRate} unit="kg/s" fixed={1} />
+      <Readout title="Intake flow" value={useEMA(intakeFlowRate, 0.01)} unit="kg/s" fixed={0} />
 
       <Readout
         title="Hotwell level"
-        value={waterVolume}
-        unit="l"
-        fixed={0}
-        delta={deltaWaterVolume}
+        value={useEMA(hotwellWaterVolume / TotalVolume, 0.1)}
+        unit=""
+        fixed={1}
+        delta={useEMA(deltaWaterVolume, 0.1)}
         deltaFixed={1}
       />
 

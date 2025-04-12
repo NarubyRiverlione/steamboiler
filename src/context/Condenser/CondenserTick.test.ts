@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, test, afterEach, beforeEach } from "vitest"
+import { describe, it, expect, vi,  afterEach, beforeEach } from "vitest"
 import { CondenserTick } from "./CondenserTick"
 import { CstSimulation } from "../const"
 import { initialPowerPlantState } from "../PowerPlantReducer"

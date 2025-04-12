@@ -2,6 +2,7 @@ import { useState } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import Readout from "../Readout"
+import useEMA from "../../utils/useEMA"
 
 const BoilerReadouts = () => {
   const {
@@ -28,14 +29,14 @@ const BoilerReadouts = () => {
       <Readout
         title="Water volume"
         value={waterVolume}
-        unit={`l/s ${(waterVolume / TotalVolume).toFixed(2)}`}
+        unit={`l ${(waterVolume / TotalVolume).toFixed(2)}`}
       />
 
       <Readout title="Temperature" value={temperature} unit="°C" fixed={1} />
 
-      <Readout title="Pressure" value={pressure / 10} unit="MPa" fixed={1} />
+      <Readout title="Pressure" value={useEMA(pressure, 0.01)} unit="bar" fixed={1} />
 
-      <Readout title="Energy Change" value={energyDelta / 1e3} unit="MJ/s" colored />
+      <Readout title="Energy Change" value={useEMA(energyDelta / 1e3, 0.01)} unit="MJ/s" colored />
 
       <div className="advanced-section">
         <h3 className="advanced-toggle" onClick={toggleAdvanced}>

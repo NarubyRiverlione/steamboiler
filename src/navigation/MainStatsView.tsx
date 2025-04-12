@@ -1,5 +1,6 @@
 import { CstSimulation } from "../context/const"
 import usePowerPlant from "../context/PowerPlantContext"
+import useEMA from "../utils/useEMA"
 
 const MainStatsView = () => {
   const {
@@ -17,7 +18,8 @@ const MainStatsView = () => {
         <div className="mainState-readout-item">
           <span className="mainState-readout-item-label">Water Volume</span>
           <span className="mainState-readout-item-value">
-            {(waterVolume / TotalVolume).toFixed(2)} - Δ {deltaWaterVolume.toFixed(0)} l
+            {useEMA(waterVolume / TotalVolume, 0.1).toFixed(1)} - Δ{" "}
+            {useEMA(deltaWaterVolume, 0.05).toFixed(0)} l
           </span>
         </div>
 

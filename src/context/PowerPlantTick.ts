@@ -34,9 +34,10 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     waterVolume: state.Boiler.waterVolume + state.Condenser.returnRate,
   }
   const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam)
+  const deltaWaterVolume = boilerNewState.waterVolume - state.Boiler.waterVolume
   return {
     ...state,
-    Boiler: boilerNewState,
+    Boiler: { ...boilerNewState, deltaWaterVolume },
     Condenser: condenserNewState,
     Turbine: turbineNewState,
   }
