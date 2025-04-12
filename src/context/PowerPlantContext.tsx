@@ -2,7 +2,7 @@ import { Dispatch, createContext, useContext } from "react"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantAction from "./PowerPlantActions"
 
-export type PowerPlantContextType = {
+type PowerPlantContextType = {
   state: PowerPlantState
   dispatch: Dispatch<PowerPlantAction>
   // Action creators

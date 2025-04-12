@@ -166,17 +166,6 @@ export function calculateIntakeFlowRate(boilerSteamFlow: number, condenserPressu
 }
 
 /**
- * Calculates the recirculation pump flow rate based on valve position
- *
- * @param valvePosition Valve position (0-1)
- * @returns Recirculation pump flow rate (kg/s)
- */
-export function calculateRecirculationPumpFlowRate(valvePosition: number): number {
-  // Flow rate is proportional to valve position
-  return valvePosition * CstSimulation.CstCondenser.RecirculationPump_MaxFlowRate
-}
-
-/**
  * Calculates the condensation of steam based on energy balance approach
  *
  * @param currentSteamMass kg, Current steam mass in the condenser

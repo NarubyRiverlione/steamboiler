@@ -1,5 +1,3 @@
- 
- 
 import { describe, it, expect, vi, test, afterEach, beforeEach } from "vitest"
 import { CondenserTick } from "./CondenserTick"
 import { CstSimulation } from "../const"
@@ -147,7 +145,8 @@ describe("CondenserTick", () => {
 
     // condensate pump at 100 %
     state.condensationPumpValvePosition = 1
-    const expectedCondensationFlow = CstSimulation.CstCondenser.CondensationPump_MaxFlowRate
+    const expectedCondensationFlow =
+      CstSimulation.CstCondenser.CondensationPump_MaxFlowRate * CstSimulation.DeltaTime
 
     let testCounter = 0
     const testTick = () => {
