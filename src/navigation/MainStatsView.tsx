@@ -25,9 +25,7 @@ const MainStatsView = () => {
 
         <div className="mainState-readout-item">
           <span className="mainState-readout-item-label">Pressure</span>
-          <span className="mainState-readout-item-value">
-            {(pressure * 0.1).toFixed(1)} MPa - {pressure.toFixed(0)} bar
-          </span>
+          <span className="mainState-readout-item-value">{useEMA(pressure, 0.01).toFixed(0)} bar</span>
         </div>
       </div>
     </div>

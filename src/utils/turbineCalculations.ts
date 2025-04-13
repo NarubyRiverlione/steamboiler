@@ -22,14 +22,12 @@ export function calculateElectricityOutput(turbineValvePosition: number, rpm: nu
  * @param currentRPM - The current RPM of the turbine
  * @param steamFlow - The steam flow through the turbine in kg/s
  * @param boilerPressure - The pressure of the boiler in bar
- * @param deltaTime - The simulation time step in seconds
  * @returns The new RPM value
  */
 export function calculateRPM(
   currentRPM: number,
   steamFlow: number,
   boilerPressure: number,
-  deltaTime: number
 ): number {
   // Calculate torque from steam flow and pressure
   // Higher pressure and flow = more torque
@@ -45,7 +43,7 @@ export function calculateRPM(
   const angularAcceleration = netTorque / CstTurbine.MomentOfInertia
   
   // Calculate RPM change (ω = ω₀ + α·t)
-  const rpmChange = angularAcceleration * deltaTime * 60 / (2 * Math.PI) // Convert rad/s² to RPM/s
+  const rpmChange = angularAcceleration * CstSimulation.DeltaTime * 60 / (2 * Math.PI) // Convert rad/s² to RPM/s
   
   // Calculate new RPM with gradual change
   const newRPM = Math.max(0, currentRPM + rpmChange)

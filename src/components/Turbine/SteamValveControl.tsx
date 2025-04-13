@@ -1,5 +1,6 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
+import useEMA from "../../utils/useEMA"
 import Indicator from "../Indicator"
 import ValveSlider from "../ValveSlider"
 
@@ -53,7 +54,6 @@ const SteamValveControl = () => {
       />
       <ValveSlider
         Label="Turbine Valve"
-        Value={`${turbineSteamFlowOut.toFixed(1)} kg/s`}
         Position={turbineValvePosition}
         Step={TurbineValveStep}
         cbAdjust={adjustTurbineValve}

@@ -28,12 +28,7 @@ function TurbineTick(
   const newElectricityOutput = calculateElectricityOutput(turbineValvePosition, turbineState.rpm)
 
   // Calculate new RPM based on steam flow and boiler pressure
-  const newRPM = calculateRPM(
-    turbineState.rpm,
-    turbineState.turbineSteamFlowOut,
-    boilerPressure,
-    CstSimulation.DeltaTime,
-  )
+  const newRPM = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, boilerPressure)
 
   // Handle automatic valve control in hold mode
   const newTurbineValvePosition = updateTurbineValve(turbineState, newRPM)

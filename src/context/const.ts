@@ -17,9 +17,8 @@ export const CstSimulation = {
   },
 
   CstCondenser: {
-    TotalVolume: 20e3, // liters
+    TotalVolume: 15e3, // liters
     HotwellStartVolume: 10e3, // liter
-
     MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
     VacuumDecayRate: 5, // mbar per second when pump is off
     OptimalPressure: 80, // mBar (center of bell curve)
@@ -51,18 +50,18 @@ export const CstSimulation = {
     steamToElectricityEfficiency: 0.35, // Typical conversion ratio from steam energy to electrical energy (black-box approach)
     steamOutflowPressure: 0.1, // bar (typical  5-10 kPa absolute (0.05-0.1 bar or approximately )
     steamOutflowTemperature: 40, // Celsius (typical 35-45C)
-    
+
     // New constants for Phase 3
     MaxRPM: 3600, // Maximum RPM (typical for 60Hz generators)
     MinRPM: 0, // Minimum RPM
     DefaultRPMSetPoint: 3000, // Default setpoint
     RPMStep: 50, // Increment/decrement step for RPM setpoint
-    
+
     // Inertia modeling constants
-    MomentOfInertia: 25000, // kg·m² (represents the turbine's resistance to changes in rotational speed)
-    FrictionFactor: 0.02, // Represents mechanical friction losses
-    TorqueFactor: 0.05, // Factor to convert steam flow and pressure to torque
-    
+    MomentOfInertia: 5000, // 25000 kg·m² (represents the turbine's resistance to changes in rotational speed)
+    FrictionFactor: 0.2, // 0.02 Represents mechanical friction losses
+    TorqueFactor: 0.1, // 0.05 Factor to convert steam flow and pressure to torque
+
     // PID controller constants for hold mode
     PID_Kp: 0.001, // Proportional gain
     PID_Ki: 0.0001, // Integral gain
