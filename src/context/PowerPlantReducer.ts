@@ -40,6 +40,9 @@ export const initialPowerPlantState: PowerPlantState = {
     turbineValvePosition: 0,
     turbineSteamFlowOut: 0,
     mainSteamValve: false, // closed
+    rpm: 0,
+    rpmSetPoint: CstTurbine.DefaultRPMSetPoint,
+    holdMode: false,
   },
 }
 
@@ -173,6 +176,25 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
         Math.min(1, state.Turbine.turbineValvePosition + action.payload.turbineValvePosition),
       )
       return { ...state, Turbine: { ...state.Turbine, turbineValvePosition } }
+    }
+    case "ADJUST_RPM_SETPOINT": {
+      const rpmSetPoint = Math.max(
+        CstTurbine.MinRPM,
+        Math.min(
+          CstTurbine.MaxRPM,
+          state.Turbine.rpmSetPoint + action.payload.rpmAdjustment
+        )
+      )
+      return { ...state, Turbine: { ...state.Turbine, rpmSetPoint } }
+    }
+    case "TOGGLE_HOLD_MODE": {
+      return {
+        ...state,
+        Turbine: {
+          ...state.Turbine,
+          holdMode: !state.Turbine.holdMode
+        }
+      }
     }
     //#endregion
     default:

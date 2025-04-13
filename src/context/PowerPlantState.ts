@@ -32,6 +32,9 @@ export type TurbineState = {
   turbineValvePosition: number // 0-1 (0-100%) open
   turbineSteamFlowOut: number // kg/s
   mainSteamValve: boolean // open/close MSV
+  rpm: number // Current RPM of the turbine
+  rpmSetPoint: number // Target RPM when in hold mode
+  holdMode: boolean // Whether the turbine is in hold mode
 }
 
 type PowerPlantState = {

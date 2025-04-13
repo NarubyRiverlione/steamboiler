@@ -27,7 +27,8 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // Turbine
   const turbineNewState: TurbineState = TurbineTick(
     bypassResult.turbineState, 
-    bypassResult.turbineState.turbineValvePosition
+    bypassResult.turbineState.turbineValvePosition,
+    bypassResult.boilerState.pressure
   )
   
   // remove steam via turbine valve

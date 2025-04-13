@@ -31,6 +31,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleDrainValve = () => {
     dispatch({ type: "TOGGLE_DRAIN_VALVE" })
   }
+  //#endregion
+
+  //#region Turbine action creators
   const adjustBypassValve = (position: number) => {
     dispatch({ type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: position } })
   }
@@ -39,6 +42,13 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   }
   const adjustTurbineValve = (position: number) => {
     dispatch({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: position } })
+  }
+  const adjustRPMSetPoint = (amount: number) => {
+    dispatch({ type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment: amount } })
+  }
+
+  const toggleHoldMode = () => {
+    dispatch({ type: "TOGGLE_HOLD_MODE" })
   }
   //#endregion
 
@@ -85,9 +95,12 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         decreaseGasFlow,
         toggleFillValve,
         toggleDrainValve,
+        // turbine rpm control actions
         adjustBypassValve,
         toggleMainSteamValve,
         adjustTurbineValve,
+        adjustRPMSetPoint,
+        toggleHoldMode,
         // condenser actions
         toggleAirExtractionPump,
         toggleSjae,
