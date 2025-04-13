@@ -1,5 +1,4 @@
 import BoilerGasControl from "./BoilerGasControl"
-import BoilerSteamValveControl from "./BoilerSteamValveControl"
 import BoilerWaterControl from "./BoilerWaterControl"
 
 const BoilerControlPanel = () => {
@@ -7,7 +6,6 @@ const BoilerControlPanel = () => {
     <div className="controls-panel">
       <BoilerGasControl />
       <BoilerWaterControl />
-      <BoilerSteamValveControl />
     </div>
   )
 }

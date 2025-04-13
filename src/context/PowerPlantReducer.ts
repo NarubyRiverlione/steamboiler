@@ -4,7 +4,7 @@ import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 
-const { CstBoiler } = CstSimulation
+const { CstBoiler, CstTurbine } = CstSimulation
 export const initialPowerPlantState: PowerPlantState = {
   Boiler: {
     waterVolume: CstBoiler.StartWaterVolume, // liters
@@ -16,13 +16,8 @@ export const initialPowerPlantState: PowerPlantState = {
     energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, CstBoiler.StartTemperature), // kJ
     energyDelta: 0, // kJ/s
     steamMass: 0, // kg - Mass of steam currently in the boiler
-    bypassValvePosition: 0, // 0-100% open
-    turbineValvePosition: 0, // 0-100% open
-    bypassSteamFlowOut: 0, // g/s
-    turbineSteamFlowOut: 0, // g/s
     deltaWaterVolume: 0,
     deltaSteamMass: 0,
-    mainSteamValve: false, // closed
   },
   Condenser: {
     pressure: CstPhysics.AtmosphericPressure_mBar, // mBar (initial atmospheric pressure)
@@ -39,7 +34,12 @@ export const initialPowerPlantState: PowerPlantState = {
     deltaWaterVolume: 0,
   },
   Turbine: {
-    electricOutput: 0, // MW
+    electricOutput: 0, // MW,
+    bypassValvePosition: 0,
+    bypassSteamFlowOut: 0,
+    turbineValvePosition: 0,
+    turbineSteamFlowOut: 0,
+    mainSteamValve: false, // closed
   },
 }
 
@@ -81,30 +81,6 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
           drainValveOpen: !state.Boiler.drainValveOpen,
         },
       }
-    case "TOGGLE_MAIN_STEAM_VALVE":
-      return {
-        ...state,
-        Boiler: {
-          ...state.Boiler,
-          // only open Main Steam Valve if pressure is above Minimum
-          mainSteamValve:
-            !state.Boiler.mainSteamValve && state.Boiler.pressure > CstBoiler.MainSteamValveMinimumPressure,
-        },
-      }
-    case "ADJUST_STEAM_BYPASS_VALVE": {
-      const bypassValvePosition = Math.max(
-        0,
-        Math.min(1, state.Boiler.bypassValvePosition + action.payload.bypassValvePosition),
-      )
-      return { ...state, Boiler: { ...state.Boiler, bypassValvePosition } }
-    }
-    case "ADJUST_STEAM_TURBINE_VALVE": {
-      const turbineValvePosition = Math.max(
-        0,
-        Math.min(1, state.Boiler.turbineValvePosition + action.payload.turbineValvePosition),
-      )
-      return { ...state, Boiler: { ...state.Boiler, turbineValvePosition } }
-    }
     //#endregion
     //#region Condenser
     case "SET_AIR_EXTRACTION_PUMP_ENABLED": {
@@ -173,7 +149,32 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
       }
     }
     //#endregion
-
+    //#region Turbine
+    case "TOGGLE_MAIN_STEAM_VALVE":
+      return {
+        ...state,
+        Turbine: {
+          ...state.Turbine,
+          // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
+          mainSteamValve:
+            !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
+        },
+      }
+    case "ADJUST_STEAM_BYPASS_VALVE": {
+      const bypassValvePosition = Math.max(
+        0,
+        Math.min(1, state.Turbine.bypassValvePosition + action.payload.bypassValvePosition),
+      )
+      return { ...state, Turbine: { ...state.Turbine, bypassValvePosition } }
+    }
+    case "ADJUST_STEAM_TURBINE_VALVE": {
+      const turbineValvePosition = Math.max(
+        0,
+        Math.min(1, state.Turbine.turbineValvePosition + action.payload.turbineValvePosition),
+      )
+      return { ...state, Turbine: { ...state.Turbine, turbineValvePosition } }
+    }
+    //#endregion
     default:
       return state
   }

@@ -4,22 +4,22 @@ import Indicator from "../Indicator"
 import ValveSlider from "../ValveSlider"
 
 const {
-  CstBoiler: { BypassValveStep, TurbineValveStep, MainSteamValveMinimumPressure },
+  CstTurbine: { BypassValveStep, TurbineValveStep, MainSteamValveMinimumPressure },
 } = CstSimulation
-const BoilerSteamValveControl = () => {
+const SteamValveControl = () => {
   const {
     state: {
-      Boiler: {
-        bypassValvePosition,
-        pressure,
-        turbineValvePosition,
-        bypassSteamFlowOut,
-        turbineSteamFlowOut,
+      Boiler: { pressure },
+      Turbine: {
         mainSteamValve,
+        bypassValvePosition,
+        bypassSteamFlowOut,
+        turbineValvePosition,
+        turbineSteamFlowOut,
       },
     },
-    adjustBypassValve,
     toggleMainSteamValve,
+    adjustBypassValve,
     adjustTurbineValve,
   } = usePowerPlant()
 
@@ -62,4 +62,4 @@ const BoilerSteamValveControl = () => {
   )
 }
 
-export default BoilerSteamValveControl
+export default SteamValveControl

@@ -5,11 +5,21 @@ import { TurbineState } from "../PowerPlantState"
 import { CstSimulation } from "../const"
 
 describe("TurbineTick", () => {
-  const initialState: TurbineState = { electricOutput: 0 }
+  const initialState: TurbineState = { 
+    electricOutput: 0,
+    bypassValvePosition: 0,
+    bypassSteamFlowOut: 0,
+    turbineValvePosition: 0,
+    turbineSteamFlowOut: 0,
+    mainSteamValve: false
+  }
+  
   const valvePositions = [0, 0.25, 0.5, 0.75, 1]
+  
   valvePositions.forEach((position) => {
-    const steamFlow = position * CstSimulation.CstBoiler.MaxSteamRemovalRate
+    const steamFlow = position * CstSimulation.CstTurbine.MaxSteamRemovalRate
     const expectPower = CstSimulation.CstTurbine.steamToElectricityEfficiency * steamFlow
+    
     it(`should create ${String(expectPower)} MW based on ${String(position * 100)}% turbine Valve Position`, () => {
       const newState = TurbineTick(initialState, position)
       expect(newState.electricOutput).toBe(expectPower)

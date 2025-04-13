@@ -10,11 +10,6 @@ export type BoilerState = {
   energyDelta: number // kJ/s
   fillValveOpen: boolean
   drainValveOpen: boolean
-  mainSteamValve: boolean // open/close MSV
-  bypassValvePosition: number // 0-1 (0-100%) open
-  bypassSteamFlowOut: number // kg/s
-  turbineValvePosition: number // 0-1 (0-100%) open
-  turbineSteamFlowOut: number // kg/s
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)
@@ -32,6 +27,11 @@ export type CondenserState = {
 }
 export type TurbineState = {
   electricOutput: number // MW
+  bypassValvePosition: number // 0-1 (0-100%) open
+  bypassSteamFlowOut: number // kg/s
+  turbineValvePosition: number // 0-1 (0-100%) open
+  turbineSteamFlowOut: number // kg/s
+  mainSteamValve: boolean // open/close MSV
 }
 
 type PowerPlantState = {

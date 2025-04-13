@@ -1,9 +1,9 @@
-import { describe, it, expect, vi,  afterEach, beforeEach } from "vitest"
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest"
 import { CondenserTick } from "./CondenserTick"
 import { CstSimulation } from "../const"
 import { initialPowerPlantState } from "../PowerPlantReducer"
 import { BoilerRemoveSteam } from "../Boiler/BoilerTick"
-import { BoilerState, CondenserState } from "../PowerPlantState"
+import { CondenserState } from "../PowerPlantState"
 
 const initialState: CondenserState = {
   steamMass: 0,
@@ -34,18 +34,24 @@ describe("CondenserTick", () => {
   testCases.forEach((turbineValvePosition) => {
     it(`Convert steam to water with a turbine valve at ${String(turbineValvePosition / 100)}%`, () => {
       // open turbine valve
-      const boilerStateTurbineValve: BoilerState = {
+      const testBoilerState = {
         ...initialPowerPlantState.Boiler,
-        turbineValvePosition,
-        mainSteamValve: true,
         steamMass: 50, // kg
       }
+      
+      const testTurbineState = {
+        ...initialPowerPlantState.Turbine,
+        turbineValvePosition,
+        mainSteamValve: true,
+      }
+      
       // get turbine steam intake from turbine valve position
-      const boilerSteamRemovedState = BoilerRemoveSteam(boilerStateTurbineValve, "TURBINE")
-      const { turbineSteamFlowOut } = boilerSteamRemovedState
+      const result = BoilerRemoveSteam(testBoilerState, testTurbineState, "TURBINE")
+      const turbineSteamFlowOut = result.turbineState.turbineSteamFlowOut
+      
       const expectedSteamFlow = Math.min(
-        boilerStateTurbineValve.steamMass,
-        turbineValvePosition * CstSimulation.CstBoiler.MaxSteamRemovalRate,
+        testBoilerState.steamMass,
+        turbineValvePosition * CstSimulation.CstTurbine.MaxSteamRemovalRate,
       )
       expect(turbineSteamFlowOut).toBeCloseTo(expectedSteamFlow)
 
@@ -74,20 +80,27 @@ describe("CondenserTick", () => {
   it(`Convert for ${String(testTicks)} Ticks steam to water with a turbine valve at 100% and condensation pump not running`, () => {
     const turbineValvePosition = 1
     // open turbine valve
-    const boilerStateTurbineValve: BoilerState = {
+    const testBoilerState = {
       ...initialPowerPlantState.Boiler,
-      turbineValvePosition,
-      mainSteamValve: true,
       steamMass: 50, // kg
     }
+    
+    const testTurbineState = {
+      ...initialPowerPlantState.Turbine,
+      turbineValvePosition,
+      mainSteamValve: true,
+    }
+    
     // get turbine steam intake from turbine valve position
-    const boilerSteamRemovedState = BoilerRemoveSteam(boilerStateTurbineValve, "TURBINE")
-    const { turbineSteamFlowOut } = boilerSteamRemovedState
+    const result = BoilerRemoveSteam(testBoilerState, testTurbineState, "TURBINE")
+    const turbineSteamFlowOut = result.turbineState.turbineSteamFlowOut
+    
     const expectedSteamFlow = Math.min(
-      boilerStateTurbineValve.steamMass,
-      turbineValvePosition * CstSimulation.CstBoiler.MaxSteamRemovalRate,
+      testBoilerState.steamMass,
+      turbineValvePosition * CstSimulation.CstTurbine.MaxSteamRemovalRate,
     )
     expect(turbineSteamFlowOut).toBeCloseTo(expectedSteamFlow)
+    
     // expect complete conversion of steam to water
     const expectedWaterDelta = turbineSteamFlowOut * CstSimulation.DeltaTime
 
@@ -123,15 +136,21 @@ describe("CondenserTick", () => {
   it(`Convert for ${String(testTicks)} Ticks steam to water with a turbine valve at 100% and condensation pump 100% running`, () => {
     const turbineValvePosition = 1
     // open turbine valve
-    const boilerStateTurbineValve: BoilerState = {
+    const testBoilerState = {
       ...initialPowerPlantState.Boiler,
-      turbineValvePosition,
-      mainSteamValve: true,
       steamMass: 50, // kg
     }
+    
+    const testTurbineState = {
+      ...initialPowerPlantState.Turbine,
+      turbineValvePosition,
+      mainSteamValve: true,
+    }
+    
     // get turbine steam intake from turbine valve position
-    const boilerSteamRemovedState = BoilerRemoveSteam(boilerStateTurbineValve, "TURBINE")
-    const { turbineSteamFlowOut } = boilerSteamRemovedState
+    const result = BoilerRemoveSteam(testBoilerState, testTurbineState, "TURBINE")
+    const turbineSteamFlowOut = result.turbineState.turbineSteamFlowOut
+    
     // expect complete conversion of steam to water
     const expectedWaterDelta = turbineSteamFlowOut * CstSimulation.DeltaTime
 

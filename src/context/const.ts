@@ -14,15 +14,12 @@ export const CstSimulation = {
     GasChangeRateSlow: 250, // °C per second,
     PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
-    MaxSteamRemovalRate: 200, // kg/second when valve is fully open
-    BypassValveStep: 5, // % per click open/close
-    TurbineValveStep: 1, // % per click open/close
-    MainSteamValveMinimumPressure: 10, // bar = 1MPa
   },
 
   CstCondenser: {
     TotalVolume: 20e3, // liters
     HotwellStartVolume: 10e3, // liter
+
     MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
     VacuumDecayRate: 5, // mbar per second when pump is off
     OptimalPressure: 80, // mBar (center of bell curve)
@@ -46,6 +43,11 @@ export const CstSimulation = {
   },
 
   CstTurbine: {
+    MaxSteamRemovalRate: 200, // kg/second when valve is fully open
+    BypassValveStep: 5, // % per click open/close
+    TurbineValveStep: 1, // % per click open/close
+    MainSteamValveMinimumPressure: 10, // bar = 1MPa
+
     steamToElectricityEfficiency: 0.35, // Typical conversion ratio from steam energy to electrical energy (black-box approach)
     steamOutflowPressure: 0.1, // bar (typical  5-10 kPa absolute (0.05-0.1 bar or approximately )
     steamOutflowTemperature: 40, // Celsius (typical 35-45C)

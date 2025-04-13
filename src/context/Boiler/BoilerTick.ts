@@ -7,8 +7,10 @@ import {
 } from "../../utils/boilerCalculations"
 import { getWaterDensity, getWaterSpecificHeat, getSteamData } from "../../utils/steamTable"
 import { CstSimulation, CstPhysics } from "../const"
-import { BoilerState } from "../PowerPlantState"
-const { CstBoiler } = CstSimulation
+import { BoilerState, TurbineState } from "../PowerPlantState"
+
+const { CstBoiler, CstTurbine } = CstSimulation
+
 function BoilerTick(boilerState: BoilerState): BoilerState {
   // console.log("5")
   let newWaterVolume = boilerState.waterVolume
@@ -165,28 +167,40 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
 // --- Steam Removal Calculation ---
 export function BoilerRemoveSteam(
   boilerState: BoilerState,
+  turbineState: TurbineState,
   removeBy: "BYPASS" | "TURBINE" | "VENT",
-): BoilerState {
+): { boilerState: BoilerState; turbineState: TurbineState } {
   // console.log("4")
   const {
     steamMass,
-    mainSteamValve,
     waterVolume,
+    temperature,
+  } = boilerState
+  
+  const {
+    mainSteamValve,
     bypassValvePosition,
     bypassSteamFlowOut,
     turbineValvePosition,
     turbineSteamFlowOut,
-    temperature,
-  } = boilerState
+  } = turbineState
+  
   const valvePosition =
     removeBy === "BYPASS" ? bypassValvePosition : removeBy === "TURBINE" ? turbineValvePosition : 0
 
   // Only attempt to remove steam if there's steam and the main steam valve is open
   if (!mainSteamValve || steamMass <= 0) {
-    return { ...boilerState, turbineSteamFlowOut: 0, bypassSteamFlowOut: 0 }
+    return { 
+      boilerState, 
+      turbineState: { 
+        ...turbineState, 
+        turbineSteamFlowOut: 0, 
+        bypassSteamFlowOut: 0 
+      } 
+    }
   }
 
-  const valveFlow = valvePosition * CstBoiler.MaxSteamRemovalRate
+  const valveFlow = valvePosition * CstTurbine.MaxSteamRemovalRate
   const removedSteamMass = Math.min(steamMass, valveFlow)
 
   // Calculate new steam mass after removal
@@ -195,9 +209,12 @@ export function BoilerRemoveSteam(
   if (newSteamMass < 0.001) {
     // newPressure = atmosphericPressure
     return {
-      ...boilerState,
-      turbineSteamFlowOut: removeBy === "TURBINE" ? steamMass : turbineSteamFlowOut,
-      bypassSteamFlowOut: removeBy === "BYPASS" ? steamMass : bypassSteamFlowOut,
+      boilerState,
+      turbineState: {
+        ...turbineState,
+        turbineSteamFlowOut: removeBy === "TURBINE" ? steamMass : turbineSteamFlowOut,
+        bypassSteamFlowOut: removeBy === "BYPASS" ? steamMass : bypassSteamFlowOut,
+      }
     }
   }
   // Recalculate boiler pressure after steam removal
@@ -210,11 +227,16 @@ export function BoilerRemoveSteam(
   )
 
   return {
-    ...boilerState,
-    steamMass: newSteamMass,
-    pressure: newPressure,
-    turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : turbineSteamFlowOut,
-    bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : bypassSteamFlowOut,
+    boilerState: {
+      ...boilerState,
+      steamMass: newSteamMass,
+      pressure: newPressure,
+    },
+    turbineState: {
+      ...turbineState,
+      turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : turbineSteamFlowOut,
+      bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : bypassSteamFlowOut,
+    }
   }
 }
 

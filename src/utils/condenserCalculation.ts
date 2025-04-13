@@ -34,13 +34,13 @@ const calcSJAEvacuum = (
   if (!isSjaeEnabled) return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
 
   // Check if SJAE should be automatically disabled
-  if (boilerPressure <= CstSimulation.CstBoiler.MainSteamValveMinimumPressure) {
+  if (boilerPressure <= CstSimulation.CstTurbine.MainSteamValveMinimumPressure) {
     // Not enough steam pressure to use  SJAE
     return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
   }
 
   const {
-    CstBoiler: { MaxSteamRemovalRate },
+    CstTurbine: { MaxSteamRemovalRate },
     CstCondenser: { CAR_MaxVacuum, SJAE_MaxPressureDifference, SJAE_VacuumIncreaseRate, MaxVacuum },
   } = CstSimulation
 

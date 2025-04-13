@@ -7,11 +7,11 @@ import { CstSimulation } from "./const"
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
   // Condenser
-  const steamFromBypass = { temp: state.Boiler.temperature, flow: state.Boiler.bypassSteamFlowOut }
+  const steamFromBypass = { temp: state.Boiler.temperature, flow: state.Turbine.bypassSteamFlowOut }
   // TODO use acutely the temp&pressure from spend steam of  the turbine
   const steamFromTurbine = {
     temp: CstSimulation.CstTurbine.steamOutflowTemperature,
-    flow: state.Boiler.turbineSteamFlowOut,
+    flow: state.Turbine.turbineSteamFlowOut,
     pressure: CstSimulation.CstTurbine.steamOutflowPressure,
   }
   const condenserNewState: CondenserState = CondenserTick(
@@ -22,23 +22,42 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   )
 
   // remove steam via bypass valve
-  const boilerBypassSteamRemoved: BoilerState = BoilerRemoveSteam(state.Boiler, "BYPASS")
+  const bypassResult = BoilerRemoveSteam(state.Boiler, state.Turbine, "BYPASS")
+  
   // Turbine
-  const turbineNewState: TurbineState = TurbineTick(state.Turbine, state.Boiler.turbineValvePosition)
+  const turbineNewState: TurbineState = TurbineTick(
+    bypassResult.turbineState, 
+    bypassResult.turbineState.turbineValvePosition
+  )
+  
   // remove steam via turbine valve
-  const boilerTurbineSteamRemoved: BoilerState = BoilerRemoveSteam(boilerBypassSteamRemoved, "TURBINE")
+  const turbineResult = BoilerRemoveSteam(
+    bypassResult.boilerState, 
+    bypassResult.turbineState, 
+    "TURBINE"
+  )
+  
   // Boiler
   // add condensation water before recalculating the boiler state
   const boilerRemovedSteam: BoilerState = {
-    ...boilerTurbineSteamRemoved,
-    waterVolume: state.Boiler.waterVolume + state.Condenser.returnRate,
+    ...turbineResult.boilerState,
+    waterVolume: turbineResult.boilerState.waterVolume + state.Condenser.returnRate,
   }
+  
   const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam)
   const deltaWaterVolume = boilerNewState.waterVolume - state.Boiler.waterVolume
+  
+  // Update turbine state with the new flow values
+  const updatedTurbineState: TurbineState = {
+    ...turbineNewState,
+    bypassSteamFlowOut: turbineResult.turbineState.bypassSteamFlowOut,
+    turbineSteamFlowOut: turbineResult.turbineState.turbineSteamFlowOut,
+  }
+  
   return {
     ...state,
     Boiler: { ...boilerNewState, deltaWaterVolume },
     Condenser: condenserNewState,
-    Turbine: turbineNewState,
+    Turbine: updatedTurbineState,
   }
 }
