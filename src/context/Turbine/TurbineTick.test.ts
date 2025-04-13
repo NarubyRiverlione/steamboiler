@@ -21,13 +21,28 @@ describe("TurbineTick", () => {
   const boilerPressure = 20 // Example boiler pressure for testing
   
   valvePositions.forEach((position) => {
-    const steamFlow = position * CstSimulation.CstTurbine.MaxSteamRemovalRate
-    const expectPower = CstSimulation.CstTurbine.steamToElectricityEfficiency * steamFlow
+    // No electricity at 0 RPM regardless of valve position
+    const expectPower = 0 // No power at 0 RPM
     
-    it(`should create ${String(expectPower)} MW based on ${String(position * 100)}% turbine Valve Position`, () => {
+    it(`should create ${String(expectPower)} MW at 0 RPM with ${String(position * 100)}% turbine Valve Position`, () => {
       const newState = TurbineTick(initialState, position, boilerPressure)
       expect(newState.electricOutput).toBe(expectPower)
     })
+  })
+  
+  // Test with RPM at max
+  it("should generate electricity when RPM is at max", () => {
+    const position = 0.5 // 50% valve position
+    const steamFlow = position * CstSimulation.CstTurbine.MaxSteamRemovalRate
+    const expectPower = CstSimulation.CstTurbine.steamToElectricityEfficiency * steamFlow
+    
+    const highRpmState: TurbineState = {
+      ...initialState,
+      rpm: CstSimulation.CstTurbine.MaxRPM
+    }
+    
+    const newState = TurbineTick(highRpmState, position, boilerPressure)
+    expect(newState.electricOutput).toBe(expectPower)
   })
   
   it("should calculate RPM based on steam flow and boiler pressure", () => {

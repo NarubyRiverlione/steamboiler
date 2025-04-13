@@ -1,5 +1,9 @@
 import { CstSimulation } from "../const"
-import { calculateElectricityOutput, calculateRPM, calculateValveAdjustment } from "../../utils/turbineCalculations"
+import {
+  calculateElectricityOutput,
+  calculateRPM,
+  calculateValveAdjustment,
+} from "../../utils/turbineCalculations"
 import { TurbineState } from "../PowerPlantState"
 
 // PID controller state (persists between function calls)
@@ -16,51 +20,52 @@ let previousError = 0
  * @returns The updated turbine state.
  */
 function TurbineTick(
-  turbineState: TurbineState, 
+  turbineState: TurbineState,
   turbineValvePosition: number,
-  boilerPressure: number
+  boilerPressure: number,
 ): TurbineState {
   // Calculate electricity output
-  const newElectricityOutput = calculateElectricityOutput(turbineValvePosition)
-  
+  const newElectricityOutput = calculateElectricityOutput(turbineValvePosition, turbineState.rpm)
+
   // Calculate new RPM based on steam flow and boiler pressure
   const newRPM = calculateRPM(
     turbineState.rpm,
     turbineState.turbineSteamFlowOut,
     boilerPressure,
-    CstSimulation.DeltaTime
+    CstSimulation.DeltaTime,
   )
-  
+
   // Handle automatic valve control in hold mode
-  let newTurbineValvePosition = turbineValvePosition
-  
-  if (turbineState.holdMode && turbineState.mainSteamValve) {
-    const { 
-      valveAdjustment, 
-      newIntegralError, 
-      newPreviousError 
-    } = calculateValveAdjustment(
-      newRPM,
-      turbineState.rpmSetPoint,
-      previousError,
-      integralError,
-      CstSimulation.DeltaTime
-    )
-    
-    // Update PID state
-    integralError = newIntegralError
-    previousError = newPreviousError
-    
-    // Adjust valve position
-    newTurbineValvePosition = Math.max(0, Math.min(1, turbineValvePosition + valveAdjustment))
-  }
-  
-  return { 
-    ...turbineState, 
+  const newTurbineValvePosition = updateTurbineValve(turbineState, newRPM)
+
+  return {
+    ...turbineState,
     electricOutput: newElectricityOutput,
     rpm: newRPM,
-    turbineValvePosition: newTurbineValvePosition
+    turbineValvePosition: newTurbineValvePosition,
   }
+}
+
+function updateTurbineValve(turbineState: TurbineState, newRPM: number) {
+  const { holdMode, mainSteamValve, turbineValvePosition } = turbineState
+  // only adjust when in Hold mode (and there Main Steam Valve is open)
+  if (!holdMode || !mainSteamValve) return turbineValvePosition
+
+  const { valveAdjustment, newIntegralError, newPreviousError } = calculateValveAdjustment(
+    newRPM,
+    turbineState.rpmSetPoint,
+    previousError,
+    integralError,
+    CstSimulation.DeltaTime,
+  )
+
+  // Update PID state
+  integralError = newIntegralError
+  previousError = newPreviousError
+
+  // Adjust valve position
+  const newTurbineValvePosition = Math.max(0, Math.min(1, turbineValvePosition + valveAdjustment))
+  return newTurbineValvePosition
 }
 
 export default TurbineTick

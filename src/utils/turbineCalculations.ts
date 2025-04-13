@@ -2,10 +2,17 @@ import { CstSimulation } from "../context/const"
 
 const { CstTurbine } = CstSimulation
 
-export function calculateElectricityOutput(turbineValvePosition: number): number {
-  const steamIntake = turbineValvePosition * CstTurbine.MaxSteamRemovalRate
-  const electricityOutput = steamIntake * CstTurbine.steamToElectricityEfficiency
-  return electricityOutput
+export function calculateElectricityOutput(turbineValvePosition: number, rpm: number): number {
+  // Only generate electricity when the turbine is at or very close to MaxRPM
+  const rpmThreshold = CstTurbine.MaxRPM * 0.99; // Allow a small tolerance (99% of MaxRPM)
+  
+  if (rpm >= rpmThreshold) {
+    const steamIntake = turbineValvePosition * CstTurbine.MaxSteamRemovalRate
+    const electricityOutput = steamIntake * CstTurbine.steamToElectricityEfficiency
+    return electricityOutput
+  }
+  
+  return 0; // No electricity output when not at required RPM
 }
 
 /**
