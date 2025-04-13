@@ -2,6 +2,7 @@ The turbine feature will be added in phases
 # Turbine Development Progress
 - Phase 1: ✅ Completed
 - Phase 2: ✅ Completed
+- Phase 3: ✅ Completed
 
 
 # phase 1: black-box approach
@@ -32,6 +33,30 @@ The steam flow from the turbine valve will be converted to electrical energy wit
 - add in the turbineControl a ValueSlider to adjust the rpm set point
 - add a toggle button for free or hold mode
 - hold mode should adjust the turbine valve automatically to keep the rpm of the turbine at the set point
+
+## Phase 3 Implementation Details
+
+### Physics-Based RPM Calculation
+
+The RPM calculation is based on Newton's laws of motion for rotational systems. Key constants used:
+
+- **MomentOfInertia (25000 kg·m²)**: Represents the turbine's resistance to changes in rotational speed. A higher value means the turbine takes longer to speed up or slow down. This value was chosen to represent a large industrial turbine with significant mass distributed at a distance from the axis of rotation.
+
+- **FrictionFactor (0.02)**: Represents mechanical friction losses in the turbine. This creates a natural damping effect where friction increases with RPM, eventually reaching an equilibrium point where the torque from steam equals the friction torque.
+
+- **TorqueFactor (0.05)**: Conversion factor that determines how steam flow and pressure translate to rotational force (torque) on the turbine.
+
+### PID Controller for Hold Mode
+
+A PID (Proportional-Integral-Derivative) controller was implemented to automatically adjust the turbine valve position when in hold mode:
+
+- **Proportional (Kp = 0.001)**: Responds to the current error (difference between actual RPM and setpoint)
+- **Integral (Ki = 0.0001)**: Responds to the accumulated error over time, eliminating steady-state error
+- **Derivative (Kd = 0.0005)**: Responds to the rate of change of error, providing damping
+
+### Realistic Electricity Generation
+
+Electricity is only generated when the turbine is running at or very close to the maximum RPM (99% threshold). This reflects real-world power generation where turbines must operate at their rated speed to effectively generate electricity.
 
 # phase 4: generator breaker
 

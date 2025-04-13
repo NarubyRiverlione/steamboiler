@@ -27,6 +27,10 @@ The Steam Boiler Simulation is currently in a functional state with core feature
   - Conversion of absorbed energy to condensed steam volume
   - Dynamic temperature changes based on energy transfer
 - ✅ Energy balance approach for boiler calculations
+- ✅ Turbine RPM calculation based on steam flow and boiler pressure
+- ✅ Physics-based turbine model with inertia and friction
+- ✅ Automatic turbine valve control using PID controller in hold mode
+- ✅ Realistic electricity generation that only occurs at maximum RPM
 
 ### User Interface
 
@@ -41,6 +45,9 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Steam Jet Air Extraction (SJAE) toggle and valve position controls
 - ✅ Recirculation pump valve position control
 - ✅ Condensation pump to pull feed water from the condenser to the boiler
+- ✅ Turbine RPM display in readouts
+- ✅ RPM setpoint control with slider
+- ✅ Turbine mode toggle (Free/Hold) for automatic control
 
 ### Technical Implementation
 
@@ -49,6 +56,9 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ✅ Reducer pattern for simulation logic
 - ✅ Simulation loop with time-based updates
 - ✅ Steam table data for accurate water properties
+- ✅ PID controller implementation for automatic control systems
+- ✅ Physics-based calculations for rotational systems
+- ✅ UI smoothing with Exponential Moving Average (EMA) via the useEMA hook
 
 ## What's Left to Build
 
@@ -57,7 +67,7 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 - ⬜ turbine valve cannot open if condenser pressure isn't inside the bell
 - ⬜ More detailed visualization of internal processes
 - ⬜ Aerator between condenser and boiler
-- ⬜ Turbines for power generation (Phases 1 & 2 completed; Phase 3-5 planned)
+- ⬜ Turbines for power generation (Phases 1, 2 & 3 completed; Phase 4-5 planned)
 - ⬜ Enhance valve control responsiveness in control panels (continuous firing behavior for valve buttons with ~150ms interval)
 - ⬜ Performance optimizations and monitoring (low priority) - see performance_enhancements.md
 - ⬜ Reduce empirical approaches in calculations:
@@ -90,9 +100,12 @@ The Steam Boiler Simulation is currently in a functional state with core feature
 
 ## Next Milestone
 
-The next milestone is to implement the aerator between the condenser and the boiler. This involves:
+The next milestones are:
 
-1. Adding an aerator between the condenser and the boiler
-2. Implementing turbines for power generation
+1. **Turbine Phase 4**: Implement the generator breaker that only works at the rated RPM (3600 RPM), with electricity only being produced when the breaker is closed.
+
+2. **Aerator Implementation**: Add an aerator between the condenser and the boiler to make the water cycle more realistic.
+
+3. **Turbine Phase 5**: Add synchronization features including phase calculation and synchroscope UI.
 
 These improvements will make the simulation more realistic and educational, particularly for understanding the complete power generation cycle and the relationship between energy input and steam output.
