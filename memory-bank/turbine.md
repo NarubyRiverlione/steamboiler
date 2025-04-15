@@ -62,7 +62,7 @@ Electricity is only generated when the turbine is running at or very close to th
 
 - add a generation breaker the only can be trow when the turbine is at 3600 rpm
 - electricity should only be produced when the generator breaker is closed
-- if with a closed breaker there isn't enough steam to keep the rpm at 3600 then the breaker should automatically open. Same with over speed. plan for a small tolerance window around 3600
+- if with a closed breaker there isn't enough steam to keep the rpm at 3600 then the breaker should automatically open. More steam flow when the breaker is closed should make more electricity, the rpm should stay at 3600.
 
 # phase 5: synchronization
 

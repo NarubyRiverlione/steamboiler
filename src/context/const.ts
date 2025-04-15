@@ -31,11 +31,11 @@ export const CstSimulation = {
     DampingFactor: 1, // Apply a damping factor to make temperature changes more gradual
     IntakeMaxFlowRate: 250, // kg/s
     RecirculationPump_MaxFlowRate: 500, // l/s (typical 9.000-12.000)
-    RecirculationPump_Step: 1,
+    RecirculationPump_Step: 5,
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
     HeatTransferCoefficient: 0.85, // Condensation rate per unit of recirculation flow
     CondensationPump_MaxFlowRate: 300, // l/s (typical 160 - 270 l/s)
-    CondensationPump_Step: 1,
+    CondensationPump_Step: 5,
     PressureMultiplier: 0.8, // steam volume adds pressure
     SteamVolumeBaseLine: 1000,
     LeakingRate: 0.01, // kg/s (typical 0.005 to 0.015 kg/s )
@@ -58,9 +58,9 @@ export const CstSimulation = {
     RPMStep: 50, // Increment/decrement step for RPM setpoint
 
     // Inertia modeling constants
-    MomentOfInertia: 5000, // 25000 kg·m² (represents the turbine's resistance to changes in rotational speed)
-    FrictionFactor: 0.2, // 0.02 Represents mechanical friction losses
-    TorqueFactor: 0.1, // 0.05 Factor to convert steam flow and pressure to torque
+    MomentOfInertia: 25000, // 25000 kg·m² (represents the turbine's resistance to changes in rotational speed)
+    FrictionFactor: 0.02, // 0.02 Represents mechanical friction losses
+    TorqueFactor: 0.05, // 0.05 Factor to convert steam flow and pressure to torque
 
     // PID controller constants for hold mode
     PID_Kp: 0.001, // Proportional gain

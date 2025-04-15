@@ -18,6 +18,7 @@ export const initialPowerPlantState: PowerPlantState = {
     steamMass: 0, // kg - Mass of steam currently in the boiler
     deltaWaterVolume: 0,
     deltaSteamMass: 0,
+    potentialSteamGeneration: 0, // kg/s - Maximum potential steam generation rate
   },
   Condenser: {
     pressure: CstPhysics.AtmosphericPressure_mBar, // mBar (initial atmospheric pressure)

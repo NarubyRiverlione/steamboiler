@@ -52,15 +52,15 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   // Calculate water mass using density
   const waterMassBeforeSteam = (newWaterVolume * waterDensity) / 1000
 
-  // Calculate instantaneous steam rate kg/s
-  const instantaneousSteamRate = calculateSteamGeneration(
+  // Calculate maximum potential steam generation rate (kg/s)
+  const potentialSteamGeneration = calculateSteamGeneration(
     waterMassBeforeSteam, // Use current mass estimate for rate calculation
     boilerState.temperature,
     boilerState.pressure,
   )
 
-  // Steam generated in this tick (kg)
-  const generatedSteamMass = instantaneousSteamRate * CstSimulation.DeltaTime
+  // Steam generated in this tick (kg) - limited by available volume
+  const generatedSteamMass = potentialSteamGeneration * CstSimulation.DeltaTime
 
   // Calculate the volume of liquid water lost to steam (Liters)
   // Use the calculateWaterVolume function to get the correct volume based on temperature
@@ -83,10 +83,10 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   const coolingEnergyLoss = waterMass * specificHeat * CstBoiler.CoolingRate * CstSimulation.DeltaTime
   energyChange -= coolingEnergyLoss
 
-  // Calculate steam generation (Use the already calculated instantaneous rate)
+  // Calculate steam generation (Use the already calculated potential rate)
   // const steamRate = calculateSteamGeneration(waterMass, state.temperature, state.pressure) // Already calculated above
   const steamEnergyLoss =
-    calculateSteamEnergyLoss(instantaneousSteamRate, boilerState.temperature) * CstSimulation.DeltaTime
+    calculateSteamEnergyLoss(potentialSteamGeneration, boilerState.temperature) * CstSimulation.DeltaTime
   energyChange -= steamEnergyLoss
 
   // Update total energy
@@ -161,6 +161,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     energyDelta: energyChange / CstSimulation.DeltaTime, // averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
     // deltaWaterVolume: newWaterVolume - boilerState.waterVolume, // averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
     deltaSteamMass: generatedSteamMass / CstSimulation.DeltaTime, // Converted to kg/s
+    potentialSteamGeneration: potentialSteamGeneration, // Maximum potential steam generation rate
   }
 }
 
@@ -171,12 +172,8 @@ export function BoilerRemoveSteam(
   removeBy: "BYPASS" | "TURBINE" | "VENT",
 ): { boilerState: BoilerState; turbineState: TurbineState } {
   // console.log("4")
-  const {
-    steamMass,
-    waterVolume,
-    temperature,
-  } = boilerState
-  
+  const { steamMass, waterVolume, temperature, potentialSteamGeneration } = boilerState
+
   const {
     mainSteamValve,
     bypassValvePosition,
@@ -184,39 +181,43 @@ export function BoilerRemoveSteam(
     turbineValvePosition,
     turbineSteamFlowOut,
   } = turbineState
-  
+
   const valvePosition =
     removeBy === "BYPASS" ? bypassValvePosition : removeBy === "TURBINE" ? turbineValvePosition : 0
 
-  // Only attempt to remove steam if there's steam and the main steam valve is open
-  if (!mainSteamValve || steamMass <= 0) {
-    return { 
-      boilerState, 
-      turbineState: { 
-        ...turbineState, 
-        turbineSteamFlowOut: 0, 
-        bypassSteamFlowOut: 0 
-      } 
-    }
-  }
-
-  const valveFlow = valvePosition * CstTurbine.MaxSteamRemovalRate
-  const removedSteamMass = Math.min(steamMass, valveFlow)
-
-  // Calculate new steam mass after removal
-  const newSteamMass = steamMass - removedSteamMass * CstSimulation.DeltaTime
-  // prevent negative steam mass
-  if (newSteamMass < 0.001) {
-    // newPressure = atmosphericPressure
+  // Only attempt to remove steam if the main steam valve is open
+  if (!mainSteamValve) {
     return {
       boilerState,
       turbineState: {
         ...turbineState,
-        turbineSteamFlowOut: removeBy === "TURBINE" ? steamMass : turbineSteamFlowOut,
-        bypassSteamFlowOut: removeBy === "BYPASS" ? steamMass : bypassSteamFlowOut,
-      }
+        turbineSteamFlowOut: 0,
+        bypassSteamFlowOut: 0,
+      },
     }
   }
+
+  // Calculate the  flow rate through the valve
+  const valveFlow = valvePosition * CstTurbine.MaxSteamRemovalRate
+
+  // Calculate how much steam can be provided from accumulated steam and direct generation
+  // 1. First, use accumulated steam
+  const fromAccumulatedSteam = Math.min(steamMass, valveFlow)
+
+  // 2. If valve is requesting more than accumulated steam, use direct generation capacity
+  const additionalNeeded = valveFlow - fromAccumulatedSteam
+  const fromDirectGeneration =
+    additionalNeeded > 0 ? Math.min(additionalNeeded, potentialSteamGeneration * CstSimulation.DeltaTime) : 0
+
+  // Total steam that can be removed this tick
+  const removedSteamMass = Math.min(fromAccumulatedSteam + fromDirectGeneration, valveFlow)
+
+  // How much to actually remove from accumulated steam (may be less than fromAccumulatedSteam)
+  const actuallyRemoveFromAccumulated = Math.min(steamMass, fromAccumulatedSteam)
+
+  // Calculate new steam mass after removal
+  const newSteamMass = Math.max(0, steamMass - actuallyRemoveFromAccumulated)
+
   // Recalculate boiler pressure after steam removal
   const steamData = getSteamData(temperature)
   const saturationPressure = steamData.pressure
@@ -234,9 +235,11 @@ export function BoilerRemoveSteam(
     },
     turbineState: {
       ...turbineState,
-      turbineSteamFlowOut: removeBy === "TURBINE" ? removedSteamMass : turbineSteamFlowOut,
-      bypassSteamFlowOut: removeBy === "BYPASS" ? removedSteamMass : bypassSteamFlowOut,
-    }
+      turbineSteamFlowOut:
+        removeBy === "TURBINE" ? removedSteamMass / CstSimulation.DeltaTime : turbineSteamFlowOut,
+      bypassSteamFlowOut:
+        removeBy === "BYPASS" ? removedSteamMass / CstSimulation.DeltaTime : bypassSteamFlowOut,
+    },
   }
 }
 
