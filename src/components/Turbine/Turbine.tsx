@@ -1,12 +1,18 @@
-import TurbineControlPanel from "./TurbineControlPanel"
 import TurbineReadouts from "./TurbineReadouts"
-import TurbineVisualization from "./TurbineVisualization"
+import SteamValveControl from "./SteamValveControl"
+import RPMControl from "./RPMControl"
+import GeneratorBreakerControl from "./GeneratorBreakerControl"
 
 const Turbine = () => {
   return (
     <div className="component-container">
-      <TurbineVisualization/>
-      <TurbineControlPanel />
+      <div className="controls-panel">
+        <SteamValveControl />
+        <RPMControl />
+      </div>
+      <div className="controls-panel">
+        <GeneratorBreakerControl />
+      </div>
       <TurbineReadouts />
     </div>
   )

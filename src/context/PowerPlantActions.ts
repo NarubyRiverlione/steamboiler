@@ -11,6 +11,7 @@ type PowerPlantAction =
   | { type: "ADJUST_STEAM_TURBINE_VALVE"; payload: { turbineValvePosition: number } }
   | { type: "ADJUST_RPM_SETPOINT"; payload: { rpmAdjustment: number } }
   | { type: "TOGGLE_HOLD_MODE" }
+  | { type: "TOGGLE_GENERATOR_BREAKER" }
   // Condenser Actions
   | { type: "SET_AIR_EXTRACTION_PUMP_ENABLED"; payload: { isAirExtractionPumpEnabled: boolean } }
   | { type: "SET_SJAE_ENABLED"; payload: { isSjaeEnabled: boolean } }

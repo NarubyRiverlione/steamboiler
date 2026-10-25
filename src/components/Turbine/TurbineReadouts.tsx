@@ -5,7 +5,7 @@ import Readout from "../Readout"
 const TurbineReadouts = () => {
   const {
     state: {
-      Turbine: { electricOutput, rpm, rpmSetPoint, holdMode, turbineSteamFlowOut },
+      Turbine: { electricOutput, rpm, rpmSetPoint, holdMode, turbineSteamFlowOut, generatorBreaker },
     },
   } = usePowerPlant()
 
@@ -25,6 +25,12 @@ const TurbineReadouts = () => {
       <div className="mode-indicator">
         <span>Mode: </span>
         <span className={holdMode ? "hold-mode" : "free-mode"}>{holdMode ? "HOLD" : "FREE"}</span>
+      </div>
+      <div className="breaker-status">
+        <span>Breaker: </span>
+        <span className={generatorBreaker ? "breaker-closed" : "breaker-open"}>
+          {generatorBreaker ? "CLOSED" : "OPEN"}
+        </span>
       </div>
     </div>
   )

@@ -54,7 +54,7 @@ const CondenserReadouts = () => {
         value={useEMA(hotwellWaterVolume / TotalVolume, 0.1)}
         unit=""
         fixed={1}
-        delta={useEMA(deltaWaterVolume, 0.1)}
+        delta={useEMA(deltaWaterVolume, 0.5)}
         deltaFixed={1}
       />
 

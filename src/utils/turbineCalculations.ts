@@ -2,17 +2,33 @@ import { CstSimulation } from "../context/const"
 
 const { CstTurbine } = CstSimulation
 
-export function calculateElectricityOutput(turbineValvePosition: number, rpm: number): number {
-  // Only generate electricity when the turbine is at or very close to MaxRPM
-  const rpmThreshold = CstTurbine.MaxRPM * 0.99; // Allow a small tolerance (99% of MaxRPM)
+/**
+ * Calculates the electricity output based on turbine valve position, RPM, and generator breaker status.
+ * For Phase 4, electricity is only produced when the generator breaker is closed and RPM is within
+ * the acceptable margin of the rated speed.
+ * 
+ * @param turbineValvePosition - The position of the turbine valve (0-1)
+ * @param rpm - The current RPM of the turbine
+ * @param generatorBreaker - Whether the generator breaker is closed
+ * @returns The electricity output in MW
+ */
+export function calculateElectricityOutput(
+  turbineValvePosition: number, 
+  rpm: number,
+  generatorBreaker: boolean
+): number {
+  // Only generate electricity when:
+  // 1. The generator breaker is closed
+  // 2. The turbine RPM is within the acceptable margin of the rated speed
+  const rpmDifference = Math.abs(rpm - CstTurbine.MaxRPM);
   
-  if (rpm >= rpmThreshold) {
+  if (generatorBreaker && rpmDifference <= CstTurbine.BreakerRPMMargin) {
     const steamIntake = turbineValvePosition * CstTurbine.MaxSteamRemovalRate
     const electricityOutput = steamIntake * CstTurbine.steamToElectricityEfficiency
     return electricityOutput
   }
   
-  return 0; // No electricity output when not at required RPM
+  return 0; // No electricity output when breaker is open or RPM is outside acceptable range
 }
 
 /**

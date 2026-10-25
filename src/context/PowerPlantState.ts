@@ -36,6 +36,7 @@ export type TurbineState = {
   rpm: number // Current RPM of the turbine
   rpmSetPoint: number // Target RPM when in hold mode
   holdMode: boolean // Whether the turbine is in hold mode
+  generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
 }
 
 type PowerPlantState = {

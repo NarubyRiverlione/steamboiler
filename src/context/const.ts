@@ -58,14 +58,17 @@ export const CstSimulation = {
     RPMStep: 50, // Increment/decrement step for RPM setpoint
 
     // Inertia modeling constants
-    MomentOfInertia: 25000, // 25000 kg·m² (represents the turbine's resistance to changes in rotational speed)
-    FrictionFactor: 0.02, // 0.02 Represents mechanical friction losses
-    TorqueFactor: 0.05, // 0.05 Factor to convert steam flow and pressure to torque
+    MomentOfInertia: 5000, // 25000 kg·m² (represents the turbine's resistance to changes in rotational speed)
+    FrictionFactor: 0.2, // 0.02 Represents mechanical friction losses
+    TorqueFactor: 0.2, // 0.05 Factor to convert steam flow and pressure to torque
 
     // PID controller constants for hold mode
     PID_Kp: 0.001, // Proportional gain
     PID_Ki: 0.0001, // Integral gain
     PID_Kd: 0.0005, // Derivative gain
+
+    // Phase 4: Generator breaker constants
+    BreakerRPMMargin: 2, // Allow ±2 RPM from MaxRPM for breaker operation
   },
 }
 

@@ -50,6 +50,10 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleHoldMode = () => {
     dispatch({ type: "TOGGLE_HOLD_MODE" })
   }
+  
+  const toggleGeneratorBreaker = () => {
+    dispatch({ type: "TOGGLE_GENERATOR_BREAKER" })
+  }
   //#endregion
 
   //#region Condenser action creators
@@ -101,6 +105,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         adjustTurbineValve,
         adjustRPMSetPoint,
         toggleHoldMode,
+        toggleGeneratorBreaker,
         // condenser actions
         toggleAirExtractionPump,
         toggleSjae,

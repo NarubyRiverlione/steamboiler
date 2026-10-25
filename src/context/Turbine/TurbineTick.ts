@@ -12,7 +12,8 @@ let previousError = 0
 
 /**
  * turbineTick - Updates the turbine state for each simulation tick.
- * Phase 3 implementation: Includes RPM calculation and automatic valve control.
+ * Phase 4 implementation: Includes RPM calculation, automatic valve control,
+ * and generator breaker functionality.
  *
  * @param turbineState - The current turbine state.
  * @param turbineValvePosition - The current position of the turbine valve.
@@ -24,11 +25,20 @@ function TurbineTick(
   turbineValvePosition: number,
   boilerPressure: number,
 ): TurbineState {
-  // Calculate electricity output
-  const newElectricityOutput = calculateElectricityOutput(turbineValvePosition, turbineState.rpm)
-
   // Calculate new RPM based on steam flow and boiler pressure
   const newRPM = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, boilerPressure)
+  
+  // Auto-open breaker if RPM goes outside acceptable margin with breaker closed
+  const rpmDifference = Math.abs(newRPM - CstSimulation.CstTurbine.MaxRPM);
+  const generatorBreaker = turbineState.generatorBreaker && 
+                          rpmDifference <= CstSimulation.CstTurbine.BreakerRPMMargin;
+  
+  // Calculate electricity output with updated breaker status
+  const newElectricityOutput = calculateElectricityOutput(
+    turbineValvePosition, 
+    newRPM,
+    generatorBreaker
+  )
 
   // Handle automatic valve control in hold mode
   const newTurbineValvePosition = updateTurbineValve(turbineState, newRPM)
@@ -38,6 +48,7 @@ function TurbineTick(
     electricOutput: newElectricityOutput,
     rpm: newRPM,
     turbineValvePosition: newTurbineValvePosition,
+    generatorBreaker, // Update breaker status
   }
 }
 

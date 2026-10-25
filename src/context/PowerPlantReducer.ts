@@ -44,6 +44,7 @@ export const initialPowerPlantState: PowerPlantState = {
     rpm: 0,
     rpmSetPoint: CstTurbine.DefaultRPMSetPoint,
     holdMode: false,
+    generatorBreaker: false, // Phase 4: Initially open
   },
 }
 
@@ -194,6 +195,20 @@ export function powerPlantReducer(state: PowerPlantState, action: PowerPlantActi
         Turbine: {
           ...state.Turbine,
           holdMode: !state.Turbine.holdMode
+        }
+      }
+    }
+    case "TOGGLE_GENERATOR_BREAKER": {
+      // Allow closing the breaker if RPM is within the acceptable margin
+      const rpmDifference = Math.abs(state.Turbine.rpm - CstTurbine.MaxRPM);
+      const canCloseBreaker = !state.Turbine.generatorBreaker && 
+                            rpmDifference <= CstTurbine.BreakerRPMMargin;
+      
+      return {
+        ...state,
+        Turbine: {
+          ...state.Turbine,
+          generatorBreaker: canCloseBreaker ? true : false
         }
       }
     }
