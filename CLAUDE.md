@@ -35,3 +35,17 @@ Do not resume parameter tuning or physics changes before the runner exists.
 - `pnpm dev` — run the app
 - `pnpm test` — vitest
 - `pnpm lint` — eslint + tsc
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues (`NarubyRiverlione/steamboiler`) via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

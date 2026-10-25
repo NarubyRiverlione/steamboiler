@@ -14,3 +14,4 @@
 | Performance monitoring ideas | [performance.md](performance.md) |
 | UI rules | [UI.md](UI.md) |
 | Setup | [setup.md](setup.md) |
+| Agent skills config: issue tracker, triage labels, domain docs | [agents/](agents/issue-tracker.md) |
