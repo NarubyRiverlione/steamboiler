@@ -14,7 +14,8 @@ describe("TurbineTick", () => {
     mainSteamValve: false,
     rpm: 0,
     rpmSetPoint: CstSimulation.CstTurbine.DefaultRPMSetPoint,
-    holdMode: false
+    holdMode: false,
+    generatorBreaker: false,
   }
   
   const valvePositions = [0, 0.25, 0.5, 0.75, 1]
@@ -38,7 +39,8 @@ describe("TurbineTick", () => {
     
     const highRpmState: TurbineState = {
       ...initialState,
-      rpm: CstSimulation.CstTurbine.MaxRPM
+      rpm: CstSimulation.CstTurbine.MaxRPM,
+      generatorBreaker: true,
     }
     
     const newState = TurbineTick(highRpmState, position, boilerPressure)

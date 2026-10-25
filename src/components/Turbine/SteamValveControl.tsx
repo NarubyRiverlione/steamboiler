@@ -1,6 +1,6 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
-import useEMA from "../../utils/useEMA"
+// import useEMA from "../../utils/useEMA"
 import Indicator from "../Indicator"
 import ValveSlider from "../ValveSlider"
 
@@ -16,7 +16,7 @@ const SteamValveControl = () => {
         bypassValvePosition,
         bypassSteamFlowOut,
         turbineValvePosition,
-        turbineSteamFlowOut,
+        // turbineSteamFlowOut,
       },
     },
     toggleMainSteamValve,
