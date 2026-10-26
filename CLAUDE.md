@@ -1,8 +1,8 @@
 # Steamboiler / PowerPlant Simulator
 
 Steam power plant simulator (boiler → turbine → condenser) in React + TypeScript + Vite.
-App code lives in `steamboiler-web/` (pnpm). Simulation core is pure functions in
-`steamboiler-web/src/context/` (`PowerPlantTick`, `BoilerTick`, `TurbineTick`,
+App code lives at the repo root (pnpm); there is no `steamboiler-web/` directory. Simulation core is pure functions in
+`src/context/` (`PowerPlantTick`, `BoilerTick`, `TurbineTick`,
 `CondenserTick`), fully decoupled from React.
 
 Project documentation is indexed in `docs/README.md` — read it to find the topic you need.
@@ -30,10 +30,11 @@ Do not resume parameter tuning or physics changes before the runner exists.
 - Boiler start state is hardcoded warm (`StartTemperature: 250` in `src/context/const.ts`),
   a workaround for the slow feedback loop; the runner plan replaces it with snapshots.
 
-## Commands (run in `steamboiler-web/`)
+## Commands (run at the repo root)
 
 - `pnpm dev` — run the app
 - `pnpm test` — vitest
+- `pnpm sim [out.csv]` — headless runner, writes CSV (see `docs/headless runner.md`)
 - `pnpm lint` — eslint + tsc
 
 ## Agent skills

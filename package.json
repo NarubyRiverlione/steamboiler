@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "depcheck": "knip"
+    "depcheck": "knip",
+    "sim": "tsx sim/run.ts"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -32,6 +33,7 @@
     "globals": "^15.15.0",
     "knip": "^5.50.2",
     "prettier": "^3.5.3",
+    "tsx": "^4.23.15",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.27.0",
     "vite": "^6.2.4",

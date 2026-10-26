@@ -1,5 +1,14 @@
 # Headless Scenario Runner
 
+## Status
+
+Build step 1 is done: `pnpm sim [out.csv]` runs a hardcoded demo scenario (one sim-hour,
+~0.1 s wall) through `powerPlantReducer` (`SIMULATE_TICK` + operator actions) and writes
+sampled boiler/turbine/condenser state to `sim-out.csv` (git-ignored). Code: `sim/runner.ts`
+(`runScenario`, `toCsv`), `sim/run.ts` (CLI + demo scenario), `sim/runner.test.ts`. `tsx` is
+a dev dependency only. Note: the app lives at the repo root, so `sim/` is at the root, not
+under `steamboiler-web/`.
+
 ## Why
 
 The project stalled on its feedback loop: every parameter tweak required a full app
