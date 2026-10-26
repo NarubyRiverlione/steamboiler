@@ -8,7 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "tsc -b && pnpm audit -P && vite build",
     "lint": "eslint . --fix && pnpm tsc -b --noEmit",
     "preview": "vite preview",

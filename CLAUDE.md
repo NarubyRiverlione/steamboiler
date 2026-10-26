@@ -32,7 +32,7 @@ Do not resume parameter tuning or physics changes before the runner exists.
 
 ## Commands (run at the repo root)
 
-- `pnpm dev` — run the app
+- `pnpm dev` — run the app (vite `--host`: reachable on the LAN)
 - `pnpm test` — vitest
 - `pnpm sim [out.csv]` — headless runner, writes CSV (see `docs/headless runner.md`)
 - `pnpm lint` — eslint + tsc
