@@ -25,3 +25,4 @@ dist-ssr
 
 # Headless runner output
 sim-out.csv
+coverage
