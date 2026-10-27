@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { runScenario, Scenario } from "./scenario"
+import { firstTimeWhere, runScenario, Scenario } from "./scenario"
 import { startupCold } from "./scenarios/startup-cold"
 import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
 
@@ -49,6 +49,25 @@ describe("runScenario", () => {
   })
 })
 
+describe("firstTimeWhere", () => {
+  const samples = runScenario(heatUp)
+
+  test("returns the sim-time of the first sample where the condition holds", () => {
+    const expected = samples.find((s) => s.state.Boiler.temperature > samples[0].state.Boiler.temperature)?.time
+    expect(firstTimeWhere(samples, (s) => s.Boiler.temperature > samples[0].state.Boiler.temperature)).toBe(
+      expected,
+    )
+  })
+
+  test("returns 0 when the condition holds from the start", () => {
+    expect(firstTimeWhere(samples, (s) => s.Boiler.gasFlow === 5000)).toBe(0)
+  })
+
+  test("returns undefined when the condition never holds", () => {
+    expect(firstTimeWhere(samples, (s) => s.Turbine.generatorBreaker)).toBeUndefined()
+  })
+})
+
 describe("makeInitialState", () => {
   test("defaults to the UI's warm start", () => {
     expect(makeInitialState()).toEqual(initialPowerPlantState)
@@ -57,7 +76,6 @@ describe("makeInitialState", () => {
 
 describe("startup-cold", () => {
   const samples = runScenario(startupCold)
-  const at = (time: number) => samples.find((s) => s.time >= time)?.state
 
   test("starts cold and at rest", () => {
     expect(samples[0].state.Boiler.temperature).toBe(20)
@@ -65,13 +83,12 @@ describe("startup-cold", () => {
   })
 
   test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 720 s", () => {
-    const first = samples.find((s) => s.state.Boiler.pressure > 10)
-    expect(first?.time).toBeLessThan(720)
+    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(720)
   })
 
-  test("main steam valve opens and the turbine spins up", () => {
-    expect(at(730)?.Turbine.mainSteamValve).toBe(true)
-    expect(samples[samples.length - 1].state.Turbine.rpm).toBeGreaterThan(0)
+  test("main steam valve opens when commanded and the turbine spins up", () => {
+    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(720)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(720)
   })
 
   test("stays physical: no NaN or infinite values", () => {

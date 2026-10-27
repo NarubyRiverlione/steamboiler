@@ -5,7 +5,8 @@
 Build steps 1–2 are done. `pnpm sim [scenario] [out.csv]` (default `startup-cold`,
 `sim-out.csv`, git-ignored) runs a named scenario through `powerPlantReducer`
 (`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV
-in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`), `sim/csv.ts` (`toCsv`),
+in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`, `firstTimeWhere` for
+assertions), `sim/csv.ts` (`toCsv`),
 `sim/scenarios/` (one file per scenario, registered in `index.ts`), `sim/run.ts` (CLI). A
 scenario's `initial` state comes from `makeInitialState(temperature)` in
 `src/context/PowerPlantReducer.ts`; `startup-cold` uses 20°C. `tsx` is a dev dependency only.

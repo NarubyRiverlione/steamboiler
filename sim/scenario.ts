@@ -14,6 +14,11 @@ export type Scenario = {
 
 export type Sample = { time: number; state: PowerPlantState }
 
+// Sim-time of the first sample where the condition holds, or undefined if it never does.
+export function firstTimeWhere(samples: Sample[], condition: (state: PowerPlantState) => boolean): number | undefined {
+  return samples.find((s) => condition(s.state))?.time
+}
+
 // Same path as the UI: operator actions and SIMULATE_TICK both go through the reducer.
 export function runScenario(scenario: Scenario): Sample[] {
   const { DeltaTime } = CstSimulation
