@@ -1,7 +1,7 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy } from "../utils/boilerCalculations"
 import PowerPlantAction from "./PowerPlantActions"
-import PowerPlantState from "./PowerPlantState"
+import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 
 const { CstBoiler, CstTurbine } = CstSimulation
@@ -52,172 +52,95 @@ export const makeInitialState = (temperature: number = CstBoiler.StartTemperatur
 
 export const initialPowerPlantState: PowerPlantState = makeInitialState()
 
-export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
-  switch (action.type) {
-    case "SIMULATE_TICK":
-      return PowerPlantTick(state)
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
+const withBoiler = (state: PowerPlantState, patch: Partial<BoilerState>): PowerPlantState => ({
+  ...state,
+  Boiler: { ...state.Boiler, ...patch },
+})
+const withCondenser = (state: PowerPlantState, patch: Partial<CondenserState>): PowerPlantState => ({
+  ...state,
+  Condenser: { ...state.Condenser, ...patch },
+})
+const withTurbine = (state: PowerPlantState, patch: Partial<TurbineState>): PowerPlantState => ({
+  ...state,
+  Turbine: { ...state.Turbine, ...patch },
+})
 
-    //#region Boiler
-    case "INCREASE_GAS_FLOW":
-      return {
-        ...state,
-        Boiler: {
-          ...state.Boiler,
-          gasFlow: Math.min(CstBoiler.MaxGasFlow, state.Boiler.gasFlow + action.amount), // Cap at 10 L/s
-        },
-      }
-    case "DECREASE_GAS_FLOW":
-      return {
-        ...state,
-        Boiler: {
-          ...state.Boiler,
-          gasFlow: Math.max(0, state.Boiler.gasFlow - action.amount),
-        },
-      }
-    case "TOGGLE_FILL_VALVE":
-      return {
-        ...state,
-        Boiler: {
-          ...state.Boiler,
-          fillValveOpen: !state.Boiler.fillValveOpen,
-        },
-      }
-    case "TOGGLE_DRAIN_VALVE":
-      return {
-        ...state,
-        Boiler: {
-          ...state.Boiler,
-          drainValveOpen: !state.Boiler.drainValveOpen,
-        },
-      }
-    //#endregion
-    //#region Condenser
-    case "SET_AIR_EXTRACTION_PUMP_ENABLED": {
-      const {
-        payload: { isAirExtractionPumpEnabled },
-      } = action
-      return {
-        ...state,
-        Condenser: {
-          ...state.Condenser,
-          isAirExtractionPumpEnabled,
-        },
-      }
-    }
-    case "SET_SJAE_ENABLED":
-      return {
-        ...state,
-        Condenser: {
-          ...state.Condenser,
-          isSjaeEnabled: action.payload.isSjaeEnabled,
-        },
-      }
-    case "SET_SJAE_VALVE_POSITION": {
-      const sjaeValvePosition = Math.max(
+type ActionType = PowerPlantAction["type"]
+type Handler<T extends ActionType> = (
+  state: PowerPlantState,
+  action: Extract<PowerPlantAction, { type: T }>,
+) => PowerPlantState
+
+// One handler per action type; the mapped type makes a missing handler a compile error.
+const handlers: { [T in ActionType]: Handler<T> } = {
+  SIMULATE_TICK: (state) => PowerPlantTick(state),
+
+  //#region Boiler
+  INCREASE_GAS_FLOW: (state, { amount }) =>
+    withBoiler(state, { gasFlow: Math.min(CstBoiler.MaxGasFlow, state.Boiler.gasFlow + amount) }),
+  DECREASE_GAS_FLOW: (state, { amount }) => withBoiler(state, { gasFlow: Math.max(0, state.Boiler.gasFlow - amount) }),
+  TOGGLE_FILL_VALVE: (state) => withBoiler(state, { fillValveOpen: !state.Boiler.fillValveOpen }),
+  TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
+  //#endregion
+
+  //#region Condenser
+  SET_AIR_EXTRACTION_PUMP_ENABLED: (state, { payload: { isAirExtractionPumpEnabled } }) =>
+    withCondenser(state, { isAirExtractionPumpEnabled }),
+  SET_SJAE_ENABLED: (state, { payload: { isSjaeEnabled } }) => withCondenser(state, { isSjaeEnabled }),
+  SET_SJAE_VALVE_POSITION: (state, { payload }) =>
+    withCondenser(state, {
+      sjaeValvePosition: clamp(state.Condenser.sjaeValvePosition + payload.sjaeValvePosition, 0, 1),
+    }),
+  SET_RECIRCULATION_PUMP_VALVE_POSITION: (state, { payload }) =>
+    withCondenser(state, {
+      recirculationPumpValvePosition: clamp(
+        state.Condenser.recirculationPumpValvePosition + payload.recirculationPumpValvePosition,
         0,
-        Math.min(1, state.Condenser.sjaeValvePosition + action.payload.sjaeValvePosition),
-      )
-      return {
-        ...state,
-        Condenser: {
-          ...state.Condenser,
-          sjaeValvePosition,
-        },
-      }
-    }
-    case "SET_RECIRCULATION_PUMP_VALVE_POSITION": {
-      const recirculationPumpValvePosition = Math.max(
+        1,
+      ),
+    }),
+  SET_CONDENSATION_PUMP_VALVE_POSITION: (state, { payload }) =>
+    withCondenser(state, {
+      condensationPumpValvePosition: clamp(
+        state.Condenser.condensationPumpValvePosition + payload.condensationPumpValvePosition,
         0,
-        Math.min(
-          1,
-          state.Condenser.recirculationPumpValvePosition + action.payload.recirculationPumpValvePosition,
-        ),
-      )
-      return {
-        ...state,
-        Condenser: {
-          ...state.Condenser,
-          recirculationPumpValvePosition,
-        },
-      }
-    }
-    case "SET_CONDENSATION_PUMP_VALVE_POSITION": {
-      const condensationPumpValvePosition = Math.max(
-        0,
-        Math.min(
-          1,
-          state.Condenser.condensationPumpValvePosition + action.payload.condensationPumpValvePosition,
-        ),
-      )
-      return {
-        ...state,
-        Condenser: {
-          ...state.Condenser,
-          condensationPumpValvePosition,
-        },
-      }
-    }
-    //#endregion
-    //#region Turbine
-    case "TOGGLE_MAIN_STEAM_VALVE":
-      return {
-        ...state,
-        Turbine: {
-          ...state.Turbine,
-          // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
-          mainSteamValve:
-            !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
-        },
-      }
-    case "ADJUST_STEAM_BYPASS_VALVE": {
-      const bypassValvePosition = Math.max(
-        0,
-        Math.min(1, state.Turbine.bypassValvePosition + action.payload.bypassValvePosition),
-      )
-      return { ...state, Turbine: { ...state.Turbine, bypassValvePosition } }
-    }
-    case "ADJUST_STEAM_TURBINE_VALVE": {
-      const turbineValvePosition = Math.max(
-        0,
-        Math.min(1, state.Turbine.turbineValvePosition + action.payload.turbineValvePosition),
-      )
-      return { ...state, Turbine: { ...state.Turbine, turbineValvePosition } }
-    }
-    case "ADJUST_RPM_SETPOINT": {
-      const rpmSetPoint = Math.max(
-        CstTurbine.MinRPM,
-        Math.min(
-          CstTurbine.MaxRPM,
-          state.Turbine.rpmSetPoint + action.payload.rpmAdjustment
-        )
-      )
-      return { ...state, Turbine: { ...state.Turbine, rpmSetPoint } }
-    }
-    case "TOGGLE_HOLD_MODE": {
-      return {
-        ...state,
-        Turbine: {
-          ...state.Turbine,
-          holdMode: !state.Turbine.holdMode
-        }
-      }
-    }
-    case "TOGGLE_GENERATOR_BREAKER": {
-      // Allow closing the breaker if RPM is within the acceptable margin
-      const rpmDifference = Math.abs(state.Turbine.rpm - CstTurbine.MaxRPM);
-      const canCloseBreaker = !state.Turbine.generatorBreaker && 
-                            rpmDifference <= CstTurbine.BreakerRPMMargin;
-      
-      return {
-        ...state,
-        Turbine: {
-          ...state.Turbine,
-          generatorBreaker: canCloseBreaker ? true : false
-        }
-      }
-    }
-    //#endregion
-    default:
-      return state
-  }
+        1,
+      ),
+    }),
+  //#endregion
+
+  //#region Turbine
+  // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
+  TOGGLE_MAIN_STEAM_VALVE: (state) =>
+    withTurbine(state, {
+      mainSteamValve: !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
+    }),
+  ADJUST_STEAM_BYPASS_VALVE: (state, { payload }) =>
+    withTurbine(state, {
+      bypassValvePosition: clamp(state.Turbine.bypassValvePosition + payload.bypassValvePosition, 0, 1),
+    }),
+  ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) =>
+    withTurbine(state, {
+      turbineValvePosition: clamp(state.Turbine.turbineValvePosition + payload.turbineValvePosition, 0, 1),
+    }),
+  ADJUST_RPM_SETPOINT: (state, { payload }) =>
+    withTurbine(state, {
+      rpmSetPoint: clamp(state.Turbine.rpmSetPoint + payload.rpmAdjustment, CstTurbine.MinRPM, CstTurbine.MaxRPM),
+    }),
+  TOGGLE_HOLD_MODE: (state) => withTurbine(state, { holdMode: !state.Turbine.holdMode }),
+  // Allow closing the breaker if RPM is within the acceptable margin; toggling a closed breaker opens it
+  TOGGLE_GENERATOR_BREAKER: (state) =>
+    withTurbine(state, {
+      generatorBreaker:
+        !state.Turbine.generatorBreaker &&
+        Math.abs(state.Turbine.rpm - CstTurbine.MaxRPM) <= CstTurbine.BreakerRPMMargin,
+    }),
+  //#endregion
+}
+
+export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
+  // TS cannot correlate action.type with its payload when indexing a mapped type, hence the widening
+  const handler = handlers[action.type] as (state: PowerPlantState, action: PowerPlantAction) => PowerPlantState
+  return handler(state, action)
 }
