@@ -5,15 +5,17 @@ import { initialPowerPlantState, powerPlantReducer } from "../src/context/PowerP
 
 export type Scenario = {
   name: string
+  description: string
   duration: number // sim-seconds
   sampleEvery: number // sim-seconds
+  initial?: PowerPlantState // default: the UI's warm start
   actions: { at: number; action: PowerPlantAction }[] // at: sim-seconds
 }
 
 export type Sample = { time: number; state: PowerPlantState }
 
 // Same path as the UI: operator actions and SIMULATE_TICK both go through the reducer.
-export function runScenario(scenario: Scenario, initial: PowerPlantState = initialPowerPlantState): Sample[] {
+export function runScenario(scenario: Scenario): Sample[] {
   const { DeltaTime } = CstSimulation
   const ticks = Math.round(scenario.duration / DeltaTime)
   const sampleTicks = Math.round(scenario.sampleEvery / DeltaTime)
@@ -30,7 +32,7 @@ export function runScenario(scenario: Scenario, initial: PowerPlantState = initi
     actionsAt.set(tick, [...(actionsAt.get(tick) ?? []), action])
   }
 
-  let state = initial
+  let state = scenario.initial ?? initialPowerPlantState
   const samples: Sample[] = []
   for (let tick = 0; tick < ticks; tick++) {
     for (const action of actionsAt.get(tick) ?? []) state = powerPlantReducer(state, action)
@@ -38,23 +40,4 @@ export function runScenario(scenario: Scenario, initial: PowerPlantState = initi
     state = powerPlantReducer(state, { type: "SIMULATE_TICK" })
   }
   return samples
-}
-
-function flatten(state: PowerPlantState): Record<string, number> {
-  const row: Record<string, number> = {}
-  const parts = { boiler: state.Boiler, turbine: state.Turbine, condenser: state.Condenser }
-  for (const [prefix, part] of Object.entries(parts)) {
-    for (const [key, value] of Object.entries(part)) {
-      row[`${prefix}_${key}`] = typeof value === "boolean" ? Number(value) : value
-    }
-  }
-  return row
-}
-
-export function toCsv(samples: Sample[]): string {
-  if (samples.length === 0) return ""
-  const rows = samples.map((s) => ({ time: s.time, ...flatten(s.state) }))
-  const columns = Object.keys(rows[0])
-  const lines = rows.map((r) => columns.map((c) => r[c as keyof typeof r]).join(","))
-  return [columns.join(","), ...lines].join("\n") + "\n"
 }

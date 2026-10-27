@@ -30,8 +30,4 @@ The project is paused. See `CLAUDE.md` for the current plan; the next step is th
 
 ## Known issues
 
-- Failing turbine test (`electricOutput` in `TurbineTick.test.ts`)
-- `StartTemperature: 250` in `const.ts` is a hardcoded warm start, a workaround for the slow feedback loop. The runner plan replaces it with snapshots.
-- Boiling point uses a simplified power law above the steam table range
-- Extreme temperatures and pressures, and rapid input changes, may behave unrealistically
-- No historical data visualisation
+See [known-issues.md](known-issues.md).

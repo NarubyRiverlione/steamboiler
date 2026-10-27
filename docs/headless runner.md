@@ -2,12 +2,18 @@
 
 ## Status
 
-Build step 1 is done: `pnpm sim [out.csv]` runs a hardcoded demo scenario (one sim-hour,
-~0.1 s wall) through `powerPlantReducer` (`SIMULATE_TICK` + operator actions) and writes
-sampled boiler/turbine/condenser state to `sim-out.csv` (git-ignored). Code: `sim/runner.ts`
-(`runScenario`, `toCsv`), `sim/run.ts` (CLI + demo scenario), `sim/runner.test.ts`. `tsx` is
-a dev dependency only. Note: the app lives at the repo root, so `sim/` is at the root, not
-under `steamboiler-web/`.
+Build steps 1–2 are done. `pnpm sim [scenario] [out.csv]` (default `startup-cold`,
+`sim-out.csv`, git-ignored) runs a named scenario through `powerPlantReducer`
+(`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV
+in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`), `sim/csv.ts` (`toCsv`),
+`sim/scenarios/` (one file per scenario, registered in `index.ts`), `sim/run.ts` (CLI). A
+scenario's `initial` state comes from `makeInitialState(temperature)` in
+`src/context/PowerPlantReducer.ts`; `startup-cold` uses 20°C. `tsx` is a dev dependency only.
+Note: the app lives at the repo root, so `sim/` is at the root, not under `steamboiler-web/`.
+
+`startup-cold` stops at "turbine valve cracked": the current physics cannot reach generator
+sync from cold (see [known-issues.md](known-issues.md)). Its vitest checks guard only what
+works today: 10 bar before 720 s, main steam valve opens, turbine turns, no NaN/Infinity.
 
 ## Why
 
@@ -159,10 +165,8 @@ become safe to attempt.
 
 ## Known wrinkles
 
-- Some operator actions live in `PowerPlantReducer` (React-side), not in the tick
-  functions. Driving the reducer from Node should just work (it's a pure function too),
-  but this is the first thing step 2 verifies.
-- `makeInitialState()` for a true cold state doesn't exist yet — current start state
-  is hardcoded warm (250°C). Small extraction from the provider/const.
-- One turbine test currently fails (`electricOutput` expectation); resolve before
-  trusting the suite as a guard.
+- Driving `PowerPlantReducer` from Node works (verified in step 2).
+- Hold-mode PID state is module-global in `TurbineTick.ts`, so hold-mode scenarios are not
+  reproducible across runs in one process until it moves into `TurbineState`.
+- Scenario actions are timed, not conditional: an action the reducer refuses (e.g.
+  `TOGGLE_MAIN_STEAM_VALVE` below 10 bar) is silently a no-op. Assert the effect in tests.

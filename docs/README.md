@@ -7,7 +7,8 @@
 | Boiler physics and constants | [boiler.md](boiler.md) |
 | Turbine and generator phases 1–5 | [turbine.md](turbine.md) |
 | Condenser, vacuum system, energy balance | [condensor plan.md](condensor%20plan.md) |
-| Current status, backlog, known issues | [status.md](status.md) |
+| Current status, backlog | [status.md](status.md) |
+| Known issues | [known-issues.md](known-issues.md) |
 | Physics improvement roadmap | [improvements.md](improvements.md) |
 | Headless scenario runner plan (next step) | [headless runner.md](headless%20runner.md) |
 | Findings from running the simulator, Oct 2026 | [assessment 2026-10.md](assessment%202026-10.md) |

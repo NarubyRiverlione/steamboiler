@@ -5,15 +5,17 @@ import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 
 const { CstBoiler, CstTurbine } = CstSimulation
-export const initialPowerPlantState: PowerPlantState = {
+
+// Plant at rest with the boiler water at the given temperature (default: the UI's warm start)
+export const makeInitialState = (temperature: number = CstBoiler.StartTemperature): PowerPlantState => ({
   Boiler: {
     waterVolume: CstBoiler.StartWaterVolume, // liters
-    temperature: CstBoiler.StartTemperature, // Celsius
+    temperature, // Celsius
     pressure: 1, // bar
     gasFlow: 0, // liters/second
     fillValveOpen: false,
     drainValveOpen: false,
-    energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, CstBoiler.StartTemperature), // kJ
+    energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, temperature), // kJ
     energyDelta: 0, // kJ/s
     steamMass: 0, // kg - Mass of steam currently in the boiler
     deltaWaterVolume: 0,
@@ -46,7 +48,9 @@ export const initialPowerPlantState: PowerPlantState = {
     holdMode: false,
     generatorBreaker: false, // Phase 4: Initially open
   },
-}
+})
+
+export const initialPowerPlantState: PowerPlantState = makeInitialState()
 
 export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
   switch (action.type) {

@@ -25,16 +25,13 @@ Do not resume parameter tuning or physics changes before the runner exists.
 
 ## Known issues
 
-- One turbine test fails (`electricOutput` expectation in `TurbineTick.test.ts`) — fix
-  before trusting the suite as a regression guard.
-- Boiler start state is hardcoded warm (`StartTemperature: 250` in `src/context/const.ts`),
-  a workaround for the slow feedback loop; the runner plan replaces it with snapshots.
+Tracked in `docs/known-issues.md`.
 
 ## Commands (run at the repo root)
 
 - `pnpm dev` — run the app (vite `--host`: reachable on the LAN)
 - `pnpm test` — vitest
-- `pnpm sim [out.csv]` — headless runner, writes CSV (see `docs/headless runner.md`)
+- `pnpm sim [scenario] [out.csv]` — headless runner, writes CSV (see `docs/headless runner.md`)
 - `pnpm lint` — eslint + tsc
 
 ## Agent skills
