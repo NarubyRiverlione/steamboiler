@@ -40,6 +40,10 @@ Tracked in `docs/known-issues.md`.
 
 Issues are tracked in GitHub Issues (`NarubyRiverlione/steamboiler`) via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
+Before closing a ticket, run the `crap-score-typescript` skill on the files the ticket changed
+and report the CRAP scores to the user (and in the closing comment). Flag any method above the
+skill's risk threshold before closing.
+
 ### Triage labels
 
 Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
