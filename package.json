@@ -15,7 +15,9 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "depcheck": "knip",
-    "sim": "tsx sim/run.ts"
+    "sim": "tsx sim/run.ts",
+    "sim:serve": "tsx sim/serve.ts",
+    "sim:view": "pnpm sim && pnpm sim:serve"
   },
   "dependencies": {
     "react": "^19.3.1",

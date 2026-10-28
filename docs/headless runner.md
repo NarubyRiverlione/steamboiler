@@ -2,14 +2,20 @@
 
 ## Status
 
-Build steps 1–2 are done. `pnpm sim [scenario] [out.csv]` (default `startup-cold`,
-`sim-out.csv`, git-ignored) runs a named scenario through `powerPlantReducer`
-(`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV
-in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`, `firstTimeWhere` for
-assertions), `sim/csv.ts` (`toCsv`),
-`sim/scenarios/` (one file per scenario, registered in `index.ts`), `sim/run.ts` (CLI). A
-scenario's `initial` state comes from `makeInitialState(temperature)` in
-`src/context/PowerPlantReducer.ts`; `startup-cold` uses 20°C. `tsx` is a dev dependency only.
+Build steps 1–3 are done. `pnpm sim [scenario] [out.csv] [report.html]` (default `startup-cold`,
+`sim-out.csv`, `report.html`, both git-ignored) runs a named scenario through `powerPlantReducer`
+(`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV plus
+a self-contained HTML report in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`,
+`firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`), `sim/report.ts` (`toReportHtml`; the
+panel list is the `panels` array), `sim/scenarios/` (one file per scenario, registered in
+`index.ts`), `sim/run.ts` (CLI). A scenario's `initial` state comes from
+`makeInitialState(temperature)` in `src/context/PowerPlantReducer.ts`; `startup-cold` uses 20°C.
+`tsx` is a dev dependency only.
+
+The report is hand-rolled SVG (no CDN, opens offline). Hovering any panel moves a synced
+crosshair across all panels; dashed lines mark operator actions. On a headless machine,
+`pnpm sim:serve` serves it on `0.0.0.0:4174` (`PORT` to override) and prints the LAN URLs; the
+file is re-read per request, so re-run `pnpm sim` and refresh. `pnpm sim:view` does both.
 Note: the app lives at the repo root, so `sim/` is at the root, not under `steamboiler-web/`.
 
 `startup-cold` stops at "turbine valve cracked": the current physics cannot reach generator
