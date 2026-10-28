@@ -22,5 +22,5 @@
     "allowJs": true,
     "esModuleInterop": true
   },
-  "include": ["vite.config.ts", "eslint.config.mjs", "jest.config.js", "sim"]
+  "include": ["vite.config.ts", "eslint.config.mjs", "jest.config.js", "sim", "scripts"]
 }

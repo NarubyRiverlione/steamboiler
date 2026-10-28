@@ -17,7 +17,8 @@
     "depcheck": "knip",
     "sim": "tsx sim/run.ts",
     "sim:serve": "tsx sim/serve.ts",
-    "sim:view": "pnpm sim && pnpm sim:serve"
+    "sim:view": "pnpm sim && pnpm sim:serve",
+    "roadmap": "tsx scripts/roadmap.ts"
   },
   "dependencies": {
     "react": "^19.3.1",

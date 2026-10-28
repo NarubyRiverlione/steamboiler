@@ -34,12 +34,17 @@ Tracked in `docs/known-issues.md`.
 - `pnpm sim [scenario] [out.csv] [report.html]` — headless runner, writes CSV + self-contained HTML report (see `docs/headless runner.md`)
 - `pnpm sim:serve [report.html]` — serve the report on the LAN (`PORT`, default 4174); `pnpm sim:view` = run + serve
 - `pnpm lint` — eslint + tsc
+- `pnpm roadmap` — regenerate `ROADMAP.md` (ticket order) from the GitHub issues
 
 ## Agent skills
 
 ### Issue tracker
 
 Issues are tracked in GitHub Issues (`NarubyRiverlione/steamboiler`) via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+`ROADMAP.md` is the order to work in; pick the first ticket under **Next up** that is `ready-*`.
+When creating a ticket, give it a `P1`/`P2`/`P3` label and blocked-by links. After creating or
+closing a ticket, run `pnpm roadmap` and commit `ROADMAP.md`.
 
 Before closing a ticket, run the `crap-score-typescript` skill on the files the ticket changed
 and report the CRAP scores to the user (and in the closing comment). Flag any method above the
