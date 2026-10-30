@@ -14,6 +14,7 @@ const CondenserReadouts = () => {
         pressure, // mbar
         steamMass,
         hotwellWaterVolume,
+        hotwellTemperature,
         returnRate,
         intakeFlowRate,
       },
@@ -27,6 +28,7 @@ const CondenserReadouts = () => {
     <div className="readouts-panel">
       <h3>Condenser Status</h3>
       <Readout title="Steam volume" value={steamMass} unit="l" />
+      <Readout title="Hotwell temperature" value={hotwellTemperature} unit="°C" />
 
       <div className="readout-container">
         <div className="readout-item">

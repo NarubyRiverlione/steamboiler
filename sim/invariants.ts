@@ -33,6 +33,10 @@ const within = (label: string, value: number, max: number) =>
 export const totalWater = ({ Boiler, Condenser }: PowerPlantState) =>
   Boiler.waterVolume + Boiler.steamMass + Condenser.steamMass + Condenser.hotwellWaterVolume
 
+// Total water with the boundary flows undone: makeup came in, reject and drain went out on purpose
+export const loopWater = (state: PowerPlantState) =>
+  totalWater(state) - state.Condenser.makeupTotal + state.Condenser.rejectTotal + state.Boiler.drainedTotal
+
 // Steam out of the boiler between samples, taking each sample's flow as constant until the next
 function steamOutSoFar(samples: Sample[]): number[] {
   let total = 0
@@ -48,11 +52,11 @@ function steamOutSoFar(samples: Sample[]): number[] {
 }
 
 function waterNeverCreated(samples: Sample[]): string[] {
-  const start = totalWater(samples[0].state)
+  const start = loopWater(samples[0].state)
   const steamOut = steamOutSoFar(samples)
   return samples
     .flatMap(({ time, state }, i) => {
-      const mass = totalWater(state)
+      const mass = loopWater(state)
       const maxLoss = start * MassLostFixed + steamOut[i] * MassLostPerSteamOut
       if (mass > start * (1 + MassCreatedLimit))
         return [`${at(time)}: water ${mass.toFixed(0)} kg created from ${start.toFixed(0)} kg`]

@@ -25,9 +25,6 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const decreaseGasFlow = (amount: number) => {
     dispatch({ type: "DECREASE_GAS_FLOW", amount })
   }
-  const toggleFillValve = () => {
-    dispatch({ type: "TOGGLE_FILL_VALVE" })
-  }
   const toggleDrainValve = () => {
     dispatch({ type: "TOGGLE_DRAIN_VALVE" })
   }
@@ -87,6 +84,12 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       payload: { condensationPumpValvePosition: position },
     })
   }
+  const adjustMakeupValvePosition = (position: number) => {
+    dispatch({ type: "SET_MAKEUP_VALVE_POSITION", payload: { makeupValvePosition: position } })
+  }
+  const adjustRejectValvePosition = (position: number) => {
+    dispatch({ type: "SET_REJECT_VALVE_POSITION", payload: { rejectValvePosition: position } })
+  }
   //#endregion
 
   return (
@@ -97,7 +100,6 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         // boiler actions
         increaseGasFlow,
         decreaseGasFlow,
-        toggleFillValve,
         toggleDrainValve,
         // turbine rpm control actions
         adjustBypassValve,
@@ -112,6 +114,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         adjustSjaeValvePosition,
         adjustRecirculationPumpValvePosition,
         adjustCondensationPumpValvePosition,
+        adjustMakeupValvePosition,
+        adjustRejectValvePosition,
       }}
     >
       {children}

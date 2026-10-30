@@ -252,3 +252,30 @@ export function CalculateCondensationFlow(
 
   return { condensatePumpVolume, newHotwellWaterVolume }
 }
+
+// Temperature after mixing two water volumes (1 L = 1 kg, same specific heat)
+export function mixTemperature(volumeA: number, tempA: number, volumeB: number, tempB: number): number {
+  const total = volumeA + volumeB
+  return total > 0 ? (volumeA * tempA + volumeB * tempB) / total : tempA
+}
+
+/**
+ * Hotwell boundary flows: makeup water in from outside the loop, reject water out to storage.
+ * Reject never takes more than the hotwell holds.
+ * @returns New hotwell volume and temperature, and the liters added and removed this tick
+ */
+export function calculateHotwellExchange(
+  hotwellVolume: number,
+  hotwellTemperature: number,
+  makeupValvePosition: number,
+  rejectValvePosition: number,
+): { volume: number; temperature: number; makeup: number; reject: number } {
+  const {
+    DeltaTime,
+    CstCondenser: { Makeup_MaxFlowRate, Makeup_Temperature, Reject_MaxFlowRate },
+  } = CstSimulation
+  const makeup = makeupValvePosition * Makeup_MaxFlowRate * DeltaTime
+  const temperature = mixTemperature(hotwellVolume, hotwellTemperature, makeup, Makeup_Temperature)
+  const reject = Math.min(hotwellVolume + makeup, rejectValvePosition * Reject_MaxFlowRate * DeltaTime)
+  return { volume: hotwellVolume + makeup - reject, temperature, makeup, reject }
+}

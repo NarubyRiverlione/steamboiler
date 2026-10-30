@@ -3,9 +3,8 @@ import usePowerPlant from "../../context/PowerPlantContext"
 const BoilerWaterControl = () => {
   const {
     state: {
-      Boiler: { fillValveOpen, drainValveOpen },
+      Boiler: { drainValveOpen },
     },
-    toggleFillValve,
     toggleDrainValve,
   } = usePowerPlant()
 
@@ -13,12 +12,6 @@ const BoilerWaterControl = () => {
     <div className="component-controls">
       <h3>Water Valve Control</h3>
       <div className="valve-buttons">
-        <div>
-          <h4>Fill Valve</h4>
-          <button className={`valve-button ${fillValveOpen ? "open" : "closed"}`} onClick={toggleFillValve}>
-            {fillValveOpen ? "Open" : "Closed"}
-          </button>
-        </div>
         <div>
           <h4>Drain Valve</h4>
           <button className={`valve-button ${drainValveOpen ? "open" : "closed"}`} onClick={toggleDrainValve}>

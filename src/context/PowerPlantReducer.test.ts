@@ -28,13 +28,10 @@ describe("powerPlantReducer", () => {
       expect(reduce({ type: "DECREASE_GAS_FLOW", amount: 5000 }, burning).Boiler.gasFlow).toBe(0)
     })
 
-    test.each([
-      ["TOGGLE_FILL_VALVE", "fillValveOpen"],
-      ["TOGGLE_DRAIN_VALVE", "drainValveOpen"],
-    ] as const)("%s toggles %s", (type, field) => {
-      const opened = reduce({ type })
-      expect(opened.Boiler[field]).toBe(true)
-      expect(reduce({ type }, opened).Boiler[field]).toBe(false)
+    test("drain valve toggles", () => {
+      const opened = reduce({ type: "TOGGLE_DRAIN_VALVE" })
+      expect(opened.Boiler.drainValveOpen).toBe(true)
+      expect(reduce({ type: "TOGGLE_DRAIN_VALVE" }, opened).Boiler.drainValveOpen).toBe(false)
     })
   })
 
@@ -61,10 +58,24 @@ describe("powerPlantReducer", () => {
         type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
         payload: { condensationPumpValvePosition: delta },
       }),
+      (delta: number): PowerPlantAction => ({
+        type: "SET_MAKEUP_VALVE_POSITION",
+        payload: { makeupValvePosition: delta },
+      }),
+      (delta: number): PowerPlantAction => ({
+        type: "SET_REJECT_VALVE_POSITION",
+        payload: { rejectValvePosition: delta },
+      }),
     ]
-    const fields = ["sjaeValvePosition", "recirculationPumpValvePosition", "condensationPumpValvePosition"] as const
+    const fields = [
+      "sjaeValvePosition",
+      "recirculationPumpValvePosition",
+      "condensationPumpValvePosition",
+      "makeupValvePosition",
+      "rejectValvePosition",
+    ] as const
 
-    test.each([0, 1, 2])("valve %i moves by its delta and stays within 0..1", (i) => {
+    test.each([0, 1, 2, 3, 4])("valve %i moves by its delta and stays within 0..1", (i) => {
       const position = (s: PowerPlantState) => s.Condenser[fields[i]]
       const opened = reduce(valves[i](0.25))
       expect(position(opened)).toBe(0.25)

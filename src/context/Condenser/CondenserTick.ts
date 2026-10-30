@@ -4,6 +4,8 @@ import {
   calculateIntakeFlowRate,
   calculateVacuumByReducers,
   CalculateCondensationFlow,
+  calculateHotwellExchange,
+  mixTemperature,
 } from "../../utils/condenserCalculation"
 import { CstPhysics, CstSimulation } from "../const"
 
@@ -61,17 +63,33 @@ export function CondenserTick(
 
   // Calculate water level based on recirculation pump flow rate and update the temperature
   // of the condensed water returning to the boiler.
-  const { steamVolumeAfterCondensation, waterVolumeAfterCondensation } = calculateCondensation(
+  const { steamVolumeAfterCondensation, waterVolumeAfterCondensation, newOutletTemperature } = calculateCondensation(
     newSteamMass,
     condenserState.hotwellWaterVolume,
     condenserState.recirculationPumpValvePosition,
     steamTemp,
   )
 
+  // Condensate enters the hotwell at the outlet temperature
+  const condensateTemperature = mixTemperature(
+    condenserState.hotwellWaterVolume,
+    condenserState.hotwellTemperature,
+    waterVolumeAfterCondensation - condenserState.hotwellWaterVolume,
+    newOutletTemperature,
+  )
+
+  // Makeup in and reject out, before the condensation pump draws from the hotwell
+  const exchange = calculateHotwellExchange(
+    waterVolumeAfterCondensation,
+    condensateTemperature,
+    condenserState.makeupValvePosition,
+    condenserState.rejectValvePosition,
+  )
+
   // Condensation pump transfer: remove water from hotwell based on pump valve setting.
   const { condensatePumpVolume, newHotwellWaterVolume } = CalculateCondensationFlow(
     condenserState.condensationPumpValvePosition,
-    waterVolumeAfterCondensation,
+    exchange.volume,
   )
 
   return {
@@ -82,7 +100,11 @@ export function CondenserTick(
     // recirculationPumpFlowRate: newRecirculationPumpFlowRate,
     steamMass: steamVolumeAfterCondensation,
     hotwellWaterVolume: newHotwellWaterVolume,
+    hotwellTemperature: exchange.temperature,
+    makeupTotal: condenserState.makeupTotal + exchange.makeup,
+    rejectTotal: condenserState.rejectTotal + exchange.reject,
     deltaWaterVolume: newHotwellWaterVolume - condenserState.hotwellWaterVolume,
     returnRate: condensatePumpVolume,
+    condensationRate: (waterVolumeAfterCondensation - condenserState.hotwellWaterVolume) / CstSimulation.DeltaTime,
   }
 }

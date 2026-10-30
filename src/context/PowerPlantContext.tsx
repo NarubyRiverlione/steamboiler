@@ -8,7 +8,6 @@ type PowerPlantContextType = {
   // Action creators
   increaseGasFlow: (amount: number) => void
   decreaseGasFlow: (amount: number) => void
-  toggleFillValve: () => void
   toggleDrainValve: () => void
   // Turbine RPM Control
   adjustBypassValve: (amount: number) => void
@@ -23,6 +22,8 @@ type PowerPlantContextType = {
   adjustSjaeValvePosition: (amount: number) => void
   adjustRecirculationPumpValvePosition: (amount: number) => void
   adjustCondensationPumpValvePosition: (amount: number) => void
+  adjustMakeupValvePosition: (amount: number) => void
+  adjustRejectValvePosition: (amount: number) => void
 }
 
 // Context

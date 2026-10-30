@@ -5,7 +5,6 @@ export const CstSimulation = {
     StartWaterVolume: 50e3, // liters (60-70% water volume to keep space for steam)
     TotalVolume: 100e3, // liters (typical  20-100m3)
     MaxGasFlow: 12000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
-    FillingRate: 0.005, // 0.5% per second
     DrainingRate: 0.005, // 0.5% per second
     GasEfficiency: 0.85,
     SteamGenerationEfficiency: 0.75, // Fraction of available energy used for steam generation
@@ -41,6 +40,12 @@ export const CstSimulation = {
     PressureMultiplier: 0.8, // steam volume adds pressure
     SteamVolumeBaseLine: 1000,
     LeakingRate: 0.01, // kg/s (typical 0.005 to 0.015 kg/s )
+    HotwellStartTemperature: 20, // Celsius
+    Makeup_MaxFlowRate: 50, // l/s demineralised water into the hotwell
+    Makeup_Temperature: 20, // Celsius
+    Makeup_Step: 5, // % per click open/close
+    Reject_MaxFlowRate: 50, // l/s hotwell water out to storage
+    Reject_Step: 5, // % per click open/close
   },
 
   CstTurbine: {

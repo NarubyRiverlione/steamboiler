@@ -27,6 +27,23 @@ from `sim/scenarios/steps.ts`:
 | `turbine-start` | turbine valve to 25%, turbine rolling |
 | `turbine-sync` | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21) |
 | `cooldown` | at pressure, then natural cooldown for 60 min |
+| `bypass-loop` | cold start, bypass only; an operator holds boiler level at 50% and the hotwell at 70% (#19) |
+
+`startup-cold` does not run the water loop: it leaves cooling water and the condensation pump at 0,
+so nothing condenses and nothing returns. Use `bypass-loop` for the loop.
+
+A scenario's optional `operator(state, time)` is a feedback hook called every tick after the timed
+actions; its actions go through `powerPlantReducer` like any other. It must decide from state and
+time alone so runs stay reproducible. `sim/scenarios/loop-operator.ts` is the one in use: it starts
+steam (main steam valve, bypass, SJAE restart), nudges the condensation pump toward the boiler level
+target and cooling water against condenser steam once a second, and opens makeup or reject on the
+hotwell limits with hysteresis. Operator actions are not drawn as dashed lines in the report; the
+Loop panels show the valve positions instead.
+
+The report's **Loop** group (every scenario) shows the water inventory with a total that should stay
+flat (boundary flows undone), the loop flows in L/s, and the loop valve positions. The water
+invariant counts makeup, reject and drain as boundary flows via the totalizers `makeupTotal`,
+`rejectTotal` and `drainedTotal`, so they are not flagged as created or lost water.
 
 Goal checks live in `sim/scenario.test.ts`. `sim/invariants.ts` holds the physical invariants
 (no NaN, design pressure and temperature, water within capacity, water never created or lost,

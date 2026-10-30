@@ -12,6 +12,9 @@ export type Scenario = {
   sampleEvery: number // sim-seconds
   initial?: PowerPlantState // default: the UI's warm start
   actions: ScenarioAction[]
+  // Feedback control: called every tick after the timed actions, its actions go through the reducer.
+  // Must decide from state and time alone so runs stay reproducible.
+  operator?: (state: PowerPlantState, time: number) => PowerPlantAction[]
 }
 
 export type Sample = { time: number; state: PowerPlantState }
@@ -47,6 +50,19 @@ function scheduleActions(scenario: Scenario, ticks: number): Map<number, PowerPl
   return actionsAt
 }
 
+const applyAll = (state: PowerPlantState, actions: PowerPlantAction[]) => actions.reduce(powerPlantReducer, state)
+
+// Timed actions first, then whatever the operator decides on the resulting state
+function actionsThisTick(
+  scenario: Scenario,
+  scheduled: PowerPlantAction[] | undefined,
+  state: PowerPlantState,
+  time: number,
+): PowerPlantState {
+  const afterTimed = applyAll(state, scheduled ?? [])
+  return scenario.operator ? applyAll(afterTimed, scenario.operator(afterTimed, time)) : afterTimed
+}
+
 // Same path as the UI: operator actions and SIMULATE_TICK both go through the reducer.
 export function runScenario(scenario: Scenario): Sample[] {
   const { DeltaTime } = CstSimulation
@@ -56,7 +72,7 @@ export function runScenario(scenario: Scenario): Sample[] {
   let state = scenario.initial ?? initialPowerPlantState
   const samples: Sample[] = []
   for (let tick = 0; tick < ticks; tick++) {
-    for (const action of actionsAt.get(tick) ?? []) state = powerPlantReducer(state, action)
+    state = actionsThisTick(scenario, actionsAt.get(tick), state, tick * DeltaTime)
     if (tick % sampleTicks === 0) samples.push({ time: tick * DeltaTime, state })
     state = powerPlantReducer(state, { type: "SIMULATE_TICK" })
   }

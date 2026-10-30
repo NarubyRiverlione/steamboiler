@@ -13,8 +13,8 @@ export const makeInitialState = (temperature: number = CstBoiler.StartTemperatur
     temperature, // Celsius
     pressure: 1, // bar
     gasFlow: 0, // liters/second
-    fillValveOpen: false,
     drainValveOpen: false,
+    drainedTotal: 0,
     energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, temperature), // kJ
     energyDelta: 0, // kJ/s
     steamMass: 0, // kg - Mass of steam currently in the boiler
@@ -25,15 +25,21 @@ export const makeInitialState = (temperature: number = CstBoiler.StartTemperatur
   Condenser: {
     pressure: CstPhysics.AtmosphericPressure_mBar, // mBar (initial atmospheric pressure)
     hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
+    hotwellTemperature: CstSimulation.CstCondenser.HotwellStartTemperature,
     steamMass: 0, // Start at 0
     intakeFlowRate: 0,
     returnRate: 0,
+    condensationRate: 0,
     coolingRate: 1,
     isAirExtractionPumpEnabled: false,
     isSjaeEnabled: false,
     sjaeValvePosition: 0, // 0% open
     recirculationPumpValvePosition: 0, // 0% open
     condensationPumpValvePosition: 0,
+    makeupValvePosition: 0,
+    rejectValvePosition: 0,
+    makeupTotal: 0,
+    rejectTotal: 0,
     deltaWaterVolume: 0,
   },
   Turbine: {
@@ -80,7 +86,6 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   INCREASE_GAS_FLOW: (state, { amount }) =>
     withBoiler(state, { gasFlow: Math.min(CstBoiler.MaxGasFlow, state.Boiler.gasFlow + amount) }),
   DECREASE_GAS_FLOW: (state, { amount }) => withBoiler(state, { gasFlow: Math.max(0, state.Boiler.gasFlow - amount) }),
-  TOGGLE_FILL_VALVE: (state) => withBoiler(state, { fillValveOpen: !state.Boiler.fillValveOpen }),
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
   //#endregion
 
@@ -107,6 +112,14 @@ const handlers: { [T in ActionType]: Handler<T> } = {
         0,
         1,
       ),
+    }),
+  SET_MAKEUP_VALVE_POSITION: (state, { payload }) =>
+    withCondenser(state, {
+      makeupValvePosition: clamp(state.Condenser.makeupValvePosition + payload.makeupValvePosition, 0, 1),
+    }),
+  SET_REJECT_VALVE_POSITION: (state, { payload }) =>
+    withCondenser(state, {
+      rejectValvePosition: clamp(state.Condenser.rejectValvePosition + payload.rejectValvePosition, 0, 1),
     }),
   //#endregion
 

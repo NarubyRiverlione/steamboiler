@@ -43,8 +43,30 @@ describe("runScenario", () => {
   test("rejects scenarios that would silently record nothing", () => {
     expect(() => runScenario({ ...heatUp, sampleEvery: 0 })).toThrow()
     expect(() =>
-      runScenario({ ...heatUp, actions: [{ at: 999, action: { type: "TOGGLE_FILL_VALVE" } }] }),
+      runScenario({ ...heatUp, actions: [{ at: 999, action: { type: "TOGGLE_DRAIN_VALVE" } }] }),
     ).toThrow()
+  })
+
+  test("operator actions go through the reducer every tick, after the timed actions", () => {
+    const seen: { time: number; gas: number }[] = []
+    const samples = runScenario({
+      ...heatUp,
+      duration: 1,
+      operator: (state, time) => {
+        seen.push({ time, gas: state.Boiler.gasFlow })
+        return [{ type: "INCREASE_GAS_FLOW", amount: 1 }]
+      },
+    })
+    expect(seen).toHaveLength(10)
+    expect(seen[0]).toEqual({ time: 0, gas: 5000 })
+    expect(seen[9].gas).toBe(5009)
+    expect(samples[0].state.Boiler.gasFlow).toBe(5001)
+  })
+
+  test("no operator actions leaves the run unchanged", () => {
+    const [, plain] = runScenario(heatUp)
+    const [, idle] = runScenario({ ...heatUp, operator: () => [] })
+    expect(idle.state).toEqual(plain.state)
   })
 
   test("one simulated hour runs in a few seconds at most", () => {
@@ -136,7 +158,7 @@ describe("cooldown", () => {
       expect(state.Boiler.gasFlow).toBe(0)
       expect(state.Turbine.mainSteamValve).toBe(false)
       expect(state.Turbine.turbineValvePosition + state.Turbine.bypassValvePosition).toBe(0)
-      expect(state.Boiler.fillValveOpen || state.Boiler.drainValveOpen).toBe(false)
+      expect(state.Boiler.drainValveOpen).toBe(false)
     }
   })
 
@@ -148,7 +170,13 @@ describe("cooldown", () => {
 
 describe("scenario registry", () => {
   test("registers every scenario under its own name", () => {
-    expect(Object.keys(scenarios)).toEqual(["startup-cold", "turbine-start", "turbine-sync", "cooldown"])
+    expect(Object.keys(scenarios)).toEqual([
+      "startup-cold",
+      "turbine-start",
+      "turbine-sync",
+      "cooldown",
+      "bypass-loop",
+    ])
     for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })
 })

@@ -22,6 +22,14 @@ _Avoid_: Max RPM, rated speed
 
 ### Operation
 
+**Makeup**:
+Demineralised water fed into the condenser hotwell from outside the loop, to top up losses. Never into the boiler.
+_Avoid_: Fill, top-up valve
+
+**Reject**:
+Hotwell water sent out of the loop to storage when the hotwell is too full.
+_Avoid_: Dump, overflow
+
 **Natural cooldown**:
 The plant left alone with gas off and all valves closed, cooling down on its own.
 _Avoid_: Shutdown, trip

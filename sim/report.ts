@@ -1,4 +1,6 @@
+import { CstSimulation } from "../src/context/const"
 import PowerPlantState from "../src/context/PowerPlantState"
+import { loopWater } from "./invariants"
 import { Sample, Scenario } from "./scenario"
 
 type Series = { label: string; value: (state: PowerPlantState) => number }
@@ -60,6 +62,48 @@ export const panels: Panel[] = [
     title: "Return rate",
     unit: "L/tick",
     series: one("Return rate", (s) => s.Condenser.returnRate),
+  },
+  {
+    group: "Condenser",
+    title: "Hotwell temperature",
+    unit: "°C",
+    series: one("Hotwell temperature", (s) => s.Condenser.hotwellTemperature),
+  },
+  // The closed water loop: boiler → steam → condenser → hotwell → condensation pump → boiler
+  {
+    group: "Loop",
+    title: "Water inventory",
+    unit: "L",
+    series: [
+      { label: "Boiler water", value: (s) => s.Boiler.waterVolume },
+      { label: "Boiler steam", value: (s) => s.Boiler.steamMass },
+      { label: "Condenser steam", value: (s) => s.Condenser.steamMass },
+      { label: "Hotwell", value: (s) => s.Condenser.hotwellWaterVolume },
+      { label: "Total excl. makeup, reject, drain", value: loopWater },
+    ],
+  },
+  {
+    group: "Loop",
+    title: "Flows",
+    unit: "L/s",
+    series: [
+      { label: "Steam out", value: (s) => s.Turbine.bypassSteamFlowOut + s.Turbine.turbineSteamFlowOut },
+      { label: "Condenser intake", value: (s) => s.Condenser.intakeFlowRate },
+      { label: "Condensation", value: (s) => s.Condenser.condensationRate },
+      { label: "Return to boiler", value: (s) => s.Condenser.returnRate / CstSimulation.DeltaTime },
+    ],
+  },
+  {
+    group: "Loop",
+    title: "Valve positions",
+    unit: "%",
+    series: [
+      { label: "Bypass", value: (s) => s.Turbine.bypassValvePosition * 100 },
+      { label: "Cooling water", value: (s) => s.Condenser.recirculationPumpValvePosition * 100 },
+      { label: "Condensation pump", value: (s) => s.Condenser.condensationPumpValvePosition * 100 },
+      { label: "Makeup", value: (s) => s.Condenser.makeupValvePosition * 100 },
+      { label: "Reject", value: (s) => s.Condenser.rejectValvePosition * 100 },
+    ],
   },
 ]
 
@@ -235,7 +279,7 @@ const STYLE = `
   --surface: #fcfcfb; --card: #ffffff; --border: #e4e3df;
   --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #77756f;
   --grid: #ecebe7; --axis: #b9b7b0; --action: #a8a59c;
-  --series-1: #2a78d6; --series-2: #eb6834;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -243,7 +287,7 @@ const STYLE = `
     --surface: #1a1a19; --card: #222220; --border: #34332f;
     --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8d85;
     --grid: #2c2b28; --axis: #55534d; --action: #6d6a62;
-    --series-1: #3987e5; --series-2: #d95926;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
   }
 }
 :root[data-theme="dark"] {
@@ -251,7 +295,7 @@ const STYLE = `
   --surface: #1a1a19; --card: #222220; --border: #34332f;
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8d85;
   --grid: #2c2b28; --axis: #55534d; --action: #6d6a62;
-  --series-1: #3987e5; --series-2: #d95926;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
 }
 * { box-sizing: border-box; }
 body { margin: 0; padding: 16px; background: var(--surface); color: var(--text-primary);
@@ -268,13 +312,16 @@ details li { font-variant-numeric: tabular-nums; }
 figcaption { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .title { font-weight: 600; }
 .unit { color: var(--text-muted); font-weight: 400; }
-.readout { display: flex; gap: 12px; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.readout { display: flex; flex-wrap: wrap; gap: 4px 12px; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
 .readout strong { color: var(--text-primary); }
-.legend { list-style: none; margin: 2px 0 0; padding: 0; display: flex; gap: 12px; color: var(--text-secondary); font-size: 12px; }
+.legend { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--text-secondary); font-size: 12px; }
 .key { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 4px; border-radius: 1px; }
 .line-key { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-right: 4px; }
 .key.s1, .line-key.s1 { background: var(--series-1); }
 .key.s2, .line-key.s2 { background: var(--series-2); }
+.key.s3, .line-key.s3 { background: var(--series-3); }
+.key.s4, .line-key.s4 { background: var(--series-4); }
+.key.s5, .line-key.s5 { background: var(--series-5); }
 svg { display: block; width: 100%; height: auto; touch-action: none; }
 svg:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; border-radius: 4px; }
 .grid { stroke: var(--grid); stroke-width: 1; }
@@ -284,6 +331,9 @@ svg:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; bor
 .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .series.s1 { stroke: var(--series-1); }
 .series.s2 { stroke: var(--series-2); }
+.series.s3 { stroke: var(--series-3); }
+.series.s4 { stroke: var(--series-4); }
+.series.s5 { stroke: var(--series-5); }
 .crosshair { stroke: var(--text-secondary); stroke-width: 1; pointer-events: none; }
 `
 

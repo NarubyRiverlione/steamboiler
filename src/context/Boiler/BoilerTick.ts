@@ -15,25 +15,18 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   // console.log("5")
   let newWaterVolume = boilerState.waterVolume
   let energyChange = 0
+  let drained = 0
   // let removedSteamMass = 0
   // let steamRemovalEnergyLoss = 0
 
-  // Handle filling and draining
-  if (boilerState.fillValveOpen) {
-    const fillAmount = CstBoiler.TotalVolume * CstBoiler.FillingRate * CstSimulation.DeltaTime
-    newWaterVolume = Math.min(CstBoiler.TotalVolume, newWaterVolume + fillAmount)
-
-    // Adding water doesn't change total energy, just adds mass
-    // The temperature will naturally decrease as the same energy is distributed
-    // over a larger mass of water
-  }
-
+  // Handle draining; the boiler is fed only by the condensation pump
   if (boilerState.drainValveOpen) {
     const drainAmount = CstBoiler.TotalVolume * CstBoiler.DrainingRate * CstSimulation.DeltaTime
 
     // Calculate the ratio of water being drained
     const originalVolume = boilerState.waterVolume
     newWaterVolume = Math.max(0, newWaterVolume - drainAmount)
+    drained = originalVolume - newWaterVolume
 
     if (originalVolume > 0) {
       // Temperature doesn't change when draining (assuming uniform temperature)
@@ -154,6 +147,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   return {
     ...boilerState,
     waterVolume: newWaterVolume,
+    drainedTotal: boilerState.drainedTotal + drained,
     temperature: newTemperature,
     pressure: newPressure, //averageTwo(boilerState.pressure, newPressure),
     steamMass: newSteamMass, // averageTwo(boilerState.steamMass, newSteamMass),

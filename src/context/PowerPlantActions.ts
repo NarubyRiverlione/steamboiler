@@ -3,7 +3,6 @@ type PowerPlantAction =
   // Boiler Actions
   | { type: "INCREASE_GAS_FLOW"; amount: number }
   | { type: "DECREASE_GAS_FLOW"; amount: number }
-  | { type: "TOGGLE_FILL_VALVE" }
   | { type: "TOGGLE_DRAIN_VALVE" }
   // Turbine RPM Control Actions
   | { type: "TOGGLE_MAIN_STEAM_VALVE" }
@@ -18,5 +17,7 @@ type PowerPlantAction =
   | { type: "SET_SJAE_VALVE_POSITION"; payload: { sjaeValvePosition: number } }
   | { type: "SET_RECIRCULATION_PUMP_VALVE_POSITION"; payload: { recirculationPumpValvePosition: number } }
   | { type: "SET_CONDENSATION_PUMP_VALVE_POSITION"; payload: { condensationPumpValvePosition: number } }
+  | { type: "SET_MAKEUP_VALVE_POSITION"; payload: { makeupValvePosition: number } }
+  | { type: "SET_REJECT_VALVE_POSITION"; payload: { rejectValvePosition: number } }
 
 export default PowerPlantAction

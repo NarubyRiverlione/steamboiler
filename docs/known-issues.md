@@ -9,6 +9,15 @@
   to 5% at 11.6 bar drops the boiler to 1 bar / 100°C within 3 sim-minutes; the water then drains
   (~23 L/s) while RPM stalls near 18 and the condenser hotwell does not refill. Generator sync
   (3600 ±2 RPM) is not reachable from a cold start.
+- **Steam flow switches between 0 and maximum (#11).** With the bypass at only 10% (`bypass-loop`)
+  or the turbine valve at 5% (`startup-cold`), steam flow, boiler steam mass and energy delta jump
+  between 0 and ~200 kg/s, and boiler pressure falls to 1 bar within minutes.
+- **Condensation creates water (#10).** In `bypass-loop` the loop total (makeup, reject and drain
+  undone) climbs from 60 t to ~86 t in an hour; the operator rejects water almost continuously to
+  hold the hotwell. `CalculateCondensationFlow` also returns the full pump volume from an empty
+  hotwell.
+- **Hotwell near 100°C.** Condensate enters the hotwell at the condensation outlet temperature,
+  which follows the bypass steam temperature, so the hotwell runs at ~99°C under vacuum.
 - **Condensation pump overfills the boiler.** With the condensation pump valve at 50% the hotwell
   empties into the boiler, which rises past its 100,000 L total volume (137,000 L after 18 min) with
   70 t of steam mass.

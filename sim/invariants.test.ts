@@ -13,6 +13,7 @@ const expectedFailures: Record<string, string> = {
   "turbine-sync / water is never created or lost": "#10, #20",
   "turbine-sync / temperature within design temperature": "#9",
   "cooldown / natural cooldown never heats": "#8",
+  "bypass-loop / water is never created or lost": "#10",
 }
 
 describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario) => {
@@ -83,6 +84,20 @@ describe("invariant checks", () => {
       const lose = (kg: number) => boiler({ waterVolume: base.Boiler.waterVolume - kg })
       expect(check(name, [sample(0, (s) => s), sample(10, lose(start * 0.0009))])).toEqual([])
       expect(check(name, [sample(0, (s) => s), sample(10, lose(start * 0.002))])).toHaveLength(1)
+    })
+
+    test("counts makeup, reject and drain as boundary flows, not created or lost water", () => {
+      const boundary = (s: PowerPlantState) => ({
+        ...s,
+        Boiler: { ...s.Boiler, waterVolume: s.Boiler.waterVolume - 300, drainedTotal: 300 },
+        Condenser: {
+          ...s.Condenser,
+          hotwellWaterVolume: s.Condenser.hotwellWaterVolume + 1000 - 200,
+          makeupTotal: 1000,
+          rejectTotal: 200,
+        },
+      })
+      expect(check(name, [sample(0, (s) => s), sample(10, boundary)])).toEqual([])
     })
 
     test("allows 2% of the steam that left the boiler", () => {

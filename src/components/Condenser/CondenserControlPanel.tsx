@@ -8,6 +8,10 @@ const {
     RecirculationPump_Step,
     CondensationPump_Step,
     RecirculationPump_MaxFlowRate,
+    Makeup_Step,
+    Makeup_MaxFlowRate,
+    Reject_Step,
+    Reject_MaxFlowRate,
   },
 } = CstSimulation
 
@@ -20,6 +24,8 @@ const CondenserControlPanel = () => {
         sjaeValvePosition,
         recirculationPumpValvePosition,
         condensationPumpValvePosition,
+        makeupValvePosition,
+        rejectValvePosition,
       },
     },
     toggleAirExtractionPump,
@@ -27,6 +33,8 @@ const CondenserControlPanel = () => {
     adjustSjaeValvePosition,
     adjustRecirculationPumpValvePosition,
     adjustCondensationPumpValvePosition,
+    adjustMakeupValvePosition,
+    adjustRejectValvePosition,
   } = usePowerPlant()
 
   const recirculationPumpFlowRate = recirculationPumpValvePosition * RecirculationPump_MaxFlowRate
@@ -85,6 +93,26 @@ const CondenserControlPanel = () => {
             Position={condensationPumpValvePosition }
             Step={CondensationPump_Step }
             cbAdjust={adjustCondensationPumpValvePosition}
+          />
+        </div>
+      </div>
+      {/* Hotwell makeup (in from outside the loop) and reject (out to storage) */}
+      <div className="component-controls">
+        <h3>Hotwell Makeup &amp; Reject</h3>
+        <div className="control-section">
+          <ValveSlider
+            Label="Makeup:"
+            Position={makeupValvePosition}
+            Value={`${(makeupValvePosition * Makeup_MaxFlowRate).toFixed(1)} l/s`}
+            Step={Makeup_Step}
+            cbAdjust={adjustMakeupValvePosition}
+          />
+          <ValveSlider
+            Label="Reject:"
+            Position={rejectValvePosition}
+            Value={`${(rejectValvePosition * Reject_MaxFlowRate).toFixed(1)} l/s`}
+            Step={Reject_Step}
+            cbAdjust={adjustRejectValvePosition}
           />
         </div>
       </div>

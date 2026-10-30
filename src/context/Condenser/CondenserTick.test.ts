@@ -8,12 +8,18 @@ import { CondenserState } from "../PowerPlantState"
 const initialState: CondenserState = {
   steamMass: 0,
   hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
+  hotwellTemperature: CstSimulation.CstCondenser.HotwellStartTemperature,
+  makeupValvePosition: 0,
+  rejectValvePosition: 0,
+  makeupTotal: 0,
+  rejectTotal: 0,
   condensationPumpValvePosition: 0, // no feedwater pull-out
   recirculationPumpValvePosition: 1,
   intakeFlowRate: 0,
   pressure: CstSimulation.CstCondenser.OptimalPressure,
   deltaWaterVolume: 0,
   returnRate: 0,
+  condensationRate: 0,
   coolingRate: 0,
   isAirExtractionPumpEnabled: false,
   sjaeValvePosition: 0,
@@ -215,5 +221,18 @@ describe("CondenserTick", () => {
     // After all ticks, verify the final state is reasonable
     expect(state.hotwellWaterVolume).toBeGreaterThan(0)
     expect(state.steamMass).toBeGreaterThanOrEqual(0)
+  })
+
+  it("makeup and reject go into the totalizers and the hotwell", () => {
+    const noSteam = { flow: 0, temp: 0 }
+    const exhaust = { flow: 0, temp: 0, pressure: 0 }
+    const { DeltaTime, CstCondenser } = CstSimulation
+    const makeup = CondenserTick({ ...initialState, makeupValvePosition: 1 }, 1, noSteam, exhaust)
+    expect(makeup.makeupTotal).toBe(CstCondenser.Makeup_MaxFlowRate * DeltaTime)
+    expect(makeup.hotwellWaterVolume).toBe(initialState.hotwellWaterVolume + makeup.makeupTotal)
+
+    const reject = CondenserTick({ ...initialState, rejectValvePosition: 1 }, 1, noSteam, exhaust)
+    expect(reject.rejectTotal).toBe(CstCondenser.Reject_MaxFlowRate * DeltaTime)
+    expect(reject.hotwellWaterVolume).toBe(initialState.hotwellWaterVolume - reject.rejectTotal)
   })
 })

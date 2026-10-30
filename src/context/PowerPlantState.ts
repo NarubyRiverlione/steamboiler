@@ -9,21 +9,27 @@ export type BoilerState = {
   deltaSteamMass: number // kg/s generated steam
   potentialSteamGeneration: number // kg/s - Maximum potential steam generation rate
   energyDelta: number // kJ/s
-  fillValveOpen: boolean
   drainValveOpen: boolean
+  drainedTotal: number // liters drained since start (totalizer)
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)
   steamMass: number // kg
   hotwellWaterVolume: number
+  hotwellTemperature: number // Celsius
   intakeFlowRate: number // g/s Flow rate from turbine to condenser
   returnRate: number
+  condensationRate: number // l/s steam condensed into the hotwell
   coolingRate: number
   isAirExtractionPumpEnabled: boolean
   isSjaeEnabled: boolean
   sjaeValvePosition: number // 0-1 (0-100%) open
   recirculationPumpValvePosition: number // 0-1 (0-100%) open
   condensationPumpValvePosition: number // 0-1 (0-100%) open
+  makeupValvePosition: number // 0-1 (0-100%) open, water from outside into the hotwell
+  rejectValvePosition: number // 0-1 (0-100%) open, hotwell water out of the loop
+  makeupTotal: number // liters of makeup since start (totalizer)
+  rejectTotal: number // liters rejected since start (totalizer)
   deltaWaterVolume: number
 }
 export type TurbineState = {

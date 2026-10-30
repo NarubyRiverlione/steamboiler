@@ -19,6 +19,14 @@ const embedded = (html: string) => {
 describe("toReportHtml", () => {
   const html = toReportHtml(scenario, runScenario(scenario))
 
+  test("has a colour for every series of every panel", () => {
+    const most = Math.max(...panels.map((p) => p.series.length))
+    for (let i = 1; i <= most; i++) {
+      expect(html).toContain(`--series-${String(i)}:`)
+      expect(html).toContain(`.series.s${String(i)} {`)
+    }
+  })
+
   test("is self-contained: no external scripts, stylesheets or images", () => {
     expect(html).not.toMatch(/<script[^>]+src=/)
     expect(html).not.toMatch(/<link[^>]+stylesheet/)
@@ -27,7 +35,7 @@ describe("toReportHtml", () => {
 
   test("has one panel per definition, grouped by subsystem", () => {
     expect(html.match(/<figure class="panel"/g)).toHaveLength(panels.length)
-    for (const group of ["Boiler", "Turbine", "Condenser"]) expect(html).toContain(`<h2>${group}</h2>`)
+    for (const group of ["Boiler", "Turbine", "Condenser", "Loop"]) expect(html).toContain(`<h2>${group}</h2>`)
     for (const title of [
       "Temperature",
       "RPM",
