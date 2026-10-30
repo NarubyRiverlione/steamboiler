@@ -39,16 +39,16 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 
 **PID controller** (hold mode): Kp = 0.001 (current error), Ki = 0.0001 (accumulated error, removes steady-state error), Kd = 0.0005 (error rate, damping).
 
-**Electricity** is only generated at or very near maximum RPM (99% threshold), as turbines must run at rated speed to generate.
+**Electricity** is only generated with the breaker closed at sync speed (3000 RPM ±2), as the generator must match the 50 Hz grid. `MaxRPM` (3300) is the overspeed limit and caps the RPM setpoint; the setpoint defaults to sync speed.
 
 Calculations: `src/utils/turbineCalculations.ts`; tick: `src/context/Turbine/TurbineTick.ts`.
 
 ## Phase 4: generator breaker
 
-- The breaker can only be closed when the turbine is at rated speed (3600 RPM)
+- The breaker can only be closed at sync speed: 3000 RPM ±2 (`SyncRPM` ± `BreakerRPMMargin`, 50 Hz grid)
 - Electricity is only produced while the breaker is closed
-- If the steam flow cannot hold 3600 RPM with the breaker closed, the breaker opens automatically
-- With the breaker closed, more steam flow gives more electricity while RPM stays at 3600
+- If the steam flow cannot hold sync speed with the breaker closed, the breaker opens automatically
+- With the breaker closed, more steam flow gives more electricity while RPM stays at sync speed
 - UI: `GeneratorBreakerControl.tsx`
 
 ## Phase 5: synchronisation

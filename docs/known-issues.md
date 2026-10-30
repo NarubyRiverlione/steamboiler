@@ -8,7 +8,7 @@
 - **Opening the turbine valve collapses the boiler.** In `startup-cold`, cracking the turbine valve
   to 5% at 11.6 bar drops the boiler to 1 bar / 100°C within 3 sim-minutes; the water then drains
   (~23 L/s) while RPM stalls near 18 and the condenser hotwell does not refill. Generator sync
-  (3600 ±2 RPM) is not reachable from a cold start.
+  (3000 ±2 RPM) is not reachable from a cold start.
 - **Steam flow switches between 0 and maximum (#11).** With the bypass at only 10% (`bypass-loop`)
   or the turbine valve at 5% (`startup-cold`), steam flow, boiler steam mass and energy delta jump
   between 0 and ~200 kg/s, and boiler pressure falls to 1 bar within minutes.

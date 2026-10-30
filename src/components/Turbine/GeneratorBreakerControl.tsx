@@ -1,6 +1,7 @@
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import Indicator from "../Indicator"
+import { isAtSyncSpeed } from "../../utils/turbineCalculations"
 
 const { CstTurbine } = CstSimulation
 
@@ -12,13 +13,12 @@ const GeneratorBreakerControl = () => {
     toggleGeneratorBreaker,
   } = usePowerPlant()
 
-  // Check if RPM is within the acceptable range to close the breaker
-  const rpmDifference = Math.abs(rpm - CstTurbine.MaxRPM);
-  const canCloseBreaker = rpmDifference <= CstTurbine.BreakerRPMMargin;
+  // Check if RPM is within the margin of sync speed to close the breaker
+  const canCloseBreaker = isAtSyncSpeed(rpm)
   
   // Calculate RPM range for display
-  const minRPM = CstTurbine.MaxRPM - CstTurbine.BreakerRPMMargin;
-  const maxRPM = CstTurbine.MaxRPM + CstTurbine.BreakerRPMMargin;
+  const minRPM = CstTurbine.SyncRPM - CstTurbine.BreakerRPMMargin;
+  const maxRPM = CstTurbine.SyncRPM + CstTurbine.BreakerRPMMargin;
 
   return (
     <div className="component-controls">
@@ -61,7 +61,7 @@ const GeneratorBreakerControl = () => {
                 backgroundColor: canCloseBreaker ? '#28a745' : '#dc3545'
               }}
             ></div>
-            <div className="rpm-gauge-target" style={{ left: `${String((CstTurbine.MaxRPM / CstTurbine.MaxRPM) * 100)}%` }}></div>
+            <div className="rpm-gauge-target" style={{ left: `${String((CstTurbine.SyncRPM / CstTurbine.MaxRPM) * 100)}%` }}></div>
             <div className="rpm-gauge-range" style={{ 
               left: `${String((minRPM / CstTurbine.MaxRPM) * 100)}%`,
               width: `${String(((maxRPM - minRPM) / CstTurbine.MaxRPM) * 100)}%`

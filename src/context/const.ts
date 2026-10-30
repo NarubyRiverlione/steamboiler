@@ -59,9 +59,10 @@ export const CstSimulation = {
     steamOutflowTemperature: 40, // Celsius (typical 35-45C)
 
     // New constants for Phase 3
-    MaxRPM: 3600, // Maximum RPM (typical for 60Hz generators)
+    SyncRPM: 3000, // Sync speed: generator matches the 50 Hz grid
+    MaxRPM: 3300, // Overspeed limit (110% of sync speed)
     MinRPM: 0, // Minimum RPM
-    DefaultRPMSetPoint: 3000, // Default setpoint
+    DefaultRPMSetPoint: 3000, // Default setpoint = sync speed
     RPMStep: 50, // Increment/decrement step for RPM setpoint
 
     // Inertia modeling constants
@@ -75,7 +76,7 @@ export const CstSimulation = {
     PID_Kd: 0.0005, // Derivative gain
 
     // Phase 4: Generator breaker constants
-    BreakerRPMMargin: 2, // Allow ±2 RPM from MaxRPM for breaker operation
+    BreakerRPMMargin: 2, // Allow ±2 RPM from SyncRPM for breaker operation
   },
 }
 

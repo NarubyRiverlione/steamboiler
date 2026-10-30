@@ -3,6 +3,7 @@ import {
   calculateElectricityOutput,
   calculateRPM,
   calculateValveAdjustment,
+  isAtSyncSpeed,
 } from "../../utils/turbineCalculations"
 import { TurbineState } from "../PowerPlantState"
 
@@ -29,9 +30,7 @@ function TurbineTick(
   const newRPM = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, boilerPressure)
   
   // Auto-open breaker if RPM goes outside acceptable margin with breaker closed
-  const rpmDifference = Math.abs(newRPM - CstSimulation.CstTurbine.MaxRPM);
-  const generatorBreaker = turbineState.generatorBreaker && 
-                          rpmDifference <= CstSimulation.CstTurbine.BreakerRPMMargin;
+  const generatorBreaker = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
   
   // Calculate electricity output with updated breaker status
   const newElectricityOutput = calculateElectricityOutput(

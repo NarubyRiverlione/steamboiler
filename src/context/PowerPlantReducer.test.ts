@@ -118,6 +118,8 @@ describe("powerPlantReducer", () => {
     test("RPM setpoint adjusts within MinRPM..MaxRPM", () => {
       const adjust = (rpmAdjustment: number, state?: PowerPlantState) =>
         reduce({ type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment } }, state)
+      expect(base.Turbine.rpmSetPoint).toBe(CstTurbine.SyncRPM)
+      expect(CstTurbine.MaxRPM).toBeGreaterThan(CstTurbine.SyncRPM)
       expect(adjust(100).Turbine.rpmSetPoint).toBe(CstTurbine.DefaultRPMSetPoint + 100)
       expect(adjust(1e6).Turbine.rpmSetPoint).toBe(CstTurbine.MaxRPM)
       expect(adjust(-1e6).Turbine.rpmSetPoint).toBe(CstTurbine.MinRPM)
@@ -133,17 +135,20 @@ describe("powerPlantReducer", () => {
       const atRpm = (rpm: number): PowerPlantState => ({ ...base, Turbine: { ...base.Turbine, rpm } })
       const toggle = (state: PowerPlantState) => reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, state).Turbine
 
-      test("closes only within the RPM margin of MaxRPM", () => {
+      test("closes only within the RPM margin of sync speed", () => {
         const margin = CstTurbine.BreakerRPMMargin
-        expect(toggle(atRpm(CstTurbine.MaxRPM)).generatorBreaker).toBe(true)
-        expect(toggle(atRpm(CstTurbine.MaxRPM - margin)).generatorBreaker).toBe(true)
-        expect(toggle(atRpm(CstTurbine.MaxRPM + margin)).generatorBreaker).toBe(true)
-        expect(toggle(atRpm(CstTurbine.MaxRPM - margin - 1)).generatorBreaker).toBe(false)
+        expect(CstTurbine.SyncRPM).toBe(3000)
+        expect(toggle(atRpm(CstTurbine.SyncRPM)).generatorBreaker).toBe(true)
+        expect(toggle(atRpm(CstTurbine.SyncRPM - margin)).generatorBreaker).toBe(true)
+        expect(toggle(atRpm(CstTurbine.SyncRPM + margin)).generatorBreaker).toBe(true)
+        expect(toggle(atRpm(CstTurbine.SyncRPM - margin - 1)).generatorBreaker).toBe(false)
+        expect(toggle(atRpm(CstTurbine.SyncRPM + margin + 1)).generatorBreaker).toBe(false)
+        expect(toggle(atRpm(CstTurbine.MaxRPM)).generatorBreaker).toBe(false)
         expect(toggle(atRpm(0)).generatorBreaker).toBe(false)
       })
 
       test("opens when closed", () => {
-        const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, atRpm(CstTurbine.MaxRPM))
+        const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, atRpm(CstTurbine.SyncRPM))
         expect(toggle(closed).generatorBreaker).toBe(false)
       })
     })

@@ -31,15 +31,15 @@ describe("TurbineTick", () => {
     })
   })
   
-  // Test with RPM at max
-  it("should generate electricity when RPM is at max", () => {
+  // Test with RPM at sync speed
+  it("should generate electricity when RPM is at sync speed", () => {
     const position = 0.5 // 50% valve position
     const steamFlow = position * CstSimulation.CstTurbine.MaxSteamRemovalRate
     const expectPower = CstSimulation.CstTurbine.steamToElectricityEfficiency * steamFlow
     
     const highRpmState: TurbineState = {
       ...initialState,
-      rpm: CstSimulation.CstTurbine.MaxRPM,
+      rpm: CstSimulation.CstTurbine.SyncRPM,
       generatorBreaker: true,
     }
     

@@ -2,10 +2,14 @@ import { CstSimulation } from "../context/const"
 
 const { CstTurbine } = CstSimulation
 
+// True when the turbine runs within the breaker margin of sync speed
+export const isAtSyncSpeed = (rpm: number): boolean =>
+  Math.abs(rpm - CstTurbine.SyncRPM) <= CstTurbine.BreakerRPMMargin
+
 /**
  * Calculates the electricity output based on turbine valve position, RPM, and generator breaker status.
  * For Phase 4, electricity is only produced when the generator breaker is closed and RPM is within
- * the acceptable margin of the rated speed.
+ * the acceptable margin of sync speed.
  * 
  * @param turbineValvePosition - The position of the turbine valve (0-1)
  * @param rpm - The current RPM of the turbine
@@ -19,10 +23,8 @@ export function calculateElectricityOutput(
 ): number {
   // Only generate electricity when:
   // 1. The generator breaker is closed
-  // 2. The turbine RPM is within the acceptable margin of the rated speed
-  const rpmDifference = Math.abs(rpm - CstTurbine.MaxRPM);
-  
-  if (generatorBreaker && rpmDifference <= CstTurbine.BreakerRPMMargin) {
+  // 2. The turbine RPM is within the acceptable margin of sync speed
+  if (generatorBreaker && isAtSyncSpeed(rpm)) {
     const steamIntake = turbineValvePosition * CstTurbine.MaxSteamRemovalRate
     const electricityOutput = steamIntake * CstTurbine.steamToElectricityEfficiency
     return electricityOutput

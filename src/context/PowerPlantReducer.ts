@@ -1,5 +1,6 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy } from "../utils/boilerCalculations"
+import { isAtSyncSpeed } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -142,12 +143,11 @@ const handlers: { [T in ActionType]: Handler<T> } = {
       rpmSetPoint: clamp(state.Turbine.rpmSetPoint + payload.rpmAdjustment, CstTurbine.MinRPM, CstTurbine.MaxRPM),
     }),
   TOGGLE_HOLD_MODE: (state) => withTurbine(state, { holdMode: !state.Turbine.holdMode }),
-  // Allow closing the breaker if RPM is within the acceptable margin; toggling a closed breaker opens it
+  // Allow closing the breaker if RPM is within the margin of sync speed; toggling a closed breaker opens it
   TOGGLE_GENERATOR_BREAKER: (state) =>
     withTurbine(state, {
       generatorBreaker:
-        !state.Turbine.generatorBreaker &&
-        Math.abs(state.Turbine.rpm - CstTurbine.MaxRPM) <= CstTurbine.BreakerRPMMargin,
+        !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm),
     }),
   //#endregion
 }
