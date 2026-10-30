@@ -11,19 +11,19 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 
 | # | Ticket | Priority | Status | Unblocks |
 | - | ------ | -------- | ------ | -------- |
-| 1 | [#17](https://github.com/NarubyRiverlione/steamboiler/issues/17) Move turbine PID state into TurbineState | P1 | ready-for-agent | [#7](https://github.com/NarubyRiverlione/steamboiler/issues/7) |
+| 1 | [#7](https://github.com/NarubyRiverlione/steamboiler/issues/7) Truly cold start state and state snapshots | P1 | ready-for-agent | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) |
 | 2 | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) Steam generation by energy balance | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#23](https://github.com/NarubyRiverlione/steamboiler/issues/23) |
 | 3 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P2 | needs-info | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
 | 4 | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) Verify and fix steam flow units | P2 | ready-for-agent | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) |
 | 5 | [#20](https://github.com/NarubyRiverlione/steamboiler/issues/20) Turbine exhaust steam disappears before the condenser | P2 | ready-for-agent |  |
 | 6 | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) Steam table is wrong at high pressure | P2 | needs-triage | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) |
 | 7 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | needs-info |  |
+| 8 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 | needs-triage |  |
 
 ## Blocked
 
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
-| 8 | [#7](https://github.com/NarubyRiverlione/steamboiler/issues/7) Truly cold start state and state snapshots | P1 | ready-for-agent | [#17](https://github.com/NarubyRiverlione/steamboiler/issues/17) |
 | 9 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | needs-info | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) |
 | 10 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | needs-info | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) |
 | 11 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | needs-info | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) |
