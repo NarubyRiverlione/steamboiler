@@ -11,7 +11,7 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 
 | # | Ticket | Priority | Status | Unblocks |
 | - | ------ | -------- | ------ | -------- |
-| 1 | [#17](https://github.com/NarubyRiverlione/steamboiler/issues/17) Move turbine PID state into TurbineState | P1 | needs-triage | [#7](https://github.com/NarubyRiverlione/steamboiler/issues/7) |
+| 1 | [#17](https://github.com/NarubyRiverlione/steamboiler/issues/17) Move turbine PID state into TurbineState | P1 | ready-for-agent | [#7](https://github.com/NarubyRiverlione/steamboiler/issues/7) |
 | 2 | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) Steam generation by energy balance | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#23](https://github.com/NarubyRiverlione/steamboiler/issues/23) |
 | 3 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P2 | needs-info | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
 | 4 | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) Verify and fix steam flow units | P2 | ready-for-agent | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) |
