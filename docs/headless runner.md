@@ -200,7 +200,5 @@ become safe to attempt.
 ## Known wrinkles
 
 - Driving `PowerPlantReducer` from Node works (verified in step 2).
-- Hold-mode PID state is module-global in `TurbineTick.ts`, so hold-mode scenarios are not
-  reproducible across runs in one process until it moves into `TurbineState`.
 - Scenario actions are timed, not conditional: an action the reducer refuses (e.g.
   `TOGGLE_MAIN_STEAM_VALVE` below 10 bar) is silently a no-op. Assert the effect in tests.

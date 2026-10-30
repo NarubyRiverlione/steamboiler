@@ -95,6 +95,29 @@ describe("firstTimeWhere", () => {
   })
 })
 
+describe("hold mode", () => {
+  // Heat up, roll the turbine, then let the hold-mode PID drive the turbine valve. The turbine only
+  // reaches ~30 rpm today (#18), so a set point of 20 rpm keeps the PID off its valve limits.
+  const holdModeRun: Scenario = {
+    name: "test-hold-mode",
+    description: "Turbine rolling in hold mode at a 20 rpm set point",
+    duration: TurbineValveOpenAt + 300,
+    sampleEvery: 10,
+    initial: makeInitialState(20),
+    actions: [
+      ...turbineStart.actions,
+      { at: TurbineValveOpenAt + 5, action: { type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment: -2980 } } },
+      { at: TurbineValveOpenAt + 10, action: { type: "TOGGLE_HOLD_MODE" } },
+    ],
+  }
+
+  test("replays identically when run twice in one process", () => {
+    const first = runScenario(holdModeRun)
+    expect(first.at(-1)?.state.Turbine.pidIntegralError).not.toBe(0) // the PID really ran
+    expect(runScenario(holdModeRun)).toEqual(first)
+  })
+})
+
 describe("makeInitialState", () => {
   test("defaults to the UI's warm start", () => {
     expect(makeInitialState()).toEqual(initialPowerPlantState)

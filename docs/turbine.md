@@ -37,7 +37,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 | FrictionFactor | 0.02 | friction rises with RPM and gives a natural equilibrium |
 | TorqueFactor | 0.05 | converts steam flow and pressure to torque |
 
-**PID controller** (hold mode): Kp = 0.001 (current error), Ki = 0.0001 (accumulated error, removes steady-state error), Kd = 0.0005 (error rate, damping).
+**PID controller** (hold mode): Kp = 0.001 (current error), Ki = 0.0001 (accumulated error, removes steady-state error), Kd = 0.0005 (error rate, damping). Its memory (`pidIntegralError`, `pidPreviousError`) lives in `TurbineState`, so a tick depends on its input state alone; it carries over when hold mode is toggled.
 
 **Electricity** is only generated with the breaker closed at sync speed (3000 RPM ±2), as the generator must match the 50 Hz grid. `MaxRPM` (3300) is the overspeed limit and caps the RPM setpoint; the setpoint defaults to sync speed.
 

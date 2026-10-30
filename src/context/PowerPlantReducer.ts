@@ -54,6 +54,8 @@ export const makeInitialState = (temperature: number = CstBoiler.StartTemperatur
     rpmSetPoint: CstTurbine.DefaultRPMSetPoint,
     holdMode: false,
     generatorBreaker: false, // Phase 4: Initially open
+    pidIntegralError: 0,
+    pidPreviousError: 0,
   },
 })
 

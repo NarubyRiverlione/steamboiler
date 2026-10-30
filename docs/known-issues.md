@@ -21,10 +21,6 @@
 - **Condensation pump overfills the boiler.** With the condensation pump valve at 50% the hotwell
   empties into the boiler, which rises past its 100,000 L total volume (137,000 L after 18 min) with
   70 t of steam mass.
-- **Turbine PID state is module-global.** `integralError` / `previousError` in
-  `src/context/Turbine/TurbineTick.ts` live outside `PowerPlantState`, so hold-mode runs are not
-  pure: two runs in the same process (or a UI reload without page refresh) influence each other.
-  Move them into `TurbineState` before writing hold-mode scenarios.
 - `StartTemperature: 250` in `src/context/const.ts` is a hardcoded warm start, a workaround for the slow
   feedback loop. The runner plan replaces it with snapshots; headless scenarios already start cold via
   `makeInitialState(20)`.

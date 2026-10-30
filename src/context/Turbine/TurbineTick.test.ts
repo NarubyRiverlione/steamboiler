@@ -16,6 +16,8 @@ describe("TurbineTick", () => {
     rpmSetPoint: CstSimulation.CstTurbine.DefaultRPMSetPoint,
     holdMode: false,
     generatorBreaker: false,
+    pidIntegralError: 0,
+    pidPreviousError: 0,
   }
   
   const valvePositions = [0, 0.25, 0.5, 0.75, 1]
@@ -78,6 +80,38 @@ describe("TurbineTick", () => {
     // Assert
     // In hold mode, the valve position should be adjusted to reach the setpoint
     expect(result.turbineValvePosition).not.toBe(0.3)
+  })
+
+  describe("hold-mode PID memory", () => {
+    const holding: TurbineState = {
+      ...initialState,
+      rpm: 1000,
+      rpmSetPoint: 2000,
+      holdMode: true,
+      mainSteamValve: true,
+      turbineSteamFlowOut: 20,
+    }
+
+    it("writes the updated PID errors into the returned state", () => {
+      const result = TurbineTick(holding, 0.3, boilerPressure)
+      const error = holding.rpmSetPoint - result.rpm
+      expect(result.pidPreviousError).toBe(error)
+      expect(result.pidIntegralError).toBe(Math.min(1, error * CstSimulation.DeltaTime))
+    })
+
+    it("passes the PID errors through untouched outside hold mode", () => {
+      const memory = { pidIntegralError: 0.4, pidPreviousError: 123 }
+      const result = TurbineTick({ ...holding, ...memory, holdMode: false }, 0.3, boilerPressure)
+      expect(result).toMatchObject(memory)
+    })
+
+    it("depends on its input alone: the same state gives the same tick", () => {
+      // Small error so the integral stays below its ±1 clamp and leftover memory would show
+      const nearSetPoint: TurbineState = { ...holding, rpm: 2000, rpmSetPoint: 2001 }
+      const first = TurbineTick(nearSetPoint, 0.3, boilerPressure)
+      TurbineTick(first, 0.3, boilerPressure) // a tick in between must not leak into the next call
+      expect(TurbineTick(nearSetPoint, 0.3, boilerPressure)).toEqual(first)
+    })
   })
   
   it("should gradually slow down when steam flow is cut to zero", () => {

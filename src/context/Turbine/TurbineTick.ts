@@ -7,10 +7,6 @@ import {
 } from "../../utils/turbineCalculations"
 import { TurbineState } from "../PowerPlantState"
 
-// PID controller state (persists between function calls)
-let integralError = 0
-let previousError = 0
-
 /**
  * turbineTick - Updates the turbine state for each simulation tick.
  * Phase 4 implementation: Includes RPM calculation, automatic valve control,
@@ -40,37 +36,38 @@ function TurbineTick(
   )
 
   // Handle automatic valve control in hold mode
-  const newTurbineValvePosition = updateTurbineValve(turbineState, newRPM)
+  const valveControl = updateTurbineValve(turbineState, newRPM)
 
   return {
     ...turbineState,
+    ...valveControl,
     electricOutput: newElectricityOutput,
     rpm: newRPM,
-    turbineValvePosition: newTurbineValvePosition,
     generatorBreaker, // Update breaker status
   }
 }
 
-function updateTurbineValve(turbineState: TurbineState, newRPM: number) {
-  const { holdMode, mainSteamValve, turbineValvePosition } = turbineState
-  // only adjust when in Hold mode (and there Main Steam Valve is open)
-  if (!holdMode || !mainSteamValve) return turbineValvePosition
+type ValveControl = Pick<TurbineState, "turbineValvePosition" | "pidIntegralError" | "pidPreviousError">
+
+// Hold-mode PID: the controller memory lives in the turbine state, so a tick depends on its input alone
+function updateTurbineValve(turbineState: TurbineState, newRPM: number): ValveControl {
+  const { holdMode, mainSteamValve, turbineValvePosition, pidIntegralError, pidPreviousError } = turbineState
+  // only adjust when in Hold mode (and there Main Steam Valve is open); the PID memory carries over
+  if (!holdMode || !mainSteamValve) return { turbineValvePosition, pidIntegralError, pidPreviousError }
 
   const { valveAdjustment, newIntegralError, newPreviousError } = calculateValveAdjustment(
     newRPM,
     turbineState.rpmSetPoint,
-    previousError,
-    integralError,
+    pidPreviousError,
+    pidIntegralError,
     CstSimulation.DeltaTime,
   )
 
-  // Update PID state
-  integralError = newIntegralError
-  previousError = newPreviousError
-
-  // Adjust valve position
-  const newTurbineValvePosition = Math.max(0, Math.min(1, turbineValvePosition + valveAdjustment))
-  return newTurbineValvePosition
+  return {
+    turbineValvePosition: Math.max(0, Math.min(1, turbineValvePosition + valveAdjustment)),
+    pidIntegralError: newIntegralError,
+    pidPreviousError: newPreviousError,
+  }
 }
 
 export default TurbineTick
