@@ -239,7 +239,6 @@ function boilerReducer(state: BoilerState, action: BoilerAction): BoilerState {
       // Only perform expensive calculations if relevant state has changed
       if (
         state.gasFlow === 0 && 
-        !state.fillValveOpen && 
         !state.drainValveOpen && 
         state.mainSteamValvePosition === 0 &&
         Math.abs(state.temperature - 20) < 0.1

@@ -105,9 +105,7 @@ const startupCold: Scenario = {
   name: "startup-cold",
   duration: 3600, // sim-seconds
   actions: [
-    { at: 0,    action: { type: "SET_FILL_VALVE", open: true } },
-    { at: 300,  action: { type: "SET_FILL_VALVE", open: false } },
-    { at: 300,  action: { type: "SET_GAS_FLOW", value: 0.6 } },
+    { at: 0,    action: { type: "SET_GAS_FLOW", value: 0.6 } },
     { at: 1200, action: { type: "OPEN_MAIN_STEAM_VALVE" } },
     // ramp turbine valve 1%/s, sync generator at rated RPM, ...
   ],
@@ -121,7 +119,7 @@ use — which is what makes them a UX regression guard, not just a physics probe
 
 First scenarios to encode:
 
-- `startup-cold` — fill from empty, heat from 20°C, reach operating pressure
+- `startup-cold` — heat from 20°C, reach operating pressure
 - `startup-hot` — from a "hot standby" snapshot to full load
 - `steady-state` — hold at load for a sim-hour; nothing should drift
 - `bypass-transient` — open/close bypass at pressure; no unphysical spikes
