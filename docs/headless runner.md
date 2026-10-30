@@ -2,7 +2,7 @@
 
 ## Status
 
-Build steps 1–3 are done. `pnpm sim [scenario] [out.csv] [report.html]` (default `startup-cold`,
+Build steps 1–4 are done. `pnpm sim [scenario] [out.csv] [report.html]` (default `startup-cold`,
 `sim-out.csv`, `report.html`, both git-ignored) runs a named scenario through `powerPlantReducer`
 (`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV plus
 a self-contained HTML report in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`,
@@ -18,9 +18,22 @@ crosshair across all panels; dashed lines mark operator actions. On a headless m
 file is re-read per request, so re-run `pnpm sim` and refresh. `pnpm sim:view` does both.
 Note: the app lives at the repo root, so `sim/` is at the root, not under `steamboiler-web/`.
 
-`startup-cold` stops at "turbine valve cracked": the current physics cannot reach generator
-sync from cold (see [known-issues.md](known-issues.md)). Its vitest checks guard only what
-works today: 10 bar before 720 s, main steam valve opens, turbine turns, no NaN/Infinity.
+Scenarios (`pnpm sim <name>`); until snapshots exist (#7) each replays the earlier operator steps
+from `sim/scenarios/steps.ts`:
+
+| Scenario | Goal |
+| --- | --- |
+| `startup-cold` | cold → 10 bar, main steam valve open, turbine valve cracked |
+| `turbine-start` | turbine valve to 25%, turbine rolling |
+| `turbine-sync` | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21) |
+| `cooldown` | at pressure, then natural cooldown for 60 min |
+
+Goal checks live in `sim/scenario.test.ts`. `sim/invariants.ts` holds the physical invariants
+(no NaN, design pressure and temperature, water within capacity, water never created or lost,
+natural cooldown never heats and stops steam generation); `sim/invariants.test.ts` checks every
+invariant against every registered scenario, one test per pair. A pair that fails today is in its
+`expectedFailures` table as a `test.fails` naming the fixing ticket; when that ticket lands the test
+turns red, so remove the entry to make the pair a guard.
 
 ## Why
 
@@ -162,8 +175,7 @@ steamboiler-web/
 2. **Reducer-driven scenarios** — `Scenario` type, `applyScenario` via
    `PowerPlantReducer`, `startup-cold` encoded. (~1–2 hours)
 3. **HTML report** — self-contained `report.html` with time-series panels. (~2 hours)
-4. **First assertions** — `startup-cold` + `steady-state` expectations in vitest;
-   fix or delete the currently failing turbine test while there. (~1 hour)
+4. **First assertions** — scenario goals and invariants in vitest (done, #6).
 5. **Snapshots + overlay mode** — presets, A/B comparison runs. (later, as needed)
 
 Steps 1–4 are roughly an afternoon. After step 4 the project is unblocked: parameter

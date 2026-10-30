@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { firstTimeWhere, runScenario, Scenario } from "./scenario"
+import { scenarios } from "./scenarios"
+import { cooldown, CooldownDuration } from "./scenarios/cooldown"
 import { startupCold } from "./scenarios/startup-cold"
+import { AtPressure, TurbineValveOpenAt } from "./scenarios/steps"
+import { turbineStart } from "./scenarios/turbine-start"
+import { turbineSync } from "./scenarios/turbine-sync"
 import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
 
 const heatUp: Scenario = {
@@ -90,11 +95,60 @@ describe("startup-cold", () => {
     expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(720)
     expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(720)
   })
+})
 
-  test("stays physical: no NaN or infinite values", () => {
-    for (const { state } of samples)
-      for (const part of [state.Boiler, state.Turbine, state.Condenser])
-        for (const value of Object.values(part))
-          if (typeof value === "number") expect(Number.isFinite(value)).toBe(true)
+describe("turbine-start", () => {
+  const samples = runScenario(turbineStart)
+  const afterOpening = samples.filter((s) => s.time > TurbineValveOpenAt)
+
+  test("turbine keeps rolling after the valve opens", () => {
+    for (const { state } of afterOpening) expect(state.Turbine.rpm).toBeGreaterThan(0)
+  })
+
+  test("turbine speeds up after the valve opens", () => {
+    expect(afterOpening.at(-1)?.state.Turbine.rpm).toBeGreaterThan(afterOpening[0].state.Turbine.rpm)
+  })
+})
+
+describe("turbine-sync", () => {
+  const samples = runScenario(turbineSync)
+
+  test.fails("reaches sync speed (3000 rpm) (fails until #18, #21)", () => {
+    expect(firstTimeWhere(samples, (s) => Math.abs(s.Turbine.rpm - 3000) <= 2)).toBeDefined()
+  })
+
+  test.fails("generator breaker closes (fails until #18, #21)", () => {
+    expect(samples.at(-1)?.state.Turbine.generatorBreaker).toBe(true)
+  })
+})
+
+describe("cooldown", () => {
+  const samples = runScenario(cooldown)
+
+  test("is at main-steam-valve pressure (10 bar) when the gas goes off", () => {
+    expect(samples.find((s) => s.time === AtPressure)?.state.Boiler.pressure).toBeGreaterThan(10)
+  })
+
+  test("runs 60 min with gas off and all valves closed", () => {
+    const cooling = samples.filter((s) => s.time > AtPressure)
+    expect(cooling.at(-1)?.time).toBeGreaterThanOrEqual(AtPressure + CooldownDuration - 10)
+    for (const { state } of cooling) {
+      expect(state.Boiler.gasFlow).toBe(0)
+      expect(state.Turbine.mainSteamValve).toBe(false)
+      expect(state.Turbine.turbineValvePosition + state.Turbine.bypassValvePosition).toBe(0)
+      expect(state.Boiler.fillValveOpen || state.Boiler.drainValveOpen).toBe(false)
+    }
+  })
+
+  test("cools down", () => {
+    const start = samples.find((s) => s.time === AtPressure)?.state.Boiler.temperature ?? 0
+    expect(samples.at(-1)?.state.Boiler.temperature).toBeLessThan(start)
+  })
+})
+
+describe("scenario registry", () => {
+  test("registers every scenario under its own name", () => {
+    expect(Object.keys(scenarios)).toEqual(["startup-cold", "turbine-start", "turbine-sync", "cooldown"])
+    for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })
 })

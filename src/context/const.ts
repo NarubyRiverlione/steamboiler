@@ -14,6 +14,8 @@ export const CstSimulation = {
     GasChangeRateSlow: 250, // °C per second,
     PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
+    DesignPressure: 180, // bar, the boiler must never exceed it (see GLOSSARY.md)
+    DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
   },
 
   CstCondenser: {

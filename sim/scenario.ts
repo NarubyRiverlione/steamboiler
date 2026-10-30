@@ -3,13 +3,15 @@ import PowerPlantAction from "../src/context/PowerPlantActions"
 import PowerPlantState from "../src/context/PowerPlantState"
 import { initialPowerPlantState, powerPlantReducer } from "../src/context/PowerPlantReducer"
 
+export type ScenarioAction = { at: number; action: PowerPlantAction } // at: sim-seconds
+
 export type Scenario = {
   name: string
   description: string
   duration: number // sim-seconds
   sampleEvery: number // sim-seconds
   initial?: PowerPlantState // default: the UI's warm start
-  actions: { at: number; action: PowerPlantAction }[] // at: sim-seconds
+  actions: ScenarioAction[]
 }
 
 export type Sample = { time: number; state: PowerPlantState }

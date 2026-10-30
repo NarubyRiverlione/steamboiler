@@ -19,6 +19,11 @@
 - `StartTemperature: 250` in `src/context/const.ts` is a hardcoded warm start, a workaround for the slow
   feedback loop. The runner plan replaces it with snapshots; headless scenarios already start cold via
   `makeInitialState(20)`.
-- Boiling point uses a simplified power law above the steam table range.
+- **Steam table wrong at high pressure (#22).** `getBoilingPoint(180)` gives about 434°C instead of
+  357°C; the table lists saturated states past the critical point and extrapolates with a power law
+  above it. `CstBoiler.DesignTemperature` is therefore a constant, not derived from the table.
+- **Pressure rises during natural cooldown (#8).** In `cooldown`, with gas at 0 and every valve
+  closed, boiler pressure still climbs at times (5.3 → 6.4 bar at 1200 s), caught by the
+  "natural cooldown never heats" invariant.
 - Extreme temperatures and pressures, and rapid input changes, may behave unrealistically.
 - No historical data visualisation.
