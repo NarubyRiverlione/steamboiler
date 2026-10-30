@@ -1,7 +1,7 @@
 import { ScenarioAction } from "../scenario"
 
-// Operator steps shared by scenarios. Until #7 snapshots exist, a later scenario replays the
-// earlier steps to reach its start state.
+// Operator steps shared by scenarios. A later scenario either replays the earlier steps or starts
+// from a snapshot of them (see sim/snapshot-sources.ts) with its steps moved by `since`.
 
 export const StartGas = 2000 // liters/second during heat-up
 
@@ -26,6 +26,10 @@ export const openMainSteam: ScenarioAction[] = [
     action: { type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 0.05 } },
   },
 ]
+
+// The same steps timed from `start` instead of from the cold start, for a scenario starting from a snapshot taken at `start`
+export const since = (start: number, actions: ScenarioAction[]): ScenarioAction[] =>
+  actions.map((a) => ({ ...a, at: a.at - start }))
 
 // Turbine valve to 25% so the turbine rolls
 export const TurbineValveOpenAt = AtPressure + 20

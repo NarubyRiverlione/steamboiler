@@ -33,7 +33,7 @@ describe("bypass-loop setup", () => {
 
 describe("bypass-loop assertions", () => {
   test.fails("condensation pump never returns more than the hotwell holds (fails until #10)", () => {
-    const empty = makeInitialState(20).Condenser
+    const empty = makeInitialState().Condenser
     const pumping = { ...empty, hotwellWaterVolume: 0, condensationPumpValvePosition: 1 }
     const next = CondenserTick(pumping, 1, { flow: 0, temp: 0 }, { flow: 0, temp: 0, pressure: 0 })
     expect(next.returnRate).toBe(0)
@@ -69,7 +69,7 @@ describe("bypass-loop assertions", () => {
 })
 
 describe("loopOperator", () => {
-  const cold = makeInitialState(20)
+  const cold = makeInitialState()
   const withBoiler = (patch: Partial<PowerPlantState["Boiler"]>): PowerPlantState => ({
     ...cold,
     Boiler: { ...cold.Boiler, ...patch },

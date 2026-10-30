@@ -10,7 +10,7 @@ export type Scenario = {
   description: string
   duration: number // sim-seconds
   sampleEvery: number // sim-seconds
-  initial?: PowerPlantState // default: the UI's warm start
+  initial?: PowerPlantState // default: the cold plant; or loadSnapshot(name) to start mid-way
   actions: ScenarioAction[]
   // Feedback control: called every tick after the timed actions, its actions go through the reducer.
   // Must decide from state and time alone so runs stay reproducible.
@@ -64,17 +64,28 @@ function actionsThisTick(
 }
 
 // Same path as the UI: operator actions and SIMULATE_TICK both go through the reducer.
-export function runScenario(scenario: Scenario): Sample[] {
+// Hands each sample to `record` and returns the state after the last tick.
+function simulate(scenario: Scenario, record: (sample: Sample) => void): PowerPlantState {
   const { DeltaTime } = CstSimulation
   const { ticks, sampleTicks } = toTicks(scenario)
   const actionsAt = scheduleActions(scenario, ticks)
 
   let state = scenario.initial ?? initialPowerPlantState
-  const samples: Sample[] = []
   for (let tick = 0; tick < ticks; tick++) {
     state = actionsThisTick(scenario, actionsAt.get(tick), state, tick * DeltaTime)
-    if (tick % sampleTicks === 0) samples.push({ time: tick * DeltaTime, state })
+    if (tick % sampleTicks === 0) record({ time: tick * DeltaTime, state })
     state = powerPlantReducer(state, { type: "SIMULATE_TICK" })
   }
+  return state
+}
+
+export function runScenario(scenario: Scenario): Sample[] {
+  const samples: Sample[] = []
+  simulate(scenario, (sample) => samples.push(sample))
   return samples
+}
+
+// The plant state at the end of the run: what a snapshot of this scenario holds.
+export function finalState(scenario: Scenario): PowerPlantState {
+  return simulate(scenario, () => undefined)
 }

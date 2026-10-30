@@ -17,6 +17,7 @@
     "depcheck": "knip",
     "sim": "tsx sim/run.ts",
     "sim:serve": "tsx sim/serve.ts",
+    "sim:snapshots": "tsx sim/write-snapshots.ts",
     "sim:view": "pnpm sim && pnpm sim:serve",
     "roadmap": "tsx scripts/roadmap.ts"
   },

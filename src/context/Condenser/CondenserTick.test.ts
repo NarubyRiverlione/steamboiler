@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest"
 import { CondenserTick } from "./CondenserTick"
-import { CstSimulation } from "../const"
+import { CstPhysics, CstSimulation } from "../const"
 import { initialPowerPlantState } from "../PowerPlantReducer"
 import { BoilerRemoveSteam } from "../Boiler/BoilerTick"
 import { CondenserState } from "../PowerPlantState"
@@ -8,7 +8,7 @@ import { CondenserState } from "../PowerPlantState"
 const initialState: CondenserState = {
   steamMass: 0,
   hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
-  hotwellTemperature: CstSimulation.CstCondenser.HotwellStartTemperature,
+  hotwellTemperature: CstPhysics.AmbientTemperature,
   makeupValvePosition: 0,
   rejectValvePosition: 0,
   makeupTotal: 0,

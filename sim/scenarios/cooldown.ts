@@ -10,6 +10,6 @@ export const cooldown: Scenario = {
   description: "Heat up to pressure, then gas off with all valves closed for 60 min",
   duration: AtPressure + CooldownDuration,
   sampleEvery: 10,
-  initial: makeInitialState(20),
+  initial: makeInitialState(),
   actions: [...heatUp, { at: AtPressure, action: { type: "DECREASE_GAS_FLOW", amount: StartGas } }],
 }

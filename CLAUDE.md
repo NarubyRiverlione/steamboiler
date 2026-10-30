@@ -32,6 +32,7 @@ Tracked in `docs/known-issues.md`.
 - `pnpm dev` — run the app (vite `--host`: reachable on the LAN)
 - `pnpm test` — vitest
 - `pnpm sim [scenario] [out.csv] [report.html]` — headless runner, writes CSV + self-contained HTML report (see `docs/headless runner.md`)
+- `pnpm sim:snapshots` — regenerate the committed start-state snapshots in `sim/snapshots/` (a test fails when they are stale)
 - `pnpm sim:serve [report.html]` — serve the report on the LAN (`PORT`, default 4174); `pnpm sim:view` = run + serve
 - `pnpm lint` — eslint + tsc
 - `pnpm roadmap` — regenerate `ROADMAP.md` (ticket order) from the GitHub issues

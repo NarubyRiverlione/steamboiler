@@ -1,0 +1,50 @@
+{
+  "Boiler": {
+    "waterVolume": 49926.66257238438,
+    "temperature": 181.7677123797751,
+    "pressure": 11.601706820368856,
+    "gasFlow": 2000,
+    "drainValveOpen": false,
+    "drainedTotal": 0,
+    "energy": 37111190.81595784,
+    "energyDelta": 46387.21400736167,
+    "steamMass": 69.21465213079601,
+    "deltaWaterVolume": 0,
+    "deltaSteamMass": 0,
+    "potentialSteamGeneration": 0
+  },
+  "Condenser": {
+    "pressure": 213.25,
+    "hotwellWaterVolume": 10000,
+    "hotwellTemperature": 20,
+    "steamMass": 0,
+    "intakeFlowRate": 0,
+    "returnRate": 0,
+    "condensationRate": 0,
+    "coolingRate": 1,
+    "isAirExtractionPumpEnabled": true,
+    "isSjaeEnabled": false,
+    "sjaeValvePosition": 0,
+    "recirculationPumpValvePosition": 0,
+    "condensationPumpValvePosition": 0,
+    "makeupValvePosition": 0,
+    "rejectValvePosition": 0,
+    "makeupTotal": 0,
+    "rejectTotal": 0,
+    "deltaWaterVolume": 0
+  },
+  "Turbine": {
+    "electricOutput": 0,
+    "bypassValvePosition": 0,
+    "bypassSteamFlowOut": 0,
+    "turbineValvePosition": 0,
+    "turbineSteamFlowOut": 0,
+    "mainSteamValve": false,
+    "rpm": 0,
+    "rpmSetPoint": 3000,
+    "holdMode": false,
+    "generatorBreaker": false,
+    "pidIntegralError": 0,
+    "pidPreviousError": 0
+  }
+}

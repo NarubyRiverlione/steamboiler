@@ -71,9 +71,13 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   const gasEnergy = calculateGasEnergy(boilerState.gasFlow) * CstSimulation.DeltaTime
   energyChange += gasEnergy
 
-  // Natural cooling - use temperature-dependent specific heat
+  // Natural cooling - use temperature-dependent specific heat; it stops at ambient so energy keeps matching temperature
   const specificHeat = getWaterSpecificHeat(boilerState.temperature)
-  const coolingEnergyLoss = waterMass * specificHeat * CstBoiler.CoolingRate * CstSimulation.DeltaTime
+  const energyAboveAmbient = Math.max(0, waterMass * specificHeat * (boilerState.temperature - CstPhysics.AmbientTemperature))
+  const coolingEnergyLoss = Math.min(
+    energyAboveAmbient,
+    waterMass * specificHeat * CstBoiler.CoolingRate * CstSimulation.DeltaTime,
+  )
   energyChange -= coolingEnergyLoss
 
   // Calculate steam generation (Use the already calculated potential rate)
@@ -109,8 +113,8 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     // Apply the temperature change to current temperature
     const calculatedTemp = boilerState.temperature + tempDelta
 
-    // Apply reasonable limits (minimum temperature is 20°C - room temperature)
-    newTemperature = Math.max(20, calculatedTemp)
+    // Natural cooling never goes below ambient
+    newTemperature = Math.max(CstPhysics.AmbientTemperature, calculatedTemp)
   }
 
   // Calculate new pressure based on steam mass, temperature, and available volume

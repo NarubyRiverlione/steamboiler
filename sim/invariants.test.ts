@@ -26,7 +26,7 @@ describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario)
 })
 
 describe("invariant checks", () => {
-  const base = makeInitialState(20)
+  const base = makeInitialState()
   const sample = (time: number, patch: (s: PowerPlantState) => PowerPlantState): Sample => ({
     time,
     state: patch(base),

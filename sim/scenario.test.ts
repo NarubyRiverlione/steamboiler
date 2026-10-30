@@ -1,12 +1,14 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario, Scenario } from "./scenario"
+import { finalState, firstTimeWhere, runScenario, Scenario } from "./scenario"
 import { scenarios } from "./scenarios"
 import { cooldown, CooldownDuration } from "./scenarios/cooldown"
 import { startupCold } from "./scenarios/startup-cold"
-import { AtPressure, TurbineValveOpenAt } from "./scenarios/steps"
+import { AtPressure, heatUp as heatUpSteps, openMainSteam, rollTurbine, since, TurbineValveOpenAt } from "./scenarios/steps"
 import { turbineStart } from "./scenarios/turbine-start"
 import { turbineSync } from "./scenarios/turbine-sync"
 import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
+import { CstPhysics } from "../src/context/const"
+import { calculateHeatingEnergy } from "../src/utils/boilerCalculations"
 
 const heatUp: Scenario = {
   name: "test-heat-up",
@@ -36,8 +38,15 @@ describe("runScenario", () => {
   })
 
   test("starts from the scenario's initial state when given", () => {
-    const [first] = runScenario({ ...heatUp, initial: makeInitialState(20) })
-    expect(first.state.Boiler.temperature).toBe(20)
+    const warm = makeInitialState()
+    const [first] = runScenario({ ...heatUp, initial: { ...warm, Boiler: { ...warm.Boiler, temperature: 90 } } })
+    expect(first.state.Boiler.temperature).toBe(90)
+  })
+
+  test("finalState is the state after the last tick", () => {
+    const oneTick = { ...heatUp, duration: 0.1, sampleEvery: 0.1 }
+    const [start] = runScenario(oneTick)
+    expect(finalState(oneTick)).toEqual(powerPlantReducer(start.state, { type: "SIMULATE_TICK" }))
   })
 
   test("rejects scenarios that would silently record nothing", () => {
@@ -96,18 +105,19 @@ describe("firstTimeWhere", () => {
 })
 
 describe("hold mode", () => {
-  // Heat up, roll the turbine, then let the hold-mode PID drive the turbine valve. The turbine only
-  // reaches ~30 rpm today (#18), so a set point of 20 rpm keeps the PID off its valve limits.
+  // From pressure, roll the turbine, then let the hold-mode PID drive the turbine valve. The turbine
+  // only reaches ~30 rpm today (#18), so a set point of 20 rpm keeps the PID off its valve limits.
+  const valveOpen = TurbineValveOpenAt - AtPressure
   const holdModeRun: Scenario = {
     name: "test-hold-mode",
     description: "Turbine rolling in hold mode at a 20 rpm set point",
-    duration: TurbineValveOpenAt + 300,
+    duration: valveOpen + 300,
     sampleEvery: 10,
-    initial: makeInitialState(20),
+    initial: turbineStart.initial,
     actions: [
       ...turbineStart.actions,
-      { at: TurbineValveOpenAt + 5, action: { type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment: -2980 } } },
-      { at: TurbineValveOpenAt + 10, action: { type: "TOGGLE_HOLD_MODE" } },
+      { at: valveOpen + 5, action: { type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment: -2980 } } },
+      { at: valveOpen + 10, action: { type: "TOGGLE_HOLD_MODE" } },
     ],
   }
 
@@ -118,9 +128,50 @@ describe("hold mode", () => {
   })
 })
 
-describe("makeInitialState", () => {
-  test("defaults to the UI's warm start", () => {
-    expect(makeInitialState()).toEqual(initialPowerPlantState)
+describe("cold initial state", () => {
+  const cold = makeInitialState()
+  const rest: Scenario = { name: "test-rest", description: "Nothing on", duration: 600, sampleEvery: 60, actions: [] }
+
+  test("is what the UI starts from", () => {
+    expect(initialPowerPlantState).toEqual(cold)
+  })
+
+  test("is at ambient temperature and atmospheric pressure, with energy matching temperature and water", () => {
+    expect(cold.Boiler.temperature).toBe(CstPhysics.AmbientTemperature)
+    expect(cold.Condenser.hotwellTemperature).toBe(CstPhysics.AmbientTemperature)
+    expect(cold.Boiler.pressure).toBe(CstPhysics.AtmosphericPressure_mBar / 1e3)
+    expect(cold.Boiler.energy).toBe(
+      calculateHeatingEnergy(cold.Boiler.waterVolume, 0, CstPhysics.AmbientTemperature),
+    )
+  })
+
+  test("makes no steam on the first tick", () => {
+    const next = powerPlantReducer(cold, { type: "SIMULATE_TICK" })
+    expect(next.Boiler.steamMass).toBe(0)
+    expect(next.Boiler.deltaSteamMass).toBe(0)
+    expect(next.Boiler.pressure).toBe(cold.Boiler.pressure)
+  })
+
+  test("stays exactly at rest for 10 min with nothing running", () => {
+    for (const { state } of runScenario(rest)) expect(state).toEqual(cold)
+    expect(finalState(rest)).toEqual(cold)
+  })
+})
+
+describe("snapshot start", () => {
+  test("turbine-start from at-pressure equals replaying the cold start", () => {
+    const replay = runScenario({
+      ...turbineStart,
+      duration: AtPressure + turbineStart.duration,
+      initial: makeInitialState(),
+      actions: [...heatUpSteps, ...openMainSteam, ...rollTurbine],
+    })
+    const fromSnapshot = runScenario(turbineStart)
+    expect(fromSnapshot.map((s) => s.state)).toEqual(replay.filter((s) => s.time >= AtPressure).map((s) => s.state))
+  })
+
+  test("since() moves steps to the snapshot's clock", () => {
+    expect(since(AtPressure, openMainSteam).map((a) => a.at)).toEqual([0, 10])
   })
 })
 
@@ -144,7 +195,12 @@ describe("startup-cold", () => {
 
 describe("turbine-start", () => {
   const samples = runScenario(turbineStart)
-  const afterOpening = samples.filter((s) => s.time > TurbineValveOpenAt)
+  const afterOpening = samples.filter((s) => s.time > TurbineValveOpenAt - AtPressure)
+
+  test("starts at main-steam-valve pressure with the turbine still", () => {
+    expect(samples[0].state.Boiler.pressure).toBeGreaterThan(10)
+    expect(samples[0].state.Turbine.rpm).toBe(0)
+  })
 
   test("turbine keeps rolling after the valve opens", () => {
     for (const { state } of afterOpening) expect(state.Turbine.rpm).toBeGreaterThan(0)
@@ -195,6 +251,7 @@ describe("scenario registry", () => {
   test("registers every scenario under its own name", () => {
     expect(Object.keys(scenarios)).toEqual([
       "startup-cold",
+      "heat-up",
       "turbine-start",
       "turbine-sync",
       "cooldown",

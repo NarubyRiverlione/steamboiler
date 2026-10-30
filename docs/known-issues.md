@@ -21,9 +21,6 @@
 - **Condensation pump overfills the boiler.** With the condensation pump valve at 50% the hotwell
   empties into the boiler, which rises past its 100,000 L total volume (137,000 L after 18 min) with
   70 t of steam mass.
-- `StartTemperature: 250` in `src/context/const.ts` is a hardcoded warm start, a workaround for the slow
-  feedback loop. The runner plan replaces it with snapshots; headless scenarios already start cold via
-  `makeInitialState(20)`.
 - **Steam table wrong at high pressure (#22).** `getBoilingPoint(180)` gives about 434°C instead of
   357°C; the table lists saturated states past the critical point and extrapolates with a power law
   above it. `CstBoiler.DesignTemperature` is therefore a constant, not derived from the table.

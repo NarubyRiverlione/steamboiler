@@ -7,16 +7,18 @@ import PowerPlantTick from "./PowerPlantTick"
 
 const { CstBoiler, CstTurbine } = CstSimulation
 
-// Plant at rest with the boiler water at the given temperature (default: the UI's warm start)
-export const makeInitialState = (temperature: number = CstBoiler.StartTemperature): PowerPlantState => ({
+const { AmbientTemperature } = CstPhysics
+
+// Truly cold plant: everything at ambient temperature and atmospheric pressure, all pumps, valves and gas off
+export const makeInitialState = (): PowerPlantState => ({
   Boiler: {
     waterVolume: CstBoiler.StartWaterVolume, // liters
-    temperature, // Celsius
-    pressure: 1, // bar
+    temperature: AmbientTemperature, // Celsius
+    pressure: CstPhysics.AtmosphericPressure_mBar / 1e3, // bar
     gasFlow: 0, // liters/second
     drainValveOpen: false,
     drainedTotal: 0,
-    energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, temperature), // kJ
+    energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, AmbientTemperature), // kJ
     energyDelta: 0, // kJ/s
     steamMass: 0, // kg - Mass of steam currently in the boiler
     deltaWaterVolume: 0,
@@ -26,7 +28,7 @@ export const makeInitialState = (temperature: number = CstBoiler.StartTemperatur
   Condenser: {
     pressure: CstPhysics.AtmosphericPressure_mBar, // mBar (initial atmospheric pressure)
     hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
-    hotwellTemperature: CstSimulation.CstCondenser.HotwellStartTemperature,
+    hotwellTemperature: AmbientTemperature, // Celsius
     steamMass: 0, // Start at 0
     intakeFlowRate: 0,
     returnRate: 0,

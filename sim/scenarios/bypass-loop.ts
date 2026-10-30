@@ -10,7 +10,7 @@ export const bypassLoop: Scenario = {
   description: "Cold start, bypass only, operator holds boiler level at 50% via the condensation pump",
   duration: 3600,
   sampleEvery: 10,
-  initial: makeInitialState(20),
+  initial: makeInitialState(),
   actions: heatUp,
   operator: loopOperator,
 }

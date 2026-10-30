@@ -70,8 +70,8 @@ Boiling point: steam-table interpolation in range, Antoine equation below, power
 | Burner efficiency | 85% |
 | Natural cooling | 1 °C per 15 s (without gas) |
 | Atmospheric pressure | 1.013 bar |
-| Minimum temperature | 20 °C |
-| Start state | atmospheric pressure, 98 °C, 50 l water (`StartTemperature` is currently hardcoded warm at 250 °C, see [status.md](status.md)) |
+| Ambient temperature | 20 °C (`CstPhysics.AmbientTemperature`): natural cooling stops here, so energy keeps matching temperature |
+| Start state | cold: ambient temperature, atmospheric pressure, 50 m³ water, energy = heating 50 m³ from 0 °C to ambient |
 | Pressure damping / steam expansion factors | `CstSimulation` |
 
 Steam expansion factor approximations: 1600× below 100 °C, 1200× at 100–150 °C, 800× above 150 °C. The square root of the volume ratio models non-ideal gas behaviour.

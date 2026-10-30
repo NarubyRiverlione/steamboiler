@@ -12,7 +12,7 @@ export const turbineSync: Scenario = {
   description: "Turbine-start replay, then more gas and full turbine valve to reach sync speed",
   duration: 3600,
   sampleEvery: 10,
-  initial: makeInitialState(20),
+  initial: makeInitialState(),
   actions: [
     ...heatUp,
     ...openMainSteam,
