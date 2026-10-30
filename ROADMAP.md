@@ -13,21 +13,21 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 | - | ------ | -------- | ------ | -------- |
 | 1 | [#7](https://github.com/NarubyRiverlione/steamboiler/issues/7) Truly cold start state and state snapshots | P1 | needs-info |  |
 | 2 | [#17](https://github.com/NarubyRiverlione/steamboiler/issues/17) Move turbine PID state into TurbineState | P1 | needs-triage |  |
-| 3 | [#19](https://github.com/NarubyRiverlione/steamboiler/issues/19) Bypass loop scenario: steam → condensate → feedwater in equilibrium | P1 | ready-for-agent | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) |
-| 4 | [#21](https://github.com/NarubyRiverlione/steamboiler/issues/21) Sync speed is 3000 rpm (50 Hz) | P1 | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 5 | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) Steam generation by energy balance | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 6 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P2 | needs-info | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 7 | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) Verify and fix steam flow units | P2 | ready-for-agent | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) |
-| 8 | [#20](https://github.com/NarubyRiverlione/steamboiler/issues/20) Turbine exhaust steam disappears before the condenser | P2 | ready-for-agent |  |
-| 9 | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) Steam table is wrong at high pressure | P2 | needs-triage | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) |
-| 10 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | needs-info |  |
+| 3 | [#21](https://github.com/NarubyRiverlione/steamboiler/issues/21) Sync speed is 3000 rpm (50 Hz) | P1 | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
+| 4 | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) Steam generation by energy balance | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#23](https://github.com/NarubyRiverlione/steamboiler/issues/23) |
+| 5 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P2 | needs-info | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
+| 6 | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) Verify and fix steam flow units | P2 | ready-for-agent | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) |
+| 7 | [#20](https://github.com/NarubyRiverlione/steamboiler/issues/20) Turbine exhaust steam disappears before the condenser | P2 | ready-for-agent |  |
+| 8 | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) Steam table is wrong at high pressure | P2 | needs-triage | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) |
+| 9 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | needs-info |  |
 
 ## Blocked
 
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
-| 11 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | needs-info | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) |
-| 12 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | needs-info | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) |
-| 13 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | needs-info | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) [#19](https://github.com/NarubyRiverlione/steamboiler/issues/19) |
-| 14 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#21](https://github.com/NarubyRiverlione/steamboiler/issues/21) |
-| 15 | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) Relief valve and pressure/temperature cap | P2 | needs-info | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
+| 10 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | needs-info | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) |
+| 11 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | needs-info | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) |
+| 12 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | needs-info | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) |
+| 13 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#21](https://github.com/NarubyRiverlione/steamboiler/issues/21) |
+| 14 | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) Relief valve and pressure/temperature cap | P2 | needs-info | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
+| 15 | [#23](https://github.com/NarubyRiverlione/steamboiler/issues/23) Split BoilerTick and BoilerRemoveSteam below the CRAP gate | P3 | needs-triage | [#8](https://github.com/NarubyRiverlione/steamboiler/issues/8) |
