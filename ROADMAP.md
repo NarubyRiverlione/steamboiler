@@ -27,7 +27,7 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
 | 11 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | needs-info | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) |
-| 12 | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) Relief valve and pressure/temperature cap | P2 | needs-info | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
+| 12 | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) Relief valve and pressure/temperature cap | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
 | 13 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
 | 14 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) |
 | 15 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) |

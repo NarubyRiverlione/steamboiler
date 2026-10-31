@@ -22,6 +22,22 @@ _Avoid_: Operating pressure, normal pressure
 The pressure at which the boiler water boils at its current temperature. In the boiler, pressure follows it (never below atmospheric).
 _Avoid_: Boiling pressure, vapour pressure
 
+**Relief valve**:
+The boiler's automatic safety valve. It opens fully at 178 bar and closes again at 171 bar, passes at least all the steam the boiler can make at full gas, and cannot be operated by hand.
+_Avoid_: Safety valve, pressure cap, blow-off
+
+**Lift**:
+One opening of the relief valve, from opening to closing.
+_Avoid_: Trip (that is a burner shutoff, see #33), pop
+
+**Blowdown**:
+The pressure drop between the relief valve opening and closing: 7 bar, about 4% of the opening pressure.
+_Avoid_: Hysteresis, deadband
+
+**Vent**:
+Steam released by the relief valve to the atmosphere. It leaves the loop and is counted in the mass balance.
+_Avoid_: Leak, bleed
+
 ### Turbine and generator
 
 **Sync speed**:
