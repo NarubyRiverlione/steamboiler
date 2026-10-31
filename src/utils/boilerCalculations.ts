@@ -120,47 +120,46 @@ export function calculatePressureFromSteam(
   return Math.max(saturationPressure, calculatedPressure)
 }
 
-// Calculate steam generation rate
-export function calculateSteamGeneration(waterMass: number, temperature: number, pressure: number): number {
+// Split the energy put into the water between heating it to saturation and vaporising it
+export type EnergyBalance = {
+  newTemperature: number // °C
+  steamMass: number // kg generated
+  heatingEnergy: number // kJ spent heating water up to the boiling point
+  vaporisationEnergy: number // kJ spent vaporising
+}
+
+// Heat to the boiling point first; only the energy beyond that vaporises water at the latent heat
+export function calculateEnergyBalance(
+  waterMass: number,
+  temperature: number,
+  pressure: number,
+  energyIn: number,
+): EnergyBalance {
   if (waterMass <= 0) {
-    return 0
+    return { newTemperature: temperature, steamMass: 0, heatingEnergy: 0, vaporisationEnergy: 0 }
   }
 
   const boilingPoint = calculateBoilingPoint(pressure)
-//  console.debug(boilingPoint.toFixed(1))
-  if (temperature < boilingPoint) {
-    return 0
-  }
-  // Calculate energy from gas flow
-  const gasEnergy = calculateGasEnergy(CstBoiler.MaxGasFlow) // Assuming max gas flow for calculation
+  // Water already above the boiling point (the pressure model lags) has nothing left to heat
+  const energyToBoil = Math.max(0, calculateHeatingEnergy(waterMass, temperature, boilingPoint)) // kJ
 
-  // Calculate energy needed to heat water to boiling point
-  const heatingEnergy = calculateHeatingEnergy(waterMass, temperature, boilingPoint) // kJ
-
-  // Calculate heat loss
-  const heatLoss = gasEnergy * CstBoiler.HeatLossPercentage
-
-  // Determine the remaining energy available for steam generation
-  const availableEnergy = gasEnergy - heatingEnergy - heatLoss
-
-  if (availableEnergy <= 0) {
-    return 0
+  if (energyIn < energyToBoil) {
+    // Not enough to reach (or stay at) the boiling point: it all changes the water temperature
+    const specificHeat = getWaterSpecificHeat(temperature)
+    return {
+      newTemperature: temperature + energyIn / (waterMass * specificHeat),
+      steamMass: 0,
+      heatingEnergy: energyIn,
+      vaporisationEnergy: 0,
+    }
   }
 
-  const latentHeat = getLatentHeat(boilingPoint) // kJ/kg
-
-  // Calculate the steam generation rate
-  const steamMassFromEnergy = availableEnergy / latentHeat //KJ / kJ/kg = kg/s
-
-  return steamMassFromEnergy
+  const steamMass = Math.min(waterMass, (energyIn - energyToBoil) / getLatentHeat(boilingPoint))
+  return {
+    newTemperature: Math.max(boilingPoint, temperature),
+    steamMass,
+    heatingEnergy: energyToBoil,
+    vaporisationEnergy: steamMass * getLatentHeat(boilingPoint),
+  }
 }
 
-// Calculate energy loss from steam generation
-export function calculateSteamEnergyLoss(steamRate: number, temperature: number): number {
-  // Energy needed to convert water to steam
-  // This is the latent heat of vaporization
-  // Get accurate latent heat from steam table data
-  const latentHeat = getLatentHeat(temperature)
-
-  return steamRate * latentHeat
-}

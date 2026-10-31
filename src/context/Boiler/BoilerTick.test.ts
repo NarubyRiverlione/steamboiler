@@ -46,3 +46,31 @@ describe("BoilerTick natural cooling", () => {
     expect(cold.energy - next.energy).toBeLessThan(cold.waterVolume * 4.2 * 0.001)
   })
 })
+
+describe("BoilerTick steam generation", () => {
+  const boiling = { ...cold, temperature: 100, pressure: CstPhysics.AtmosphericPressure_mBar / 1e3 }
+
+  test("makes no steam with the gas off, even at the boiling point", () => {
+    const next = BoilerTick({ ...boiling, gasFlow: 0 })
+    expect(next.deltaSteamMass).toBe(0)
+    expect(next.steamMass).toBe(boiling.steamMass)
+  })
+
+  test("makes no steam while the water is below boiling", () => {
+    const next = BoilerTick({ ...cold, temperature: 60, gasFlow: CstBoiler.MaxGasFlow })
+    expect(next.deltaSteamMass).toBe(0)
+    expect(next.temperature).toBeGreaterThan(60)
+  })
+
+  test("steam rate scales with the actual gas flow", () => {
+    const half = BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow / 2 }).deltaSteamMass
+    const full = BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow }).deltaSteamMass
+    expect(half).toBeGreaterThan(0)
+    expect(full / half).toBeGreaterThan(1.8)
+    expect(full / half).toBeLessThan(2.5)
+  })
+
+  test("the water stays at the boiling point while it makes steam", () => {
+    expect(BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow }).temperature).toBeCloseTo(100, 1)
+  })
+})

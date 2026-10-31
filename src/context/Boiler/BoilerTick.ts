@@ -1,8 +1,7 @@
 import {
-  calculateSteamGeneration,
+  calculateEnergyBalance,
   calculateWaterVolume,
   calculateGasEnergy,
-  calculateSteamEnergyLoss,
   calculatePressureFromSteam,
 } from "../../utils/boilerCalculations"
 import { getWaterDensity, getWaterSpecificHeat, getSteamData } from "../../utils/steamTable"
@@ -37,37 +36,12 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     }
   }
 
-  // --- Steam Mass Calculation (Early for Volume Adjustment) ---
-  // Get temperature-dependent water density
+  // Water mass (kg) after draining, from the temperature-dependent density
   const waterDensity =
     boilerState.temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(boilerState.temperature)
-
-  // Calculate water mass using density
-  const waterMassBeforeSteam = (newWaterVolume * waterDensity) / 1000
-
-  // Calculate maximum potential steam generation rate (kg/s)
-  const potentialSteamGeneration = calculateSteamGeneration(
-    waterMassBeforeSteam, // Use current mass estimate for rate calculation
-    boilerState.temperature,
-    boilerState.pressure,
-  )
-
-  // Steam generated in this tick (kg) - limited by available volume
-  const generatedSteamMass = potentialSteamGeneration * CstSimulation.DeltaTime
-
-  // Calculate the volume of liquid water lost to steam (Liters)
-  // Use the calculateWaterVolume function to get the correct volume based on temperature
-  const waterVolumePerKg = calculateWaterVolume(1, boilerState.temperature) // Volume of 1kg of water at current temperature
-  const liquidVolumeDecreaseLiters = generatedSteamMass * waterVolumePerKg
-
-  // Adjust water volume *before* final mass calculation
-  newWaterVolume = Math.max(0, newWaterVolume - liquidVolumeDecreaseLiters)
-  // --- End Steam Mass Calculation (Early Part) ---
-
-  // Water mass (kg) - Now calculated based on adjusted volume and temperature-dependent density
   const waterMass = (newWaterVolume * waterDensity) / 1000
 
-  // Add energy from gas
+  // Energy from the gas actually flowing
   const gasEnergy = calculateGasEnergy(boilerState.gasFlow) * CstSimulation.DeltaTime
   energyChange += gasEnergy
 
@@ -80,42 +54,29 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   )
   energyChange -= coolingEnergyLoss
 
-  // Calculate steam generation (Use the already calculated potential rate)
-  // const steamRate = calculateSteamGeneration(waterMass, state.temperature, state.pressure) // Already calculated above
-  const steamEnergyLoss =
-    calculateSteamEnergyLoss(potentialSteamGeneration, boilerState.temperature) * CstSimulation.DeltaTime
-  energyChange -= steamEnergyLoss
+  // Energy balance: heat the water to boiling first, only the rest vaporises
+  const balance = calculateEnergyBalance(
+    waterMass,
+    boilerState.temperature,
+    boilerState.pressure,
+    gasEnergy - coolingEnergyLoss,
+  )
+  const generatedSteamMass = balance.steamMass
+  const potentialSteamGeneration = generatedSteamMass / CstSimulation.DeltaTime
+  energyChange -= balance.vaporisationEnergy
 
-  // Update total energy
+  // The liquid lost to steam, at the volume 1 kg of water takes at the current temperature
+  newWaterVolume = Math.max(
+    0,
+    newWaterVolume - generatedSteamMass * calculateWaterVolume(1, boilerState.temperature),
+  )
+
   const newEnergy = Math.max(0, boilerState.energy + energyChange)
-
-  // --- End Steam Removal Calculation ---
-
-  // --- Steam Mass Accumulation ---
-  // Accumulate steam mass (using generatedSteamMass calculated earlier )
   const newSteamMass = Math.max(0, boilerState.steamMass + generatedSteamMass)
-  // --- End Steam Mass Accumulation ---
 
-  // Calculate new temperature based on energy changes
-  let newTemperature
-  if (waterMass <= 0) {
-    newTemperature = boilerState.temperature
-  } else {
-    // For temperature changes, consider only gas heating, cooling, and steam generation
-    // When water amount changes (filling/draining), the temperature shouldn't be directly affected
-
-    // Energy changes not related to water volume changes
-    const nonVolumeEnergyChange = gasEnergy - coolingEnergyLoss - steamEnergyLoss
-
-    // Calculate temperature change from these energy changes - use temperature-dependent specific heat
-    const tempDelta = waterMass > 0 ? nonVolumeEnergyChange / (waterMass * specificHeat) : 0
-
-    // Apply the temperature change to current temperature
-    const calculatedTemp = boilerState.temperature + tempDelta
-
-    // Natural cooling never goes below ambient
-    newTemperature = Math.max(CstPhysics.AmbientTemperature, calculatedTemp)
-  }
+  // Natural cooling never goes below ambient
+  const newTemperature =
+    waterMass <= 0 ? boilerState.temperature : Math.max(CstPhysics.AmbientTemperature, balance.newTemperature)
 
   // Calculate new pressure based on steam mass, temperature, and available volume
   let newPressure
