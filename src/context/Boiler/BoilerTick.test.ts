@@ -3,7 +3,7 @@ import BoilerTick, { BoilerRemoveSteam } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 
-const { CstBoiler, DeltaTime } = CstSimulation
+const { CstBoiler, CstTurbine, DeltaTime } = CstSimulation
 const cold = makeInitialState().Boiler
 
 describe("BoilerTick drain", () => {
@@ -78,35 +78,39 @@ describe("BoilerTick steam generation", () => {
 describe("BoilerRemoveSteam", () => {
   const plant = makeInitialState()
   const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
+  // A half-open valve passes half the rated steam flow (kg/s), so this much per tick
+  const halfOpenFlow = 0.5 * CstTurbine.MaxSteamRemovalRate
+  const halfOpenPerTick = halfOpenFlow * DeltaTime
 
   test("caps the flow at the valve rate when the boiler holds plenty of steam", () => {
-    // 50% of 200 kg/s for 0.1 s is 10 kg
+    const plenty = 100 * halfOpenPerTick
     const { boilerState, turbineState } = BoilerRemoveSteam(
-      { ...plant.Boiler, steamMass: 1000 },
+      { ...plant.Boiler, steamMass: plenty },
       openTurbine,
       "TURBINE",
     )
-    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(100)
-    expect(boilerState.steamMass).toBeCloseTo(990)
+    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow)
+    expect(boilerState.steamMass).toBeCloseTo(plenty - halfOpenPerTick)
   })
 
   test("removes only the steam the boiler holds when the valve asks for more", () => {
+    const little = halfOpenPerTick / 5
     const { boilerState, turbineState } = BoilerRemoveSteam(
-      { ...plant.Boiler, steamMass: 2 },
+      { ...plant.Boiler, steamMass: little },
       openTurbine,
       "TURBINE",
     )
     expect(boilerState.steamMass).toBe(0)
-    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(20)
+    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow / 5)
   })
 
   test("bypass and turbine draw from the same steam", () => {
     const both = { ...openTurbine, bypassValvePosition: 0.5 }
-    const bypass = BoilerRemoveSteam({ ...plant.Boiler, steamMass: 15 }, both, "BYPASS")
+    // One tick's worth through the bypass leaves half a tick's worth for the turbine
+    const bypass = BoilerRemoveSteam({ ...plant.Boiler, steamMass: 1.5 * halfOpenPerTick }, both, "BYPASS")
     const turbine = BoilerRemoveSteam(bypass.boilerState, bypass.turbineState, "TURBINE")
-    // 10 kg through the bypass leaves 5 kg for the turbine
-    expect(turbine.turbineState.bypassSteamFlowOut).toBeCloseTo(100)
-    expect(turbine.turbineState.turbineSteamFlowOut).toBeCloseTo(50)
+    expect(turbine.turbineState.bypassSteamFlowOut).toBeCloseTo(halfOpenFlow)
+    expect(turbine.turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow / 2)
     expect(turbine.boilerState.steamMass).toBe(0)
   })
 

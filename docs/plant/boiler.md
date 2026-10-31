@@ -28,11 +28,11 @@ Steam generation (energy balance per tick, #8):
 Steam removal (`BoilerRemoveSteam`, once for the bypass, then for the turbine valve):
 
 ```
-Removed this tick = min(valve position × MaxSteamRemovalRate × tick, steam mass in the boiler)
-Reported flow     = removed / tick   (kg/s, never above valve position × 200 kg/s)
+Removed this tick = min(valve position × rated steam flow × tick, steam mass in the boiler)
+Reported flow     = removed / tick   (kg/s, never above valve position × rated steam flow)
 ```
 
-All of it is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before this tick's generation, so it takes the steam from earlier ticks. Pressure follows the balance: it rises while less steam leaves than is generated, holds when they match, and falls when more leaves.
+Rated steam flow is in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before this tick's generation, so it takes the steam from earlier ticks. Pressure follows the balance: it rises while less steam leaves than is generated, holds when they match, and falls when more leaves.
 
 Boiling point: steam-table interpolation in range, Antoine equation below it, power law above it. The high-pressure end is wrong: `getBoilingPoint(180)` gives about 434 °C instead of 357 °C (#22).
 
