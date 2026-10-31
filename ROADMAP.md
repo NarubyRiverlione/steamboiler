@@ -12,10 +12,10 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 | # | Ticket | Priority | Status | Unblocks |
 | - | ------ | -------- | ------ | -------- |
 | 1 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P2 | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) [#34](https://github.com/NarubyRiverlione/steamboiler/issues/34) [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) |
-| 2 | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) Verify and fix steam flow units | P2 | ready-for-agent | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) |
+| 2 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | ready-for-agent |  |
 | 3 | [#20](https://github.com/NarubyRiverlione/steamboiler/issues/20) Turbine exhaust steam disappears before the condenser | P2 | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#37](https://github.com/NarubyRiverlione/steamboiler/issues/37) |
 | 4 | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) Steam table is wrong at high pressure | P2 | ready-for-agent | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) |
-| 5 | [#32](https://github.com/NarubyRiverlione/steamboiler/issues/32) BoilerRemoveSteam counts this tick's generated steam twice | P2 | ready-for-agent | [#23](https://github.com/NarubyRiverlione/steamboiler/issues/23) |
+| 5 | [#32](https://github.com/NarubyRiverlione/steamboiler/issues/32) BoilerRemoveSteam counts this tick's generated steam twice | P2 | ready-for-agent | [#23](https://github.com/NarubyRiverlione/steamboiler/issues/23) [#43](https://github.com/NarubyRiverlione/steamboiler/issues/43) |
 | 6 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | ready-for-agent |  |
 | 7 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P3 | needs-triage |  |
 | 8 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 | needs-triage |  |
@@ -28,11 +28,11 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
-| 13 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | ready-for-agent | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) |
-| 14 | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) Relief valve and pressure/temperature cap | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
-| 15 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
-| 16 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) |
-| 17 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#20](https://github.com/NarubyRiverlione/steamboiler/issues/20) |
+| 13 | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) Relief valve and pressure/temperature cap | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
+| 14 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
+| 15 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) |
+| 16 | [#43](https://github.com/NarubyRiverlione/steamboiler/issues/43) Startup scenarios: build pressure, then hold it at the main steam valve | P2 | needs-triage | [#32](https://github.com/NarubyRiverlione/steamboiler/issues/32) |
+| 17 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) [#20](https://github.com/NarubyRiverlione/steamboiler/issues/20) [#43](https://github.com/NarubyRiverlione/steamboiler/issues/43) |
 | 18 | [#23](https://github.com/NarubyRiverlione/steamboiler/issues/23) Split BoilerTick and BoilerRemoveSteam below the CRAP gate | P3 | needs-triage | [#32](https://github.com/NarubyRiverlione/steamboiler/issues/32) |
 | 19 | [#37](https://github.com/NarubyRiverlione/steamboiler/issues/37) Block the turbine valve without condenser vacuum | P3 | ready-for-agent | [#20](https://github.com/NarubyRiverlione/steamboiler/issues/20) |
 | 20 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) |
