@@ -21,15 +21,14 @@ export const CstSimulation = {
     HotwellStartVolume: 10e3, // liter
     MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
     VacuumDecayRate: 5, // mbar per second when pump is off
-    OptimalPressure: 80, // mBar (center of bell curve)
-    OptimalPressureBellWidth: 20, // Controls how quickly efficiency drops off
+    OptimalPressure: 80, // mBar, centre of the band on the vacuum readout
+    OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
     CAR_MaxVacuum: 800, // mbar vacuum  (70-90 kPa vacuum = 11-31 kPa absolute pressure)
     CAR_TimeNeeded: 15, // seconds to reach max vacuum
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 20, // mbar above AirExtractionPump.MaxVacuum
     SJAE_ValveStep: 5, // % per click open/close
     DampingFactor: 1, // Apply a damping factor to make temperature changes more gradual
-    IntakeMaxFlowRate: 250, // kg/s
     RecirculationPump_MaxFlowRate: 500, // l/s (typical 9.000-12.000)
     RecirculationPump_Step: 5,
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)

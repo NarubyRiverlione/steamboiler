@@ -134,38 +134,6 @@ export function calculatePressureBySteam(
   return pressure * 1000 // Convert to mBar
 }
 /**
- * Calculates the change in steam volume based on steam flow and water flow
- * @param boilerSteamFlow Steam flow from the boiler (kg/s)
- * @param intakeFlowRate Flow rate from turbine to condenser (kg/s)
- * @returns Changed steam volume
- */
-export function calculateSteamVolumeChange(boilerSteamFlow: number, intakeFlowRate: number): number {
-  // Steam flow increases the steam volume, water flow decreases it
-  return (boilerSteamFlow - intakeFlowRate) * CstSimulation.DeltaTime
-}
-
-/**
- * Calculates the flow rate from turbine to condenser based on steam flow and condenser pressure
- * @param boilerSteamFlow Steam flow from the boiler (kg/s)
- * @param condenserPressure Current condenser pressure (mBar)
- * @returns Flow rate from turbine to condenser (kg/s)
- */
-export function calculateIntakeFlowRate(boilerSteamFlow: number, condenserPressure: number): number {
-  // Define pressure parameters for bell curve
-  const {
-    CstCondenser: { OptimalPressure, OptimalPressureBellWidth, IntakeMaxFlowRate },
-  } = CstSimulation
-  // Calculate pressure efficiency factor using bell curve (0-1)
-  const pressureEfficiency = Math.exp(
-    -0.5 * Math.pow((condenserPressure - OptimalPressure) / (OptimalPressureBellWidth / 2), 2),
-  )
-
-  // Calculate flow rate based on available steam and pressure efficiency
-  // Cap at maximum intake flow rate defined in constants
-  return Math.min(boilerSteamFlow * pressureEfficiency, IntakeMaxFlowRate)
-}
-
-/**
  * Calculates the condensation of steam based on energy balance approach
  *
  * @param currentSteamMass kg, Current steam mass in the condenser

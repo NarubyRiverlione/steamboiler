@@ -8,9 +8,9 @@ import PowerPlantState from "../src/context/PowerPlantState"
 // (scenario, invariant) pairs that fail today, with the ticket that fixes them. When that ticket
 // lands the test.fails flips red: remove the entry so the pair guards as a normal test.
 const expectedFailures: Record<string, string> = {
-  "startup-cold / water is never created or lost": "#20",
-  "turbine-start / water is never created or lost": "#20",
-  "turbine-sync / water is never created or lost": "#20",
+  "startup-cold / water is never created or lost": "#34",
+  "turbine-start / water is never created or lost": "#34",
+  "turbine-sync / water is never created or lost": "#34",
   "cooldown / natural cooldown never heats": "#12",
   "startup-cold / temperature within design temperature": "#43",
   "startup-cold / pressure within design pressure": "#9",

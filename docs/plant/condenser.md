@@ -17,7 +17,7 @@ The condenser pressure, shown as a vacuum readout in mbar, is controlled by two 
 - Enabled, it builds vacuum over time based on steam flow and valve position
 - Auto-disables when there is no steam flow in the master steam valve, or when condenser pressure is more than `SJAE_MaxPressureDifference` above `CAR_MaxVacuum`
 
-`CondenserTick` calls `calculateVacuumByReducers` (`condenserCalculation.ts`) each tick: CAR first, then SJAE, then decay if neither is active. Pressure is atmospheric plus a steam-mass term (`steamMass / 1000`, not physically derived) minus that vacuum. The resulting pressure drives the intake flow from the boiler (and turbine) through a bell curve around `OptimalPressure` with width `OptimalPressureBellWidth`.
+`CondenserTick` calls `calculateVacuumByReducers` (`condenserCalculation.ts`) each tick: CAR first, then SJAE, then decay if neither is active. Pressure is atmospheric plus a steam-mass term (`steamMass / 1000`, not physically derived) minus that vacuum. The vacuum does not limit the intake: all turbine exhaust and bypass steam enters the condenser. `OptimalPressure` and `OptimalPressureBellWidth` only set the band shown on the vacuum readout.
 
 ## Energy balance
 
@@ -43,8 +43,8 @@ Loop targets and the operator that holds them are in [feedwater-loop.md](feedwat
 
 ## Intakes
 
-The condenser takes steam from two paths, both used in the condenser calculations: the turbine exhaust (requires pressure near the bell-curve optimum) and the boiler bypass valve (no pressure requirement). Turbine exhaust steam currently disappears before it reaches the condenser (#20).
+The condenser takes steam from two paths: the turbine exhaust and the boiler bypass valve. `PowerPlantTick` removes the steam from the boiler first and passes those same-tick flows to `CondenserTick`, so every kg through either valve arrives in the condenser in that tick (`intakeFlowRate` is their sum). Condenser vacuum should act on turbine back-pressure and power, not on the exhaust mass flow; that coupling is not modelled yet (#14).
 
 ## Remaining empirical areas
 
-`calcCARvacuum` (`CAR_MaxVacuum`, `CAR_TimeNeeded`), `calcSJAEvacuum` (`SJAE_MaxPressureDifference`, `SJAE_VacuumIncreaseRate`), `calculateIntakeFlowRate` (bell curve) `calculateCondensation` (`DampingFactor`), and the steam-mass pressure term in `CondenserTick`.
+`calcCARvacuum` (`CAR_MaxVacuum`, `CAR_TimeNeeded`), `calcSJAEvacuum` (`SJAE_MaxPressureDifference`, `SJAE_VacuumIncreaseRate`), `calculateCondensation` (`DampingFactor`), and the steam-mass pressure term in `CondenserTick`.

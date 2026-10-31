@@ -223,6 +223,19 @@ describe("CondenserTick", () => {
     expect(state.steamMass).toBeGreaterThanOrEqual(0)
   })
 
+  // 10 kg/s turbine exhaust + 5 kg/s bypass for one 0.1 s tick = 1.5 kg, whatever the vacuum
+  it.each([
+    ["atmospheric", CstPhysics.AtmosphericPressure_mBar],
+    ["80 mbar", 80],
+  ])("all turbine exhaust and bypass steam arrives at %s condenser pressure", (_, pressure) => {
+    const noCondensation = { ...initialState, pressure, recirculationPumpValvePosition: 0, isSjaeEnabled: false }
+    const exhaust = { flow: 10, temp: 40, pressure: 0.1 }
+    const bypass = { flow: 5, temp: 300 }
+    const next = CondenserTick(noCondensation, 100, bypass, exhaust, boilerRoom)
+    expect(next.steamMass).toBeCloseTo(1.5, 9)
+    expect(next.intakeFlowRate).toBe(15)
+  })
+
   it("makeup and reject go into the totalizers and the hotwell", () => {
     const noSteam = { flow: 0, temp: 0 }
     const exhaust = { flow: 0, temp: 0, pressure: 0 }

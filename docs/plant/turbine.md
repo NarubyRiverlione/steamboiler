@@ -20,8 +20,8 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 ## Phase 2: condenser coupling
 
 - Steam leaving the turbine has reduced energy: `outputTemp` and `outputPressure`, via a dedicated heuristic or empirical loss calculation
-- The condenser takes its steam from the turbine instead of the bypass valve, and keeps the reduced `OptimalPressure` requirement for that path
-- The bypass valve gets its own condenser intake without the pressure requirement
+- The condenser takes its steam from the turbine instead of the bypass valve; all exhaust arrives, whatever the vacuum (#20)
+- The bypass valve gets its own condenser intake
 - Both intakes are used in the condenser calculations (see [condenser.md](condenser.md))
 
 ## Phase 3: RPM and control

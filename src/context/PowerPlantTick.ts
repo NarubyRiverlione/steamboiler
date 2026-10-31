@@ -6,12 +6,25 @@ import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./Po
 import { CstSimulation } from "./const"
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
-  // Condenser
-  const steamFromBypass = { temp: state.Boiler.temperature, flow: state.Turbine.bypassSteamFlowOut }
+  // remove steam via bypass valve
+  const bypassResult = BoilerRemoveSteam(state.Boiler, state.Turbine, "BYPASS")
+
+  // Turbine
+  const turbineNewState: TurbineState = TurbineTick(
+    bypassResult.turbineState,
+    bypassResult.turbineState.turbineValvePosition,
+    bypassResult.boilerState.pressure,
+  )
+
+  // remove steam via turbine valve
+  const turbineResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
+
+  // Condenser: receives the steam removed from the boiler in this same tick
+  const steamFromBypass = { temp: state.Boiler.temperature, flow: turbineResult.turbineState.bypassSteamFlowOut }
   // TODO use acutely the temp&pressure from spend steam of  the turbine
   const steamFromTurbine = {
     temp: CstSimulation.CstTurbine.steamOutflowTemperature,
-    flow: state.Turbine.turbineSteamFlowOut,
+    flow: turbineResult.turbineState.turbineSteamFlowOut,
     pressure: CstSimulation.CstTurbine.steamOutflowPressure,
   }
   // The return fills the boiler at most to its total volume; steam and drain only lower it afterwards
@@ -24,23 +37,6 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     boilerRoom,
   )
 
-  // remove steam via bypass valve
-  const bypassResult = BoilerRemoveSteam(state.Boiler, state.Turbine, "BYPASS")
-  
-  // Turbine
-  const turbineNewState: TurbineState = TurbineTick(
-    bypassResult.turbineState, 
-    bypassResult.turbineState.turbineValvePosition,
-    bypassResult.boilerState.pressure
-  )
-  
-  // remove steam via turbine valve
-  const turbineResult = BoilerRemoveSteam(
-    bypassResult.boilerState, 
-    bypassResult.turbineState, 
-    "TURBINE"
-  )
-  
   // Boiler
   // add this tick's return before recalculating the boiler state
   const boilerRemovedSteam: BoilerState = {

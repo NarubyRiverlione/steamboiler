@@ -1,7 +1,6 @@
 import { CondenserState } from "../PowerPlantState"
 import {
   calculateCondensation,
-  calculateIntakeFlowRate,
   calculateVacuumByReducers,
   CalculateCondensationFlow,
   calculateHotwellExchange,
@@ -44,14 +43,8 @@ export function CondenserTick(
   //   "pressureBySteam " + pressureBySteam.toFixed(1) + ", vacuumByReducers " + vacuumByReducers.toFixed(0),
   // )
 
-  // Calculate turbine to condenser flow rate based on boiler steam flow and condenser vacuum pressure.
-  // The vacuum pressure affects the efficiency of steam flow from turbine to condenser.
-  const intakeFromTurbineRate = calculateIntakeFlowRate(steamFromTurbine.flow, newPressure)
-  // always use the bypass flow rate, doesn't need a vacuum as it has pressure (energy is not spend)
-  const totalIntakeRate = intakeFromTurbineRate + steamFromBypass.flow
-  // Calculate steam volume change.
-  // const steamVolumeChange = Math.min(steamFlow, totalIntakeRate)
-  //calculateSteamVolumeChange(steamFlow, newIntakeFlowRate)
+  // All turbine exhaust and bypass steam enters the condenser; vacuum does not scale the mass flow
+  const totalIntakeRate = steamFromTurbine.flow + steamFromBypass.flow
   const newSteamMass = condenserState.steamMass + totalIntakeRate * CstSimulation.DeltaTime
 
   // steam temp inside the condenser is combination of the steam from the bypass and the turbine

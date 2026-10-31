@@ -16,7 +16,7 @@ export type CondenserState = {
   steamMass: number // kg
   hotwellWaterVolume: number
   hotwellTemperature: number // Celsius
-  intakeFlowRate: number // g/s Flow rate from turbine to condenser
+  intakeFlowRate: number // kg/s turbine exhaust plus bypass steam into the condenser
   returnRate: number
   condensationRate: number // l/s steam condensed into the hotwell
   coolingRate: number

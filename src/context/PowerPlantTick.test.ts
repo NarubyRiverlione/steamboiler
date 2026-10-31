@@ -53,3 +53,18 @@ describe("PowerPlantTick dry boiler", () => {
     expect(next.Boiler.waterVolume).toBe(0)
   })
 })
+
+describe("PowerPlantTick turbine exhaust", () => {
+  test("the condenser receives the steam through the turbine valve in the same tick", () => {
+    // 5% of 200 kg/s for one 0.1 s tick = 1 kg; recirculation off so none of it condenses yet
+    const turbineOpen: PowerPlantState = {
+      ...cold,
+      Boiler: { ...cold.Boiler, steamMass: 1_000 },
+      Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.05, turbineSteamFlowOut: 0 },
+      Condenser: { ...cold.Condenser, steamMass: 0, recirculationPumpValvePosition: 0 },
+    }
+    const next = PowerPlantTick(turbineOpen)
+    expect(next.Turbine.turbineSteamFlowOut).toBeCloseTo(10, 9)
+    expect(next.Condenser.steamMass).toBeCloseTo(1, 9)
+  })
+})
