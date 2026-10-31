@@ -22,13 +22,17 @@ _Avoid_: Operating pressure, normal pressure
 The pressure at which the boiler water boils at its current temperature. In the boiler, pressure follows it (never below atmospheric).
 _Avoid_: Boiling pressure, vapour pressure
 
+**Saturation temperature**:
+The temperature at which water boils at a given pressure. Condensate leaves the condenser at the saturation temperature of the condenser pressure (about 41 °C at 80 mbar).
+_Avoid_: Boiling temperature
+
 **Relief valve**:
 The boiler's automatic safety valve. It opens fully at 178 bar and closes again at 171 bar, passes at least all the steam the boiler can make at full gas, and cannot be operated by hand.
 _Avoid_: Safety valve, pressure cap, blow-off
 
 **Lift**:
 One opening of the relief valve, from opening to closing.
-_Avoid_: Trip (that is a burner shutoff, see #33), pop
+_Avoid_: Trip (a turbine trip closes the turbine valve; a burner trip is #33), pop
 
 **Blowdown**:
 The pressure drop between the relief valve opening and closing: 7 bar, about 4% of the opening pressure.
@@ -51,6 +55,14 @@ _Avoid_: Max steam removal, nominal flow
 **Electric output**:
 The power the generator delivers to the grid, in MW. Only produced with the breaker closed at sync speed; it follows from the steam flow and from the energy the turbine takes out of each kilogram, which depends on boiler pressure and condenser pressure.
 _Avoid_: Power, electricity, MW readout
+
+**Vacuum limit**:
+The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
+_Avoid_: Bell curve, optimal pressure, vacuum permissive
+
+**Turbine trip**:
+The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also switches hold mode off; the turbine only takes steam again when the operator reopens the valve.
+_Avoid_: Trip (on its own), shutdown
 
 ### Operation
 

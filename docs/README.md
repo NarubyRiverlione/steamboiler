@@ -32,6 +32,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 |---|---|
 | [0001](adr/0001-boiler-pressure-follows-saturation.md) | Boiler pressure follows saturation; playability never alters the physics |
 | [0002](adr/0002-makeup-into-hotwell.md) | Makeup water enters at the hotwell; the boiler is fed only by the condensation pump |
+| [0003](adr/0003-turbine-trip-on-vacuum-limit.md) | The turbine valve trips above the vacuum limit |
 
 ## Research (dated, frozen)
 
