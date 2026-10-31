@@ -4,7 +4,7 @@ The closed water loop as built: boiler → main steam valve → bypass (or turbi
 
 ## Boundary flows
 
-Water enters or leaves the loop in only three places. Everything else must conserve water (#10).
+Water enters or leaves the loop in only three places. Everything else must conserve water.
 
 | Flow | Where | Totalizer |
 |---|---|---|
@@ -13,6 +13,10 @@ Water enters or leaves the loop in only three places. Everything else must conse
 | Drain | out of the boiler | `drainedTotal` |
 
 The sim models no leaks, vents or blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` allows 0.1% of the start mass.
+
+## Return and capacity
+
+The condensation pump moves hotwell water into the boiler as the **Return**: the pump volume (valve position × `CondensationPump_MaxFlowRate` × tick), but never more than the hotwell holds after makeup and reject, and never more than the boiler has room for (capacity minus its water), so the boiler never passes its 100 000 L total volume. What cannot be returned stays in the hotwell. The boiler takes the Return in the same tick the hotwell gives it. A full boiler simply stops taking water; there is no overflow and no automatic reject ([ADR 0004](../adr/0004-return-stops-at-full-boiler.md)). Volumes count 1 L = 1 kg; temperature-dependent density is #34.
 
 ## Level targets
 

@@ -16,6 +16,7 @@ import { CstPhysics, CstSimulation } from "../const"
  * @param steamFlow Steam flow from bypass or turbine (kg/s)
  * @param steamTemp Steam flow from bypass or turbine  (C)
  * @param steamPressure Steam flow from bypass or turbine  (bar)
+ * @param boilerRoom Liters of liquid the boiler can still take, limits the return
  * @returns Action to update the condenser state
  */
 export function CondenserTick(
@@ -23,6 +24,7 @@ export function CondenserTick(
   boilerPressure: number,
   steamFromBypass: { flow: number; temp: number },
   steamFromTurbine: { flow: number; temp: number; pressure: number },
+  boilerRoom: number,
 ): CondenserState {
   // console.log("1")
 
@@ -86,10 +88,11 @@ export function CondenserTick(
     condenserState.rejectValvePosition,
   )
 
-  // Condensation pump transfer: remove water from hotwell based on pump valve setting.
+  // Condensation pump transfer: the return, limited by the hotwell and the room in the boiler
   const { condensatePumpVolume, newHotwellWaterVolume } = CalculateCondensationFlow(
     condenserState.condensationPumpValvePosition,
     exchange.volume,
+    boilerRoom,
   )
 
   return {

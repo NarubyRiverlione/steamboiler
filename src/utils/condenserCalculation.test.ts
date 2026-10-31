@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
-import { calculateHotwellExchange, mixTemperature } from "./condenserCalculation"
+import { CalculateCondensationFlow, calculateHotwellExchange, mixTemperature } from "./condenserCalculation"
 
 const { DeltaTime, CstCondenser } = CstSimulation
 
@@ -43,5 +43,28 @@ describe("calculateHotwellExchange", () => {
     const result = calculateHotwellExchange(1, 40, 0, 1)
     expect(result.reject).toBe(1)
     expect(result.volume).toBe(0)
+  })
+})
+
+describe("CalculateCondensationFlow", () => {
+  // 300 l/s full open for one 0.1 s tick
+  const fullPump = 30
+
+  test("returns the pump volume when the hotwell and the boiler have room", () => {
+    expect(CalculateCondensationFlow(1, 1000, 1000)).toEqual({ condensatePumpVolume: fullPump, newHotwellWaterVolume: 970 })
+  })
+
+  test("never returns more than the hotwell holds", () => {
+    expect(CalculateCondensationFlow(1, 12, 1000)).toEqual({ condensatePumpVolume: 12, newHotwellWaterVolume: 0 })
+    expect(CalculateCondensationFlow(1, 0, 1000)).toEqual({ condensatePumpVolume: 0, newHotwellWaterVolume: 0 })
+  })
+
+  test("never returns more than the boiler has room for, the rest stays in the hotwell", () => {
+    expect(CalculateCondensationFlow(1, 1000, 5)).toEqual({ condensatePumpVolume: 5, newHotwellWaterVolume: 995 })
+    expect(CalculateCondensationFlow(1, 1000, 0)).toEqual({ condensatePumpVolume: 0, newHotwellWaterVolume: 1000 })
+  })
+
+  test("a closed valve returns nothing", () => {
+    expect(CalculateCondensationFlow(0, 1000, 1000)).toEqual({ condensatePumpVolume: 0, newHotwellWaterVolume: 1000 })
   })
 })

@@ -8,12 +8,12 @@ import PowerPlantState from "../src/context/PowerPlantState"
 // (scenario, invariant) pairs that fail today, with the ticket that fixes them. When that ticket
 // lands the test.fails flips red: remove the entry so the pair guards as a normal test.
 const expectedFailures: Record<string, string> = {
-  "startup-cold / water is never created or lost": "#10, #20",
-  "turbine-start / water is never created or lost": "#10, #20",
-  "turbine-sync / water is never created or lost": "#10, #20",
+  "startup-cold / water is never created or lost": "#20",
+  "turbine-start / water is never created or lost": "#20",
+  "turbine-sync / water is never created or lost": "#20",
   "startup-cold / temperature within design temperature": "#9",
   "cooldown / natural cooldown never heats": "#12",
-  "bypass-loop / water is never created or lost": "#10",
+  "bypass-loop / water is never created or lost": "#32",
 }
 
 describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario) => {
@@ -63,6 +63,15 @@ describe("invariant checks", () => {
         sample(0, (s) => ({ ...s, Condenser: { ...s.Condenser, hotwellWaterVolume: 1e9 } })),
       ]),
     ).toHaveLength(1)
+  })
+
+  test("flags a return outside 0..the pump volume of one tick", () => {
+    const name = "condensation pump return within pump capacity"
+    const returning = (returnRate: number) => (s: PowerPlantState) => ({ ...s, Condenser: { ...s.Condenser, returnRate } })
+    // full pump: 300 l/s for one 0.1 s tick
+    expect(check(name, [sample(0, returning(30))])).toEqual([])
+    expect(check(name, [sample(0, returning(31))])).toHaveLength(1)
+    expect(check(name, [sample(0, returning(-1))])).toHaveLength(1)
   })
 
   test("caps the violations listed", () => {
