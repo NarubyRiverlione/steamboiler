@@ -10,34 +10,25 @@ Project documentation is indexed in `docs/README.md` — read it to find the top
 ## Realism rule
 
 Physics must be realistic: never add a magic number to speed up a process. Playability comes
-from over-dimensioning utilities (gas flow, pump volumes). Record every over-dimensioned utility
-in the register in `README.md` ("Over-dimensioned utilities").
+from sizing the utilities (gas flow, pump volumes). Record every over-dimensioned utility or
+deliberate reduction in the register in `docs/plant/design-basis.md`.
 
-## Current status (July 2026)
+## How to work
 
-Project is paused. It stalled on a slow feedback loop: every parameter tweak required a
-full app startup and a manual power-up sequence to judge the effect.
+Judge every physics or parameter change with the headless runner (`docs/dev/headless-runner.md`),
+not by running the app. Its scenario and invariant tests guard the manual-control path.
 
-## Next step: headless scenario runner
+## Where things go
 
-**Read `docs/headless runner.md` first** — it is the agreed plan to unblock the project.
-Summary: a Node script drives `PowerPlantTick` headless through scripted operator
-scenarios (via `PowerPlantReducer` actions), runs a full simulated startup in under a
-second, and writes a self-contained HTML report with time-series charts. Scenario
-assertions in vitest then guard the manual-control UX while the physics gets corrected
-per `docs/improvements.md` (energy-balance steam generation first).
-
-Do not resume parameter tuning or physics changes before the runner exists.
-
-## Known issues
-
-Tracked in `docs/known-issues.md`.
+See the rules at the top of `docs/README.md`. In short: work, bugs and ideas go into GitHub issues,
+never into a doc. When a change alters the plant or the code, update its reference doc in
+`docs/plant/` or `docs/dev/` in the same commit. A decision gets an ADR in `docs/adr/`.
 
 ## Commands (run at the repo root)
 
 - `pnpm dev` — run the app (vite `--host`: reachable on the LAN)
 - `pnpm test` — vitest
-- `pnpm sim [scenario]` — headless runner, writes `sim/reports/<scenario>-<timestamp>.csv` + self-contained `.html` report (see `docs/headless runner.md`)
+- `pnpm sim [scenario]` — headless runner, writes `sim/reports/<scenario>-<timestamp>.csv` + self-contained `.html` report (see `docs/dev/headless-runner.md`)
 - `pnpm sim:snapshots` — regenerate the committed start-state snapshots in `sim/snapshots/` (a test fails when they are stale)
 - `pnpm sim:serve [report.html]` — serve the newest report in `sim/reports/` on the LAN (`PORT`, default 4174); `pnpm sim:view` = run + serve
 - `pnpm lint` — eslint + tsc

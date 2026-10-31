@@ -1,0 +1,41 @@
+# Feedwater loop
+
+The closed water loop as built: boiler → main steam valve → bypass (or turbine) → condenser → hotwell → condensation pump → boiler. Why it is shaped this way: [ADR 0002](../adr/0002-makeup-into-hotwell.md). How real plants run it, with sources: [research/2026-10-feedwater-loop.md](../research/2026-10-feedwater-loop.md).
+
+## Boundary flows
+
+Water enters or leaves the loop in only three places. Everything else must conserve water (#10).
+
+| Flow | Where | Totalizer |
+|---|---|---|
+| Makeup | into the hotwell from storage | `makeupTotal` |
+| Reject | out of the hotwell to storage | `rejectTotal` |
+| Drain | out of the boiler | `drainedTotal` |
+
+The sim models no leaks, vents or blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` allows 0.1% of the start mass.
+
+## Level targets
+
+These are our own scaling to the simulator, agreed on #19, not sourced values.
+
+| Boiler (capacity 100 000 L) | Level |
+|---|---|
+| Target | 50% (50 000 L) |
+| Control band | ±5% |
+| Alarm | ±12% (not in code) |
+| Trip | below 30%, above 70% (not in code) |
+
+| Hotwell (capacity 15 000 L) | Level |
+|---|---|
+| Target | 70% |
+| Makeup opens | below 65% |
+| Reject opens | above 75% |
+
+## Control
+
+Real plants hold drum level and hotwell level with automatic control loops. In the sim the operator does this by hand. In scenarios a per-tick operator hook plays that role: `sim/scenarios/loop-operator.ts` (settings in `LoopSettings`). It:
+
+- opens the main steam valve, the bypass (10%) and restarts the SJAE once there is pressure
+- nudges the condensation pump valve toward the boiler level target
+- nudges cooling water against the steam mass in the condenser
+- opens makeup or reject on the hotwell limits, with hysteresis

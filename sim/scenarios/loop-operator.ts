@@ -2,7 +2,7 @@ import { CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 
-// An operator holding the closed water loop, decided from state alone (see docs/feedwater loop.md).
+// An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
 // Valve actions are deltas, so the operator asks for the difference to the position it wants.
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation

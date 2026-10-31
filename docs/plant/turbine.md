@@ -7,7 +7,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 | 1 | Black box: steam flow → electricity at a fixed ratio | ✅ |
 | 2 | Turbine exhaust feeds the condenser, with energy loss | ✅ |
 | 3 | RPM physics, set point, free/hold mode with PID | ✅ |
-| 4 | Generator breaker | in progress (uncommitted on branch `turbine-4`) |
+| 4 | Generator breaker | partly done: see Phase 4 |
 | 5 | Synchronisation and synchroscope | planned |
 
 ## Phase 1: black-box
@@ -22,7 +22,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 - Steam leaving the turbine has reduced energy: `outputTemp` and `outputPressure`, via a dedicated heuristic or empirical loss calculation
 - The condenser takes its steam from the turbine instead of the bypass valve, and keeps the reduced `OptimalPressure` requirement for that path
 - The bypass valve gets its own condenser intake without the pressure requirement
-- Both intakes are used in the condenser calculations (see [condensor plan.md](condensor%20plan.md))
+- Both intakes are used in the condenser calculations (see [condenser.md](condenser.md))
 
 ## Phase 3: RPM and control
 
@@ -45,18 +45,21 @@ Calculations: `src/utils/turbineCalculations.ts`; tick: `src/context/Turbine/Tur
 
 ## Phase 4: generator breaker
 
-- The breaker can only be closed at sync speed: 3000 RPM ±2 (`SyncRPM` ± `BreakerRPMMargin`, 50 Hz grid)
+Done:
+
+- The breaker can only be closed at sync speed: 3000 RPM ±2 (`SyncRPM` ± `BreakerRPMMargin`, 50 Hz grid); toggling a closed breaker opens it (`TOGGLE_GENERATOR_BREAKER`)
 - Electricity is only produced while the breaker is closed
-- If the steam flow cannot hold sync speed with the breaker closed, the breaker opens automatically
-- With the breaker closed, more steam flow gives more electricity while RPM stays at sync speed
 - UI: `GeneratorBreakerControl.tsx`
+
+Not built yet:
+
+- If the steam flow cannot hold sync speed with the breaker closed, the breaker opens automatically
+- With the breaker closed, more steam flow gives more electricity while RPM stays at sync speed (the output model is #14)
+
+Sync is not reachable from a cold start today (#18).
 
 ## Phase 5: synchronisation
 
 - Add a net demand in MW to the readout (constant in `CstTurbine`)
 - Calculate the generator phase from turbine speed
 - Add a synchroscope to the turbine controls showing the phase difference between generator and grid
-
-## Known issue
-
-One test fails in `TurbineTick.test.ts` (`electricOutput` expectation). Fix it before relying on the suite as a regression guard.

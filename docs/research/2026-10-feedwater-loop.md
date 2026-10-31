@@ -1,5 +1,7 @@
 # Feedwater loop: how real plants run it
 
+Frozen research record. The loop as built is in [plant/feedwater-loop.md](../plant/feedwater-loop.md); the makeup decision is [ADR 0002](../adr/0002-makeup-into-hotwell.md).
+
 Web research, Oct 2026, to settle the open decisions of issue #19 (bypass loop scenario). The loop is
 boiler → main steam valve → bypass → condenser → hotwell → condensation pump → boiler. "Real plant"
 statements below are sourced; the numbers under **Sim decision** are our own scaling to the

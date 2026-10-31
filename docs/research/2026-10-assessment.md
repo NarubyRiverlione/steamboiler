@@ -1,8 +1,10 @@
 # Assessment, 25 October 2026
 
+Frozen record of the project state on that date. The problems below became tickets #8–#15; see [ROADMAP.md](../../ROADMAP.md) for where they stand.
+
 Findings from running the simulator (suite, lint, UI, and a headless probe driving the real
 `PowerPlantTick` through `powerPlantReducer`). Nothing in the repo was changed. The probe was a
-throwaway; it is the seed for step 1 of [headless runner.md](headless%20runner.md).
+throwaway; it is the seed for step 1 of [headless-runner.md](../dev/headless-runner.md).
 
 ## Verdict
 
@@ -30,7 +32,7 @@ yet, and the cause is structural (missing invariants and a few bugs), not parame
 ## Problems, in suggested fix order
 
 1. **Steam generation ignores the gas setting.** `calculateSteamGeneration` hardcodes `MaxGasFlow`.
-   This is the energy-balance item in [improvements.md](improvements.md) and the root of most runaways.
+   This is the energy-balance item (#8) and the root of most runaways.
 2. **No safety valve or temperature cap.** The steam table clamps near 509 °C, nothing stops the runaway,
    and it ends in NaN.
 3. **Inconsistent start state.** 250 °C water at 1 bar flashes violently on tick one.

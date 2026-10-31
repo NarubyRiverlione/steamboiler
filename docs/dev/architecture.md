@@ -54,6 +54,11 @@ src/
 │   └── Boiler/ Condenser/ Turbine/   # <Subsystem>Tick.ts
 ├── navigation/                       # routing, tab navigation, layout
 └── utils/                            # calculations, steam tables, useEMA, average
+sim/                                  # headless scenario runner, see headless-runner.md
+├── scenarios/                        # one file per scenario, registered in index.ts
+├── snapshots/                        # committed start states (JSON)
+└── reports/                          # generated CSV + HTML, git-ignored
+scripts/roadmap.ts                    # generates ROADMAP.md from the GitHub issues
 ```
 
 ## Conventions
@@ -61,7 +66,7 @@ src/
 - Constants use a `Cst` prefix (`CstPhysics`, `CstSimulation`, `CstTurbine`) and live in `src/context/const.ts`. Do not hardcode tunables in calculations.
 - Components PascalCase, functions camelCase, types PascalCase. Use `type`, not `interface`. No `any`.
 - Default exports where possible. Function components with hooks. Explicit parameter and return types.
-- Context, provider and logic in separate files. All calculations in `src/utils/`.
+- Context, provider and logic in separate files; components read state through the context hook. All calculations in `src/utils/`.
 - One CSS file per component. Numbers formatted with `toFixed()` for display, 1 decimal.
 - Do not change the eslint configuration.
 - Units: °C, bar (vacuum in mbar), kJ for energy, litres for volume.
@@ -76,10 +81,10 @@ src/
 
 ## Numerical stability
 
-- Phase changes alter system properties quickly, so pressure uses damping factors (configurable in `CstSimulation`).
+- Phase changes alter system properties quickly, so the current pressure model uses damping factors (configurable in `CstSimulation`); [ADR 0001](../adr/0001-boiler-pressure-follows-saturation.md) removes them (#12).
 - Vacuum build-up and decay rates need careful tuning.
 - Edge cases: empty boiler, temperatures or pressures beyond the table, very small steam mass (minimum threshold before it affects pressure).
 
 ## Testing and commands
 
-Run in `steamboiler-web/`: `pnpm dev`, `pnpm test` (Vitest, 90% coverage target), `pnpm lint` (eslint + tsc). The planned scenario runner is in [headless runner.md](headless%20runner.md).
+Run at the repo root: `pnpm dev`, `pnpm test` (Vitest, 90% coverage target), `pnpm lint` (eslint + tsc). Physics changes are judged with the headless runner and guarded by its scenario and invariant tests: see [headless-runner.md](headless-runner.md). The full command list is in `CLAUDE.md`.
