@@ -11,7 +11,7 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 
 | # | Ticket | Priority | Status | Unblocks |
 | - | ------ | -------- | ------ | -------- |
-| 1 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P2 | needs-info | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) [#34](https://github.com/NarubyRiverlione/steamboiler/issues/34) |
+| 1 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P2 | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) [#34](https://github.com/NarubyRiverlione/steamboiler/issues/34) |
 | 2 | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) Verify and fix steam flow units | P2 | ready-for-agent | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) |
 | 3 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | needs-info | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
 | 4 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | needs-info |  |

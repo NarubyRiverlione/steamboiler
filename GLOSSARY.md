@@ -42,6 +42,10 @@ _Avoid_: Fill, top-up valve
 Hotwell water sent out of the loop to storage when the hotwell is too full.
 _Avoid_: Dump, overflow
 
+**Return**:
+Hotwell water pumped into the boiler by the condensation pump. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
+_Avoid_: Feedwater, refill
+
 **Natural cooldown**:
 The plant left alone with gas off and all valves closed, cooling down on its own.
 _Avoid_: Shutdown, trip
