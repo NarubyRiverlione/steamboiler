@@ -17,7 +17,7 @@ full app startup and a manual power-up sequence to judge the effect.
 **Read `docs/headless runner.md` first** — it is the agreed plan to unblock the project.
 Summary: a Node script drives `PowerPlantTick` headless through scripted operator
 scenarios (via `PowerPlantReducer` actions), runs a full simulated startup in under a
-second, and writes a self-contained `report.html` with time-series charts. Scenario
+second, and writes a self-contained HTML report with time-series charts. Scenario
 assertions in vitest then guard the manual-control UX while the physics gets corrected
 per `docs/improvements.md` (energy-balance steam generation first).
 
@@ -31,9 +31,9 @@ Tracked in `docs/known-issues.md`.
 
 - `pnpm dev` — run the app (vite `--host`: reachable on the LAN)
 - `pnpm test` — vitest
-- `pnpm sim [scenario] [out.csv] [report.html]` — headless runner, writes CSV + self-contained HTML report (see `docs/headless runner.md`)
+- `pnpm sim [scenario]` — headless runner, writes `sim/reports/<scenario>-<timestamp>.csv` + self-contained `.html` report (see `docs/headless runner.md`)
 - `pnpm sim:snapshots` — regenerate the committed start-state snapshots in `sim/snapshots/` (a test fails when they are stale)
-- `pnpm sim:serve [report.html]` — serve the report on the LAN (`PORT`, default 4174); `pnpm sim:view` = run + serve
+- `pnpm sim:serve [report.html]` — serve the newest report in `sim/reports/` on the LAN (`PORT`, default 4174); `pnpm sim:view` = run + serve
 - `pnpm lint` — eslint + tsc
 - `pnpm roadmap` — regenerate `ROADMAP.md` (ticket order) from the GitHub issues
 

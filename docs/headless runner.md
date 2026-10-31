@@ -2,8 +2,8 @@
 
 ## Status
 
-Build steps 1–4 are done. `pnpm sim [scenario] [out.csv] [report.html]` (default `startup-cold`,
-`sim-out.csv`, `report.html`, both git-ignored) runs a named scenario through `powerPlantReducer`
+Build steps 1–4 are done. `pnpm sim [scenario]` (default `startup-cold`; writes
+`sim/reports/<scenario>-<timestamp>.csv` and `.html`, git-ignored) runs a named scenario through `powerPlantReducer`
 (`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV plus
 a self-contained HTML report in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`,
 `firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`), `sim/report.ts` (`toReportHtml`; the
@@ -65,7 +65,7 @@ simulated startup runs in under a second, with charts instead of gauge-watching.
 Target workflow:
 
 ```
-edit const.ts  →  pnpm sim startup-cold  →  open report.html  →  compare curves
+edit const.ts  →  pnpm sim startup-cold  →  open the newest sim/reports/*.html  →  compare curves
 ```
 
 Feedback drops from ~15 minutes of manual operation to ~5 seconds.
@@ -163,7 +163,7 @@ committed. A scenario starts from one with `initial: loadSnapshot("<name>")` (`s
 the loader compares the file with the shape of `makeInitialState()` and throws on missing or extra
 keys or a wrong type, so a snapshot from an older state shape fails loudly instead of running.
 
-- `pnpm sim <scenario> [out.csv] [report.html] --snapshot <name>` writes the run's final state to
+- `pnpm sim <scenario> --snapshot <name>` writes the run's final state to
   `sim/snapshots/<name>.json` (ad hoc).
 - Committed snapshots are listed in `sim/snapshot-sources.ts` with the scenario whose final state
   they are; `pnpm sim:snapshots` regenerates them all. `sim/snapshot.test.ts` fails when a committed
@@ -179,7 +179,7 @@ UI presets ("cold", "hot standby", "at pressure") are #24; the UI starts cold.
 ```
 steamboiler-web/
   sim/
-    run.ts              // CLI entry: pnpm sim <scenario> [--out report.html]
+    run.ts              // CLI entry: pnpm sim <scenario> [--snapshot name]
     scenario.ts         // Scenario type + applyScenario + runScenario
     scenarios/
       startup-cold.ts

@@ -24,6 +24,5 @@ dist-ssr
 *.sw?
 
 # Headless runner output
-sim-out.csv
-report.html
+sim/reports/
 coverage
