@@ -73,10 +73,11 @@ scripts/roadmap.ts                    # generates ROADMAP.md from the GitHub iss
 
 ## Steam tables
 
-`steamTable.ts` holds 80–300 °C data (pressure, specific volume, enthalpy, specific heat, latent heat) with linear interpolation. Outside that range:
+`steamData.ts` holds IAPWS-IF97 saturation data from 80 °C to the critical point (373.946 °C, 220.64 bar): pressure, specific volume, enthalpy, specific heat, latent heat. `steamTable.ts` interpolates it linearly. Outside that range:
 
-- Boiling point: Antoine equation below the table, power law above
-- Latent heat: linear extrapolation at low temperature
+- Above the critical point (temperature or pressure): clamp to the critical-point row, never throw
+- Boiling point below the table: Antoine equation
+- Latent heat below 80 °C: linear extrapolation
 - Water properties below 80 °C: linear approximation
 
 ## Numerical stability

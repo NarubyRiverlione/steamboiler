@@ -45,7 +45,7 @@ Scenarios (`pnpm sim <name>`); each either replays the earlier operator steps fr
 | `turbine-start` | `at-pressure` | main steam valve, turbine valve to 25%, turbine rolling |
 | `turbine-sync` | cold | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21) |
 | `cooldown` | cold | at pressure, then natural cooldown for 60 min |
-| `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Runs to NaN above ~100 bar until #22 and #12 |
+| `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Runs to NaN above ~100 bar until #12 |
 
 `startup-cold` does not run the water loop: it leaves cooling water and the condensation pump at 0,
 so nothing condenses and nothing returns. Use `bypass-loop` for the loop.

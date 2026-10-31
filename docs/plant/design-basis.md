@@ -20,6 +20,7 @@ Add a row when you over-dimension a utility or reduce something for playability.
 |---|---|---|---|---|
 | Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: heat-up takes about 4.5 min instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
 | Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 15 min instead of 4 to 8 h | heating-rate limit constant (to be added in #13) |
+| Specific heat at the critical point (held) | 47.1 kJ/kg·K from 370 °C up | diverges to infinity at 373.946 °C | the simulation core must stay finite every tick; the table clamps at the critical point instead of throwing | last row of `steamTable` in `steamData.ts` |
 
 Basis for the realistic boiler volume (an engineering estimate, not a sourced data sheet): a drum of about 1.6–1.8 m inside diameter and 15–20 m long holds 35–50 m³, about half full of water; waterwall tubes and downcomers add roughly 80–120 m³. Heating 100 m³ of water plus the 100 t of steel from 20 °C to about 350 °C takes about 180 GJ, which is 8–9 minutes at the full 357 MW. The reduced 50 m³ heats in about 4.5 minutes. The single-lump boiler also has a steam space equal to total minus water, so at 165 bar a realistic 100 m³ would hold about 9 t of steam, more than a real drum.
 
@@ -57,7 +58,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Main steam valve minimum pressure | 10 bar |
 | Sync speed | 3000 RPM (50 Hz grid) |
 | Overspeed limit | 3300 RPM (110%) |
-| Electric output at rated steam flow | ≈ 150 MWe | derived from the enthalpy drop (#14): isentropic efficiency about 0.85, generator efficiency about 0.98; about 130 MWe at the 171 kg/s of full gas. Hand estimate from textbook steam tables; re-check after #22 |
+| Electric output at rated steam flow | ≈ 150 MWe | derived from the enthalpy drop (#14): isentropic efficiency about 0.85, generator efficiency about 0.98; about 130 MWe at the 171 kg/s of full gas. Hand estimate from textbook steam tables; re-check now that #22 is fixed |
 
 ## Condenser and water loop
 

@@ -1,10 +1,13 @@
-import { SteamData, steamTable } from "./steamData";
+import { type SteamData, steamTable } from "./steamData";
 
+
+// Last table row: the critical point, where lookups clamp (never throw, the simulation runs this every tick)
+const CriticalPoint: SteamData = steamTable[steamTable.length - 1];
 
 // Helper function to get steam data through interpolation
 export function getSteamData(temperature: number): SteamData {
-  // Clamp temperature to valid range
-  const clampedTemp = Math.max(80, Math.min(500, temperature));
+  // Clamp temperature to the table: 80°C up to the critical point
+  const clampedTemp = Math.max(steamTable[0].temperature, Math.min(CriticalPoint.temperature, temperature));
   
   // Find two closest data points
   let lower = steamTable[0];
@@ -92,12 +95,9 @@ export function getBoilingPoint(pressure: number): number {
     return Math.max(0, temperature); // Ensure temperature is not negative
   }
   
-  // For pressures above our table range, use a simple extrapolation
-  if (pressure > steamTable[steamTable.length - 1].pressure) {
-    // Simple power law extrapolation
-    // T = T_ref * (P/P_ref)^0.25
-    const refData = steamTable[steamTable.length - 1];
-    return refData.temperature * Math.pow(pressure / refData.pressure, 0.25);
+  // Above the critical pressure there is no boiling point: clamp to the critical point
+  if (pressure >= CriticalPoint.pressure) {
+    return CriticalPoint.temperature;
   }
   
   // Find two closest data points

@@ -1,14 +1,14 @@
 {
   "Boiler": {
-    "waterVolume": 49938.87912968625,
-    "temperature": 181.8787913648346,
-    "pressure": 10.645542910911463,
+    "waterVolume": 49937.458412775115,
+    "temperature": 182.2435913795583,
+    "pressure": 10.933763175055228,
     "gasFlow": 2000,
     "drainValveOpen": false,
     "drainedTotal": 0,
-    "energy": 37134586.49627761,
-    "energyDelta": 46383.981643449624,
-    "steamMass": 57.96199188478535,
+    "energy": 37148290.12745641,
+    "energyDelta": 46495.59484374124,
+    "steamMass": 59.275689678361566,
     "deltaWaterVolume": 0,
     "deltaSteamMass": 0
   },

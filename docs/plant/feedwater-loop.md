@@ -50,4 +50,4 @@ Real plants hold drum level and hotwell level with automatic control loops. In t
 - nudges cooling water against the steam mass in the condenser
 - opens makeup or reject on the hotwell limits, with hysteresis
 
-The `bypass-loop` scenario cannot reach the operating pressure yet: above about 100 bar the boiler model heats water past saturation, stops making steam and runs to NaN even with the bypass fully open (#22, #12, with no relief valve until #9). Its pressure and level assertions are expected failures until then; the scenario verifies those fixes.
+The `bypass-loop` scenario cannot reach the operating pressure yet: above about 100 bar the boiler model heats water past saturation, stops making steam and runs to NaN even with the bypass fully open (#12, with no relief valve until #9). Its pressure and level assertions are expected failures until then; the scenario verifies those fixes.

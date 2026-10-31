@@ -25,6 +25,8 @@ Steam generation (energy balance per tick, #8):
 3. Remaining energy ÷ latent heat (steam tables) = mass of steam generated, capped at the water mass
 4. Temperature stays at the boiling point during the phase change; the steam mass is subtracted from the water mass
 
+Steam table (`src/utils/steamData.ts`): saturated water from 80 °C up to the critical point (373.946 °C, 220.64 bar), generated from IAPWS-IF97 (liquid specific volume, enthalpy and specific heat, plus latent heat). Boiling point at 180 bar is 357.0 °C. Lookups clamp at the critical point and never throw: a temperature or pressure above it returns the critical-point row (latent heat 0). Over-pressure is handled elsewhere (#9, #33). Specific heat is held at its 370 °C value in the last row, see [design-basis.md](design-basis.md).
+
 Steam removal (`BoilerRemoveSteam`, once for the bypass, then for the turbine valve):
 
 ```
@@ -34,7 +36,7 @@ Reported flow     = removed / tick   (kg/s, never above valve position × rated 
 
 Rated steam flow is in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before this tick's generation, so it takes the steam from earlier ticks. Pressure follows the balance: it rises while less steam leaves than is generated, holds when they match, and falls when more leaves.
 
-Boiling point: steam-table interpolation in range, Antoine equation below it, power law above it. The high-pressure end is wrong: `getBoilingPoint(180)` gives about 434 °C instead of 357 °C (#22).
+Boiling point: steam-table interpolation in range, Antoine equation below it, clamped to the critical point (373.946 °C) from 220.64 bar up. `getBoilingPoint(180)` gives 357.0 °C.
 
 ## Pressure model
 

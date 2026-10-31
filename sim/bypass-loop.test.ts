@@ -44,7 +44,7 @@ describe("bypass-loop setup", () => {
 })
 
 // The boiler model breaks down above ~100 bar (water past saturation, no steam, pressure runs to
-// NaN), so the run cannot reach the 165 bar operating pressure yet. These verify #22 and #12.
+// NaN), so the run cannot reach the 165 bar operating pressure yet. These verify #12.
 describe("bypass-loop assertions", () => {
   test("condensation pump never returns more than the hotwell holds", () => {
     const empty = makeInitialState().Condenser
@@ -60,20 +60,20 @@ describe("bypass-loop assertions", () => {
     expect(next.hotwellWaterVolume).toBe(pumping.hotwellWaterVolume)
   })
 
-  test.fails("hotwell neither runs dry nor overflows (fails until #22, #12)", () => {
+  test.fails("hotwell neither runs dry nor overflows (fails until #12)", () => {
     for (const { state } of samples) {
       expect(state.Condenser.hotwellWaterVolume).toBeGreaterThan(0)
       expect(state.Condenser.hotwellWaterVolume).toBeLessThanOrEqual(CstCondenser.TotalVolume)
     }
   })
 
-  test.fails("bypass holds the operating pressure within the band (fails until #22, #12)", () => {
+  test.fails("bypass holds the operating pressure within the band (fails until #12)", () => {
     const { BoilerPressureTarget, BoilerPressureBand } = LoopSettings
     for (const { state } of steady)
       expect(Math.abs(state.Boiler.pressure - BoilerPressureTarget)).toBeLessThanOrEqual(BoilerPressureBand)
   })
 
-  test.fails("operator reaches a steady boiler level within the control band (fails until #22, #12)", () => {
+  test.fails("operator reaches a steady boiler level within the control band (fails until #12)", () => {
     const { BoilerLevelTarget, BoilerLevelBand } = LoopSettings
     for (const { state } of steady) {
       const level = state.Boiler.waterVolume / CstBoiler.TotalVolume
