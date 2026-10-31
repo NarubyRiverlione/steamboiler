@@ -60,20 +60,20 @@ describe("bypass-loop assertions", () => {
     expect(next.hotwellWaterVolume).toBe(pumping.hotwellWaterVolume)
   })
 
-  test.fails("hotwell neither runs dry nor overflows (fails until #12)", () => {
+  test.fails("hotwell neither runs dry nor overflows (fails until #45)", () => {
     for (const { state } of samples) {
       expect(state.Condenser.hotwellWaterVolume).toBeGreaterThan(0)
       expect(state.Condenser.hotwellWaterVolume).toBeLessThanOrEqual(CstCondenser.TotalVolume)
     }
   })
 
-  test.fails("bypass holds the operating pressure within the band (fails until #12)", () => {
+  test.fails("bypass holds the operating pressure within the band (fails until #45)", () => {
     const { BoilerPressureTarget, BoilerPressureBand } = LoopSettings
     for (const { state } of steady)
       expect(Math.abs(state.Boiler.pressure - BoilerPressureTarget)).toBeLessThanOrEqual(BoilerPressureBand)
   })
 
-  test.fails("operator reaches a steady boiler level within the control band (fails until #12)", () => {
+  test.fails("operator reaches a steady boiler level within the control band (fails until #45)", () => {
     const { BoilerLevelTarget, BoilerLevelBand } = LoopSettings
     for (const { state } of steady) {
       const level = state.Boiler.waterVolume / CstBoiler.TotalVolume

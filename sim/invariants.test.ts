@@ -14,12 +14,12 @@ const expectedFailures: Record<string, string> = {
   "turbine-sync / temperature within design temperature": "#43",
   "turbine-sync / pressure within design pressure": "#9",
   "bypass-loop / water is never created or lost": "#34",
-  "bypass-loop / no NaN or Infinity": "#12",
-  "bypass-loop / pressure within design pressure": "#12",
-  "bypass-loop / temperature within design temperature": "#12",
-  "bypass-loop / boiler water within capacity": "#12",
-  "bypass-loop / hotwell within capacity": "#12",
-  "bypass-loop / condensation pump return within pump capacity": "#12",
+  "bypass-loop / no NaN or Infinity": "#45",
+  "bypass-loop / pressure within design pressure": "#45",
+  "bypass-loop / temperature within design temperature": "#45",
+  "bypass-loop / boiler water within capacity": "#45",
+  "bypass-loop / hotwell within capacity": "#45",
+  "bypass-loop / condensation pump return within pump capacity": "#45",
 }
 
 describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario) => {
