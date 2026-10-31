@@ -29,7 +29,7 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
-| 14 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | needs-info | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) |
+| 14 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P2 | ready-for-agent | [#11](https://github.com/NarubyRiverlione/steamboiler/issues/11) |
 | 15 | [#9](https://github.com/NarubyRiverlione/steamboiler/issues/9) Relief valve and pressure/temperature cap | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
 | 16 | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) Replace the arbitrary pressure model | P2 | ready-for-agent | [#22](https://github.com/NarubyRiverlione/steamboiler/issues/22) |
 | 17 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P2 | ready-for-agent | [#12](https://github.com/NarubyRiverlione/steamboiler/issues/12) |

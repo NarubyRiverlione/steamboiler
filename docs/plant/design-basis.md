@@ -2,7 +2,7 @@
 
 What plant is being simulated: its size, its limits, and where it deliberately differs from a real plant. Values come from `src/context/const.ts` unless a row says otherwise.
 
-The plant is a utility-scale, gas-fired drum boiler of roughly 180–200 MWe, a class confirmed by the [sizing check](../research/2026-10-sizing-check.md).
+The plant is a utility-scale, gas-fired drum boiler of roughly 150 MWe at the rated steam flow (about 130 MWe at full-gas steam). Its utilities are sized for a conventional 180–200 MWe unit ([sizing check](../research/2026-10-sizing-check.md)), but the plant has no superheater and expands saturated steam, which yields less per kilogram (decided in #14).
 
 ## Realism rule
 
@@ -23,7 +23,7 @@ Add a row when you over-dimension a utility or reduce something for playability.
 
 Basis for the realistic boiler volume (an engineering estimate, not a sourced data sheet): a drum of about 1.6–1.8 m inside diameter and 15–20 m long holds 35–50 m³, about half full of water; waterwall tubes and downcomers add roughly 80–120 m³. Heating 100 m³ of water plus the 100 t of steel from 20 °C to about 350 °C takes about 180 GJ, which is 8–9 minutes at the full 357 MW. The reduced 50 m³ heats in about 4.5 minutes. The single-lump boiler also has a steam space equal to total minus water, so at 165 bar a realistic 100 m³ would hold about 9 t of steam, more than a real drum.
 
-Gas flow and the condensation pump are not departures: the sizing check found them sized for a roughly 200 MWe plant.
+Gas flow and the condensation pump are not departures: the sizing check found them sized for a conventional 200 MWe unit.
 
 ## Boiler
 
@@ -34,7 +34,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Working pressure | 165 bar | typical utility drum boiler (2400 psi); not a code constant yet |
 | Design pressure | 180 bar | must never be exceeded; not enforced yet (#9) |
 | Design temperature | 357 °C | saturation at 180 bar |
-| Max gas flow | 12 m³/s (12 000 L/s) | about 420 MW of fuel, in line with a 200 MWe unit |
+| Max gas flow | 12 m³/s (12 000 L/s) | about 420 MW of fuel, in line with a conventional 200 MWe unit |
 | Fuel power at max gas flow | ≈ 420 MW | 12 m³/s × 35 000 kJ/m³ |
 | Heat into the water at max gas flow | ≈ 357 MW | 85% gas efficiency |
 | Steam generation at full gas | 171 kg/s (about 615 t/h) | measured at 10 bar; a real unit of this size passes 170–180 kg/s |
@@ -56,7 +56,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Main steam valve minimum pressure | 10 bar |
 | Sync speed | 3000 RPM (50 Hz grid) |
 | Overspeed limit | 3300 RPM (110%) |
-| Steam-to-electricity efficiency | 35% |
+| Electric output at rated steam flow | ≈ 150 MWe | derived from the enthalpy drop (#14): isentropic efficiency about 0.85, generator efficiency about 0.98; about 130 MWe at the 171 kg/s of full gas. Hand estimate from textbook steam tables; re-check after #22 |
 
 ## Condenser and water loop
 

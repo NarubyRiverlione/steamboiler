@@ -44,6 +44,14 @@ _Avoid_: Leak, bleed
 The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
+**Rated steam flow**:
+The steam flow through the turbine with the turbine valve fully open: 200 kg/s.
+_Avoid_: Max steam removal, nominal flow
+
+**Electric output**:
+The power the generator delivers to the grid, in MW. Only produced with the breaker closed at sync speed; it follows from the steam flow and from the energy the turbine takes out of each kilogram, which depends on boiler pressure and condenser pressure.
+_Avoid_: Power, electricity, MW readout
+
 ### Operation
 
 **Ambient temperature**:
