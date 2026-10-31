@@ -35,12 +35,13 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space |
 | Water capacity | 100 m³ of liquid | `CstBoiler.TotalVolume`, see [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
 | Working pressure | 165 bar | typical utility drum boiler (2400 psi); not a code constant yet |
-| Design pressure | 180 bar | must never be exceeded; not enforced yet (#9) |
+| Design pressure | 180 bar | must never be exceeded; the relief valve holds it while water remains (see [boiler.md](boiler.md#relief-valve)) |
 | Design temperature | 357 °C | saturation at 180 bar |
 | Max gas flow | 12 m³/s (12 000 L/s) | about 420 MW of fuel, in line with a conventional 200 MWe unit |
 | Fuel power at max gas flow | ≈ 420 MW | 12 m³/s × 35 000 kJ/m³ |
 | Heat into the water at max gas flow | ≈ 357 MW | 85% gas efficiency |
 | Steam generation at full gas | 171 kg/s (about 615 t/h) | measured at 10 bar; a real unit of this size passes 170–180 kg/s |
+| Relief valve | opens 178 bar, closes 171 bar, ≈ 497 kg/s | 110% of the steam full gas makes at 178 bar; realistic sizing, not a departure |
 
 ## Startup and heat loss (target values, not in code yet, see #13)
 

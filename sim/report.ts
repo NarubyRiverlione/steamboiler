@@ -1,7 +1,7 @@
 import { CstSimulation } from "../src/context/const"
 import PowerPlantState from "../src/context/PowerPlantState"
 import { loopWater } from "./invariants"
-import { Sample, Scenario } from "./scenario"
+import { Lift, Sample, Scenario } from "./scenario"
 
 type Series = { label: string; value: (state: PowerPlantState) => number }
 // Colour code: temperature red, pressure green, volume blue, flows one hue each, valve position white, anything else amber.
@@ -60,6 +60,13 @@ export const panels: Panel[] = [
     kind: "volume",
     unit: "kg",
     series: one("Steam mass", (s) => s.Boiler.steamMass),
+  },
+  {
+    group: "Boiler",
+    title: "Vented to atmosphere",
+    kind: "volume",
+    unit: "kg",
+    series: one("Vented", (s) => s.Boiler.ventedTotal),
   },
   {
     group: "Boiler",
@@ -217,7 +224,7 @@ export const panels: Panel[] = [
       { label: "Boiler steam", value: (s) => s.Boiler.steamMass },
       { label: "Condenser steam", value: (s) => s.Condenser.steamMass },
       { label: "Hotwell", value: (s) => s.Condenser.hotwellWaterVolume },
-      { label: "Total excl. makeup, reject, drain", value: loopWater },
+      { label: "Total excl. makeup, reject, drain, vent", value: loopWater },
     ],
   },
 ]
@@ -285,6 +292,7 @@ function renderPanel(
   times: number[],
   values: number[][],
   actionTimes: number[],
+  lifts: Lift[],
 ) {
   const tEnd = times[times.length - 1] || 1
   const [yMin, yMax] = yRange(values.flat())
@@ -310,6 +318,13 @@ function renderPanel(
         `<line class="action" x1="${x(t).toFixed(1)}" x2="${x(t).toFixed(1)}" y1="${String(PAD.top)}" y2="${String(H - PAD.bottom)}"/>`,
     )
     .join("")
+  // A lift still open at the end runs to the last sample
+  const liftBands = lifts
+    .map((lift) => {
+      const [from, to] = [x(lift.open), x(lift.close ?? tEnd)]
+      return `<rect class="lift" x="${from.toFixed(1)}" y="${String(PAD.top)}" width="${(to - from).toFixed(1)}" height="${String(plotH)}"/>`
+    })
+    .join("")
   const lines = values
     .map((v, i) => `<path class="series s${String(i + 1)}" d="${linePath(times, v, x, y)}"/>`)
     .join("")
@@ -322,7 +337,7 @@ function renderPanel(
 <figcaption><span class="title">${escapeHtml(panel.title)} <span class="unit">${escapeHtml(panel.unit)}</span></span><span class="readout"></span></figcaption>
 ${legend}
 <svg viewBox="0 0 ${String(W)} ${String(H)}" tabindex="0" role="img" aria-label="${escapeHtml(`${panel.group} ${panel.title} over time`)}">
-${yGrid}<line class="axis" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${String(H - PAD.bottom)}" y2="${String(H - PAD.bottom)}"/>${xTicks}${actions}${lines}
+${yGrid}<line class="axis" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${String(H - PAD.bottom)}" y2="${String(H - PAD.bottom)}"/>${xTicks}${liftBands}${actions}${lines}
 <line class="crosshair" y1="${String(PAD.top)}" y2="${String(H - PAD.bottom)}" visibility="hidden"/>
 </svg></figure>`
 }
@@ -454,11 +469,11 @@ const kindVars = (theme: "light" | "dark") =>
 const SURFACE_LIGHT = `color-scheme: light;
   --surface: #fcfcfb; --card: #ffffff; --border: #e4e3df;
   --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #77756f;
-  --grid: #ecebe7; --axis: #b9b7b0; --action: #a8a59c;`
+  --grid: #ecebe7; --axis: #b9b7b0; --action: #a8a59c; --lift: rgba(217, 45, 32, 0.12);`
 const SURFACE_DARK = `color-scheme: dark;
   --surface: #1a1a19; --card: #222220; --border: #34332f;
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8d85;
-  --grid: #2c2b28; --axis: #55534d; --action: #6d6a62;`
+  --grid: #2c2b28; --axis: #55534d; --action: #6d6a62; --lift: rgba(249, 112, 102, 0.18);`
 
 const themeCss = () => `:root {
   ${SURFACE_LIGHT}
@@ -508,13 +523,20 @@ svg:focus-visible { outline: 2px solid var(--text-secondary); outline-offset: 2p
 .axis { stroke: var(--axis); stroke-width: 1; }
 .tick { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .action { stroke: var(--action); stroke-width: 1; stroke-dasharray: 3 3; }
+.lift { fill: var(--lift); }
 .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 ${[1, 2, 3, 4, 5].map((i) => `.series.s${String(i)} { stroke: var(--series-${String(i)}); }`).join("\n")}
 .crosshair { stroke: var(--text-secondary); stroke-width: 1; pointer-events: none; }
 `
 
 // Self-contained report: one HTML file, no external resources, opens offline by double-click.
-export function toReportHtml(scenario: Scenario, samples: Sample[]): string {
+// One line per relief valve lift: open – close (duration), vented mass
+const liftLine = ({ open, close, vented }: Lift): string => {
+  const until = close === undefined ? "still open" : `${clock(close)} (${(close - open).toFixed(1)} s)`
+  return `<li>${clock(open)} – ${until} — vented ${Math.round(vented).toLocaleString("en")} kg</li>`
+}
+
+export function toReportHtml(scenario: Scenario, samples: Sample[], lifts: Lift[] = []): string {
   const times = samples.map((s) => s.time)
   const values = panels.map((p) => p.series.map((s) => samples.map((sample) => s.value(sample.state))))
   const actionTimes = [...new Set(scenario.actions.map((a) => a.at))]
@@ -532,7 +554,7 @@ export function toReportHtml(scenario: Scenario, samples: Sample[]): string {
       const figures = (inRow?: number) =>
         panels
           .map((p, i) =>
-            p.group === group && p.row === inRow ? renderPanel(p, i, times, values[i], actionTimes) : "",
+            p.group === group && p.row === inRow ? renderPanel(p, i, times, values[i], actionTimes, lifts) : "",
           )
           .join("")
       const rows = [
@@ -566,11 +588,12 @@ export function toReportHtml(scenario: Scenario, samples: Sample[]): string {
 <body>
 <header>
 <h1>${escapeHtml(scenario.name)}</h1>
-<p class="meta">${escapeHtml(scenario.description)} · ${clock(times[times.length - 1] ?? 0)} sim-time · ${String(samples.length)} samples every ${String(scenario.sampleEvery)} s · x-axis in minutes · dashed lines = operator actions</p>
+<p class="meta">${escapeHtml(scenario.description)} · ${clock(times[times.length - 1] ?? 0)} sim-time · ${String(samples.length)} samples every ${String(scenario.sampleEvery)} s · x-axis in minutes · dashed lines = operator actions · shaded bands = relief valve lifts</p>
 <p class="hint">Hover a chart (or focus it and use ← →, Shift for ×10) to read all panels at one time.</p>
 <p id="cursor"></p>
 </header>
 <details><summary>Operator actions (${String(scenario.actions.length)})</summary><ul>${actionList}</ul></details>
+<details><summary>Relief valve lifts (${String(lifts.length)})</summary><ul>${lifts.map(liftLine).join("")}</ul></details>
 ${groups}
 <script type="application/json" id="data">${jsonForScript(data)}</script>
 <script>${CLIENT_SCRIPT}</script>

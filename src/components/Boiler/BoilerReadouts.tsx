@@ -2,17 +2,29 @@ import { useState } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import Readout from "../Readout"
+import Indicator from "../Indicator"
 import useEMA from "../../utils/useEMA"
 
 const BoilerReadouts = () => {
   const {
     state: {
-      Boiler: { gasFlow, waterVolume, temperature, pressure, energyDelta, steamMass, deltaSteamMass, energy },
+      Boiler: {
+        gasFlow,
+        waterVolume,
+        temperature,
+        pressure,
+        energyDelta,
+        steamMass,
+        deltaSteamMass,
+        energy,
+        reliefValveOpen,
+        ventedTotal,
+      },
     },
   } = usePowerPlant()
 
   const {
-    CstBoiler: { TotalVolume },
+    CstBoiler: { TotalVolume, ReliefOpenPressure, ReliefClosePressure },
   } = CstSimulation
 
   const [advancedExpanded, setAdvancedExpanded] = useState(false)
@@ -35,6 +47,20 @@ const BoilerReadouts = () => {
       <Readout title="Temperature" value={temperature} unit="°C" fixed={1} />
 
       <Readout title="Pressure" value={useEMA(pressure, 0.01)} unit="bar" fixed={1} />
+
+      <div className="readout-container">
+        <div className="readout-item">
+          <span className="label">Relief valve</span>
+          <Indicator
+            isActive={reliefValveOpen}
+            title={`Opens at ${String(ReliefOpenPressure)} bar, closes at ${String(ReliefClosePressure)} bar`}
+            label="Open"
+          />
+        </div>
+        <div className="readout-right">
+          <div className="value">{(ventedTotal / 1e3).toFixed(1)} t vented</div>
+        </div>
+      </div>
 
       <Readout title="Energy Change" value={useEMA(energyDelta / 1e3, 0.01)} unit="MJ/s" colored />
 

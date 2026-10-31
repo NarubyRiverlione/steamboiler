@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick, { BoilerRemoveSteam, drainBoiler, valvePositionFor, warmBy, waterMassOf } from "./BoilerTick"
+import BoilerTick, { BoilerRemoveSteam, BoilerVent, drainBoiler, warmBy, waterMassOf } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 import { calculateBoilerPressure, calculateSteamInventory } from "../../utils/boilerCalculations"
@@ -223,16 +223,50 @@ describe("BoilerTick helpers", () => {
     expect(warmBy(150, 1e6, 0)).toBe(150)
     expect(warmBy(150, 1000, 100)).toBe(160)
   })
+})
 
-  test("the vent has no valve yet, so it passes nothing", () => {
-    const open = { ...makeInitialState().Turbine, bypassValvePosition: 1, turbineValvePosition: 1 }
-    expect(valvePositionFor(open, "VENT")).toBe(0)
-    const { boilerState, turbineState } = BoilerRemoveSteam(
-      { ...cold, steamMass: 50 },
-      { ...open, mainSteamValve: true },
-      "VENT",
-    )
-    expect(boilerState.steamMass).toBe(50)
-    expect(turbineState).toEqual({ ...open, mainSteamValve: true })
+describe("BoilerVent relief valve", () => {
+  // 1.1 × 357 MW of heat over about 790 kJ/kg latent heat at 178 bar (356.2 °C, IAPWS-IF97) ≈ 497 kg/s
+  const capacityPerTick = 497 * DeltaTime
+  const at = (pressure: number, reliefValveOpen = false) => ({
+    ...cold,
+    pressure,
+    reliefValveOpen,
+    steamMass: 8000,
+  })
+
+  test("lifts at 178 bar and vents its capacity", () => {
+    const vented = BoilerVent(at(178))
+    expect(vented.reliefValveOpen).toBe(true)
+    expect(vented.steamMass).toBeCloseTo(8000 - capacityPerTick, 0)
+    expect(vented.ventedTotal).toBeCloseTo(capacityPerTick, 0)
+    expect(vented.reliefLifts).toBe(1)
+  })
+
+  test("stays open through the blowdown without counting a new lift", () => {
+    const vented = BoilerVent({ ...at(172, true), reliefLifts: 1 })
+    expect(vented.reliefValveOpen).toBe(true)
+    expect(vented.ventedTotal).toBeCloseTo(capacityPerTick, 0)
+    expect(vented.reliefLifts).toBe(1)
+  })
+
+  test("reseats at 171 bar and vents nothing", () => {
+    const reseated = BoilerVent(at(171, true))
+    expect(reseated.reliefValveOpen).toBe(false)
+    expect(reseated.steamMass).toBe(8000)
+    expect(reseated.ventedTotal).toBe(0)
+  })
+
+  test.each([165, 177.9])("stays shut at %d bar", (pressure) => {
+    const shut = BoilerVent(at(pressure))
+    expect(shut.reliefValveOpen).toBe(false)
+    expect(shut.steamMass).toBe(8000)
+    expect(shut.reliefLifts).toBe(0)
+  })
+
+  test("never vents more steam than the drum holds", () => {
+    const vented = BoilerVent({ ...at(180), steamMass: 10 })
+    expect(vented.steamMass).toBe(0)
+    expect(vented.ventedTotal).toBe(10)
   })
 })

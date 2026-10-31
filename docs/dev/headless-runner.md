@@ -14,7 +14,7 @@ edit const.ts  →  pnpm sim <scenario>  →  open the newest sim/reports/*.html
 `sim/reports/<scenario>-<timestamp>.csv` and `.html`, git-ignored) runs a named scenario through `powerPlantReducer`
 (`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV plus
 a self-contained HTML report in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`,
-`firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`), `sim/report.ts` (`toReportHtml`; the
+`runScenarioWithLifts`, `firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`), `sim/report.ts` (`toReportHtml`; the
 panel list is the `panels` array), `sim/scenarios/` (one file per scenario, registered in
 `index.ts`), `sim/run.ts` (CLI). A scenario's `initial` state is the cold plant from
 `makeInitialState()` in `src/context/PowerPlantReducer.ts` (the UI starts there too), or a snapshot
@@ -23,15 +23,17 @@ panel list is the `panels` array), `sim/scenarios/` (one file per scenario, regi
 ## Report
 
 The report is hand-rolled SVG (no CDN, opens offline). Hovering any panel moves a synced
-crosshair across all panels; dashed lines mark operator actions. On a headless machine,
+crosshair across all panels; dashed lines mark operator actions and shaded bands mark relief valve
+lifts, which are also listed with open and close time and vented mass. Lifts are recorded per tick
+(`runScenarioWithLifts`, `trackLifts`), so a lift shorter than the sample interval still shows. On a headless machine,
 `pnpm sim:serve` serves it on `0.0.0.0:4174` (`PORT` to override) and prints the LAN URLs; the
 file is re-read per request, so re-run `pnpm sim` and refresh. `pnpm sim:view` does both.
 
 Panels are grouped Boiler, Turbine, Condenser, Hotwell and Loop (the list is the `panels` array in
 `sim/report.ts`). The **Loop** group's water inventory shows a total that should stay flat
 (boundary flows undone). The water
-invariant counts makeup, reject and drain as boundary flows via the totalizers `makeupTotal`,
-`rejectTotal` and `drainedTotal`, so they are not flagged as created or lost water.
+invariant counts makeup, reject, drain and vent as boundary flows via the totalizers `makeupTotal`,
+`rejectTotal`, `drainedTotal` and `ventedTotal`, so they are not flagged as created or lost water.
 
 ## Scenarios
 
@@ -43,9 +45,11 @@ Scenarios (`pnpm sim <name>`); each either replays the earlier operator steps fr
 | `startup-cold` | cold | cold → 10 bar, main steam valve open, turbine valve cracked |
 | `heat-up` | cold | cold → 10 bar with vacuum pulled, nothing opened; source of the `at-pressure` snapshot |
 | `turbine-start` | `at-pressure` | main steam valve, turbine valve to 25%, turbine rolling |
-| `turbine-sync` | cold | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21) |
+| `turbine-sync` | cold | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21). The unfed boiler runs dry at ~1290 s and jumps to the critical point, past design pressure (#33, #43) |
 | `cooldown` | cold | at pressure, then natural cooldown for 60 min |
 | `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Reaches 165 bar since #12, then the hotwell empties, the boiler boils dry and the condenser goes NaN (see feedwater-loop.md) |
+| `relief-lift` | cold | full gas with everything closed until the relief valve lifts (~226 s), then gas off: one lift, 178 → 171 bar, then cooldown |
+| `full-gas` | cold | full gas for an hour with everything closed: the relief valve lifts at ~225 s and holds the pressure below design (peak ≈ 178.1 bar per tick) until the boiler runs dry at ~272 s; after that the dry boiler stays frozen at about 126 bar (burner protection is #33) |
 
 `startup-cold` does not run the water loop: it leaves cooling water and the condensation pump at 0,
 so nothing condenses and nothing returns. Use `bypass-loop` for the loop.

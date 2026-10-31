@@ -6,6 +6,7 @@ import {
 } from "../../utils/boilerCalculations"
 import {
   CriticalTemperature,
+  getBoilingPoint,
   getLatentHeat,
   getWaterDensity,
   getWaterSpecificHeat,
@@ -103,20 +104,40 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   }
 }
 
-type SteamOutlet = "BYPASS" | "TURBINE" | "VENT"
+// Relief capacity (kg/s): the steam full gas makes at the opening pressure, with the capacity margin on top
+export const ReliefCapacity =
+  (CstBoiler.ReliefCapacityMargin * calculateGasEnergy(CstBoiler.MaxGasFlow)) /
+  getLatentHeat(getBoilingPoint(CstBoiler.ReliefOpenPressure))
 
-// Position of the valve the steam leaves through; the vent has no valve yet
+// The relief valve on the drum vents steam to the atmosphere, upstream of the main steam valve. It decides on the
+// pressure at the start of the tick: fully open from the opening pressure until it falls to the closing pressure
+// (the blowdown).
+export function BoilerVent(boilerState: BoilerState): BoilerState {
+  const { reliefValveOpen: wasOpen, pressure, steamMass } = boilerState
+  const open = wasOpen ? pressure > CstBoiler.ReliefClosePressure : pressure >= CstBoiler.ReliefOpenPressure
+  if (!open) return { ...boilerState, reliefValveOpen: false }
+  const vented = Math.min(steamMass, ReliefCapacity * CstSimulation.DeltaTime)
+  return {
+    ...boilerState,
+    reliefValveOpen: true,
+    steamMass: steamMass - vented,
+    ventedTotal: boilerState.ventedTotal + vented,
+    reliefLifts: boilerState.reliefLifts + (wasOpen ? 0 : 1),
+  }
+}
+
+type SteamOutlet = "BYPASS" | "TURBINE"
+
+// Position of the valve the steam leaves through
 export function valvePositionFor(turbineState: TurbineState, removeBy: SteamOutlet): number {
-  if (removeBy === "BYPASS") return turbineState.bypassValvePosition
-  if (removeBy === "TURBINE") return turbineState.turbineValvePosition
-  return 0
+  return removeBy === "BYPASS" ? turbineState.bypassValvePosition : turbineState.turbineValvePosition
 }
 
 // Report the flow (kg/s) on the outlet it went through, leaving the other outlet's flow as it was
 function withSteamFlowOut(turbineState: TurbineState, removeBy: SteamOutlet, flow: number): TurbineState {
-  if (removeBy === "TURBINE") return { ...turbineState, turbineSteamFlowOut: flow }
-  if (removeBy === "BYPASS") return { ...turbineState, bypassSteamFlowOut: flow }
-  return turbineState
+  return removeBy === "TURBINE"
+    ? { ...turbineState, turbineSteamFlowOut: flow }
+    : { ...turbineState, bypassSteamFlowOut: flow }
 }
 
 // --- Steam Removal Calculation ---

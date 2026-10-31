@@ -1,13 +1,16 @@
 import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick from "./Turbine/TurbineTick"
-import BoilerTick, { BoilerRemoveSteam } from "./Boiler/BoilerTick"
+import BoilerTick, { BoilerRemoveSteam, BoilerVent } from "./Boiler/BoilerTick"
 
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import { CstSimulation } from "./const"
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
+  // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
+  const ventedBoiler = BoilerVent(state.Boiler)
+
   // remove steam via bypass valve
-  const bypassResult = BoilerRemoveSteam(state.Boiler, state.Turbine, "BYPASS")
+  const bypassResult = BoilerRemoveSteam(ventedBoiler, state.Turbine, "BYPASS")
 
   // Turbine
   const turbineNewState: TurbineState = TurbineTick(

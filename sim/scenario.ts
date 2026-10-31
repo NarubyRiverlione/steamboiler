@@ -19,6 +19,9 @@ export type Scenario = {
 
 export type Sample = { time: number; state: PowerPlantState }
 
+// One lift of the relief valve: open and close in sim-seconds (close undefined while still open at the end), kg vented
+export type Lift = { open: number; close?: number; vented: number }
+
 // Sim-time of the first sample where the condition holds, or undefined if it never does.
 export function firstTimeWhere(samples: Sample[], condition: (state: PowerPlantState) => boolean): number | undefined {
   return samples.find((s) => condition(s.state))?.time
@@ -63,9 +66,31 @@ function actionsThisTick(
   return scenario.operator ? applyAll(afterTimed, scenario.operator(afterTimed, time)) : afterTimed
 }
 
+// The last lift if an open valve continues it; undefined for a new lift, or a run from a snapshot taken mid-lift
+function continuingLift(lifts: Lift[], wasOpen: boolean): Lift | undefined {
+  const last = lifts.at(-1)
+  return wasOpen && last?.close === undefined ? last : undefined
+}
+
+// Lifts so far after one tick from `before` to `after` that ran from `time`: a lift opens or closes within a tick,
+// so lifts shorter than the sample interval are still recorded
+export function trackLifts(lifts: Lift[], before: PowerPlantState, after: PowerPlantState, time: number): Lift[] {
+  const [was, now] = [before.Boiler.reliefValveOpen, after.Boiler.reliefValveOpen]
+  if (!was && !now) return lifts
+  const continuing = continuingLift(lifts, was)
+  const lift = continuing ?? { open: time, vented: 0 }
+  const vented = lift.vented + after.Boiler.ventedTotal - before.Boiler.ventedTotal
+  const updated: Lift = now ? { ...lift, vented } : { ...lift, vented, close: time }
+  return [...lifts.filter((l) => l !== continuing), updated]
+}
+
 // Same path as the UI: operator actions and SIMULATE_TICK both go through the reducer.
-// Hands each sample to `record` and returns the state after the last tick.
-function simulate(scenario: Scenario, record: (sample: Sample) => void): PowerPlantState {
+// Hands each sample to `record`, each tick to `onTick`, and returns the state after the last tick.
+function simulate(
+  scenario: Scenario,
+  record: (sample: Sample) => void,
+  onTick: (before: PowerPlantState, after: PowerPlantState, time: number) => void = () => undefined,
+): PowerPlantState {
   const { DeltaTime } = CstSimulation
   const { ticks, sampleTicks } = toTicks(scenario)
   const actionsAt = scheduleActions(scenario, ticks)
@@ -74,15 +99,29 @@ function simulate(scenario: Scenario, record: (sample: Sample) => void): PowerPl
   for (let tick = 0; tick < ticks; tick++) {
     state = actionsThisTick(scenario, actionsAt.get(tick), state, tick * DeltaTime)
     if (tick % sampleTicks === 0) record({ time: tick * DeltaTime, state })
+    const before = state
     state = powerPlantReducer(state, { type: "SIMULATE_TICK" })
+    onTick(before, state, tick * DeltaTime)
   }
   return state
 }
 
 export function runScenario(scenario: Scenario): Sample[] {
+  return runScenarioWithLifts(scenario).samples
+}
+
+// The samples plus every relief valve lift, recorded per tick
+export function runScenarioWithLifts(scenario: Scenario): { samples: Sample[]; lifts: Lift[] } {
   const samples: Sample[] = []
-  simulate(scenario, (sample) => samples.push(sample))
-  return samples
+  let lifts: Lift[] = []
+  simulate(
+    scenario,
+    (sample) => samples.push(sample),
+    (before, after, time) => {
+      lifts = trackLifts(lifts, before, after, time)
+    },
+  )
+  return { samples, lifts }
 }
 
 // The plant state at the end of the run: what a snapshot of this scenario holds.

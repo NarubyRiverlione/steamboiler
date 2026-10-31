@@ -68,3 +68,24 @@ describe("PowerPlantTick turbine exhaust", () => {
     expect(next.Condenser.steamMass).toBeCloseTo(1, 9)
   })
 })
+
+describe("PowerPlantTick relief valve", () => {
+  // At 178 bar with the main steam valve closed, as after a heat-up with everything shut
+  const atLift: PowerPlantState = {
+    ...cold,
+    Boiler: { ...cold.Boiler, temperature: 356, pressure: 178, steamMass: 8000, waterVolume: 37_600 },
+  }
+
+  test("vents to the atmosphere with the main steam valve closed", () => {
+    const next = PowerPlantTick(atLift)
+    expect(next.Boiler.reliefValveOpen).toBe(true)
+    expect(next.Boiler.ventedTotal).toBeGreaterThan(0)
+    expect(next.Boiler.reliefLifts).toBe(1)
+  })
+
+  test("vented steam never reaches the condenser", () => {
+    const next = PowerPlantTick(atLift)
+    expect(next.Condenser.intakeFlowRate).toBe(0)
+    expect(next.Condenser.steamMass).toBe(0)
+  })
+})

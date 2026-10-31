@@ -12,7 +12,8 @@ const expectedFailures: Record<string, string> = {
   "turbine-start / water is never created or lost": "#34",
   "turbine-sync / water is never created or lost": "#34",
   "turbine-sync / temperature within design temperature": "#43",
-  "turbine-sync / pressure within design pressure": "#9",
+  // the unfed boiler runs dry at 1 bar and jumps to the critical point as its last water goes; the relief valve never lifts in time
+  "turbine-sync / pressure within design pressure": "#33, #43",
   "bypass-loop / water is never created or lost": "#34",
   "bypass-loop / no NaN or Infinity": "#45",
   "bypass-loop / pressure within design pressure": "#45",
@@ -20,6 +21,8 @@ const expectedFailures: Record<string, string> = {
   "bypass-loop / boiler water within capacity": "#45",
   "bypass-loop / hotwell within capacity": "#45",
   "bypass-loop / condensation pump return within pump capacity": "#45",
+  "relief-lift / water is never created or lost": "#34",
+  "full-gas / water is never created or lost": "#34",
 }
 
 describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario) => {
@@ -113,6 +116,11 @@ describe("invariant checks", () => {
         },
       })
       expect(check(name, [sample(0, (s) => s), sample(10, boundary)])).toEqual([])
+    })
+
+    test("counts vented steam as a boundary flow, not lost water", () => {
+      const vented = boiler({ steamMass: base.Boiler.steamMass - 0.5, waterVolume: base.Boiler.waterVolume - 5000, ventedTotal: 5000.5 })
+      expect(check(name, [sample(0, (s) => s), sample(10, vented)])).toEqual([])
     })
 
     test("allows 2% of the steam that left the boiler", () => {

@@ -34,6 +34,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0002](adr/0002-makeup-into-hotwell.md) | Makeup water enters at the hotwell; the boiler is fed only by the condensation pump |
 | [0003](adr/0003-turbine-trip-on-vacuum-limit.md) | The turbine valve trips above the vacuum limit |
 | [0004](adr/0004-return-stops-at-full-boiler.md) | The Return stops at a full boiler; no overflow |
+| [0005](adr/0005-relief-valve-vents-to-atmosphere.md) | The relief valve vents to the atmosphere and is sized at 110% of full-gas steam |
 
 ## Research (dated, frozen)
 

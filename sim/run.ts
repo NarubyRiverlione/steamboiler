@@ -3,7 +3,7 @@ import process from "node:process"
 import { toCsv } from "./csv"
 import { REPORTS_DIR, reportPaths } from "./report-paths"
 import { toReportHtml } from "./report"
-import { finalState, runScenario } from "./scenario"
+import { finalState, runScenarioWithLifts } from "./scenario"
 import { scenarios } from "./scenarios"
 import { saveSnapshot } from "./snapshot"
 
@@ -27,13 +27,13 @@ if (!Object.hasOwn(scenarios, name)) {
 const scenario = scenarios[name]
 
 const start = performance.now()
-const samples = runScenario(scenario)
+const { samples, lifts } = runScenarioWithLifts(scenario)
 const { csv, html } = reportPaths(scenario.name, new Date())
 mkdirSync(REPORTS_DIR, { recursive: true })
 writeFileSync(csv, toCsv(samples))
-writeFileSync(html, toReportHtml(scenario, samples))
+writeFileSync(html, toReportHtml(scenario, samples, lifts))
 const ms = Math.round(performance.now() - start)
 console.log(
-  `${scenario.name}: ${String(samples.length)} samples -> ${csv}, ${html} (${String(ms)} ms wall)`,
+  `${scenario.name}: ${String(samples.length)} samples, ${String(lifts.length)} relief valve lifts -> ${csv}, ${html} (${String(ms)} ms wall)`,
 )
 if (snapshot) console.log(`final state -> ${saveSnapshot(snapshot, finalState(scenario))}`)

@@ -4,15 +4,16 @@ The closed water loop as built: boiler → main steam valve → bypass (or turbi
 
 ## Boundary flows
 
-Water enters or leaves the loop in only three places. Everything else must conserve water.
+Water enters or leaves the loop in only four places. Everything else must conserve water.
 
 | Flow | Where | Totalizer |
 |---|---|---|
 | Makeup | into the hotwell from storage | `makeupTotal` |
 | Reject | out of the hotwell to storage | `rejectTotal` |
 | Drain | out of the boiler | `drainedTotal` |
+| Vent | steam out of the boiler to the atmosphere through the relief valve ([boiler.md](boiler.md#relief-valve)) | `ventedTotal` (kg) |
 
-The sim models no leaks, vents or blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` allows 0.1% of the start mass.
+The sim models no leaks or continuous blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` allows 0.1% of the start mass.
 
 ## Return and capacity
 

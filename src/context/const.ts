@@ -13,6 +13,9 @@ export const CstSimulation = {
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
     DesignPressure: 180, // bar, the boiler must never exceed it (see GLOSSARY.md)
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
+    ReliefOpenPressure: 178, // bar, the relief valve lifts fully (2 bar margin for one tick's rise)
+    ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
+    ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
   },
 
   CstCondenser: {

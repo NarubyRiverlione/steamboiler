@@ -18,6 +18,9 @@ export const makeInitialState = (): PowerPlantState => ({
     gasFlow: 0, // liters/second
     drainValveOpen: false,
     drainedTotal: 0,
+    reliefValveOpen: false,
+    ventedTotal: 0, // kg
+    reliefLifts: 0,
     energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, AmbientTemperature), // kJ
     energyDelta: 0, // kJ/s
     steamMass: calculateSteamInventory(AmbientTemperature, CstBoiler.StartWaterVolume), // kg - vapour over the water, in equilibrium

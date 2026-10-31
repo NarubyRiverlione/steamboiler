@@ -177,6 +177,33 @@ describe("toReportHtml", () => {
   })
 })
 
+describe("toReportHtml relief valve lifts", () => {
+  const samples = runScenario(scenario)
+  const lifts = [
+    { open: 20, close: 26.5, vented: 2934.4 },
+    { open: 50, vented: 120 },
+  ]
+  const html = toReportHtml(scenario, samples, lifts)
+
+  test("marks each lift as a band on every chart, an open lift up to the end", () => {
+    expect(html.match(/<rect class="lift"/g)).toHaveLength(2 * panels.length)
+    // x = left padding 52 + t / 50 s × plot width 416
+    expect(html).toContain('<rect class="lift" x="218.4" y="10" width="54.1" height="146"/>')
+    expect(html).toContain('<rect class="lift" x="468.0" y="10" width="0.0" height="146"/>')
+  })
+
+  test("lists each lift with its open and close time and the steam it vented", () => {
+    expect(html).toContain("Relief valve lifts (2)")
+    expect(html).toContain("<li>0:20 – 0:27 (6.5 s) — vented 2,934 kg</li>")
+    expect(html).toContain("<li>0:50 – still open — vented 120 kg</li>")
+  })
+
+  test("a run without lifts says so", () => {
+    expect(toReportHtml(scenario, samples)).toContain("Relief valve lifts (0)")
+    expect(toReportHtml(scenario, samples)).not.toContain('class="lift"')
+  })
+})
+
 describe("niceTicks", () => {
   test("steps by 1/2/5 × 10^k within the range", () => {
     expect(niceTicks(0, 30, 5)).toEqual([0, 10, 20, 30])

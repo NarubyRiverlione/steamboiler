@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { finalState, firstTimeWhere, runScenario, Scenario } from "./scenario"
+import { finalState, firstTimeWhere, runScenario, runScenarioWithLifts, Scenario, trackLifts } from "./scenario"
 import { scenarios } from "./scenarios"
 import { cooldown, CooldownDuration } from "./scenarios/cooldown"
+import { fullGas } from "./scenarios/full-gas"
+import { GasOffAt, reliefLift } from "./scenarios/relief-lift"
 import { startupCold } from "./scenarios/startup-cold"
 import { AtPressure, heatUp as heatUpSteps, openMainSteam, rollTurbine, since, TurbineValveOpenAt } from "./scenarios/steps"
 import { turbineStart } from "./scenarios/turbine-start"
@@ -247,6 +249,63 @@ describe("cooldown", () => {
   })
 })
 
+describe("relief-lift", () => {
+  const { samples, lifts } = runScenarioWithLifts(reliefLift)
+
+  test("records the one lift with its open and close time, though it is shorter than a sample", () => {
+    expect(lifts).toHaveLength(1)
+    const [lift] = lifts
+    // full gas reaches 178 bar after about 3¾ minutes; with the gas off the 7 bar blowdown takes seconds
+    expect(lift.open).toBeGreaterThan(200)
+    expect(lift.open).toBeLessThan(GasOffAt)
+    expect(lift.close).toBeGreaterThan(GasOffAt)
+    expect(lift.close).toBeLessThan(GasOffAt + 30)
+  })
+
+  test("the lift vents what the totalizer counts", () => {
+    expect(lifts[0].vented).toBeCloseTo(samples[samples.length - 1].state.Boiler.ventedTotal, 6)
+  })
+
+  test("the valve stays shut at working pressure", () => {
+    const below = samples.filter((s) => s.state.Boiler.pressure <= 165)
+    expect(below.every((s) => !s.state.Boiler.reliefValveOpen)).toBe(true)
+  })
+})
+
+describe("trackLifts", () => {
+  const plant = makeInitialState()
+  const valve = (open: boolean, ventedTotal: number) => ({
+    ...plant,
+    Boiler: { ...plant.Boiler, reliefValveOpen: open, ventedTotal },
+  })
+
+  test("a run from a snapshot taken mid-lift starts the lift at its first tick", () => {
+    expect(trackLifts([], valve(true, 100), valve(false, 150), 0)).toEqual([{ open: 0, close: 0, vented: 50 }])
+  })
+
+  test("a lift still open at the end has no close time", () => {
+    const opened = trackLifts([], valve(false, 0), valve(true, 50), 10)
+    expect(trackLifts(opened, valve(true, 50), valve(true, 100), 10.1)).toEqual([{ open: 10, vented: 100 }])
+  })
+})
+
+describe("full-gas", () => {
+  // every tick, so no overshoot hides between samples
+  const samples = runScenario({ ...fullGas, sampleEvery: 0.1 })
+
+  test("the relief valve lifts and pressure never exceeds design pressure in any tick", () => {
+    expect(samples[samples.length - 1].state.Boiler.reliefLifts).toBeGreaterThan(0)
+    expect(Math.max(...samples.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(180)
+  })
+
+  test("no NaN or Infinity in an hour of full gas", () => {
+    const values: unknown[] = samples.flatMap((s) =>
+      [s.state.Boiler, s.state.Condenser, s.state.Turbine].flatMap((part) => Object.values(part) as unknown[]),
+    )
+    expect(values.filter((v) => typeof v === "number" && !Number.isFinite(v))).toEqual([])
+  })
+})
+
 describe("scenario registry", () => {
   test("registers every scenario under its own name", () => {
     expect(Object.keys(scenarios)).toEqual([
@@ -256,6 +315,8 @@ describe("scenario registry", () => {
       "turbine-sync",
       "cooldown",
       "bypass-loop",
+      "relief-lift",
+      "full-gas",
     ])
     for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })
