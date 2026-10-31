@@ -49,6 +49,24 @@ describe("steam table shape", () => {
   })
 })
 
+describe("boiling point below the table", () => {
+  test("follows the Antoine equation under the lowest table pressure", () => {
+    expect(getBoilingPoint(0.1)).toBeCloseTo(45.8, 0)
+  })
+
+  test("returns 0 °C when the pressure is under 1 mmHg", () => {
+    expect(getBoilingPoint(0.001)).toBe(0)
+  })
+})
+
+describe("exact table rows", () => {
+  test("lookup at a table temperature and pressure returns that row", () => {
+    const row = steamTable[10]
+    expect(getSteamData(row.temperature).pressure).toBeCloseTo(row.pressure, 9)
+    expect(getBoilingPoint(row.pressure)).toBeCloseTo(row.temperature, 9)
+  })
+})
+
 describe("clamping at the critical point", () => {
   test("temperature above the critical point returns the critical-point values", () => {
     const data = getSteamData(500)

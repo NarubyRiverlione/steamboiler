@@ -4,31 +4,22 @@ import { type SteamData, steamTable } from "./steamData";
 // Last table row: the critical point, where lookups clamp (never throw, the simulation runs this every tick)
 const CriticalPoint: SteamData = steamTable[steamTable.length - 1];
 
+type Bracket = { lower: SteamData; upper: SteamData; ratio: number }
+
+// Find the two table rows around a value of the (ascending) key column and the interpolation ratio between them
+function bracket(key: "temperature" | "pressure", value: number): Bracket {
+  const index: number = steamTable.findIndex((row, i) => i < steamTable.length - 1 && steamTable[i + 1][key] >= value && row[key] <= value);
+  const lower: SteamData = steamTable[Math.max(index, 0)];
+  const upper: SteamData = steamTable[Math.max(index, 0) + 1];
+  return { lower, upper, ratio: (value - lower[key]) / (upper[key] - lower[key]) };
+}
+
 // Helper function to get steam data through interpolation
 export function getSteamData(temperature: number): SteamData {
   // Clamp temperature to the table: 80°C up to the critical point
   const clampedTemp = Math.max(steamTable[0].temperature, Math.min(CriticalPoint.temperature, temperature));
-  
-  // Find two closest data points
-  let lower = steamTable[0];
-  let upper = steamTable[steamTable.length - 1];
-  
-  for (let i = 0; i < steamTable.length - 1; i++) {
-    if (steamTable[i].temperature <= clampedTemp && steamTable[i + 1].temperature >= clampedTemp) {
-      lower = steamTable[i];
-      upper = steamTable[i + 1];
-      break;
-    }
-  }
-  
-  // If exact match, return the data point
-  if (lower.temperature === clampedTemp) {
-    return lower;
-  }
-  
-  // Interpolate between the two points
-  const ratio = (clampedTemp - lower.temperature) / (upper.temperature - lower.temperature);
-  
+  const { lower, upper, ratio } = bracket("temperature", clampedTemp);
+
   return {
     temperature: clampedTemp,
     pressure: lower.pressure + ratio * (upper.pressure - lower.pressure),
@@ -67,57 +58,30 @@ export function getLatentHeat(temperature: number): number {
   return steamData.latentHeat;
 }
 
+// Boiling point below the table range (°C), Antoine equation: log10(P) = A - B/(C + T)
+// P in mmHg, T in °C; constants for water valid for 1-200 mmHg (about 0.0013-0.267 bar)
+function antoineBoilingPoint(pressure: number): number {
+  const pressureInMmHg = pressure * 750.062;
+  if (pressureInMmHg < 1) {
+    return 0; // Minimum temperature
+  }
+  const A = 8.07131;
+  const B = 1730.63;
+  const C = 233.426;
+  return Math.max(0, B / (A - Math.log10(pressureInMmHg)) - C);
+}
+
 // Get boiling point of water based on pressure (°C)
 export function getBoilingPoint(pressure: number): number {
-  // For pressures below our table range, use the Antoine equation
   if (pressure < steamTable[0].pressure) {
-    // Antoine equation: log10(P) = A - B/(C + T)
-    // Where P is pressure in mmHg, T is temperature in °C
-    // Constants for water: A = 8.07131, B = 1730.63, C = 233.426
-    // These are valid for 1-200 mmHg, which is about 0.0013-0.267 bar
-    
-    // Convert pressure from bar to mmHg
-    const pressureInMmHg = pressure * 750.062;
-    
-    // If pressure is too low, return a minimum temperature
-    if (pressureInMmHg < 1) {
-      return 0; // Minimum temperature
-    }
-    
-    // Calculate temperature using Antoine equation
-    const A = 8.07131;
-    const B = 1730.63;
-    const C = 233.426;
-    
-    const logP = Math.log10(pressureInMmHg);
-    const temperature = B / (A - logP) - C;
-    
-    return Math.max(0, temperature); // Ensure temperature is not negative
+    return antoineBoilingPoint(pressure);
   }
-  
+
   // Above the critical pressure there is no boiling point: clamp to the critical point
   if (pressure >= CriticalPoint.pressure) {
     return CriticalPoint.temperature;
   }
-  
-  // Find two closest data points
-  let lower = steamTable[0];
-  let upper = steamTable[steamTable.length - 1];
-  
-  for (let i = 0; i < steamTable.length - 1; i++) {
-    if (steamTable[i].pressure <= pressure && steamTable[i + 1].pressure >= pressure) {
-      lower = steamTable[i];
-      upper = steamTable[i + 1];
-      break;
-    }
-  }
-  
-  // If exact match, return the data point
-  if (lower.pressure === pressure) {
-    return lower.temperature;
-  }
-  
-  // Interpolate between the two points
-  const ratio = (pressure - lower.pressure) / (upper.pressure - lower.pressure);
+
+  const { lower, upper, ratio } = bracket("pressure", pressure);
   return lower.temperature + ratio * (upper.temperature - lower.temperature);
 }
