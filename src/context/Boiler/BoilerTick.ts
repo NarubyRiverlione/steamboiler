@@ -4,7 +4,12 @@ import {
   calculateWaterVolume,
   calculateGasEnergy,
 } from "../../utils/boilerCalculations"
-import { CriticalTemperature, getLatentHeat, getWaterDensity, getWaterSpecificHeat } from "../../utils/steamTable"
+import {
+  CriticalTemperature,
+  getLatentHeat,
+  getWaterDensity,
+  getWaterSpecificHeat,
+} from "../../utils/steamTable"
 import { CstSimulation, CstPhysics } from "../const"
 import { BoilerState, TurbineState } from "../PowerPlantState"
 
@@ -47,7 +52,10 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
 
   // Natural cooling - use temperature-dependent specific heat; it stops at ambient so energy keeps matching temperature
   const specificHeat = getWaterSpecificHeat(boilerState.temperature)
-  const energyAboveAmbient = Math.max(0, waterMass * specificHeat * (boilerState.temperature - CstPhysics.AmbientTemperature))
+  const energyAboveAmbient = Math.max(
+    0,
+    waterMass * specificHeat * (boilerState.temperature - CstPhysics.AmbientTemperature),
+  )
   const coolingEnergyLoss = Math.min(
     energyAboveAmbient,
     waterMass * specificHeat * CstBoiler.CoolingRate * CstSimulation.DeltaTime,
@@ -66,7 +74,12 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
 
   // The steam space holds saturated steam; water flashes to steam (or steam condenses) to restore that inventory,
   // and the latent heat comes from, or returns to, the water. A steam draw leaves a deficit, so it cools the water.
-  const flashedMass = calculateFlashedMass(heatedTemperature, waterMass, newWaterVolume, boilerState.steamMass)
+  const flashedMass = calculateFlashedMass(
+    heatedTemperature,
+    waterMass,
+    newWaterVolume,
+    boilerState.steamMass,
+  )
   const flashEnergy = flashedMass * getLatentHeat(heatedTemperature)
   energyChange -= flashEnergy
 

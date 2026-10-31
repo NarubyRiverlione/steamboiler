@@ -1,6 +1,12 @@
 // Constants and utility functions for boiler calculations
 import { CstPhysics, CstSimulation } from "../context/const"
-import { getSteamData, getSaturatedSteamDensity, getWaterSpecificHeat, getLatentHeat, getBoilingPoint } from "./steamTable"
+import {
+  getSteamData,
+  getSaturatedSteamDensity,
+  getWaterSpecificHeat,
+  getLatentHeat,
+  getBoilingPoint,
+} from "./steamTable"
 
 const { CstBoiler } = CstSimulation
 

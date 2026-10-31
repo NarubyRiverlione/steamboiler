@@ -162,12 +162,11 @@ describe("BoilerRemoveSteam", () => {
 describe("BoilerTick pressure law", () => {
   const atmospheric = CstPhysics.AtmosphericPressure_mBar / 1e3
   // Saturated water in equilibrium with its steam: the steam space holds its saturated inventory
-  const saturated = settled
 
   // Textbook saturation pressures: 150 °C = 4.76 bar, 250 °C = 39.7 bar
   test("pressure is the saturation pressure of the water temperature", () => {
-    expect(BoilerTick(saturated(150)).pressure).toBeCloseTo(4.76, 1)
-    expect(BoilerTick(saturated(250)).pressure).toBeCloseTo(39.7, 0)
+    expect(BoilerTick(settled(150)).pressure).toBeCloseTo(4.76, 1)
+    expect(BoilerTick(settled(250)).pressure).toBeCloseTo(39.7, 0)
   })
 
   test("pressure never drops below atmospheric, even for cold water", () => {
@@ -178,7 +177,7 @@ describe("BoilerTick pressure law", () => {
   // Textbook saturated steam density: 0.598 kg/m³ at 100 °C, 2.55 at 150, 19.95 at 250, 46.2 at 300
   test("the steam space holds saturated steam at the water temperature", () => {
     const steamSpace = (CstBoiler.TotalVolume - cold.waterVolume) / 1000
-    const density = (temperature: number) => BoilerTick(saturated(temperature)).steamMass / steamSpace
+    const density = (temperature: number) => BoilerTick(settled(temperature)).steamMass / steamSpace
     const withinPercent = (value: number, expected: number) => Math.abs(value / expected - 1) < 0.03
     expect(withinPercent(density(100), 0.598)).toBe(true)
     expect(withinPercent(density(150), 2.55)).toBe(true)
@@ -187,15 +186,15 @@ describe("BoilerTick pressure law", () => {
   })
 
   test("heat beyond the atmospheric boiling point raises temperature and pressure", () => {
-    const hot = saturated(120)
+    const hot = settled(120)
     const next = BoilerTick({ ...hot, gasFlow: CstBoiler.MaxGasFlow })
     expect(next.temperature).toBeGreaterThan(120)
     expect(next.pressure).toBeGreaterThan(BoilerTick(hot).pressure)
   })
 
   test("with the gas off and the steam in equilibrium, pressure falls with the temperature", () => {
-    const next = BoilerTick(saturated(150))
+    const next = BoilerTick(settled(150))
     expect(next.temperature).toBeLessThan(150)
-    expect(next.pressure).toBeLessThan(saturated(150).pressure)
+    expect(next.pressure).toBeLessThan(settled(150).pressure)
   })
 })
