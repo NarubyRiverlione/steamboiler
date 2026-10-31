@@ -42,6 +42,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Oct 2026 | [Assessment from running the simulator](research/2026-10-assessment.md) |
 | Oct 2026 | [How real plants run the feedwater loop (sourced)](research/2026-10-feedwater-loop.md) |
 | Oct 2026 | [Sizing check: steam flow at full gas](research/2026-10-sizing-check.md) |
+| Oct 2026 | [Cold startup: how real plants do it (sourced)](research/2026-10-startup-procedure.md) |
 
 ## Agent configuration
 
