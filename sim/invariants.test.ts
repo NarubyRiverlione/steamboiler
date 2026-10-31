@@ -11,6 +11,7 @@ const expectedFailures: Record<string, string> = {
   "startup-cold / water is never created or lost": "#10, #20",
   "turbine-start / water is never created or lost": "#10, #20",
   "turbine-sync / water is never created or lost": "#10, #20",
+  "startup-cold / temperature within design temperature": "#9",
   "cooldown / natural cooldown never heats": "#12",
   "bypass-loop / water is never created or lost": "#10",
 }

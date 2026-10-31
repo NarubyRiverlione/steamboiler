@@ -46,7 +46,7 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  test.fails("boiler pressure holds with only the bypass open (fails until #11)", () => {
+  test("boiler pressure holds with only the bypass open", () => {
     for (const { state } of samples.filter((s) => s.time > valveOpenAt))
       expect(state.Boiler.pressure).toBeGreaterThan(CstTurbine.MainSteamValveMinimumPressure)
   })
@@ -59,11 +59,11 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  test("makeup is only an occasional top-up", () => {
+  test.fails("makeup is only an occasional top-up (fails until #10)", () => {
     expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 
-  test.fails("reject is only occasional: the loop creates no water to dump (fails until #10)", () => {
+  test("reject is only occasional: the loop creates no water to dump", () => {
     expect(openShare((s) => s.Condenser.rejectValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 })

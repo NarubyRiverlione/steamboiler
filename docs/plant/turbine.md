@@ -2,6 +2,8 @@
 
 The turbine is built in phases. Steam from the boiler passes the turbine valve, spins the turbine, and the generator turns that into electricity.
 
+**Steam draw** (`BoilerRemoveSteam`, `src/context/Boiler/BoilerTick.ts`): with the main steam valve open, the turbine valve and the bypass valve each pass `position × MaxSteamRemovalRate` kg/s (200 kg/s fully open), so `× DeltaTime` kg per tick, limited by the steam available. The flow does not yet depend on boiler pressure. The reported `turbineSteamFlowOut` and `bypassSteamFlowOut` are in kg/s.
+
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Black box: steam flow → electricity at a fixed ratio | ✅ |

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick from "./BoilerTick"
+import BoilerTick, { BoilerRemoveSteam } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 
@@ -72,5 +72,27 @@ describe("BoilerTick steam generation", () => {
 
   test("the water stays at the boiling point while it makes steam", () => {
     expect(BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow }).temperature).toBeCloseTo(100, 1)
+  })
+})
+
+describe("BoilerRemoveSteam flow units", () => {
+  const { CstTurbine } = CstSimulation
+  const plant = makeInitialState()
+  // Plenty of accumulated steam and no generation, so only the valve limits the draw
+  const boiler = { ...plant.Boiler, temperature: 180, steamMass: 1000, potentialSteamGeneration: 0 }
+  const turbine = { ...plant.Turbine, mainSteamValve: true, bypassValvePosition: 0.1, turbineValvePosition: 0.05 }
+
+  test("a 10% bypass removes 10% of the max rate in kg/s, scaled to one tick", () => {
+    const result = BoilerRemoveSteam(boiler, turbine, "BYPASS")
+    const rate = 0.1 * CstTurbine.MaxSteamRemovalRate // kg/s
+    expect(result.turbineState.bypassSteamFlowOut).toBeCloseTo(rate)
+    expect(boiler.steamMass - result.boilerState.steamMass).toBeCloseTo(rate * DeltaTime)
+  })
+
+  test("a 5% turbine valve removes 5% of the max rate in kg/s, scaled to one tick", () => {
+    const result = BoilerRemoveSteam(boiler, turbine, "TURBINE")
+    const rate = 0.05 * CstTurbine.MaxSteamRemovalRate // kg/s
+    expect(result.turbineState.turbineSteamFlowOut).toBeCloseTo(rate)
+    expect(boiler.steamMass - result.boilerState.steamMass).toBeCloseTo(rate * DeltaTime)
   })
 })

@@ -156,8 +156,8 @@ export function BoilerRemoveSteam(
     }
   }
 
-  // Calculate the  flow rate through the valve
-  const valveFlow = valvePosition * CstTurbine.MaxSteamRemovalRate
+  // Steam mass the valve passes this tick: its rate (kg/s) over one tick
+  const valveFlow = valvePosition * CstTurbine.MaxSteamRemovalRate * CstSimulation.DeltaTime
 
   // Calculate how much steam can be provided from accumulated steam and direct generation
   // 1. First, use accumulated steam
