@@ -54,6 +54,14 @@ _Avoid_: Dump, overflow
 Hotwell water pumped into the boiler by the condensation pump. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
 _Avoid_: Feedwater, refill
 
+**Heat loss**:
+Heat the boiler gives off to its surroundings, proportional to how far the water is above ambient temperature.
+_Avoid_: Cooling rate, natural cooling (that is the resulting behaviour, see Natural cooldown)
+
+**Heating-rate limit**:
+The fastest the boiler water temperature may rise without over-stressing the drum: 0.4 K/s (24 K/min), a time-compressed version of the real limit of about 100 K/h. Going over it raises an alarm; nothing is limited or tripped automatically.
+_Avoid_: Ramp limit, max heat-up rate
+
 **Natural cooldown**:
 The plant left alone with gas off and all valves closed, cooling down on its own.
 _Avoid_: Shutdown, trip
