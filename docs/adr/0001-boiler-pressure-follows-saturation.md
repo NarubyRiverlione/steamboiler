@@ -1,6 +1,6 @@
-# Boiler pressure follows saturation; game speed comes only from oversized inputs
+# Boiler pressure follows saturation; playability never alters the physics
 
-Boiler pressure is the saturation pressure of the water temperature, never below atmospheric: `P = max(1.013 bar, Psat(T))`. Steam mass no longer feeds into pressure, and the steam-volume expansion factors, the damping factor and any ideal-gas term are removed. The plant is modelled at utility scale (README, Major Dimensions) with realistic state and property physics. To keep the simulator pleasant to run, speed comes only from oversized inputs such as the 12 m³/s gas flow, never from altering the pressure law or the steam table.
+Boiler pressure is the saturation pressure of the water temperature, never below atmospheric: `P = max(1.013 bar, Psat(T))`. Steam mass no longer feeds into pressure, and the steam-volume expansion factors, the damping factor and any ideal-gas term are removed. The plant is modelled at utility scale (README, Major Dimensions) with realistic state and property physics. To keep the simulator pleasant to run, playability comes from how the utilities are sized, plus the few deliberate departures listed in the README register (currently the reduced boiler volume and the scaled heating-rate limit), never from altering the pressure law or the steam table.
 
 ## Considered options
 
