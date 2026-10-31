@@ -7,6 +7,12 @@ App code lives at the repo root (pnpm); there is no `steamboiler-web/` directory
 
 Project documentation is indexed in `docs/README.md` — read it to find the topic you need.
 
+## Realism rule
+
+Physics must be realistic: never add a magic number to speed up a process. Playability comes
+from over-dimensioning utilities (gas flow, pump volumes). Record every over-dimensioned utility
+in the register in `README.md` ("Over-dimensioned utilities").
+
 ## Current status (July 2026)
 
 Project is paused. It stalled on a slow feedback loop: every parameter tweak required a

@@ -10,6 +10,10 @@ An educational tool for the thermodynamics of steam generation and power product
 - **Visualisation**: makes temperature, pressure, volume and energy relationships tangible
 - **Education**: students, educators, professionals refreshing their knowledge, curious learners
 
+## Realism rule
+
+The physics is realistic: no magic numbers to speed up a process. Playability comes from over-dimensioning utilities (gas flow, pump capacity), and every over-dimensioned utility is tracked in the register in the [README](../README.md#over-dimensioned-utilities).
+
 ## UX goals
 
 1. **Intuitive controls**: direct control over the key parameters (gas flow, valves, pumps, breaker)

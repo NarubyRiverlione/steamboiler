@@ -13,6 +13,21 @@ The project, formerly known as Steamboiler, has evolved to more accurately refle
 - **Modular Architecture:** Organized into reusable components for simulation visualization and control panels.
 - **Responsive UI:** Provides real-time readouts and control interfaces for manipulating simulation parameters.
 
+## Design principle: realistic physics, generous utilities
+
+The physics is realistic. A process is never sped up with a magic number, such as an inflated heat-transfer coefficient, a scaled-down heat capacity or a time multiplier.
+
+Playability comes from over-dimensioning the utilities: gas flow, pump capacity, valve flow and similar. A bigger burner heats the water faster for a physical reason, so the plant stays honest and the operator doesn't wait hours for a startup.
+
+Every deliberate over-dimensioning is listed in the register below, so the simulator stays honest about where it departs from a real plant. Add a row when you over-dimension something new.
+
+### Over-dimensioned utilities
+
+| Utility | Simulator | Realistic | Constant |
+|---|---|---|---|
+| Max gas flow | 12 000 L/s | 700–900 L/s | `CstBoiler.MaxGasFlow` |
+| Condensation pump max flow | 300 L/s | 160–270 L/s | `CstCondenser.CondensationPump_MaxFlowRate` |
+
 ## Major Dimensions
 
 The plant is modelled on a utility-scale, gas-fired drum boiler. Values come from `src/context/const.ts`.
@@ -29,6 +44,15 @@ The plant is modelled on a utility-scale, gas-fired drum boiler. Values come fro
 | Max gas flow | 12 m³/s (12 000 L/s) | deliberately unrealistically high so the simulation reacts fast |
 | Fuel power at max gas flow | ≈ 420 MW | 12 m³/s × 35 000 kJ/m³ |
 | Heat into the water at max gas flow | ≈ 357 MW | 85% gas efficiency |
+
+### Startup and heat loss (target values, not in code yet, see #13)
+
+| | Value | Note |
+|---|---|---|
+| Metal mass (drum and tubes) | ≈ 100 t steel | 0.5 kJ/kg·K, added to the water's heat capacity |
+| Heat loss | ≈ 0.5 MW at design temperature | proportional to the difference with ambient; cooldown takes days |
+| Heating-rate limit | 0.4 K/s (24 K/min) | alarm only; the real limit is about 100 K/h |
+| Cold start to working pressure | ≈ 15 min at the limit | time-compressed: real cold startups take 4 to 8 h |
 
 ### Steam path and turbine
 
