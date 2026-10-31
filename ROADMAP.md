@@ -29,8 +29,8 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
 | 13 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P1 | ready-for-agent | [#34](https://github.com/NarubyRiverlione/steamboiler/issues/34) |
-| 14 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P1 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) |
-| 15 | [#45](https://github.com/NarubyRiverlione/steamboiler/issues/45) bypass-loop: condenser doesn't return the bypass steam; hotwell empties and the boiler boils dry | P1 | needs-triage | [#35](https://github.com/NarubyRiverlione/steamboiler/issues/35) |
+| 14 | [#45](https://github.com/NarubyRiverlione/steamboiler/issues/45) bypass-loop: condenser doesn't return the bypass steam; hotwell empties and the boiler boils dry | P1 | needs-triage | [#35](https://github.com/NarubyRiverlione/steamboiler/issues/35) |
+| 15 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) |
 | 16 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#43](https://github.com/NarubyRiverlione/steamboiler/issues/43) |
 | 17 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) |
 | 18 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#35](https://github.com/NarubyRiverlione/steamboiler/issues/35) |
