@@ -29,6 +29,11 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 | Alarm | ±12% (not in code) |
 | Trip | below 30%, above 70% (not in code) |
 
+| Boiler pressure | Value |
+|---|---|
+| Operating pressure | 165 bar (below the 180 bar design pressure) |
+| Control band | ±2 bar |
+
 | Hotwell (capacity 15 000 L) | Level |
 |---|---|
 | Target | 70% |
@@ -39,7 +44,10 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 
 Real plants hold drum level and hotwell level with automatic control loops. In the sim the operator does this by hand. In scenarios a per-tick operator hook plays that role: `sim/scenarios/loop-operator.ts` (settings in `LoopSettings`). It:
 
-- opens the main steam valve, the bypass (10%) and restarts the SJAE once there is pressure
+- above main-steam-valve pressure (10 bar): brings gas down to 5000 L/s, opens the main steam valve, sets the bypass to 5% and the condensation pump to 10%, and restarts the SJAE at 100%
+- nudges the bypass toward the operating pressure, never below its 5% start opening (a plain dead band: the state carries no pressure trend)
 - nudges the condensation pump valve toward the boiler level target
 - nudges cooling water against the steam mass in the condenser
 - opens makeup or reject on the hotwell limits, with hysteresis
+
+The `bypass-loop` scenario cannot reach the operating pressure yet: above about 100 bar the boiler model heats water past saturation, stops making steam and runs to NaN even with the bypass fully open (#22, #12, with no relief valve until #9). Its pressure and level assertions are expected failures until then; the scenario verifies those fixes.
