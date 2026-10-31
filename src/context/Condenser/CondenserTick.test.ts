@@ -5,6 +5,9 @@ import { initialPowerPlantState } from "../PowerPlantReducer"
 import { BoilerRemoveSteam } from "../Boiler/BoilerTick"
 import { CondenserState } from "../PowerPlantState"
 
+// The boiler has room for any return in these tests
+const boilerRoom = CstSimulation.CstBoiler.TotalVolume
+
 const initialState: CondenserState = {
   steamMass: 0,
   hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
@@ -86,7 +89,7 @@ describe("CondenserTick", () => {
       }
       const steamFromBypass = { flow: 0, temp: 300 }
 
-      const newState = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine)
+      const newState = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine, boilerRoom)
       expect(newState).not.toBeInstanceOf(Error)
       expect(newState.isSjaeEnabled).toBeTruthy()
       // Use the actual value from the result
@@ -133,7 +136,7 @@ describe("CondenserTick", () => {
     const testTick = () => {
       const simulationInterval = setInterval(() => {
         testCounter++
-        state = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine)
+        state = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine, boilerRoom)
 
         expect(state).not.toBeInstanceOf(Error)
         expect(state.isSjaeEnabled).toBeTruthy()
@@ -193,7 +196,7 @@ describe("CondenserTick", () => {
 
     // Instead of checking accumulated values over 100 ticks, which can lead to error accumulation,
     // we'll check the behavior for a single tick and verify the rate of change
-    state = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine)
+    state = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine, boilerRoom)
     
     // Check that the condensation pump is working
     expect(state.returnRate).toBe(expectedCondensationFlow)
@@ -207,7 +210,7 @@ describe("CondenserTick", () => {
     const testTick = () => {
       const simulationInterval = setInterval(() => {
         testCounter++
-        state = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine)
+        state = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine, boilerRoom)
         
         // Just verify the system doesn't crash or return errors
         expect(state).not.toBeInstanceOf(Error)
@@ -227,11 +230,11 @@ describe("CondenserTick", () => {
     const noSteam = { flow: 0, temp: 0 }
     const exhaust = { flow: 0, temp: 0, pressure: 0 }
     const { DeltaTime, CstCondenser } = CstSimulation
-    const makeup = CondenserTick({ ...initialState, makeupValvePosition: 1 }, 1, noSteam, exhaust)
+    const makeup = CondenserTick({ ...initialState, makeupValvePosition: 1 }, 1, noSteam, exhaust, boilerRoom)
     expect(makeup.makeupTotal).toBe(CstCondenser.Makeup_MaxFlowRate * DeltaTime)
     expect(makeup.hotwellWaterVolume).toBe(initialState.hotwellWaterVolume + makeup.makeupTotal)
 
-    const reject = CondenserTick({ ...initialState, rejectValvePosition: 1 }, 1, noSteam, exhaust)
+    const reject = CondenserTick({ ...initialState, rejectValvePosition: 1 }, 1, noSteam, exhaust, boilerRoom)
     expect(reject.rejectTotal).toBe(CstCondenser.Reject_MaxFlowRate * DeltaTime)
     expect(reject.hotwellWaterVolume).toBe(initialState.hotwellWaterVolume - reject.rejectTotal)
   })

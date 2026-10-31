@@ -32,11 +32,18 @@ describe("bypass-loop setup", () => {
 })
 
 describe("bypass-loop assertions", () => {
-  test.fails("condensation pump never returns more than the hotwell holds (fails until #10)", () => {
+  test("condensation pump never returns more than the hotwell holds", () => {
     const empty = makeInitialState().Condenser
     const pumping = { ...empty, hotwellWaterVolume: 0, condensationPumpValvePosition: 1 }
-    const next = CondenserTick(pumping, 1, { flow: 0, temp: 0 }, { flow: 0, temp: 0, pressure: 0 })
+    const next = CondenserTick(pumping, 1, { flow: 0, temp: 0 }, { flow: 0, temp: 0, pressure: 0 }, CstBoiler.TotalVolume)
     expect(next.returnRate).toBe(0)
+  })
+
+  test("condensation pump returns nothing into a full boiler, the water stays in the hotwell", () => {
+    const pumping = { ...makeInitialState().Condenser, condensationPumpValvePosition: 1 }
+    const next = CondenserTick(pumping, 1, { flow: 0, temp: 0 }, { flow: 0, temp: 0, pressure: 0 }, 0)
+    expect(next.returnRate).toBe(0)
+    expect(next.hotwellWaterVolume).toBe(pumping.hotwellWaterVolume)
   })
 
   test("hotwell neither runs dry nor overflows", () => {
@@ -63,7 +70,7 @@ describe("bypass-loop assertions", () => {
     expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 
-  test.fails("reject is only occasional: the loop creates no water to dump (fails until #10)", () => {
+  test.fails("reject is only occasional: the loop creates no water to dump (fails until #32)", () => {
     expect(openShare((s) => s.Condenser.rejectValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 })

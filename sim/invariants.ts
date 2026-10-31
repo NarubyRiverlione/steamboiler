@@ -143,6 +143,13 @@ export const invariants: Invariant[] = [
       within("hotwell", Condenser.hotwellWaterVolume, CstCondenser.TotalVolume),
     ),
   },
+  {
+    // A sample holds no pre-pump hotwell volume; "never more than the hotwell holds" is a CondenserTick test
+    name: "condensation pump return within pump capacity",
+    check: everySample(({ Condenser }) =>
+      within("return", Condenser.returnRate, CstCondenser.CondensationPump_MaxFlowRate * CstSimulation.DeltaTime),
+    ),
+  },
   { name: "water is never created or lost", check: waterNeverCreated },
   { name: "natural cooldown never heats", check: cooldownNeverHeats },
   { name: "natural cooldown stops steam generation", check: cooldownSteamStops },
