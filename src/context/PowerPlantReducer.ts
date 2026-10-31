@@ -1,5 +1,5 @@
 import { CstPhysics, CstSimulation } from "./const"
-import { calculateHeatingEnergy } from "../utils/boilerCalculations"
+import { calculateHeatingEnergy, calculateSteamInventory } from "../utils/boilerCalculations"
 import { isAtSyncSpeed } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
@@ -20,7 +20,7 @@ export const makeInitialState = (): PowerPlantState => ({
     drainedTotal: 0,
     energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, AmbientTemperature), // kJ
     energyDelta: 0, // kJ/s
-    steamMass: 0, // kg - Mass of steam currently in the boiler
+    steamMass: calculateSteamInventory(AmbientTemperature, CstBoiler.StartWaterVolume), // kg - vapour over the water, in equilibrium
     deltaWaterVolume: 0,
     deltaSteamMass: 0,
   },

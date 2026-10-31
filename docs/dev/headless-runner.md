@@ -45,7 +45,7 @@ Scenarios (`pnpm sim <name>`); each either replays the earlier operator steps fr
 | `turbine-start` | `at-pressure` | main steam valve, turbine valve to 25%, turbine rolling |
 | `turbine-sync` | cold | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21) |
 | `cooldown` | cold | at pressure, then natural cooldown for 60 min |
-| `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Runs to NaN above ~100 bar until #12 |
+| `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Reaches 165 bar since #12, then the hotwell empties, the boiler boils dry and the condenser goes NaN (see feedwater-loop.md) |
 
 `startup-cold` does not run the water loop: it leaves cooling water and the condensation pump at 0,
 so nothing condenses and nothing returns. Use `bypass-loop` for the loop.
@@ -84,7 +84,7 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
   they are; `pnpm sim:snapshots` regenerates them all. `sim/snapshot.test.ts` fails when a committed
   file no longer matches a fresh run of its source, so after a physics or state change: run
   `pnpm sim:snapshots`, look at the diff, commit.
-- `at-pressure` is the end of `heat-up` (t = 720 s, ~11.6 bar). `turbine-start` starts from it, and
+- `at-pressure` is the end of `heat-up` (t = 750 s, ~11.8 bar). `turbine-start` starts from it, and
   a test checks that this gives exactly the same states as replaying the cold start.
 
 UI presets ("cold", "hot standby", "at pressure") are #24; the UI starts cold.

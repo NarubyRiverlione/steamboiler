@@ -43,8 +43,8 @@ describe("bypass-loop setup", () => {
   })
 })
 
-// The boiler model breaks down above ~100 bar (water past saturation, no steam, pressure runs to
-// NaN), so the run cannot reach the 165 bar operating pressure yet. These verify #12.
+// Since #12 the boiler reaches 165 bar, but the condenser does not return the bypass steam fast enough:
+// the hotwell empties, the boiler boils dry and the condenser goes NaN (docs/plant/feedwater-loop.md).
 describe("bypass-loop assertions", () => {
   test("condensation pump never returns more than the hotwell holds", () => {
     const empty = makeInitialState().Condenser

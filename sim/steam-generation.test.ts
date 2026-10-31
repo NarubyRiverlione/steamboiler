@@ -1,20 +1,25 @@
 import { describe, expect, test } from "vitest"
 import { runScenario } from "./scenario"
 import { scenarios } from "./scenarios"
+import { getSteamData } from "../src/utils/steamTable"
 
-// Steam generation by energy balance, judged on the cold start.
-const BoilingPoint = 99 // °C, a little under the table value so sampling noise cannot trip it
+// Pressure law (ADR 0001), judged on the cold start: saturation pressure of the water, never below atmospheric.
+const Atmospheric = 1.01325 // bar
 
-describe("startup-cold steam generation", () => {
+describe("startup-cold pressure follows saturation", () => {
   const samples = runScenario(scenarios["startup-cold"])
 
-  test("generates no steam until the water has reached boiling", () => {
-    const early = samples.filter(({ state }) => state.Boiler.temperature < BoilingPoint)
-    expect(early.length).toBeGreaterThan(0)
-    for (const { state } of early) expect(state.Boiler.deltaSteamMass).toBe(0)
+  test("pressure is finite and equals max(atmospheric, Psat(T)) at every sample", () => {
+    for (const { state } of samples) {
+      const { pressure, temperature } = state.Boiler
+      expect(Number.isFinite(pressure)).toBe(true)
+      expect(pressure).toBeCloseTo(Math.max(Atmospheric, getSteamData(temperature).pressure), 6)
+    }
   })
 
-  test("generates steam once the water is boiling", () => {
-    expect(samples.some(({ state }) => state.Boiler.deltaSteamMass > 0)).toBe(true)
+  test("stays atmospheric until the water passes 100 °C, then rises with it", () => {
+    for (const { state } of samples.filter((s) => s.state.Boiler.temperature < 99))
+      expect(state.Boiler.pressure).toBeCloseTo(Atmospheric, 6)
+    expect(samples.at(-1)?.state.Boiler.pressure).toBeGreaterThan(100)
   })
 })

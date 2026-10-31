@@ -1,8 +1,11 @@
 // Constants and utility functions for boiler calculations
 import { CstPhysics, CstSimulation } from "../context/const"
-import { getSteamData, getWaterSpecificHeat, getLatentHeat, getBoilingPoint } from "./steamTable"
+import { getSteamData, getSaturatedSteamDensity, getWaterSpecificHeat, getLatentHeat, getBoilingPoint } from "./steamTable"
 
 const { CstBoiler } = CstSimulation
+
+const EquilibriumTolerance = 1e-9 // kg
+const FlashIterations = 40 // bisection steps: the bracket is tonnes wide, 40 halvings is far below a gram
 
 // Calculate water volume based on temperature using specific volume data from steam table
 export function calculateWaterVolume(baseVolume: number, temperature: number): number {
@@ -56,110 +59,50 @@ export function calculateBoilingPoint(pressure: number): number {
   return getBoilingPoint(pressure)
 }
 
-// Calculate pressure based on steam mass, temperature, and available volume
-export function calculatePressureFromSteam(
-  steamMass: number,
-  temperature: number,
-  availableVolume: number, // Liters
-  saturationPressure: number,
-): number {
-  // If no steam or no available volume, return saturation pressure
-  if (steamMass <= 0 || availableVolume <= 0) {
-    return saturationPressure
-  }
-
-  // Convert available volume from liters to m³
-  const availableVolumeM3 = availableVolume / 1000
-
-  // Get specific volume of steam at current temperature and saturation pressure
-  // This is an approximation, as the specific volume also depends on pressure
-  const steamData = getSteamData(temperature)
-
-  // Specific volume of saturated steam at this temperature (m³/kg)
-  // For superheated steam, this would be higher, but we'll use this as a lower bound
-  // The expansion factor is temperature-dependent
-  // At lower temperatures, the expansion factor is higher
-  let expansionFactor
-  if (temperature < 100) {
-    expansionFactor = CstPhysics.SteamExpansionFactorLow // For temperatures < 100°C
-  } else if (temperature < 150) {
-    expansionFactor = CstPhysics.SteamExpansionFactorMedium // For temperatures 100-150°C
-  } else {
-    expansionFactor = CstPhysics.SteamExpansionFactorHigh // For temperatures > 150°C
-  }
-
-  const specificVolumeSteam = steamData.specificVolume * expansionFactor
-
-  // Calculate the volume that the steam would occupy at saturation pressure
-  const steamVolumeAtSaturation = steamMass * specificVolumeSteam
-
-  // If the steam volume at saturation is less than the available volume,
-  // then the pressure is just the saturation pressure
-  if (steamVolumeAtSaturation <= availableVolumeM3) {
-    return saturationPressure
-  }
-
-  // Otherwise, calculate the pressure using a simplified equation of state
-  // P1 * V1 = P2 * V2 (assuming constant temperature)
-  // P2 = P1 * (V1 / V2)
-  // Apply a damping factor to make pressure rise more gradually
-  const volumeRatio = steamVolumeAtSaturation / availableVolumeM3
-
-  // Apply a square root function to the volume ratio to make pressure rise more gradually
-  // This is a common approach in thermodynamics to model non-ideal gas behavior
-  // and to account for the fact that steam doesn't behave exactly like an ideal gas
-  const dampedRatio = Math.sqrt(volumeRatio)
-
-  // Apply an additional damping factor to slow down pressure rise even more
-  // Use the configurable damping factor from CstBoiler
-  const pressureFactor = 1 + (dampedRatio - 1) * CstBoiler.PressureDampingFactor
-
-  const calculatedPressure = saturationPressure * pressureFactor
-
-  // Return the calculated pressure, ensuring it's at least the saturation pressure
-  return Math.max(saturationPressure, calculatedPressure)
+// Boiler pressure: the saturation pressure of the water temperature, never below atmospheric (ADR 0001)
+export function calculateBoilerPressure(temperature: number): number {
+  return Math.max(CstPhysics.AtmosphericPressure_mBar / 1e3, getSteamData(temperature).pressure)
 }
 
-// Split the energy put into the water between heating it to saturation and vaporising it
-export type EnergyBalance = {
-  newTemperature: number // °C
-  steamMass: number // kg generated
-  heatingEnergy: number // kJ spent heating water up to the boiling point
-  vaporisationEnergy: number // kJ spent vaporising
+// Steam the free volume holds at saturation (kg): saturated steam in the steam space, or the vapour over the
+// water in a vented drum below the boiling point
+export function calculateSteamInventory(temperature: number, waterVolume: number): number {
+  const steamSpaceM3 = Math.max(0, CstBoiler.TotalVolume - waterVolume) / 1000
+  return steamSpaceM3 * getSaturatedSteamDensity(temperature)
 }
 
-// Heat to the boiling point first; only the energy beyond that vaporises water at the latent heat
-export function calculateEnergyBalance(
+// Mass that flashes from the water to steam in a tick (kg, negative: steam condenses) to restore the saturated
+// steam inventory. Solved implicitly, because flashing cools the water (less steam wanted) and shrinks the water
+// volume (more steam space), and an explicit step oscillates near the critical point. Bisection on the residual.
+export function calculateFlashedMass(
+  heatedTemperature: number,
   waterMass: number,
-  temperature: number,
-  pressure: number,
-  energyIn: number,
-): EnergyBalance {
-  if (waterMass <= 0) {
-    return { newTemperature: temperature, steamMass: 0, heatingEnergy: 0, vaporisationEnergy: 0 }
+  waterVolume: number,
+  steamMass: number,
+): number {
+  if (waterMass <= 0) return 0
+  const latentHeat = getLatentHeat(heatedTemperature)
+  const heatCapacity = waterMass * getWaterSpecificHeat(heatedTemperature)
+  const litresPerKg = calculateWaterVolume(1, heatedTemperature)
+
+  // Steam still wanted after flashing this much, minus what is already there and what was just flashed
+  const residual = (flashed: number): number => {
+    const temperature = Math.max(0, heatedTemperature - (flashed * latentHeat) / heatCapacity)
+    const volume = Math.min(CstBoiler.TotalVolume, Math.max(0, waterVolume - flashed * litresPerKg))
+    return calculateSteamInventory(temperature, volume) - steamMass - flashed
   }
 
-  const boilingPoint = calculateBoilingPoint(pressure)
-  // Water already above the boiling point (the pressure model lags) has nothing left to heat
-  const energyToBoil = Math.max(0, calculateHeatingEnergy(waterMass, temperature, boilingPoint)) // kJ
+  // Already in equilibrium (within a microgram): nothing flashes, and a resting boiler stays exactly at rest
+  if (Math.abs(residual(0)) < EquilibriumTolerance) return 0
 
-  if (energyIn < energyToBoil) {
-    // Not enough to reach (or stay at) the boiling point: it all changes the water temperature
-    const specificHeat = getWaterSpecificHeat(temperature)
-    return {
-      newTemperature: temperature + energyIn / (waterMass * specificHeat),
-      steamMass: 0,
-      heatingEnergy: energyIn,
-      vaporisationEnergy: 0,
-    }
+  let low = -steamMass
+  let high = waterMass
+  if (residual(low) <= 0) return low
+  if (residual(high) >= 0) return high
+  for (let i = 0; i < FlashIterations; i++) {
+    const mid = (low + high) / 2
+    if (residual(mid) > 0) low = mid
+    else high = mid
   }
-
-  const steamMass = Math.min(waterMass, (energyIn - energyToBoil) / getLatentHeat(boilingPoint))
-  return {
-    newTemperature: Math.max(boilingPoint, temperature),
-    steamMass,
-    heatingEnergy: energyToBoil,
-    vaporisationEnergy: steamMass * getLatentHeat(boilingPoint),
-  }
+  return (low + high) / 2
 }
-

@@ -5,25 +5,30 @@ A gas-fired, closed-loop drum boiler. Sizes and limits are in [design-basis.md](
 ## Elements
 
 - **Water and steam**: the boiler holds liquid water that turns to steam when enough energy is added. Water volume follows temperature (specific volume from the steam tables) and shrinks as water boils. Steam takes far more volume than the water it came from (about 1600× at atmospheric pressure).
-- **Temperature**: rises with gas energy, falls through natural cooling, is diluted by returned water, and holds at the boiling point while steam is generated.
+- **Temperature**: rises with gas energy, falls through natural cooling and through the latent heat of water flashing to steam, and is diluted by returned water. A closed drum keeps heating past 100 °C; pressure follows it.
 - **Pressure**: see **Pressure model** below.
-- **Energy**: the source is the gas burner. The sinks are natural cooling, the latent heat of steam generation, and drained water.
+- **Energy**: the source is the gas burner (thermal mass: the water only; metal mass is #13). The sinks are natural cooling, the latent heat of the flash, and drained water.
 - **Volume**: a fixed 100 m³ shared between water and steam; 50 m³ of water at the start.
-- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second. Steam leaves through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the accumulated steam. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
+- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second. Steam leaves through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the steam inventory. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
 
 ## Calculations
 
 ```
-Energy change      = gas input − (cooling + steam generation + draining)
-Temperature change = energy change / (water mass × specific heat)
+Heated temperature = T + (gas input − cooling) / (water mass × specific heat)
+Steam inventory    = saturated steam density(T) × (total volume − water volume)
+Flashed mass       = inventory wanted − steam mass held     (negative: steam condenses)
+Temperature        = heated temperature − flashed mass × latent heat / (water mass × specific heat)
+Pressure           = max(1.013 bar, Psat(temperature))
 ```
 
-Steam generation (energy balance per tick, #8):
+Each tick (`BoilerTick`, `calculateFlashedMass`):
 
-1. Gas energy in, minus cooling losses
-2. Energy needed to heat the water to the boiling point at the current pressure
-3. Remaining energy ÷ latent heat (steam tables) = mass of steam generated, capped at the water mass
-4. Temperature stays at the boiling point during the phase change; the steam mass is subtracted from the water mass
+1. Gas energy in, minus cooling losses, warms the water. The temperature stops at the critical point, where the saturated model ends; a boiler run dry would otherwise run away.
+2. The steam space should hold saturated steam at that temperature. Water flashes to steam (or steam condenses) to restore the inventory, and the latent heat is taken from (or returned to) the water.
+3. Flashing cools the water (less steam wanted) and lowers the water level (more steam space), so the flashed mass is solved implicitly by bisection. An explicit step oscillates near the critical point, where steam density approaches water density. A boiler already in equilibrium flashes exactly nothing, so a resting plant stays at rest.
+4. `deltaSteamMass` is the flash rate in kg/s: positive while heating or under draw, negative while cooling.
+
+Saturated steam density: the table holds only the liquid side, so the steam side comes from Clausius-Clapeyron, `vg = vf + hfg / (T · dP/dT)`, with `dP/dT` a centred difference over ±5 K (within 3% of IAPWS-IF97 from 100 to 300 °C). Below 80 °C it is the ideal-gas vapour density at the Antoine saturation pressure: the vapour over the water in the vented drum. The cold start holds this vapour inventory (about 0.9 kg at 20 °C), so it starts in equilibrium.
 
 Steam table (`src/utils/steamData.ts`): saturated water from 80 °C up to the critical point (373.946 °C, 220.64 bar), generated from IAPWS-IF97 (liquid specific volume, enthalpy and specific heat, plus latent heat). Boiling point at 180 bar is 357.0 °C. Lookups clamp at the critical point and never throw: a temperature or pressure above it returns the critical-point row (latent heat 0). Over-pressure is handled elsewhere (#9, #33). Specific heat is held at its 370 °C value in the last row, see [design-basis.md](design-basis.md).
 
@@ -34,15 +39,13 @@ Removed this tick = min(valve position × rated steam flow × tick, steam mass i
 Reported flow     = removed / tick   (kg/s, never above valve position × rated steam flow)
 ```
 
-Rated steam flow is in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before this tick's generation, so it takes the steam from earlier ticks. Pressure follows the balance: it rises while less steam leaves than is generated, holds when they match, and falls when more leaves.
+Rated steam flow is in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before `BoilerTick`, which flashes water to refill the inventory. That flash takes its latent heat from the water, so a draw cools the water and lowers the pressure; the gas holds pressure only while its heat matches the latent heat of the steam leaving.
 
 Boiling point: steam-table interpolation in range, Antoine equation below it, clamped to the critical point (373.946 °C) from 220.64 bar up. `getBoilingPoint(180)` gives 357.0 °C.
 
 ## Pressure model
 
-**Today:** pressure comes from steam mass, temperature (specific volume), free volume (total minus water) and saturation pressure, through a modified ideal-gas relation with damping. It uses the expansion factors `SteamExpansionFactorLow/Medium/High` (1600× below 100 °C, 1200× at 100–150 °C, 800× above 150 °C) and the square root of the volume ratio. It is held at atmospheric when steam mass is negligible (< 0.001 kg). This model gives unrealistic pressures and runs away.
-
-**Decided:** pressure equals the saturation pressure of the water temperature, never below atmospheric ([ADR 0001](../adr/0001-boiler-pressure-follows-saturation.md)). It is being built in #12; when it lands, replace this section.
+Pressure is the saturation pressure of the water temperature, never below atmospheric: `P = max(1.013 bar, Psat(T))` ([ADR 0001](../adr/0001-boiler-pressure-follows-saturation.md), `calculateBoilerPressure`). Steam mass does not feed into it. Below 100 °C the drum is vented and stays at atmospheric. The pressure is finite everywhere: the steam table clamps at the critical point (220.64 bar). Over-pressure is not capped here; the relief valve (#9) and burner protection (#33) own it. How fast pressure responds depends on the thermal mass, water only until #13.
 
 ## Constants and simplifications
 
@@ -53,11 +56,10 @@ Boiling point: steam-table interpolation in range, Antoine equation below it, cl
 | Natural cooling | 1 °C per 15 s without gas, a constant rate (heat loss proportional to temperature difference is #13) |
 | Atmospheric pressure | 1.013 bar |
 | Ambient temperature | 20 °C (`CstPhysics.AmbientTemperature`): natural cooling stops here, so energy keeps matching temperature |
-| Start state | cold: ambient temperature, atmospheric pressure, 50 m³ water, energy = heating 50 m³ from 0 °C to ambient |
+| Start state | cold: ambient temperature, atmospheric pressure, 50 m³ water, the vapour inventory at ambient, energy = heating 50 m³ from 0 °C to ambient |
 
 ## Remaining empirical areas
 
 - `calculateGasEnergy` uses `GasEfficiency`, which may be an empirical factor
-- `calculatePressureFromSteam` uses the expansion factors (removed by #12)
 - `calculateWaterVolume` uses a linear approximation below 80 °C (#34)
 - Natural cooling is a constant rate, with no thermal mass of the metal (#13)

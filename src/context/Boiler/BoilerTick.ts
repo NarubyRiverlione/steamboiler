@@ -1,10 +1,10 @@
 import {
-  calculateEnergyBalance,
+  calculateBoilerPressure,
+  calculateFlashedMass,
   calculateWaterVolume,
   calculateGasEnergy,
-  calculatePressureFromSteam,
 } from "../../utils/boilerCalculations"
-import { getWaterDensity, getWaterSpecificHeat, getSteamData } from "../../utils/steamTable"
+import { CriticalTemperature, getLatentHeat, getWaterDensity, getWaterSpecificHeat } from "../../utils/steamTable"
 import { CstSimulation, CstPhysics } from "../const"
 import { BoilerState, TurbineState } from "../PowerPlantState"
 
@@ -54,58 +54,38 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
   )
   energyChange -= coolingEnergyLoss
 
-  // Energy balance: heat the water to boiling first, only the rest vaporises
-  const balance = calculateEnergyBalance(
-    waterMass,
-    boilerState.temperature,
-    boilerState.pressure,
-    gasEnergy - coolingEnergyLoss,
-  )
-  const generatedSteamMass = balance.steamMass
-  energyChange -= balance.vaporisationEnergy
+  // The net heat warms the water (water-only thermal mass, #13 adds the metal)
+  // and stops at the critical point, where the saturated model ends (a boiler run dry would otherwise run away)
+  const heatedTemperature =
+    waterMass <= 0
+      ? boilerState.temperature
+      : Math.min(
+          CriticalTemperature,
+          boilerState.temperature + (gasEnergy - coolingEnergyLoss) / (waterMass * specificHeat),
+        )
+
+  // The steam space holds saturated steam; water flashes to steam (or steam condenses) to restore that inventory,
+  // and the latent heat comes from, or returns to, the water. A steam draw leaves a deficit, so it cools the water.
+  const flashedMass = calculateFlashedMass(heatedTemperature, waterMass, newWaterVolume, boilerState.steamMass)
+  const flashEnergy = flashedMass * getLatentHeat(heatedTemperature)
+  energyChange -= flashEnergy
 
   // The liquid lost to steam, at the volume 1 kg of water takes at the current temperature
-  newWaterVolume = Math.max(
-    0,
-    newWaterVolume - generatedSteamMass * calculateWaterVolume(1, boilerState.temperature),
+  newWaterVolume = Math.min(
+    CstBoiler.TotalVolume,
+    Math.max(0, newWaterVolume - flashedMass * calculateWaterVolume(1, heatedTemperature)),
   )
 
   const newEnergy = Math.max(0, boilerState.energy + energyChange)
-  const newSteamMass = Math.max(0, boilerState.steamMass + generatedSteamMass)
+  const newSteamMass = Math.max(0, boilerState.steamMass + flashedMass)
 
   // Natural cooling never goes below ambient
   const newTemperature =
-    waterMass <= 0 ? boilerState.temperature : Math.max(CstPhysics.AmbientTemperature, balance.newTemperature)
+    waterMass <= 0
+      ? boilerState.temperature
+      : Math.max(CstPhysics.AmbientTemperature, heatedTemperature - flashEnergy / (waterMass * specificHeat))
 
-  // Calculate new pressure based on steam mass, temperature, and available volume
-  let newPressure
-
-  // If there is no steam, keep pressure at atmospheric (1 bar)
-  if (newSteamMass < 0.001) {
-    newPressure = CstPhysics.AtmosphericPressure_mBar / 1e3
-  } else {
-    // For temperatures at or above 100°C, calculate pressure based on steam accumulation
-    // Get saturation pressure from steam table
-    const steamData = getSteamData(newTemperature)
-    const saturationPressure = steamData.pressure
-
-    // Calculate volume occupied by liquid water
-    const liquidWaterVolume = newWaterVolume
-
-    // Calculate volume available for steam
-    const availableVolumeForSteam = Math.max(0, CstBoiler.TotalVolume - liquidWaterVolume)
-
-    // Calculate pressure based on steam mass, temperature, and available volume
-    const calculatedPressure = calculatePressureFromSteam(
-      newSteamMass,
-      newTemperature,
-      availableVolumeForSteam,
-      saturationPressure,
-    )
-
-    // Ensure pressure is at least atmospheric
-    newPressure = Math.max(CstPhysics.AtmosphericPressure_mBar / 1e3, calculatedPressure)
-  }
+  const newPressure = calculateBoilerPressure(newTemperature)
 
   // average the values for a better UX
   return {
@@ -118,7 +98,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     energy: newEnergy,
     energyDelta: energyChange / CstSimulation.DeltaTime, // averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
     // deltaWaterVolume: newWaterVolume - boilerState.waterVolume, // averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
-    deltaSteamMass: generatedSteamMass / CstSimulation.DeltaTime, // Converted to kg/s
+    deltaSteamMass: flashedMass / CstSimulation.DeltaTime, // kg/s flashed to steam (negative: condensing)
   }
 }
 
@@ -129,7 +109,7 @@ export function BoilerRemoveSteam(
   removeBy: "BYPASS" | "TURBINE" | "VENT",
 ): { boilerState: BoilerState; turbineState: TurbineState } {
   // console.log("4")
-  const { steamMass, waterVolume, temperature } = boilerState
+  const { steamMass } = boilerState
 
   const {
     mainSteamValve,
@@ -159,20 +139,10 @@ export function BoilerRemoveSteam(
   const removedSteamMass = Math.min(steamMass, valveMassPerTick)
   const newSteamMass = steamMass - removedSteamMass
 
-  // Recalculate boiler pressure after steam removal
-  const steamData = getSteamData(temperature)
-  const saturationPressure = steamData.pressure
-  const availableVolumeForSteam = Math.max(0, CstBoiler.TotalVolume - waterVolume)
-  const newPressure = Math.max(
-    CstPhysics.AtmosphericPressure_mBar / 1000,
-    calculatePressureFromSteam(newSteamMass, temperature, availableVolumeForSteam, saturationPressure),
-  )
-
   return {
     boilerState: {
       ...boilerState,
       steamMass: newSteamMass,
-      pressure: newPressure,
     },
     turbineState: {
       ...turbineState,

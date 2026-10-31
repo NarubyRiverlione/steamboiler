@@ -1,6 +1,5 @@
 import { CondenserState } from "../context/PowerPlantState"
 import { CstPhysics, CstSimulation } from "../context/const"
-import { calculatePressureFromSteam } from "./boilerCalculations"
 import { getLatentHeat } from "./steamTable"
 
 // Air Extraction Pump (CAR) behavior
@@ -120,19 +119,6 @@ export function calculateVacuumByReducers(
   }
 }
 
-export function calculatePressureBySteam(
-  steamMass: number,
-  waterVolume: number,
-  temperature: number,
-  steamPressure: number,
-) {
-  const {
-    CstCondenser: { TotalVolume },
-  } = CstSimulation
-  const availableVolume = TotalVolume - waterVolume
-  const pressure = calculatePressureFromSteam(steamMass, temperature, availableVolume, steamPressure)
-  return pressure * 1000 // Convert to mBar
-}
 /**
  * Calculates the condensation of steam based on energy balance approach
  *

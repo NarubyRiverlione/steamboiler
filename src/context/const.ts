@@ -10,7 +10,6 @@ export const CstSimulation = {
     CoolingRate: 1 / 15, // °C per second
     GasChangeRateFast: 500, // °C per second
     GasChangeRateSlow: 250, // °C per second,
-    PressureDampingFactor: 1, //0.05, // Damping factor for pressure calculation
     HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
     DesignPressure: 180, // bar, the boiler must never exceed it (see GLOSSARY.md)
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
@@ -78,9 +77,6 @@ export const CstSimulation = {
 }
 
 export const CstPhysics = {
-  SteamExpansionFactorLow: 1600, // For temperatures < 100°C
-  SteamExpansionFactorMedium: 1200, // For temperatures 100-150°C
-  SteamExpansionFactorHigh: 800, // For temperatures > 150°C
   Water_Density: 1000, // kg/m³ (used as fallback for temperatures below 80°C)
   Water_SpecificHeat: 4.18, // kJ/kg°C (used as fallback for temperatures below 80°C)
   GasEnergyDensity: 35000, // kJ/m³ (approximate energy density of natural gas)

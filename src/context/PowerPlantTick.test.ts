@@ -18,7 +18,7 @@ describe("PowerPlantTick return", () => {
     const next = PowerPlantTick(pumping(50_000, 10_000))
     expect(next.Condenser.returnRate).toBe(30)
     expect(next.Condenser.hotwellWaterVolume).toBe(9_970)
-    expect(next.Boiler.waterVolume).toBe(50_030)
+    expect(next.Boiler.waterVolume).toBeCloseTo(50_030, 2)
   })
 
   test("a full boiler takes no return, the water stays in the hotwell", () => {
@@ -37,7 +37,7 @@ describe("PowerPlantTick return", () => {
   test("an empty hotwell returns nothing", () => {
     const next = PowerPlantTick(pumping(50_000, 0))
     expect(next.Condenser.returnRate).toBe(0)
-    expect(next.Boiler.waterVolume).toBe(50_000)
+    expect(next.Boiler.waterVolume).toBeCloseTo(50_000, 2)
   })
 })
 
@@ -45,7 +45,7 @@ describe("PowerPlantTick dry boiler", () => {
   test("makes no steam from water that is not there", () => {
     const dry: PowerPlantState = {
       ...cold,
-      Boiler: { ...cold.Boiler, waterVolume: 0, temperature: 100, gasFlow: CstBoiler.MaxGasFlow },
+      Boiler: { ...cold.Boiler, waterVolume: 0, steamMass: 0, temperature: 100, gasFlow: CstBoiler.MaxGasFlow },
     }
     const next = PowerPlantTick(dry)
     expect(next.Boiler.deltaSteamMass).toBe(0)

@@ -147,7 +147,7 @@ describe("cold initial state", () => {
 
   test("makes no steam on the first tick", () => {
     const next = powerPlantReducer(cold, { type: "SIMULATE_TICK" })
-    expect(next.Boiler.steamMass).toBe(0)
+    expect(next.Boiler.steamMass).toBe(cold.Boiler.steamMass)
     expect(next.Boiler.deltaSteamMass).toBe(0)
     expect(next.Boiler.pressure).toBe(cold.Boiler.pressure)
   })
@@ -183,13 +183,13 @@ describe("startup-cold", () => {
     expect(samples[0].state.Turbine.rpm).toBe(0)
   })
 
-  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 720 s", () => {
-    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(720)
+  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 750 s", () => {
+    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(750)
   })
 
   test("main steam valve opens when commanded and the turbine spins up", () => {
-    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(720)
-    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(720)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(750)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(750)
   })
 })
 

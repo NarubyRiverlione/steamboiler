@@ -30,12 +30,6 @@ export function CondenserTick(
   // Calculate the pressure based on the CAR & SJAE
   const { vacuumByReducers, newIsSjaeEnabled } = calculateVacuumByReducers(condenserState, boilerPressure)
   // Pressure change by steam volume
-  // const pressureBySteam = calculatePressureBySteam(
-  //   condenserState.steamMass,
-  //   condenserState.hotwellWaterVolume,
-  //   steamFromTurbine.temp,
-  //   0,
-  // )
   const pressureBySteam = condenserState.steamMass / 1000
   const newPressure = CstPhysics.AtmosphericPressure_mBar + pressureBySteam - vacuumByReducers
 

@@ -2,9 +2,18 @@ import { describe, expect, test } from "vitest"
 import BoilerTick, { BoilerRemoveSteam } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
+import { calculateBoilerPressure, calculateSteamInventory } from "../../utils/boilerCalculations"
 
 const { CstBoiler, CstTurbine, DeltaTime } = CstSimulation
 const cold = makeInitialState().Boiler
+
+// Water at a temperature with its steam space in equilibrium, as a plant that has rested there
+const settled = (temperature: number) => ({
+  ...cold,
+  temperature,
+  pressure: calculateBoilerPressure(temperature),
+  steamMass: calculateSteamInventory(temperature, cold.waterVolume),
+})
 
 describe("BoilerTick drain", () => {
   test("closed drain keeps the totalizer at 0", () => {
@@ -30,12 +39,12 @@ describe("BoilerTick natural cooling", () => {
 
   test("loses no energy at ambient", () => {
     const next = BoilerTick(cold)
-    expect(next.energy).toBe(cold.energy)
-    expect(next.temperature).toBe(AmbientTemperature)
+    expect(next.energy).toBeCloseTo(cold.energy, 2)
+    expect(next.temperature).toBeCloseTo(AmbientTemperature, 9)
   })
 
   test("cools a full step when well above ambient", () => {
-    const warm = BoilerTick({ ...cold, temperature: 60 })
+    const warm = BoilerTick(settled(60))
     expect(warm.temperature).toBeCloseTo(60 - CstBoiler.CoolingRate * DeltaTime)
   })
 
@@ -48,30 +57,54 @@ describe("BoilerTick natural cooling", () => {
 })
 
 describe("BoilerTick steam generation", () => {
-  const boiling = { ...cold, temperature: 100, pressure: CstPhysics.AtmosphericPressure_mBar / 1e3 }
+  const boiling = settled(100)
 
   test("makes no steam with the gas off, even at the boiling point", () => {
     const next = BoilerTick({ ...boiling, gasFlow: 0 })
-    expect(next.deltaSteamMass).toBe(0)
-    expect(next.steamMass).toBe(boiling.steamMass)
+    expect(next.deltaSteamMass).toBeLessThanOrEqual(0)
+    expect(next.steamMass).toBeLessThanOrEqual(boiling.steamMass)
   })
 
-  test("makes no steam while the water is below boiling", () => {
-    const next = BoilerTick({ ...cold, temperature: 60, gasFlow: CstBoiler.MaxGasFlow })
-    expect(next.deltaSteamMass).toBe(0)
+  test("makes next to no steam while the water is well below boiling", () => {
+    const next = BoilerTick({ ...settled(60), gasFlow: CstBoiler.MaxGasFlow })
+    expect(next.deltaSteamMass).toBeLessThan(0.5)
     expect(next.temperature).toBeGreaterThan(60)
   })
 
   test("steam rate scales with the actual gas flow", () => {
-    const half = BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow / 2 }).deltaSteamMass
-    const full = BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow }).deltaSteamMass
+    const warm = settled(120)
+    const half = BoilerTick({ ...warm, gasFlow: CstBoiler.MaxGasFlow / 2 }).deltaSteamMass
+    const full = BoilerTick({ ...warm, gasFlow: CstBoiler.MaxGasFlow }).deltaSteamMass
     expect(half).toBeGreaterThan(0)
     expect(full / half).toBeGreaterThan(1.8)
     expect(full / half).toBeLessThan(2.5)
   })
 
-  test("the water stays at the boiling point while it makes steam", () => {
-    expect(BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow }).temperature).toBeCloseTo(100, 1)
+  test("the closed drum keeps heating past the atmospheric boiling point", () => {
+    expect(BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow }).temperature).toBeGreaterThan(100.1)
+  })
+})
+
+describe("steam draw cools the boiler", () => {
+  const plant = makeInitialState()
+  const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
+  const hot = settled(250)
+
+  test("drawing steam lowers temperature and pressure, the flash takes its latent heat from the water", () => {
+    const drawn = BoilerRemoveSteam(hot, openTurbine, "TURBINE")
+    const after = BoilerTick(drawn.boilerState)
+    const rest = BoilerTick(hot)
+    expect(after.temperature).toBeLessThan(rest.temperature)
+    expect(after.pressure).toBeLessThan(rest.pressure)
+    // 10 kg out in a tick, each kg needs about 1700 kJ from tens of tonnes of water: a fraction of a kelvin
+    expect(rest.temperature - after.temperature).toBeGreaterThan(0.01)
+    expect(rest.temperature - after.temperature).toBeLessThan(1)
+  })
+
+  test("the flash restores the steam inventory the draw took", () => {
+    const after = BoilerTick(BoilerRemoveSteam(hot, openTurbine, "TURBINE").boilerState)
+    expect(after.steamMass).toBeGreaterThan(hot.steamMass * 0.99)
+    expect(after.deltaSteamMass).toBeGreaterThan(0)
   })
 })
 
@@ -123,5 +156,46 @@ describe("BoilerRemoveSteam", () => {
     )
     expect(boilerState.steamMass).toBe(50)
     expect(turbineState.turbineSteamFlowOut).toBe(0)
+  })
+})
+
+describe("BoilerTick pressure law", () => {
+  const atmospheric = CstPhysics.AtmosphericPressure_mBar / 1e3
+  // Saturated water in equilibrium with its steam: the steam space holds its saturated inventory
+  const saturated = settled
+
+  // Textbook saturation pressures: 150 °C = 4.76 bar, 250 °C = 39.7 bar
+  test("pressure is the saturation pressure of the water temperature", () => {
+    expect(BoilerTick(saturated(150)).pressure).toBeCloseTo(4.76, 1)
+    expect(BoilerTick(saturated(250)).pressure).toBeCloseTo(39.7, 0)
+  })
+
+  test("pressure never drops below atmospheric, even for cold water", () => {
+    expect(BoilerTick(cold).pressure).toBeCloseTo(atmospheric, 5)
+    expect(BoilerTick({ ...cold, temperature: 60 }).pressure).toBeCloseTo(atmospheric, 5)
+  })
+
+  // Textbook saturated steam density: 0.598 kg/m³ at 100 °C, 2.55 at 150, 19.95 at 250, 46.2 at 300
+  test("the steam space holds saturated steam at the water temperature", () => {
+    const steamSpace = (CstBoiler.TotalVolume - cold.waterVolume) / 1000
+    const density = (temperature: number) => BoilerTick(saturated(temperature)).steamMass / steamSpace
+    const withinPercent = (value: number, expected: number) => Math.abs(value / expected - 1) < 0.03
+    expect(withinPercent(density(100), 0.598)).toBe(true)
+    expect(withinPercent(density(150), 2.55)).toBe(true)
+    expect(withinPercent(density(250), 19.95)).toBe(true)
+    expect(withinPercent(density(300), 46.2)).toBe(true)
+  })
+
+  test("heat beyond the atmospheric boiling point raises temperature and pressure", () => {
+    const hot = saturated(120)
+    const next = BoilerTick({ ...hot, gasFlow: CstBoiler.MaxGasFlow })
+    expect(next.temperature).toBeGreaterThan(120)
+    expect(next.pressure).toBeGreaterThan(BoilerTick(hot).pressure)
+  })
+
+  test("with the gas off and the steam in equilibrium, pressure falls with the temperature", () => {
+    const next = BoilerTick(saturated(150))
+    expect(next.temperature).toBeLessThan(150)
+    expect(next.pressure).toBeLessThan(saturated(150).pressure)
   })
 })
