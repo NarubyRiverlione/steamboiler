@@ -31,6 +31,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 |---|---|---|
 | Total volume | 100 m³ | on purpose reduced, see the register |
 | Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space |
+| Water capacity | 100 m³ of liquid | `CstBoiler.TotalVolume`, see [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
 | Working pressure | 165 bar | typical utility drum boiler (2400 psi); not a code constant yet |
 | Design pressure | 180 bar | must never be exceeded; not enforced yet (#9) |
 | Design temperature | 357 °C | saturation at 180 bar |

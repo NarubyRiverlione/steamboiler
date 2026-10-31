@@ -14,11 +14,14 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     flow: state.Turbine.turbineSteamFlowOut,
     pressure: CstSimulation.CstTurbine.steamOutflowPressure,
   }
+  // The return fills the boiler at most to its total volume; steam and drain only lower it afterwards
+  const boilerRoom = CstSimulation.CstBoiler.TotalVolume - state.Boiler.waterVolume
   const condenserNewState: CondenserState = CondenserTick(
     state.Condenser,
     state.Boiler.pressure,
     steamFromBypass,
     steamFromTurbine,
+    boilerRoom,
   )
 
   // remove steam via bypass valve
@@ -39,10 +42,10 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   )
   
   // Boiler
-  // add condensation water before recalculating the boiler state
+  // add this tick's return before recalculating the boiler state
   const boilerRemovedSteam: BoilerState = {
     ...turbineResult.boilerState,
-    waterVolume: turbineResult.boilerState.waterVolume + state.Condenser.returnRate,
+    waterVolume: turbineResult.boilerState.waterVolume + condenserNewState.returnRate,
   }
   
   const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam)

@@ -242,13 +242,19 @@ export function calculateCondensation(
   }
 }
 
+// The Return: the pump volume, limited by what the hotwell holds and the room left in the boiler.
+// Whatever cannot be returned stays in the hotwell.
 export function CalculateCondensationFlow(
   condensationPumpValvePosition: number,
   waterVolumeAfterCondensation: number,
-) {
+  boilerRoom: number,
+): { condensatePumpVolume: number; newHotwellWaterVolume: number } {
   const pumpFlowRate = condensationPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate
-  const condensatePumpVolume = pumpFlowRate * CstSimulation.DeltaTime
-  const newHotwellWaterVolume = Math.max(0, waterVolumeAfterCondensation - condensatePumpVolume)
+  const condensatePumpVolume = Math.max(
+    0,
+    Math.min(pumpFlowRate * CstSimulation.DeltaTime, waterVolumeAfterCondensation, boilerRoom),
+  )
+  const newHotwellWaterVolume = waterVolumeAfterCondensation - condensatePumpVolume
 
   return { condensatePumpVolume, newHotwellWaterVolume }
 }

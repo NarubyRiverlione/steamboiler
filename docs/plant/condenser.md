@@ -30,9 +30,9 @@ The condenser pressure, shown as a vacuum readout in mbar, is controlled by two 
 5. Steam and liquid volumes adjusted; hotwell collects the condensate
 6. New outlet temperature from the energy transfer, tracked as `outletTemperature`
 
-A condensation pump returns feedwater from the hotwell to the boiler. It is the boiler's only water supply ([ADR 0002](../adr/0002-makeup-into-hotwell.md)).
+A condensation pump moves hotwell water into the boiler as the **Return** (`returnRate`, liters per tick). It is the boiler's only water supply ([ADR 0002](../adr/0002-makeup-into-hotwell.md)); its limits are in [feedwater-loop.md](feedwater-loop.md#return-and-capacity).
 
-Known gaps: the pump returns its full volume even from an empty hotwell (#10), and the hotwell runs near 100 °C because condensate enters at the bypass steam temperature instead of the condenser saturation temperature (#35).
+Known gap: the hotwell runs near 100 °C because condensate enters at the bypass steam temperature instead of the condenser saturation temperature (#35).
 
 ## Hotwell makeup and reject
 

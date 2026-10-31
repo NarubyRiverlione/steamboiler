@@ -63,8 +63,9 @@ valve panels in each group show the positions instead. Loop targets: [feedwater-
 ## Tests
 
 Goal checks live in `sim/scenario.test.ts`. `sim/invariants.ts` holds the physical invariants
-(no NaN, design pressure and temperature, water within capacity, water never created or lost,
-natural cooldown never heats and stops steam generation); `sim/invariants.test.ts` checks every
+(no NaN, design pressure and temperature, water within capacity, condensation pump return within
+pump capacity, water never created or lost, natural cooldown never heats and stops steam
+generation); `sim/invariants.test.ts` checks every
 invariant against every registered scenario, one test per pair. A pair that fails today is in its
 `expectedFailures` table as a `test.fails` naming the fixing ticket; when that ticket lands the test
 turns red, so remove the entry to make the pair a guard.
