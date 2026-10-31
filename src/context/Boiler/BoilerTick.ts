@@ -15,155 +15,129 @@ import { BoilerState, TurbineState } from "../PowerPlantState"
 
 const { CstBoiler, CstTurbine } = CstSimulation
 
-function BoilerTick(boilerState: BoilerState): BoilerState {
-  // console.log("5")
-  let newWaterVolume = boilerState.waterVolume
-  let energyChange = 0
-  let drained = 0
-  // let removedSteamMass = 0
-  // let steamRemovalEnergyLoss = 0
+type Drain = { waterVolume: number; drained: number; energyLoss: number }
 
-  // Handle draining; the boiler is fed only by the condensation pump
-  if (boilerState.drainValveOpen) {
-    const drainAmount = CstBoiler.TotalVolume * CstBoiler.DrainingRate * CstSimulation.DeltaTime
-
-    // Calculate the ratio of water being drained
-    const originalVolume = boilerState.waterVolume
-    newWaterVolume = Math.max(0, newWaterVolume - drainAmount)
-    drained = originalVolume - newWaterVolume
-
-    if (originalVolume > 0) {
-      // Temperature doesn't change when draining (assuming uniform temperature)
-      // But total energy is reduced proportionally
-      const drainRatio = drainAmount / originalVolume
-      // Remove the same proportion of energy
-      energyChange -= boilerState.energy * drainRatio
-    }
+// The open drain removes a fixed share of the total volume per tick, with the same share of the energy
+// (uniform temperature); the boiler is fed only by the condensation pump
+export function drainBoiler({ drainValveOpen, waterVolume, energy }: BoilerState): Drain {
+  if (!drainValveOpen || waterVolume <= 0) return { waterVolume, drained: 0, energyLoss: 0 }
+  const drainAmount = CstBoiler.TotalVolume * CstBoiler.DrainingRate * CstSimulation.DeltaTime
+  const newWaterVolume = Math.max(0, waterVolume - drainAmount)
+  return {
+    waterVolume: newWaterVolume,
+    drained: waterVolume - newWaterVolume,
+    energyLoss: energy * (drainAmount / waterVolume),
   }
+}
 
-  // Water mass (kg) after draining, from the temperature-dependent density
-  const waterDensity =
-    boilerState.temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(boilerState.temperature)
-  const waterMass = (newWaterVolume * waterDensity) / 1000
+// Water mass (kg) of a volume (L), from the temperature-dependent density (the table starts at 80 °C)
+export function waterMassOf(waterVolume: number, temperature: number): number {
+  const density = temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(temperature)
+  return (waterVolume * density) / 1000
+}
+
+// Temperature after an energy change (kJ) into a heat capacity (kJ/K); an empty boiler keeps its temperature
+export function warmBy(temperature: number, energy: number, heatCapacity: number): number {
+  return heatCapacity > 0 ? temperature + energy / heatCapacity : temperature
+}
+
+function BoilerTick(boilerState: BoilerState): BoilerState {
+  const drain = drainBoiler(boilerState)
+  const waterMass = waterMassOf(drain.waterVolume, boilerState.temperature)
+  // kJ/K, water only (#13 adds the metal)
+  const heatCapacity = waterMass * getWaterSpecificHeat(boilerState.temperature)
 
   // Energy from the gas actually flowing
   const gasEnergy = calculateGasEnergy(boilerState.gasFlow) * CstSimulation.DeltaTime
-  energyChange += gasEnergy
 
-  // Natural cooling - use temperature-dependent specific heat; it stops at ambient so energy keeps matching temperature
-  const specificHeat = getWaterSpecificHeat(boilerState.temperature)
+  // Natural cooling at a constant rate; it stops at ambient so energy keeps matching temperature
   const energyAboveAmbient = Math.max(
     0,
-    waterMass * specificHeat * (boilerState.temperature - CstPhysics.AmbientTemperature),
+    heatCapacity * (boilerState.temperature - CstPhysics.AmbientTemperature),
   )
   const coolingEnergyLoss = Math.min(
     energyAboveAmbient,
-    waterMass * specificHeat * CstBoiler.CoolingRate * CstSimulation.DeltaTime,
+    heatCapacity * CstBoiler.CoolingRate * CstSimulation.DeltaTime,
   )
-  energyChange -= coolingEnergyLoss
 
-  // The net heat warms the water (water-only thermal mass, #13 adds the metal)
-  // and stops at the critical point, where the saturated model ends (a boiler run dry would otherwise run away)
-  const heatedTemperature =
-    waterMass <= 0
-      ? boilerState.temperature
-      : Math.min(
-          CriticalTemperature,
-          boilerState.temperature + (gasEnergy - coolingEnergyLoss) / (waterMass * specificHeat),
-        )
+  // The net heat warms the water and stops at the critical point, where the saturated model ends
+  // (a boiler run dry would otherwise run away)
+  const heatedTemperature = Math.min(
+    CriticalTemperature,
+    warmBy(boilerState.temperature, gasEnergy - coolingEnergyLoss, heatCapacity),
+  )
 
   // The steam space holds saturated steam; water flashes to steam (or steam condenses) to restore that inventory,
   // and the latent heat comes from, or returns to, the water. A steam draw leaves a deficit, so it cools the water.
   const flashedMass = calculateFlashedMass(
     heatedTemperature,
     waterMass,
-    newWaterVolume,
+    drain.waterVolume,
     boilerState.steamMass,
   )
   const flashEnergy = flashedMass * getLatentHeat(heatedTemperature)
-  energyChange -= flashEnergy
+  const energyChange = gasEnergy - drain.energyLoss - coolingEnergyLoss - flashEnergy
 
   // The liquid lost to steam, at the volume 1 kg of water takes at the current temperature
-  newWaterVolume = Math.min(
+  const newWaterVolume = Math.min(
     CstBoiler.TotalVolume,
-    Math.max(0, newWaterVolume - flashedMass * calculateWaterVolume(1, heatedTemperature)),
+    Math.max(0, drain.waterVolume - flashedMass * calculateWaterVolume(1, heatedTemperature)),
   )
 
-  const newEnergy = Math.max(0, boilerState.energy + energyChange)
-  const newSteamMass = Math.max(0, boilerState.steamMass + flashedMass)
-
   // Natural cooling never goes below ambient
-  const newTemperature =
-    waterMass <= 0
-      ? boilerState.temperature
-      : Math.max(CstPhysics.AmbientTemperature, heatedTemperature - flashEnergy / (waterMass * specificHeat))
+  const newTemperature = Math.max(
+    CstPhysics.AmbientTemperature,
+    warmBy(heatedTemperature, -flashEnergy, heatCapacity),
+  )
 
-  const newPressure = calculateBoilerPressure(newTemperature)
-
-  // average the values for a better UX
   return {
     ...boilerState,
     waterVolume: newWaterVolume,
-    drainedTotal: boilerState.drainedTotal + drained,
+    drainedTotal: boilerState.drainedTotal + drain.drained,
     temperature: newTemperature,
-    pressure: newPressure, //averageTwo(boilerState.pressure, newPressure),
-    steamMass: newSteamMass, // averageTwo(boilerState.steamMass, newSteamMass),
-    energy: newEnergy,
-    energyDelta: energyChange / CstSimulation.DeltaTime, // averageTwo(boilerState.energyDelta, energyChange / CstSimulation.DeltaTime),
-    // deltaWaterVolume: newWaterVolume - boilerState.waterVolume, // averageTwo(boilerState.deltaWaterVolume, newWaterVolume - boilerState.waterVolume),
+    pressure: calculateBoilerPressure(newTemperature),
+    steamMass: Math.max(0, boilerState.steamMass + flashedMass),
+    energy: Math.max(0, boilerState.energy + energyChange),
+    energyDelta: energyChange / CstSimulation.DeltaTime,
     deltaSteamMass: flashedMass / CstSimulation.DeltaTime, // kg/s flashed to steam (negative: condensing)
   }
+}
+
+type SteamOutlet = "BYPASS" | "TURBINE" | "VENT"
+
+// Position of the valve the steam leaves through; the vent has no valve yet
+export function valvePositionFor(turbineState: TurbineState, removeBy: SteamOutlet): number {
+  if (removeBy === "BYPASS") return turbineState.bypassValvePosition
+  if (removeBy === "TURBINE") return turbineState.turbineValvePosition
+  return 0
+}
+
+// Report the flow (kg/s) on the outlet it went through, leaving the other outlet's flow as it was
+function withSteamFlowOut(turbineState: TurbineState, removeBy: SteamOutlet, flow: number): TurbineState {
+  if (removeBy === "TURBINE") return { ...turbineState, turbineSteamFlowOut: flow }
+  if (removeBy === "BYPASS") return { ...turbineState, bypassSteamFlowOut: flow }
+  return turbineState
 }
 
 // --- Steam Removal Calculation ---
 export function BoilerRemoveSteam(
   boilerState: BoilerState,
   turbineState: TurbineState,
-  removeBy: "BYPASS" | "TURBINE" | "VENT",
+  removeBy: SteamOutlet,
 ): { boilerState: BoilerState; turbineState: TurbineState } {
-  // console.log("4")
-  const { steamMass } = boilerState
-
-  const {
-    mainSteamValve,
-    bypassValvePosition,
-    bypassSteamFlowOut,
-    turbineValvePosition,
-    turbineSteamFlowOut,
-  } = turbineState
-
-  const valvePosition =
-    removeBy === "BYPASS" ? bypassValvePosition : removeBy === "TURBINE" ? turbineValvePosition : 0
-
   // Only attempt to remove steam if the main steam valve is open
-  if (!mainSteamValve) {
-    return {
-      boilerState,
-      turbineState: {
-        ...turbineState,
-        turbineSteamFlowOut: 0,
-        bypassSteamFlowOut: 0,
-      },
-    }
+  if (!turbineState.mainSteamValve) {
+    return { boilerState, turbineState: { ...turbineState, turbineSteamFlowOut: 0, bypassSteamFlowOut: 0 } }
   }
 
   // The valve passes at most its rate (kg/s) over one tick, and never more than the boiler holds
-  const valveMassPerTick = valvePosition * CstTurbine.MaxSteamRemovalRate * CstSimulation.DeltaTime
-  const removedSteamMass = Math.min(steamMass, valveMassPerTick)
-  const newSteamMass = steamMass - removedSteamMass
+  const valveMassPerTick =
+    valvePositionFor(turbineState, removeBy) * CstTurbine.MaxSteamRemovalRate * CstSimulation.DeltaTime
+  const removedSteamMass = Math.min(boilerState.steamMass, valveMassPerTick)
 
   return {
-    boilerState: {
-      ...boilerState,
-      steamMass: newSteamMass,
-    },
-    turbineState: {
-      ...turbineState,
-      turbineSteamFlowOut:
-        removeBy === "TURBINE" ? removedSteamMass / CstSimulation.DeltaTime : turbineSteamFlowOut,
-      bypassSteamFlowOut:
-        removeBy === "BYPASS" ? removedSteamMass / CstSimulation.DeltaTime : bypassSteamFlowOut,
-    },
+    boilerState: { ...boilerState, steamMass: boilerState.steamMass - removedSteamMass },
+    turbineState: withSteamFlowOut(turbineState, removeBy, removedSteamMass / CstSimulation.DeltaTime),
   }
 }
 

@@ -100,9 +100,12 @@ export function calculateFlashedMass(
 
   // Already in equilibrium (within a microgram): nothing flashes, and a resting boiler stays exactly at rest
   if (Math.abs(residual(0)) < EquilibriumTolerance) return 0
+  // At most all the steam condenses, at most all the water flashes
+  return findRoot(residual, -steamMass, waterMass)
+}
 
-  let low = -steamMass
-  let high = waterMass
+// Root of a decreasing function between low and high by bisection; an end of the bracket when the root lies beyond it
+export function findRoot(residual: (x: number) => number, low: number, high: number): number {
   if (residual(low) <= 0) return low
   if (residual(high) >= 0) return high
   for (let i = 0; i < FlashIterations; i++) {

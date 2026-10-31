@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick, { BoilerRemoveSteam } from "./BoilerTick"
+import BoilerTick, { BoilerRemoveSteam, drainBoiler, valvePositionFor, warmBy, waterMassOf } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 import { calculateBoilerPressure, calculateSteamInventory } from "../../utils/boilerCalculations"
@@ -196,5 +196,43 @@ describe("BoilerTick pressure law", () => {
     const next = BoilerTick(settled(150))
     expect(next.temperature).toBeLessThan(150)
     expect(next.pressure).toBeLessThan(settled(150).pressure)
+  })
+})
+
+describe("BoilerTick helpers", () => {
+  test("an open drain on an empty boiler drains nothing and loses no energy", () => {
+    expect(drainBoiler({ ...cold, waterVolume: 0, drainValveOpen: true })).toEqual({
+      waterVolume: 0,
+      drained: 0,
+      energyLoss: 0,
+    })
+  })
+
+  test("the drain takes the same share of the energy as of the water", () => {
+    const drain = drainBoiler({ ...cold, drainValveOpen: true })
+    expect(drain.energyLoss / cold.energy).toBeCloseTo(drain.drained / cold.waterVolume, 9)
+  })
+
+  // 1 m³ of water: 1000 kg cold, about 958 kg at 100 °C (textbook density)
+  test("water mass follows the density at the water temperature", () => {
+    expect(waterMassOf(1000, 20)).toBe(1000)
+    expect(waterMassOf(1000, 100)).toBeCloseTo(958, -1)
+  })
+
+  test("an empty boiler (no heat capacity) keeps its temperature", () => {
+    expect(warmBy(150, 1e6, 0)).toBe(150)
+    expect(warmBy(150, 1000, 100)).toBe(160)
+  })
+
+  test("the vent has no valve yet, so it passes nothing", () => {
+    const open = { ...makeInitialState().Turbine, bypassValvePosition: 1, turbineValvePosition: 1 }
+    expect(valvePositionFor(open, "VENT")).toBe(0)
+    const { boilerState, turbineState } = BoilerRemoveSteam(
+      { ...cold, steamMass: 50 },
+      { ...open, mainSteamValve: true },
+      "VENT",
+    )
+    expect(boilerState.steamMass).toBe(50)
+    expect(turbineState).toEqual({ ...open, mainSteamValve: true })
   })
 })
