@@ -19,14 +19,33 @@ The physics is realistic. A process is never sped up with a magic number, such a
 
 Playability comes from over-dimensioning the utilities: gas flow, pump capacity, valve flow and similar. A bigger burner heats the water faster for a physical reason, so the plant stays honest and the operator doesn't wait hours for a startup.
 
-Every deliberate over-dimensioning is listed in the register below, so the simulator stays honest about where it departs from a real plant. Add a row when you over-dimension something new.
+The boiler volume is the one deliberate exception: it is on purpose smaller than a real boiler of this power, so the heat-up stays short. Every such departure is listed in the register below, so the simulator stays honest about where it differs from a real plant.
 
-### Over-dimensioned utilities
+### Deliberate departures from a real plant
 
-| Utility | Simulator | Realistic | Constant |
-|---|---|---|---|
-| Max gas flow | 12 000 L/s | 700–900 L/s | `CstBoiler.MaxGasFlow` |
-| Condensation pump max flow | 300 L/s | 160–270 L/s | `CstCondenser.CondensationPump_MaxFlowRate` |
+| Item | Simulator | Realistic | Why | Constant |
+|---|---|---|---|---|
+| Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: heat-up takes about 4.5 min instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
+
+Basis for the realistic figure (an engineering estimate, not a sourced data sheet): a drum of about 1.6–1.8 m inside diameter and 15–20 m long holds 35–50 m³, about half full of water; waterwall tubes and downcomers add roughly 80–120 m³. Heating 100 m³ of water plus the 100 t of steel from 20 °C to about 350 °C takes about 180 GJ, which is 8–9 minutes at the full 357 MW. The reduced 50 m³ heats in about 4.5 minutes. The single-lump boiler also has a steam space equal to total minus water, so at 165 bar a realistic 100 m³ would hold about 9 t of steam, more than a real drum.
+
+Gas flow and the condensation pump are not departures: the sizing check below found them sized for a roughly 200 MWe plant. Add a row when you over-dimension a utility or reduce something else for playability.
+
+### Sizing check (October 2026)
+
+Steam flow was measured with the headless runner: from the `at-pressure` snapshot (10 bar), full gas, main steam valve and bypass open, boiler level held by the loop operator.
+
+| | Result |
+|---|---|
+| Steam generation at full gas | 171 kg/s (about 615 t/h), steady, at 10.4 bar and 182 °C |
+| Heat per kg of steam | 2.09 MJ/kg (357 MW ÷ 171 kg/s), consistent with the energy balance |
+| Plant class | about 180–200 MWe; a real unit of that size passes about 170–180 kg/s |
+| Max gas flow | 12 m³/s is about 420 MW of fuel, in line with a 200 MWe unit; the old "typical 700–900 L/s" comment describes a small industrial boiler |
+| Condensation pump | 300 L/s is about 1.5× the 171 kg/s steam flow, a normal feedwater margin |
+| Boiler volume | 100 m³ total, 50 m³ of water, on purpose reduced for playability (see the departures table); not verified against a real data sheet |
+
+Not measured: generation near the 165 bar working pressure (estimated to be about the same).
+The measured bypass flow was 342 kg/s, twice the generation and above the 200 kg/s valve limit, so the flow accounting needs checking.
 
 ## Major Dimensions
 
@@ -36,12 +55,12 @@ The plant is modelled on a utility-scale, gas-fired drum boiler. Values come fro
 
 | | Value | Note |
 |---|---|---|
-| Total volume | 100 m³ | |
-| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space |
+| Total volume | 100 m³ | on purpose reduced for playability, realistic is about 200 m³ |
+| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space; realistic is about 100 m³ |
 | Working (operating) pressure | 165 bar | typical utility drum boiler (2400 psi), not a code constant yet |
 | Design (max) pressure | 180 bar | must never be exceeded; not enforced yet, see the relief valve ticket (#9) |
 | Design (max) temperature | 357 °C | saturation at 180 bar |
-| Max gas flow | 12 m³/s (12 000 L/s) | deliberately unrealistically high so the simulation reacts fast |
+| Max gas flow | 12 m³/s (12 000 L/s) | sized for a roughly 200 MWe plant, see the sizing check |
 | Fuel power at max gas flow | ≈ 420 MW | 12 m³/s × 35 000 kJ/m³ |
 | Heat into the water at max gas flow | ≈ 357 MW | 85% gas efficiency |
 
