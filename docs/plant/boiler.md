@@ -9,7 +9,7 @@ A gas-fired, closed-loop drum boiler. Sizes and limits are in [design-basis.md](
 - **Pressure**: see **Pressure model** below.
 - **Energy**: the source is the gas burner. The sinks are natural cooling, the latent heat of steam generation, and drained water.
 - **Volume**: a fixed 100 m³ shared between water and steam; 50 m³ of water at the start.
-- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second.
+- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second. Steam leaves through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the accumulated steam. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
 
 ## Calculations
 

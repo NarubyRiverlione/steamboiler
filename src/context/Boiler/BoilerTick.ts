@@ -157,19 +157,19 @@ export function BoilerRemoveSteam(
   }
 
   // Steam mass the valve passes this tick: its rate (kg/s) over one tick
-  const valveFlow = valvePosition * CstTurbine.MaxSteamRemovalRate * CstSimulation.DeltaTime
+  const valveMassThisTick = valvePosition * CstTurbine.MaxSteamRemovalRate * CstSimulation.DeltaTime
 
   // Calculate how much steam can be provided from accumulated steam and direct generation
   // 1. First, use accumulated steam
-  const fromAccumulatedSteam = Math.min(steamMass, valveFlow)
+  const fromAccumulatedSteam = Math.min(steamMass, valveMassThisTick)
 
   // 2. If valve is requesting more than accumulated steam, use direct generation capacity
-  const additionalNeeded = valveFlow - fromAccumulatedSteam
+  const additionalNeeded = valveMassThisTick - fromAccumulatedSteam
   const fromDirectGeneration =
     additionalNeeded > 0 ? Math.min(additionalNeeded, potentialSteamGeneration * CstSimulation.DeltaTime) : 0
 
   // Total steam that can be removed this tick
-  const removedSteamMass = Math.min(fromAccumulatedSteam + fromDirectGeneration, valveFlow)
+  const removedSteamMass = Math.min(fromAccumulatedSteam + fromDirectGeneration, valveMassThisTick)
 
   // How much to actually remove from accumulated steam (may be less than fromAccumulatedSteam)
   const actuallyRemoveFromAccumulated = Math.min(steamMass, fromAccumulatedSteam)

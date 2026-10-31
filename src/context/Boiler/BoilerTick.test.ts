@@ -82,17 +82,13 @@ describe("BoilerRemoveSteam flow units", () => {
   const boiler = { ...plant.Boiler, temperature: 180, steamMass: 1000, potentialSteamGeneration: 0 }
   const turbine = { ...plant.Turbine, mainSteamValve: true, bypassValvePosition: 0.1, turbineValvePosition: 0.05 }
 
-  test("a 10% bypass removes 10% of the max rate in kg/s, scaled to one tick", () => {
-    const result = BoilerRemoveSteam(boiler, turbine, "BYPASS")
-    const rate = 0.1 * CstTurbine.MaxSteamRemovalRate // kg/s
-    expect(result.turbineState.bypassSteamFlowOut).toBeCloseTo(rate)
-    expect(boiler.steamMass - result.boilerState.steamMass).toBeCloseTo(rate * DeltaTime)
-  })
-
-  test("a 5% turbine valve removes 5% of the max rate in kg/s, scaled to one tick", () => {
-    const result = BoilerRemoveSteam(boiler, turbine, "TURBINE")
-    const rate = 0.05 * CstTurbine.MaxSteamRemovalRate // kg/s
-    expect(result.turbineState.turbineSteamFlowOut).toBeCloseTo(rate)
+  test.each([
+    { valve: "BYPASS", position: 0.1, flowOut: "bypassSteamFlowOut" },
+    { valve: "TURBINE", position: 0.05, flowOut: "turbineSteamFlowOut" },
+  ] as const)("$valve at $position removes that share of the max rate in kg/s, scaled to one tick", ({ valve, position, flowOut }) => {
+    const result = BoilerRemoveSteam(boiler, turbine, valve)
+    const rate = position * CstTurbine.MaxSteamRemovalRate // kg/s
+    expect(result.turbineState[flowOut]).toBeCloseTo(rate)
     expect(boiler.steamMass - result.boilerState.steamMass).toBeCloseTo(rate * DeltaTime)
   })
 })

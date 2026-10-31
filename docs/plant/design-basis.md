@@ -52,7 +52,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 
 | | Value |
 |---|---|
-| Max steam removal (main steam valve fully open) | 200 kg/s |
+| Max steam removal per valve (turbine valve or bypass fully open, main steam valve open) | 200 kg/s each, so up to 400 kg/s with both |
 | Main steam valve minimum pressure | 10 bar |
 | Sync speed | 3000 RPM (50 Hz grid) |
 | Overspeed limit | 3300 RPM (110%) |
