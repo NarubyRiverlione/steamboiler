@@ -14,6 +14,14 @@ _Avoid_: Max pressure, pressure limit
 The highest boiler water temperature: the saturation temperature at design pressure (about 357 °C).
 _Avoid_: Max temperature
 
+**Working pressure**:
+The pressure the boiler normally runs at when producing steam: 165 bar. Below the design pressure.
+_Avoid_: Operating pressure, normal pressure
+
+**Saturation pressure**:
+The pressure at which the boiler water boils at its current temperature. In the boiler, pressure follows it (never below atmospheric).
+_Avoid_: Boiling pressure, vapour pressure
+
 ### Turbine and generator
 
 **Sync speed**:
