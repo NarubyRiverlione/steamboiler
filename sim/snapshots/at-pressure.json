@@ -10,8 +10,7 @@
     "energyDelta": 46383.981643449624,
     "steamMass": 57.96199188478535,
     "deltaWaterVolume": 0,
-    "deltaSteamMass": 0,
-    "potentialSteamGeneration": 0
+    "deltaSteamMass": 0
   },
   "Condenser": {
     "pressure": 213.25,

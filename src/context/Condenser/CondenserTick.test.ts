@@ -46,7 +46,6 @@ describe("CondenserTick", () => {
       const testBoilerState = {
         ...initialPowerPlantState.Boiler,
         steamMass: 50, // kg
-        potentialSteamGeneration: 0, // No excess steam generation in this test
       }
       
       const testTurbineState = {
@@ -106,7 +105,6 @@ describe("CondenserTick", () => {
     const testBoilerState = {
       ...initialPowerPlantState.Boiler,
       steamMass: 50, // kg
-      potentialSteamGeneration: 0, // No excess steam generation in this test
     }
     
     const testTurbineState = {
@@ -166,7 +164,6 @@ describe("CondenserTick", () => {
     const testBoilerState = {
       ...initialPowerPlantState.Boiler,
       steamMass: 50, // kg
-      potentialSteamGeneration: 0, // No excess steam generation in this test
     }
     
     const testTurbineState = {

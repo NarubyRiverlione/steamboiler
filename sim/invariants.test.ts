@@ -13,7 +13,8 @@ const expectedFailures: Record<string, string> = {
   "turbine-sync / water is never created or lost": "#20",
   "startup-cold / temperature within design temperature": "#9",
   "cooldown / natural cooldown never heats": "#12",
-  "bypass-loop / water is never created or lost": "#32",
+  "startup-cold / temperature within design temperature": "#43",
+  "bypass-loop / water is never created or lost": "#34",
 }
 
 describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario) => {

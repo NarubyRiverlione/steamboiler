@@ -3,7 +3,7 @@ import BoilerTick, { BoilerRemoveSteam } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 
-const { CstBoiler, DeltaTime } = CstSimulation
+const { CstBoiler, CstTurbine, DeltaTime } = CstSimulation
 const cold = makeInitialState().Boiler
 
 describe("BoilerTick drain", () => {
@@ -75,20 +75,53 @@ describe("BoilerTick steam generation", () => {
   })
 })
 
-describe("BoilerRemoveSteam flow units", () => {
-  const { CstTurbine } = CstSimulation
+describe("BoilerRemoveSteam", () => {
   const plant = makeInitialState()
-  // Plenty of accumulated steam and no generation, so only the valve limits the draw
-  const boiler = { ...plant.Boiler, temperature: 180, steamMass: 1000, potentialSteamGeneration: 0 }
-  const turbine = { ...plant.Turbine, mainSteamValve: true, bypassValvePosition: 0.1, turbineValvePosition: 0.05 }
+  const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
+  // A half-open valve passes half the rated steam flow (kg/s), so this much per tick
+  const halfOpenFlow = 0.5 * CstTurbine.MaxSteamRemovalRate
+  const halfOpenPerTick = halfOpenFlow * DeltaTime
 
-  test.each([
-    { valve: "BYPASS", position: 0.1, flowOut: "bypassSteamFlowOut" },
-    { valve: "TURBINE", position: 0.05, flowOut: "turbineSteamFlowOut" },
-  ] as const)("$valve at $position removes that share of the max rate in kg/s, scaled to one tick", ({ valve, position, flowOut }) => {
-    const result = BoilerRemoveSteam(boiler, turbine, valve)
-    const rate = position * CstTurbine.MaxSteamRemovalRate // kg/s
-    expect(result.turbineState[flowOut]).toBeCloseTo(rate)
-    expect(boiler.steamMass - result.boilerState.steamMass).toBeCloseTo(rate * DeltaTime)
+  test("caps the flow at the valve rate when the boiler holds plenty of steam", () => {
+    const plenty = 100 * halfOpenPerTick
+    const { boilerState, turbineState } = BoilerRemoveSteam(
+      { ...plant.Boiler, steamMass: plenty },
+      openTurbine,
+      "TURBINE",
+    )
+    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow)
+    expect(boilerState.steamMass).toBeCloseTo(plenty - halfOpenPerTick)
+  })
+
+  test("removes only the steam the boiler holds when the valve asks for more", () => {
+    const little = halfOpenPerTick / 5
+    const { boilerState, turbineState } = BoilerRemoveSteam(
+      { ...plant.Boiler, steamMass: little },
+      openTurbine,
+      "TURBINE",
+    )
+    expect(boilerState.steamMass).toBe(0)
+    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow / 5)
+  })
+
+  test("bypass and turbine draw from the same steam", () => {
+    const both = { ...openTurbine, bypassValvePosition: 0.5 }
+    // One tick's worth through the bypass leaves half a tick's worth for the turbine
+    const bypass = BoilerRemoveSteam({ ...plant.Boiler, steamMass: 1.5 * halfOpenPerTick }, both, "BYPASS")
+    const turbine = BoilerRemoveSteam(bypass.boilerState, bypass.turbineState, "TURBINE")
+    expect(turbine.turbineState.bypassSteamFlowOut).toBeCloseTo(halfOpenFlow)
+    expect(turbine.turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow / 2)
+    expect(turbine.boilerState.steamMass).toBe(0)
+  })
+
+  test("a closed main steam valve removes nothing", () => {
+    const boiler = { ...plant.Boiler, steamMass: 50 }
+    const { boilerState, turbineState } = BoilerRemoveSteam(
+      boiler,
+      { ...openTurbine, mainSteamValve: false },
+      "TURBINE",
+    )
+    expect(boilerState.steamMass).toBe(50)
+    expect(turbineState.turbineSteamFlowOut).toBe(0)
   })
 })
