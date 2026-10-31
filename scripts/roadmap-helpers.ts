@@ -1,6 +1,6 @@
 /**
  * Pure logic behind `pnpm roadmap`: orders open GitHub issues by their blocked-by links and
- * P1/P2/P3 labels, and renders ROADMAP.md.
+ * P1–P4 labels, and renders ROADMAP.md.
  */
 
 export type Ticket = { number: number; title: string; labels: string[]; blockedBy: number[] }
