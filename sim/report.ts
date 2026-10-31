@@ -4,68 +4,204 @@ import { loopWater } from "./invariants"
 import { Sample, Scenario } from "./scenario"
 
 type Series = { label: string; value: (state: PowerPlantState) => number }
-export type Panel = { group: string; title: string; unit: string; series: Series[] }
+// Colour code: temperature red, pressure green, volume blue, flows one hue each, valve position white, anything else amber.
+export type Kind = "temperature" | "pressure" | "volume" | "flow" | "valve" | "other"
+
+// row: panels sharing a row number render on one line; a group without rows keeps the auto-filling grid.
+// Flow charts each get their own hue; every other chart uses its kind's colour.
+export type Palette =
+  Kind | "flowSteam" | "flowIntake" | "flowReturn" | "flowCondensation" | "flowGas" | "inventory"
+
+export type Panel = {
+  group: string
+  row?: number
+  title: string
+  kind: Kind
+  palette?: Palette
+  unit: string
+  series: Series[]
+}
 
 const one = (label: string, value: Series["value"]): Series[] => [{ label, value }]
 
 export const panels: Panel[] = [
   {
     group: "Boiler",
+    title: "Gas flow",
+    kind: "flow",
+    palette: "flowGas",
+    unit: "L/s",
+    series: one("Gas flow", (s) => s.Boiler.gasFlow),
+  },
+  {
+    group: "Boiler",
     title: "Temperature",
+    kind: "temperature",
     unit: "°C",
     series: one("Temperature", (s) => s.Boiler.temperature),
   },
-  { group: "Boiler", title: "Pressure", unit: "bar", series: one("Pressure", (s) => s.Boiler.pressure) },
+  {
+    group: "Boiler",
+    title: "Pressure",
+    kind: "pressure",
+    unit: "bar",
+    series: one("Pressure", (s) => s.Boiler.pressure),
+  },
   {
     group: "Boiler",
     title: "Water volume",
+    kind: "volume",
     unit: "L",
     series: one("Water volume", (s) => s.Boiler.waterVolume),
   },
-  { group: "Boiler", title: "Steam mass", unit: "kg", series: one("Steam mass", (s) => s.Boiler.steamMass) },
+  {
+    group: "Boiler",
+    title: "Steam mass",
+    kind: "volume",
+    unit: "kg",
+    series: one("Steam mass", (s) => s.Boiler.steamMass),
+  },
   {
     group: "Boiler",
     title: "Energy delta",
+    kind: "other",
     unit: "kJ/s",
     series: one("Energy delta", (s) => s.Boiler.energyDelta),
   },
-  { group: "Turbine", title: "RPM", unit: "rpm", series: one("RPM", (s) => s.Turbine.rpm) },
+  // Turbine
   {
     group: "Turbine",
+    row: 1,
+    title: "Bypass valve",
+    kind: "valve",
+    unit: "%",
+    series: one("Bypass valve", (s) => s.Turbine.bypassValvePosition * 100),
+  },
+  {
+    group: "Turbine",
+    row: 1,
+    title: "Turbine valve",
+    kind: "valve",
+    unit: "%",
+    series: one("Turbine valve", (s) => s.Turbine.turbineValvePosition * 100),
+  },
+  {
+    group: "Turbine",
+    row: 1,
     title: "Steam flow",
+    kind: "flow",
+    palette: "flowSteam",
     unit: "kg/s",
     series: [
       { label: "Turbine", value: (s) => s.Turbine.turbineSteamFlowOut },
       { label: "Bypass", value: (s) => s.Turbine.bypassSteamFlowOut },
+      { label: "Total", value: (s) => s.Turbine.bypassSteamFlowOut + s.Turbine.turbineSteamFlowOut },
     ],
   },
   {
     group: "Turbine",
+    row: 2,
+    title: "RPM",
+    kind: "other",
+    unit: "rpm",
+    series: one("RPM", (s) => s.Turbine.rpm),
+  },
+  {
+    group: "Turbine",
+    row: 2,
     title: "Electric output",
+    kind: "other",
     unit: "MW",
     series: one("Output", (s) => s.Turbine.electricOutput),
   },
+  // Condenser. Flows in kg/s: steam intake is kg/s, and 1 L of condensate is taken as 1 kg.
   {
     group: "Condenser",
+    row: 1,
+    title: "SJAE valve",
+    kind: "valve",
+    unit: "%",
+    series: one("SJAE valve", (s) => s.Condenser.sjaeValvePosition * 100),
+  },
+  {
+    group: "Condenser",
+    row: 1,
     title: "Pressure",
+    kind: "pressure",
     unit: "mbar",
     series: one("Pressure", (s) => s.Condenser.pressure),
   },
   {
     group: "Condenser",
-    title: "Hotwell volume",
-    unit: "L",
-    series: one("Hotwell volume", (s) => s.Condenser.hotwellWaterVolume),
+    row: 1,
+    title: "Cooling water valve",
+    kind: "valve",
+    unit: "%",
+    series: one("Cooling water valve", (s) => s.Condenser.recirculationPumpValvePosition * 100),
   },
   {
     group: "Condenser",
-    title: "Return rate",
-    unit: "L/tick",
-    series: one("Return rate", (s) => s.Condenser.returnRate),
+    row: 2,
+    title: "Condensation pump valve",
+    kind: "valve",
+    unit: "%",
+    series: one("Condensation pump valve", (s) => s.Condenser.condensationPumpValvePosition * 100),
   },
   {
     group: "Condenser",
+    row: 2,
+    title: "Intake flow",
+    kind: "flow",
+    palette: "flowIntake",
+    unit: "kg/s",
+    series: one("Intake flow", (s) => s.Condenser.intakeFlowRate),
+  },
+  {
+    group: "Condenser",
+    row: 2,
+    title: "Return to boiler",
+    kind: "flow",
+    palette: "flowReturn",
+    unit: "kg/s",
+    series: one("Return to boiler", (s) => s.Condenser.returnRate / CstSimulation.DeltaTime),
+  },
+  {
+    group: "Condenser",
+    row: 3,
+    title: "Condensation rate",
+    kind: "flow",
+    palette: "flowCondensation",
+    unit: "kg/s",
+    series: one("Condensation rate", (s) => s.Condenser.condensationRate),
+  },
+  // Hotwell: level is hotwell volume over the condenser's TotalVolume, shown in %
+  {
+    group: "Hotwell",
+    row: 1,
+    title: "Hotwell level",
+    kind: "volume",
+    unit: "%",
+    series: one(
+      "Level",
+      (s) => (s.Condenser.hotwellWaterVolume / CstSimulation.CstCondenser.TotalVolume) * 100,
+    ),
+  },
+  {
+    group: "Hotwell",
+    row: 1,
+    title: "Makeup and reject valves",
+    kind: "valve",
+    unit: "%",
+    series: [
+      { label: "Makeup", value: (s) => s.Condenser.makeupValvePosition * 100 },
+      { label: "Reject", value: (s) => s.Condenser.rejectValvePosition * 100 },
+    ],
+  },
+  {
+    group: "Hotwell",
+    row: 1,
     title: "Hotwell temperature",
+    kind: "temperature",
     unit: "°C",
     series: one("Hotwell temperature", (s) => s.Condenser.hotwellTemperature),
   },
@@ -73,6 +209,8 @@ export const panels: Panel[] = [
   {
     group: "Loop",
     title: "Water inventory",
+    kind: "volume",
+    palette: "inventory",
     unit: "L",
     series: [
       { label: "Boiler water", value: (s) => s.Boiler.waterVolume },
@@ -80,29 +218,6 @@ export const panels: Panel[] = [
       { label: "Condenser steam", value: (s) => s.Condenser.steamMass },
       { label: "Hotwell", value: (s) => s.Condenser.hotwellWaterVolume },
       { label: "Total excl. makeup, reject, drain", value: loopWater },
-    ],
-  },
-  {
-    group: "Loop",
-    title: "Flows",
-    unit: "L/s",
-    series: [
-      { label: "Steam out", value: (s) => s.Turbine.bypassSteamFlowOut + s.Turbine.turbineSteamFlowOut },
-      { label: "Condenser intake", value: (s) => s.Condenser.intakeFlowRate },
-      { label: "Condensation", value: (s) => s.Condenser.condensationRate },
-      { label: "Return to boiler", value: (s) => s.Condenser.returnRate / CstSimulation.DeltaTime },
-    ],
-  },
-  {
-    group: "Loop",
-    title: "Valve positions",
-    unit: "%",
-    series: [
-      { label: "Bypass", value: (s) => s.Turbine.bypassValvePosition * 100 },
-      { label: "Cooling water", value: (s) => s.Condenser.recirculationPumpValvePosition * 100 },
-      { label: "Condensation pump", value: (s) => s.Condenser.condensationPumpValvePosition * 100 },
-      { label: "Makeup", value: (s) => s.Condenser.makeupValvePosition * 100 },
-      { label: "Reject", value: (s) => s.Condenser.rejectValvePosition * 100 },
     ],
   },
 ]
@@ -203,7 +318,7 @@ function renderPanel(
       ? `<ul class="legend">${panel.series.map((s, i) => `<li><span class="key s${String(i + 1)}"></span>${escapeHtml(s.label)}</li>`).join("")}</ul>`
       : ""
 
-  return `<figure class="panel" data-panel="${String(index)}">
+  return `<figure class="panel kind-${panel.palette ?? panel.kind}" data-panel="${String(index)}">
 <figcaption><span class="title">${escapeHtml(panel.title)} <span class="unit">${escapeHtml(panel.unit)}</span></span><span class="readout"></span></figcaption>
 ${legend}
 <svg viewBox="0 0 ${String(W)} ${String(H)}" tabindex="0" role="img" aria-label="${escapeHtml(`${panel.group} ${panel.title} over time`)}">
@@ -273,30 +388,97 @@ for (const svg of document.querySelectorAll(".panel svg")) {
 show(current)
 `
 
-const STYLE = `
-:root {
-  color-scheme: light;
+// Up to five line colours per kind (shades of one hue), for light and dark surfaces.
+const PALETTE: Record<Palette, { light: string[]; dark: string[] }> = {
+  temperature: {
+    light: ["#d92d20", "#f97066", "#7a271a", "#fda29b", "#b42318"],
+    dark: ["#f04438", "#fda29b", "#d92d20", "#fecdca", "#b42318"],
+  },
+  pressure: {
+    light: ["#12a150", "#6ce9a6", "#05603a", "#a6f4c5", "#039855"],
+    dark: ["#32d583", "#a6f4c5", "#12b76a", "#d1fadf", "#039855"],
+  },
+  volume: {
+    light: ["#2a78d6", "#84caff", "#1849a9", "#b2ddff", "#1570ef"],
+    dark: ["#3987e5", "#b2ddff", "#2e90fa", "#d1e9ff", "#1570ef"],
+  },
+  // Generic flow colour; the flow charts override it with their own hue below
+  flow: {
+    light: ["#2a78d6", "#84caff", "#1849a9", "#b2ddff", "#1570ef"],
+    dark: ["#3987e5", "#b2ddff", "#2e90fa", "#d1e9ff", "#1570ef"],
+  },
+  flowSteam: {
+    light: ["#7a5af8", "#bdb4fe", "#4a1fb8", "#d9d6fe", "#6938ef"],
+    dark: ["#9b8afb", "#d9d6fe", "#7a5af8", "#ebe9fe", "#6938ef"],
+  },
+  flowIntake: {
+    light: ["#06aed4", "#67e3f9", "#0e7090", "#a5f0fc", "#088ab2"],
+    dark: ["#22ccee", "#a5f0fc", "#06aed4", "#cff9fe", "#088ab2"],
+  },
+  flowReturn: {
+    light: ["#ee46bc", "#faa7e0", "#c11574", "#fcceee", "#dd2590"],
+    dark: ["#f670c7", "#fcceee", "#ee46bc", "#fee6f6", "#dd2590"],
+  },
+  // Water inventory: one distinct hue per line, the total in ink/white
+  inventory: {
+    light: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#0b0b0b"],
+    dark: ["#3987e5", "#d95926", "#199e70", "#c98500", "#ffffff"],
+  },
+  flowGas: {
+    light: ["#f76b15", "#ffa66b", "#a8400a", "#ffd0ad", "#d9540a"],
+    dark: ["#ff8a3d", "#ffd0ad", "#f76b15", "#ffe6d3", "#d9540a"],
+  },
+  flowCondensation: {
+    light: ["#65a30d", "#a6ef67", "#3b7c0f", "#d3f8a8", "#4d7c0f"],
+    dark: ["#85e13a", "#d3f8a8", "#66c61c", "#e3fbcc", "#4ca30d"],
+  },
+  // White on the dark theme; on the white light-theme cards it would vanish, so it turns to ink there
+  valve: {
+    light: ["#0b0b0b", "#77756f", "#3a3936", "#a8a59c", "#52514e"],
+    dark: ["#ffffff", "#c3c2b7", "#e8e7e2", "#8f8d85", "#a8a69d"],
+  },
+  other: {
+    light: ["#c98500", "#fdb022", "#93370d", "#fedf89", "#dc6803"],
+    dark: ["#eda100", "#fedf89", "#f79009", "#fef0c7", "#dc6803"],
+  },
+}
+
+const kindVars = (theme: "light" | "dark") =>
+  (Object.keys(PALETTE) as Palette[])
+    .map(
+      (kind) =>
+        `.kind-${kind} { ${PALETTE[kind][theme].map((c, i) => `--series-${String(i + 1)}: ${c};`).join(" ")} }`,
+    )
+    .join("\n")
+
+const SURFACE_LIGHT = `color-scheme: light;
   --surface: #fcfcfb; --card: #ffffff; --border: #e4e3df;
   --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #77756f;
-  --grid: #ecebe7; --axis: #b9b7b0; --action: #a8a59c;
-  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --surface: #1a1a19; --card: #222220; --border: #34332f;
-    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8d85;
-    --grid: #2c2b28; --axis: #55534d; --action: #6d6a62;
-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
+  --grid: #ecebe7; --axis: #b9b7b0; --action: #a8a59c;`
+const SURFACE_DARK = `color-scheme: dark;
   --surface: #1a1a19; --card: #222220; --border: #34332f;
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8d85;
-  --grid: #2c2b28; --axis: #55534d; --action: #6d6a62;
-  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
+  --grid: #2c2b28; --axis: #55534d; --action: #6d6a62;`
+
+const themeCss = () => `:root {
+  ${SURFACE_LIGHT}
 }
+${kindVars("light")}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  ${SURFACE_DARK}
+  }
+${kindVars("dark")
+  .replace(/^/gm, "  ")
+  .replace(/^ {2}\.kind/gm, '  :root:not([data-theme="light"]) .kind')}
+}
+:root[data-theme="dark"] {
+  ${SURFACE_DARK}
+}
+${kindVars("dark").replace(/^\./gm, ':root[data-theme="dark"] .')}`
+
+const STYLE = `
+${themeCss()}
 * { box-sizing: border-box; }
 body { margin: 0; padding: 16px; background: var(--surface); color: var(--text-primary);
   font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -308,6 +490,8 @@ h2 { font-size: 15px; margin: 24px 0 8px; color: var(--text-secondary); }
 details { margin-top: 8px; color: var(--text-secondary); }
 details li { font-variant-numeric: tabular-nums; }
 .grid-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 12px; }
+.grid-row { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+@media (max-width: 800px) { .grid-row { grid-template-columns: minmax(0, 1fr); } }
 .panel { margin: 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px 6px; }
 figcaption { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .title { font-weight: 600; }
@@ -317,23 +501,15 @@ figcaption { display: flex; justify-content: space-between; gap: 8px; flex-wrap:
 .legend { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--text-secondary); font-size: 12px; }
 .key { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 4px; border-radius: 1px; }
 .line-key { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-right: 4px; }
-.key.s1, .line-key.s1 { background: var(--series-1); }
-.key.s2, .line-key.s2 { background: var(--series-2); }
-.key.s3, .line-key.s3 { background: var(--series-3); }
-.key.s4, .line-key.s4 { background: var(--series-4); }
-.key.s5, .line-key.s5 { background: var(--series-5); }
+${[1, 2, 3, 4, 5].map((i) => `.key.s${String(i)}, .line-key.s${String(i)} { background: var(--series-${String(i)}); }`).join("\n")}
 svg { display: block; width: 100%; height: auto; touch-action: none; }
-svg:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; border-radius: 4px; }
+svg:focus-visible { outline: 2px solid var(--text-secondary); outline-offset: 2px; border-radius: 4px; }
 .grid { stroke: var(--grid); stroke-width: 1; }
 .axis { stroke: var(--axis); stroke-width: 1; }
 .tick { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .action { stroke: var(--action); stroke-width: 1; stroke-dasharray: 3 3; }
 .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.series.s1 { stroke: var(--series-1); }
-.series.s2 { stroke: var(--series-2); }
-.series.s3 { stroke: var(--series-3); }
-.series.s4 { stroke: var(--series-4); }
-.series.s5 { stroke: var(--series-5); }
+${[1, 2, 3, 4, 5].map((i) => `.series.s${String(i)} { stroke: var(--series-${String(i)}); }`).join("\n")}
 .crosshair { stroke: var(--text-secondary); stroke-width: 1; pointer-events: none; }
 `
 
@@ -353,10 +529,26 @@ export function toReportHtml(scenario: Scenario, samples: Sample[]): string {
 
   const groups = [...new Set(panels.map((p) => p.group))]
     .map((group) => {
-      const figures = panels
-        .map((p, i) => (p.group === group ? renderPanel(p, i, times, values[i], actionTimes) : ""))
-        .join("")
-      return `<section><h2>${escapeHtml(group)}</h2><div class="grid-panels">${figures}</div></section>`
+      const figures = (inRow?: number) =>
+        panels
+          .map((p, i) =>
+            p.group === group && p.row === inRow ? renderPanel(p, i, times, values[i], actionTimes) : "",
+          )
+          .join("")
+      const rows = [
+        ...new Set(panels.filter((p) => p.group === group && p.row !== undefined).map((p) => p.row)),
+      ].sort((a, b) => (a ?? 0) - (b ?? 0))
+      // Every row uses the widest row's column count, so a lone chart keeps tile width
+      const cols = Math.max(
+        0,
+        ...rows.map((row) => panels.filter((p) => p.group === group && p.row === row).length),
+      )
+      const body = rows.length
+        ? rows
+            .map((row) => `<div class="grid-row" style="--cols:${String(cols)}">${figures(row)}</div>`)
+            .join("")
+        : `<div class="grid-panels">${figures(undefined)}</div>`
+      return `<section><h2>${escapeHtml(group)}</h2>${body}</section>`
     })
     .join("\n")
   const actionList = scenario.actions

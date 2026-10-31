@@ -7,7 +7,9 @@ import { finalState, runScenario } from "./scenario"
 import { scenarios } from "./scenarios"
 import { saveSnapshot } from "./snapshot"
 
-// usage: pnpm sim [scenario] [--snapshot name]
+const DEFAULT_SCENARIO = "bypass-loop"
+
+// usage: pnpm sim [scenario] [--snapshot name] (default scenario: bypass-loop)
 // Writes sim/reports/<scenario>-<timestamp>.csv and .html
 const args = process.argv.slice(2)
 const flag = args.indexOf("--snapshot")
@@ -16,7 +18,7 @@ if (flag !== -1 && !snapshot) {
   console.error("--snapshot needs a name")
   process.exit(1)
 }
-const name = args[0] ?? "startup-cold"
+const name = args[0] ?? DEFAULT_SCENARIO
 if (!Object.hasOwn(scenarios, name)) {
   console.error(`Unknown scenario "${name}". Available:`)
   for (const s of Object.values(scenarios)) console.error(`  ${s.name} — ${s.description}`)

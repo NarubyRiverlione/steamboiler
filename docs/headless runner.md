@@ -2,7 +2,7 @@
 
 ## Status
 
-Build steps 1–4 are done. `pnpm sim [scenario]` (default `startup-cold`; writes
+Build steps 1–4 are done. `pnpm sim [scenario]` (default `bypass-loop`; writes
 `sim/reports/<scenario>-<timestamp>.csv` and `.html`, git-ignored) runs a named scenario through `powerPlantReducer`
 (`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV plus
 a self-contained HTML report in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`,
