@@ -7,7 +7,6 @@ export type BoilerState = {
   energy: number // kJ
   steamMass: number // kg - Mass of steam currently in the boiler
   deltaSteamMass: number // kg/s generated steam
-  potentialSteamGeneration: number // kg/s - Maximum potential steam generation rate
   energyDelta: number // kJ/s
   drainValveOpen: boolean
   drainedTotal: number // liters drained since start (totalizer)

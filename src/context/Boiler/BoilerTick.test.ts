@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick from "./BoilerTick"
+import BoilerTick, { BoilerRemoveSteam } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 
@@ -72,5 +72,52 @@ describe("BoilerTick steam generation", () => {
 
   test("the water stays at the boiling point while it makes steam", () => {
     expect(BoilerTick({ ...boiling, gasFlow: CstBoiler.MaxGasFlow }).temperature).toBeCloseTo(100, 1)
+  })
+})
+
+describe("BoilerRemoveSteam", () => {
+  const plant = makeInitialState()
+  const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
+
+  test("caps the flow at the valve rate when the boiler holds plenty of steam", () => {
+    // 50% of 200 kg/s for 0.1 s is 10 kg
+    const { boilerState, turbineState } = BoilerRemoveSteam(
+      { ...plant.Boiler, steamMass: 1000 },
+      openTurbine,
+      "TURBINE",
+    )
+    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(100)
+    expect(boilerState.steamMass).toBeCloseTo(990)
+  })
+
+  test("removes only the steam the boiler holds when the valve asks for more", () => {
+    const { boilerState, turbineState } = BoilerRemoveSteam(
+      { ...plant.Boiler, steamMass: 2 },
+      openTurbine,
+      "TURBINE",
+    )
+    expect(boilerState.steamMass).toBe(0)
+    expect(turbineState.turbineSteamFlowOut).toBeCloseTo(20)
+  })
+
+  test("bypass and turbine draw from the same steam", () => {
+    const both = { ...openTurbine, bypassValvePosition: 0.5 }
+    const bypass = BoilerRemoveSteam({ ...plant.Boiler, steamMass: 15 }, both, "BYPASS")
+    const turbine = BoilerRemoveSteam(bypass.boilerState, bypass.turbineState, "TURBINE")
+    // 10 kg through the bypass leaves 5 kg for the turbine
+    expect(turbine.turbineState.bypassSteamFlowOut).toBeCloseTo(100)
+    expect(turbine.turbineState.turbineSteamFlowOut).toBeCloseTo(50)
+    expect(turbine.boilerState.steamMass).toBe(0)
+  })
+
+  test("a closed main steam valve removes nothing", () => {
+    const boiler = { ...plant.Boiler, steamMass: 50 }
+    const { boilerState, turbineState } = BoilerRemoveSteam(
+      boiler,
+      { ...openTurbine, mainSteamValve: false },
+      "TURBINE",
+    )
+    expect(boilerState.steamMass).toBe(50)
+    expect(turbineState.turbineSteamFlowOut).toBe(0)
   })
 })
