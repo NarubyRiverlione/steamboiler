@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     // Long headless scenarios exceed vitest's 5s default under coverage instrumentation
-    testTimeout: 10_000,
+    testTimeout: 30_000,
   },
 })

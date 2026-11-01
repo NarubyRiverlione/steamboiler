@@ -83,7 +83,8 @@ describe("runScenario", () => {
   test("one simulated hour runs in a few seconds at most", () => {
     const start = performance.now()
     runScenario({ ...heatUp, duration: 3600, sampleEvery: 10 })
-    expect(performance.now() - start).toBeLessThan(5000)
+    // 2.6 s plain, 7.8-8.6 s under coverage instrumentation on a 15 W laptop CPU: see headless-runner.md
+    expect(performance.now() - start).toBeLessThan(15_000)
   })
 })
 
