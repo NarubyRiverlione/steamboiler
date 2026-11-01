@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario } from "./scenario"
+import { firstTimeWhere, runScenarioWithLifts } from "./scenario"
 import { bypassLoop } from "./scenarios/bypass-loop"
 import { LoopSettings, loopOperator } from "./scenarios/loop-operator"
+import { holdPressureWithGas, PressureHoldSettings } from "./scenarios/pressure-hold"
+import { StartGas } from "./scenarios/steps"
 import { CstSimulation } from "../src/context/const"
 import { CondenserTick } from "../src/context/Condenser/CondenserTick"
 import { makeInitialState } from "../src/context/PowerPlantReducer"
@@ -11,10 +13,12 @@ import PowerPlantState from "../src/context/PowerPlantState"
 // Loop assertions for the bypass loop; water conservation runs with the generic invariants.
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const SettleTime = 1800 // sim-seconds: the second half of the run counts as steady
+const SteadyWindow = 600 // sim-seconds at the end of the run that count as steady
+const SteadyShare = 0.05 // average steam out within this share of average steam generated
 const OccasionalFraction = 0.1 // a valve open in at most this share of the steady samples
 
-const samples = runScenario(bypassLoop)
+const { samples, lifts } = runScenarioWithLifts(bypassLoop)
+const SettleTime = bypassLoop.duration - SteadyWindow
 const valveOpenAt = firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve) ?? Infinity
 const steady = samples.filter((s) => s.time >= SettleTime)
 const openShare = (open: (s: PowerPlantState) => boolean) =>
@@ -29,13 +33,18 @@ describe("bypass-loop setup", () => {
 
   test("opens the main steam valve once above main-steam-valve pressure", () => {
     expect(valveOpenAt).toBeLessThan(SettleTime)
-    expect(atOpen?.state.Boiler.gasFlow).toBe(LoopSettings.SteamGasFlow)
+    expect(atOpen?.state.Boiler.gasFlow).toBe(StartGas)
     expect(atOpen?.state.Condenser.sjaeValvePosition).toBe(LoopSettings.SjaeOpening)
   })
 
-  test("never closes the bypass below its start opening once steam flows", () => {
+  test("holds the bypass at its fixed load opening once the main steam valve opens", () => {
     for (const { state } of samples.filter((s) => s.time > valveOpenAt))
-      expect(state.Turbine.bypassValvePosition).toBeGreaterThanOrEqual(LoopSettings.BypassOpening - 1e-9)
+      expect(state.Turbine.bypassValvePosition).toBeCloseTo(LoopSettings.BypassLoadOpening, 9)
+  })
+
+  test("gas never goes above the heat-up gas once the main steam valve opens", () => {
+    for (const { state } of samples.filter((s) => s.time > valveOpenAt))
+      expect(state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas)
   })
 
   test("keeps the turbine valve closed throughout", () => {
@@ -67,13 +76,23 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  test.fails("bypass holds the operating pressure within the band (fails until #43)", () => {
-    const { BoilerPressureTarget, BoilerPressureBand } = LoopSettings
-    for (const { state } of steady)
-      expect(Math.abs(state.Boiler.pressure - BoilerPressureTarget)).toBeLessThanOrEqual(BoilerPressureBand)
+  test("gas holds the working pressure within the band", () => {
+    const { Target, Band } = PressureHoldSettings
+    for (const { state } of steady) expect(Math.abs(state.Boiler.pressure - Target)).toBeLessThanOrEqual(Band)
   })
 
-  test.fails("operator reaches a steady boiler level within the control band (fails until #43)", () => {
+  test("the relief valve never lifts", () => {
+    expect(lifts).toEqual([])
+  })
+
+  test("while holding, steam out of the boiler matches steam generated", () => {
+    const average = (value: (s: PowerPlantState) => number) => steady.reduce((sum, s) => sum + value(s.state), 0) / steady.length
+    const out = average((s) => s.Turbine.bypassSteamFlowOut + s.Turbine.turbineSteamFlowOut)
+    const generated = average((s) => s.Boiler.deltaSteamMass)
+    expect(Math.abs(out - generated)).toBeLessThanOrEqual(SteadyShare * generated)
+  })
+
+  test("operator reaches a steady boiler level within the control band", () => {
     const { BoilerLevelTarget, BoilerLevelBand } = LoopSettings
     for (const { state } of steady) {
       const level = state.Boiler.waterVolume / CstBoiler.TotalVolume
@@ -81,13 +100,13 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  // The hotwell runs near 30 °C since #35, but the on/off hysteresis lets the level swing between the makeup and
-  // reject limits, so the operator churns water instead of settling (#52; the hotwell volume question is #53)
-  test.fails("makeup is only an occasional top-up (fails until #52)", () => {
+  // With gas holding the pressure the loop is steady, so the hotwell level settles between the makeup and reject limits
+  // (#52 and #53 stay open for the thresholds and the hotwell volume)
+  test("makeup is only an occasional top-up", () => {
     expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 
-  test.fails("reject is only occasional: the loop creates no water to dump (fails until #52)", () => {
+  test("reject is only occasional: the loop creates no water to dump", () => {
     expect(openShare((s) => s.Condenser.rejectValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 })
@@ -108,7 +127,7 @@ describe("loopOperator", () => {
 
   const steaming = (patch: Partial<PowerPlantState["Boiler"]>, turbine: Partial<PowerPlantState["Turbine"]> = {}) => {
     const state = withBoiler(patch)
-    return { ...state, Turbine: { ...state.Turbine, mainSteamValve: true, bypassValvePosition: LoopSettings.BypassOpening, ...turbine } }
+    return { ...state, Turbine: { ...state.Turbine, mainSteamValve: true, bypassValvePosition: LoopSettings.BypassLoadOpening, ...turbine } }
   }
   const find = (state: PowerPlantState, type: PowerPlantAction["type"]) => loopOperator(state, 0).find((a) => a.type === type)
 
@@ -120,9 +139,9 @@ describe("loopOperator", () => {
     const atPressure = withBoiler({ pressure: CstTurbine.MainSteamValveMinimumPressure + 1, gasFlow: CstBoiler.MaxGasFlow })
     const state = { ...atPressure, Condenser: { ...atPressure.Condenser, hotwellWaterVolume: hotwellAt(0.7) } }
     expect(loopOperator(state, 0.5)).toEqual([
-      { type: "DECREASE_GAS_FLOW", amount: CstBoiler.MaxGasFlow - LoopSettings.SteamGasFlow },
+      { type: "DECREASE_GAS_FLOW", amount: CstBoiler.MaxGasFlow - StartGas },
       { type: "TOGGLE_MAIN_STEAM_VALVE" },
-      { type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: LoopSettings.BypassOpening } },
+      { type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: LoopSettings.BypassLoadOpening } },
       {
         type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
         payload: { condensationPumpValvePosition: LoopSettings.CondensationPumpOpening },
@@ -132,20 +151,31 @@ describe("loopOperator", () => {
     ])
   })
 
-  test("the bypass opens above the pressure band, holds within it and closes below it, never under its start opening", () => {
-    const { BoilerPressureTarget: target, BoilerPressureBand: band, ValveNudge } = LoopSettings
-    const bypass = (pressure: number, position = 0.5) =>
-      (find(steaming({ pressure }, { bypassValvePosition: position }), "ADJUST_STEAM_BYPASS_VALVE") as
-        | { payload: { bypassValvePosition: number } }
-        | undefined)?.payload.bypassValvePosition
-    expect(bypass(target + band + 1)).toBeCloseTo(ValveNudge)
-    expect(bypass(target)).toBeUndefined()
-    expect(bypass(target - band - 1)).toBeCloseTo(-ValveNudge)
-    expect(bypass(target - band - 1, LoopSettings.BypassOpening)).toBeUndefined()
+  test("gas lowers above the pressure band, raises below it and leans against the trend inside it, never above StartGas", () => {
+    const { Target, Band, GasStep } = PressureHoldSettings
+    const gas = (pressure: number, gasFlow: number, heatingRate = 0) => {
+      const state = steaming({ pressure, gasFlow, heatingRate })
+      const action = loopOperator(state, 0).find((a) => a.type === "INCREASE_GAS_FLOW" || a.type === "DECREASE_GAS_FLOW")
+      if (action === undefined) return 0
+      return action.type === "INCREASE_GAS_FLOW" ? action.amount : -action.amount
+    }
+    expect(gas(Target + Band + 1, StartGas)).toBe(-GasStep)
+    expect(gas(Target - Band - 1, 500)).toBe(GasStep)
+    expect(gas(Target - Band - 1, StartGas)).toBe(0)
+    expect(gas(Target + 1, 500, 0.01)).toBe(-GasStep)
+    expect(gas(Target - 1, 500, -0.01)).toBe(GasStep)
+    expect(gas(Target + 1, 500, -0.01)).toBe(0)
+    expect(holdPressureWithGas(steaming({ pressure: Target, gasFlow: 500 }))).toEqual([])
   })
 
-  test("leaves bypass and condensation pump alone before the main steam valve opens", () => {
-    const cold = withBoiler({ waterVolume: boilerAt(0.4) })
+  test("never moves the bypass after the main steam valve opens", () => {
+    const state = steaming({ pressure: PressureHoldSettings.Target + 10 }, { bypassValvePosition: LoopSettings.BypassLoadOpening })
+    expect(types(state)).not.toContain("ADJUST_STEAM_BYPASS_VALVE")
+  })
+
+  test("leaves gas hold, bypass and condensation pump alone before the main steam valve opens", () => {
+    const cold = withBoiler({ waterVolume: boilerAt(0.4), pressure: 5, gasFlow: 500 })
+    expect(types(cold, 1)).not.toContain("INCREASE_GAS_FLOW")
     expect(types(cold)).not.toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
     expect(types(cold)).not.toContain("ADJUST_STEAM_BYPASS_VALVE")
   })
@@ -155,7 +185,7 @@ describe("loopOperator", () => {
       (find(state, "SET_CONDENSATION_PUMP_VALVE_POSITION") as
         | { payload: { condensationPumpValvePosition: number } }
         | undefined)?.payload.condensationPumpValvePosition
-    const target = { pressure: LoopSettings.BoilerPressureTarget }
+    const target = { pressure: PressureHoldSettings.Target }
     expect(pump(steaming({ ...target, waterVolume: boilerAt(0.4) }))).toBeCloseTo(LoopSettings.ValveNudge)
     const high = steaming({ ...target, waterVolume: boilerAt(0.6) })
     const running = { ...high, Condenser: { ...high.Condenser, condensationPumpValvePosition: 0.5 } }
@@ -164,19 +194,19 @@ describe("loopOperator", () => {
 
   test("inside the band leans against the level trend", () => {
     const pump = (deltaWaterMass: number, level: number) =>
-      types(steaming({ pressure: LoopSettings.BoilerPressureTarget, waterVolume: boilerAt(level), deltaWaterMass })).includes(
+      types(steaming({ pressure: PressureHoldSettings.Target, waterVolume: boilerAt(level), deltaWaterMass })).includes(
         "SET_CONDENSATION_PUMP_VALVE_POSITION",
       )
     expect(pump(-1, 0.49)).toBe(true)
     expect(pump(1, 0.49)).toBe(false)
   })
 
-  test("adjusts bypass and pumps only on whole seconds", () => {
-    const low = steaming({ pressure: LoopSettings.BoilerPressureTarget + 10, waterVolume: boilerAt(0.4) })
+  test("adjusts gas and pumps only on whole seconds", () => {
+    const low = steaming({ pressure: PressureHoldSettings.Target + 10, gasFlow: StartGas, waterVolume: boilerAt(0.4) })
     expect(types(low, 0.5)).not.toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
-    expect(types(low, 0.5)).not.toContain("ADJUST_STEAM_BYPASS_VALVE")
+    expect(types(low, 0.5)).not.toContain("DECREASE_GAS_FLOW")
     expect(types(low, 1)).toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
-    expect(types(low, 1)).toContain("ADJUST_STEAM_BYPASS_VALVE")
+    expect(types(low, 1)).toContain("DECREASE_GAS_FLOW")
   })
 
   test("adds cooling water when steam collects in the condenser, and backs off when it is gone", () => {

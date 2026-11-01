@@ -15,8 +15,8 @@ const fullGas = [
 
 export const bypassLoop: Scenario = {
   name: "bypass-loop",
-  description: "Cold start at full gas, bypass only, operator holds boiler level at 50% via the condensation pump",
-  duration: 3600,
+  description: "Cold start at full gas, bypass fixed at 10%, gas holds 165 bar, operator holds boiler level at 50% via the condensation pump",
+  duration: 7200,
   sampleEvery: 10,
   initial: makeInitialState(),
   actions: fullGas,

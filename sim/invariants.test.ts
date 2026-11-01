@@ -89,6 +89,13 @@ describe("invariant checks", () => {
       ).toHaveLength(1)
     })
 
+    test("allows rounding that adds up over a long run: 1e-12 of the start per 1800 s, but not within a short one", () => {
+      const gain = (kg: number) => boiler({ waterMass: base.Boiler.waterMass + kg })
+      expect(check(name, [sample(0, (s) => s), sample(10, gain(start * 3e-12))])).toHaveLength(1)
+      expect(check(name, [sample(0, (s) => s), sample(5400, gain(start * 3e-12))])).toEqual([])
+      expect(check(name, [sample(0, (s) => s), sample(5400, gain(start * 4e-12))])).toHaveLength(1)
+    })
+
     test("allows only floating-point rounding (1e-13 of the start) lost with no steam out, not more", () => {
       const lose = (kg: number) => boiler({ waterMass: base.Boiler.waterMass - kg })
       expect(check(name, [sample(0, (s) => s), sample(10, lose(start * 0.9e-13))])).toEqual([])

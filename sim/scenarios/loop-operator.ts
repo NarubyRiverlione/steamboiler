@@ -1,7 +1,8 @@
 import { CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
-import { isAdjustTime } from "./steps"
+import { bandDirection, holdPressureWithGas } from "./pressure-hold"
+import { isAdjustTime, StartGas } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
 // Valve actions are deltas, so the operator asks for the difference to the position it wants.
@@ -9,12 +10,9 @@ import { isAdjustTime } from "./steps"
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
 export const LoopSettings = {
-  SteamGasFlow: 5000, // liters/second once the main steam valve opens
-  BypassOpening: 0.05, // bypass position when the main steam valve opens, and its minimum
+  BypassLoadOpening: 0.1, // bypass position once the main steam valve opens: 20 kg/s, close to the turbine's ~18 kg/s at sync speed
   SjaeOpening: 1, // SJAE valve position once there is steam
   CondensationPumpOpening: 0.1, // condensation pump position when the main steam valve opens
-  BoilerPressureTarget: 165, // bar: operating pressure the bypass holds
-  BoilerPressureBand: 2, // bar: no bypass change within target ± band
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // no pump change within target ± band
   HotwellMakeupBelow: 0.65, // fraction of condenser capacity: open makeup
@@ -23,7 +21,7 @@ export const LoopSettings = {
   CondenserSteamHigh: 100, // kg in the condenser: more cooling water
   CondenserSteamLow: 10, // kg: less cooling water
   ValveNudge: 0.01, // position change per adjustment
-  AdjustEvery: 1, // sim-seconds between bypass, pump and cooling adjustments
+  AdjustEvery: 1, // sim-seconds between gas, pump and cooling adjustments
 }
 
 const S = LoopSettings
@@ -44,14 +42,14 @@ function hysteresis(open: boolean, level: number, limit: number, target: number,
 const toPosition = (current: number, wanted: number, make: (delta: number) => PowerPlantAction): PowerPlantAction[] =>
   current === wanted ? [] : [make(wanted - current)]
 
-// At pressure: gas down to the steam flow, main steam valve open, bypass and condensation pump to their start positions
+// At pressure: gas down to the heat-up gas, main steam valve open, bypass and condensation pump to their start positions
 function openMainSteam({ Boiler, Turbine, Condenser }: PowerPlantState): PowerPlantAction[] {
   if (Turbine.mainSteamValve) return []
-  const gasDown = Boiler.gasFlow - S.SteamGasFlow
+  const gasDown = Boiler.gasFlow - StartGas
   return [
     ...(gasDown > 0 ? [{ type: "DECREASE_GAS_FLOW", amount: gasDown } as const] : []),
     { type: "TOGGLE_MAIN_STEAM_VALVE" },
-    ...toPosition(Turbine.bypassValvePosition, S.BypassOpening, (bypassValvePosition) => ({
+    ...toPosition(Turbine.bypassValvePosition, S.BypassLoadOpening, (bypassValvePosition) => ({
       type: "ADJUST_STEAM_BYPASS_VALVE",
       payload: { bypassValvePosition },
     })),
@@ -78,25 +76,7 @@ function startSteam(state: PowerPlantState): PowerPlantAction[] {
   return [...openMainSteam(state), ...restartSjae(state)]
 }
 
-// Outside the band always correct; inside it, only lean against the trend so the value settles
-function bandDirection(error: number, band: number, trend: number): -1 | 0 | 1 {
-  const correcting = Math.abs(error) > band || Math.sign(trend) === Math.sign(error)
-  if (error === 0 || !correcting) return 0
-  return error < 0 ? 1 : -1
-}
-
-// The bypass holds boiler pressure: open above the band, close below it, never below its start
-// opening. The state carries no pressure trend, so unlike the level there is no leaning inside the band.
-function holdBoilerPressure({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
-  if (!Turbine.mainSteamValve) return []
-  const error = Boiler.pressure - S.BoilerPressureTarget
-  const direction = Math.abs(error) <= S.BoilerPressureBand ? 0 : error > 0 ? 1 : -1
-  const position = Turbine.bypassValvePosition
-  const delta = Math.max(S.BypassOpening, position + nudge(position, direction)) - position
-  return delta === 0 ? [] : [{ type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: delta } }]
-}
-
-function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {
+export function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
   const direction = bandDirection(level - S.BoilerLevelTarget, S.BoilerLevelBand, Boiler.deltaWaterMass)
@@ -106,7 +86,7 @@ function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): Power
     : [{ type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: delta } }]
 }
 
-function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
+export function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
   const direction =
     Condenser.steamMass > S.CondenserSteamHigh ? 1 : Condenser.steamMass < S.CondenserSteamLow ? -1 : 0
   const delta = nudge(Condenser.recirculationPumpValvePosition, direction)
@@ -115,7 +95,7 @@ function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
     : [{ type: "SET_RECIRCULATION_PUMP_VALVE_POSITION", payload: { recirculationPumpValvePosition: delta } }]
 }
 
-function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
+export function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
   const level = Condenser.hotwellWaterVolume / CstCondenser.TotalVolume
   const makeup = hysteresis(Condenser.makeupValvePosition > 0, level, S.HotwellMakeupBelow, S.HotwellTarget, -1)
   const reject = hysteresis(Condenser.rejectValvePosition > 0, level, S.HotwellRejectAbove, S.HotwellTarget, 1)
@@ -134,6 +114,6 @@ export function loopOperator(state: PowerPlantState, time: number): PowerPlantAc
   return [
     ...startSteam(state),
     ...holdHotwell(state),
-    ...(adjustNow ? [...holdBoilerPressure(state), ...holdBoilerLevel(state), ...holdCondensing(state)] : []),
+    ...(adjustNow ? [...(state.Turbine.mainSteamValve ? holdPressureWithGas(state) : []), ...holdBoilerLevel(state), ...holdCondensing(state)] : []),
   ]
 }
