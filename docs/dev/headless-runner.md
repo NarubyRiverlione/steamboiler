@@ -54,8 +54,14 @@ Scenarios (`pnpm sim <name>`); each either replays the earlier operator steps fr
 | `relief-lift` | cold | full gas with everything closed until the relief valve lifts (~289 s), then gas off at 291 s: one lift, 178 → 171 bar, then cooldown |
 | `full-gas` | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 78 K/min), the relief valve lifts at ~289 s and holds the pressure below design (peak ≈ 178.1 bar per tick while 1 m³ of water remains) until the boiler runs dry at ~395 s; its last litre and then the dry metal heat to the critical point, 220.6 bar (burner protection is #33) |
 
-`startup-cold` does not run the water loop: it leaves cooling water and the condensation pump at 0,
-so nothing condenses and nothing returns. Use `bypass-loop` for the loop.
+The turbine valve only opens under the vacuum limit, and above it an open valve closes in a turbine
+trip (ADR 0003). So the turbine scenarios hold the vacuum: `heatUp` starts the air extraction pump at
+t=0 (under the limit within seconds), and `openMainSteam` enables the SJAE and opens its valve once
+the boiler is above main-steam-valve pressure (below it the SJAE switches itself off), opens the
+recirculation pump so the exhaust condenses, and opens the condensation pump just far enough to
+return the condensate without emptying the 20 °C hotwell into the boiler. A scenario test checks,
+every tick, that no turbine trip happens. The condensation pump follows the turbine valve by hand;
+there is no level control. Use `bypass-loop` for the controlled loop.
 
 ## Operator hook
 

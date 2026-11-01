@@ -10,7 +10,8 @@ import { AtPressure, heatUp as heatUpSteps, openMainSteam, rollTurbine, since, T
 import { turbineStart } from "./scenarios/turbine-start"
 import { turbineSync } from "./scenarios/turbine-sync"
 import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
-import { CstPhysics } from "../src/context/const"
+import { CstPhysics, CstSimulation } from "../src/context/const"
+import { calculateHeatingEnergy } from "../src/utils/boilerCalculations"
 
 const heatUp: Scenario = {
   name: "test-heat-up",
@@ -172,7 +173,7 @@ describe("snapshot start", () => {
   })
 
   test("since() moves steps to the snapshot's clock", () => {
-    expect(since(AtPressure, openMainSteam).map((a) => a.at)).toEqual([0, 10])
+    expect(since(AtPressure, openMainSteam).map((a) => a.at)).toEqual([0, 0, 0, 0, 0, 10])
   })
 })
 
@@ -221,6 +222,25 @@ describe("turbine-sync", () => {
 
   test.fails("generator breaker closes (fails until #18, #21)", () => {
     expect(samples.at(-1)?.state.Turbine.generatorBreaker).toBe(true)
+  })
+})
+
+// The turbine valve may only open under vacuum (ADR 0003): the scenarios pull it first and the turbine
+// never trips. Sampled every tick, so a trip that a later opening clears again cannot slip between samples.
+describe.each([startupCold, turbineStart, turbineSync])("$name under the vacuum limit", (scenario) => {
+  const samples = runScenario({ ...scenario, sampleEvery: CstSimulation.DeltaTime })
+  const limit = CstSimulation.CstCondenser.VacuumLimit
+  const firstOpen = samples.findIndex((s) => s.state.Turbine.turbineValvePosition > 0)
+
+  test("condenser pressure is at or below the vacuum limit when the turbine valve first opens", () => {
+    expect(firstOpen).toBeGreaterThanOrEqual(0)
+    expect(samples[firstOpen].state.Condenser.pressure).toBeLessThanOrEqual(limit)
+  })
+
+  test("the turbine valve never closes on a turbine trip after it opens", () => {
+    const afterOpening = samples.slice(firstOpen)
+    expect(afterOpening.filter((s) => s.state.Turbine.turbineValvePosition === 0)).toEqual([])
+    expect(afterOpening.filter((s) => s.state.Turbine.turbineTripped)).toEqual([])
   })
 })
 

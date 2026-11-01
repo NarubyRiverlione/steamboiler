@@ -1,11 +1,12 @@
 import usePowerPlant from "../../context/PowerPlantContext"
 import useEMA from "../../utils/useEMA"
+import Indicator from "../Indicator"
 import Readout from "../Readout"
 
 const TurbineReadouts = () => {
   const {
     state: {
-      Turbine: { electricOutput, rpm, rpmSetPoint, holdMode, turbineSteamFlowOut, generatorBreaker },
+      Turbine: { electricOutput, rpm, rpmSetPoint, holdMode, turbineSteamFlowOut, generatorBreaker, turbineTripped },
     },
   } = usePowerPlant()
 
@@ -32,6 +33,11 @@ const TurbineReadouts = () => {
           {generatorBreaker ? "CLOSED" : "OPEN"}
         </span>
       </div>
+      <Indicator
+        isActive={turbineTripped}
+        title="Turbine tripped: condenser pressure rose above the vacuum limit"
+        label="Turbine trip"
+      />
     </div>
   )
 }

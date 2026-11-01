@@ -5,7 +5,8 @@ import { heatUp, openMainSteam, rollTurbine, StartGas, TurbineValveOpenAt } from
 // Operator tries to close the breaker at the end of the run
 export const BreakerAttemptAt = 3590
 
-// From a rolling turbine to sync speed: more gas, turbine valve fully open, then close the breaker.
+// From a rolling turbine to sync speed: more gas, turbine valve fully open (condensation pump with it,
+// so the hotwell does not overflow), then close the breaker.
 // Not reachable with the current physics (#18, #21).
 export const turbineSync: Scenario = {
   name: "turbine-sync",
@@ -21,6 +22,10 @@ export const turbineSync: Scenario = {
     {
       at: TurbineValveOpenAt + 10,
       action: { type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 1 } },
+    },
+    {
+      at: TurbineValveOpenAt + 10,
+      action: { type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: 1 } },
     },
     { at: BreakerAttemptAt, action: { type: "TOGGLE_GENERATOR_BREAKER" } },
   ],

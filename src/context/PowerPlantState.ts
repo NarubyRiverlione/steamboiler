@@ -52,6 +52,7 @@ export type TurbineState = {
   generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
   pidIntegralError: number // hold-mode PID accumulated rpm error (rpm·s, clamped to ±1)
   pidPreviousError: number // hold-mode PID rpm error of the last hold-mode tick
+  turbineTripped: boolean // set by a turbine trip, cleared by the next opening of the turbine valve
 }
 
 type PowerPlantState = {

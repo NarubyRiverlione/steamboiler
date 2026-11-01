@@ -117,3 +117,24 @@ describe("PowerPlantTick relief valve", () => {
     expect(next.Condenser.steamMass).toBe(0)
   })
 })
+
+describe("PowerPlantTick turbine trip", () => {
+  const running = (condenserPressure: number): PowerPlantState => ({
+    ...cold,
+    Boiler: { ...cold.Boiler, pressure: 50 },
+    Condenser: { ...cold.Condenser, pressure: condenserPressure },
+    Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.3 },
+  })
+
+  test("the turbine trips on the condenser pressure going into the tick", () => {
+    const next = PowerPlantTick(running(CstSimulation.CstCondenser.VacuumLimit + 1))
+    expect(next.Turbine.turbineValvePosition).toBe(0)
+    expect(next.Turbine.turbineTripped).toBe(true)
+  })
+
+  test("under vacuum the turbine keeps its valve", () => {
+    const next = PowerPlantTick(running(CstSimulation.CstCondenser.VacuumLimit))
+    expect(next.Turbine.turbineValvePosition).toBe(0.3)
+    expect(next.Turbine.turbineTripped).toBe(false)
+  })
+})

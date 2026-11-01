@@ -1,10 +1,21 @@
 import { CstSimulation } from "../context/const"
 
-const { CstTurbine } = CstSimulation
+const { CstCondenser, CstTurbine } = CstSimulation
 
 // True when the turbine runs within the breaker margin of sync speed
 export const isAtSyncSpeed = (rpm: number): boolean =>
   Math.abs(rpm - CstTurbine.SyncRPM) <= CstTurbine.BreakerRPMMargin
+
+// True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
+export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit
+
+// Highest turbine valve position allowed: above the vacuum limit the valve may close but not open further
+export const maxTurbineValvePosition = (currentPosition: number, condenserPressure: number): number =>
+  isAboveVacuumLimit(condenserPressure) ? currentPosition : 1
+
+// The turbine trip flag clears on the next opening of the turbine valve, by the operator or the hold-mode PID
+export const turbineTrippedAfter = (tripped: boolean, previousPosition: number, newPosition: number): boolean =>
+  tripped && newPosition <= previousPosition
 
 /**
  * Calculates the electricity output based on turbine valve position, RPM, and generator breaker status.
