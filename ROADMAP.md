@@ -13,12 +13,12 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 | - | ------ | -------- | ------ | -------- |
 | 1 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 (↑P2) | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
 | 2 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage |  |
-| 3 | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) Hotwell makeup and reject thresholds: protection limits plus a working band | P2 | needs-triage | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) |
-| 4 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |
-| 5 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | ready-for-agent |  |
-| 6 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | needs-triage |  |
-| 7 | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) Condensation runs at 10 times the energy balance (magic number in calculateCondensation) | P3 | needs-triage |  |
-| 8 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |
+| 3 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |
+| 4 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | ready-for-agent |  |
+| 5 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | needs-triage |  |
+| 6 | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) Condensation runs at 10 times the energy balance (magic number in calculateCondensation) | P3 | needs-triage |  |
+| 7 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |
+| 8 | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) Hotwell makeup and reject thresholds: protection limits plus a working band | P3 | ready-for-agent | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) |
 | 9 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P3 | needs-triage |  |
 | 10 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage |  |
 | 11 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |

@@ -98,6 +98,38 @@ _Avoid_: Dump, overflow
 Hotwell water pumped into the boiler by the condensation pump. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
 _Avoid_: Feedwater, refill
 
+**Hotwell level**:
+How full the hotwell is, as the water volume over the hotwell's total volume. Measured on volume, not mass, as a real level gauge does.
+_Avoid_: Hotwell fill, hotwell mass
+
+**Normal level**:
+The hotwell level the loop is run at: 70%. Makeup and reject bring the level back to it.
+_Avoid_: Target level, setpoint (on its own)
+
+**Working band**:
+The hotwell levels the operator keeps without acting: 65% to 75%. Makeup opens below it and reject above it; both close again at the normal level.
+_Avoid_: Deadband, control band
+
+**Hotwell level alarm**:
+A warning when the hotwell level falls below 25% or rises above 85%. Nothing is limited or tripped automatically.
+_Avoid_: Level trip, low-low, high-high (those are protections)
+
+**Low-low level**:
+The hotwell level below which the condensation pump would cavitate: 10%. Reaching it causes a condensation pump trip.
+_Avoid_: Empty, dry hotwell
+
+**Condensation pump trip**:
+The automatic, full closing of the condensation pump valve when the hotwell level falls below the low-low level. The pump only runs again when the operator reopens it, and that is refused while the level is still below low-low.
+_Avoid_: Pump stop, start inhibit
+
+**High-high level**:
+The hotwell level above which the hotwell may overfill: 95%. Reaching it causes a makeup block.
+_Avoid_: Full, overflow
+
+**Makeup block**:
+The protection at the high-high level: makeup closes and cannot be opened, and reject is forced fully open, until the hotwell level is back below the high alarm (85%).
+_Avoid_: Makeup trip, overfill clamp
+
 **Heat loss**:
 Heat the boiler gives off to its surroundings, proportional to how far the water is above ambient temperature.
 _Avoid_: Cooling rate, natural cooling (that is the resulting behaviour, see Natural cooldown)
