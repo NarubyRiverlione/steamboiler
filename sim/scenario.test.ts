@@ -11,7 +11,6 @@ import { turbineStart } from "./scenarios/turbine-start"
 import { turbineSync } from "./scenarios/turbine-sync"
 import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
 import { CstPhysics, CstSimulation } from "../src/context/const"
-import { calculateHeatingEnergy } from "../src/utils/boilerCalculations"
 
 const heatUp: Scenario = {
   name: "test-heat-up",

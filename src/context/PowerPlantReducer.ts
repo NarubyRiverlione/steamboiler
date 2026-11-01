@@ -1,5 +1,5 @@
 import { CstPhysics, CstSimulation } from "./const"
-import { calculateHeatingEnergy, calculateSteamInventory } from "../utils/boilerCalculations"
+import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { isAtSyncSpeed, maxTurbineValvePosition, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"

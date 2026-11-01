@@ -8,9 +8,6 @@ import PowerPlantState from "../src/context/PowerPlantState"
 // (scenario, invariant) pairs that fail today, with the ticket that fixes them. When that ticket
 // lands the test.fails flips red: remove the entry so the pair guards as a normal test.
 const expectedFailures: Record<string, string> = {
-  "turbine-sync / temperature within design temperature": "#43",
-  // the unfed boiler runs dry at 1 bar and jumps to the critical point as its last water goes; the relief valve never lifts in time
-  "turbine-sync / pressure within design pressure": "#33, #43",
   // a drum about 80% full of water holds a slowly rising steam inventory while it cools (+0.03 kg/s): the steam density
   // kink and the invariant's premise, see #46
   "relief-lift / natural cooldown stops steam generation": "#46",
