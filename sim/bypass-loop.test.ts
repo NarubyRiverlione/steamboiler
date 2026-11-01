@@ -44,7 +44,7 @@ describe("bypass-loop setup", () => {
 })
 
 // Since #12 the boiler reaches 165 bar. With the water held in kg (#34) the loop no longer empties the hotwell or boils
-// the boiler dry, but the condensate stays as hot as the bypass steam (docs/plant/feedwater-loop.md).
+// the boiler dry, and since #35 the condensate leaves at the condenser saturation temperature (docs/plant/feedwater-loop.md).
 describe("bypass-loop assertions", () => {
   test("condensation pump never returns more than the hotwell holds", () => {
     const empty = makeInitialState().Condenser
@@ -67,13 +67,13 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  test.fails("bypass holds the operating pressure within the band (fails until #45)", () => {
+  test.fails("bypass holds the operating pressure within the band (fails until #43)", () => {
     const { BoilerPressureTarget, BoilerPressureBand } = LoopSettings
     for (const { state } of steady)
       expect(Math.abs(state.Boiler.pressure - BoilerPressureTarget)).toBeLessThanOrEqual(BoilerPressureBand)
   })
 
-  test.fails("operator reaches a steady boiler level within the control band (fails until #45)", () => {
+  test.fails("operator reaches a steady boiler level within the control band (fails until #43)", () => {
     const { BoilerLevelTarget, BoilerLevelBand } = LoopSettings
     for (const { state } of steady) {
       const level = state.Boiler.waterVolume / CstBoiler.TotalVolume
@@ -81,13 +81,13 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  // The hotwell runs at about 327 °C (the condensate keeps the bypass steam temperature, the recirculation pump is almost shut),
-  // so 9.6 t of water fills its 15 m³ and the operator rejects and makes up all the time
-  test.fails("makeup is only an occasional top-up (fails until #45)", () => {
+  // The hotwell runs near 30 °C since #35, but the on/off hysteresis lets the level swing between the makeup and
+  // reject limits, so the operator churns water instead of settling (#52; the hotwell volume question is #53)
+  test.fails("makeup is only an occasional top-up (fails until #52)", () => {
     expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 
-  test.fails("reject is only occasional: the loop creates no water to dump (fails until #45)", () => {
+  test.fails("reject is only occasional: the loop creates no water to dump (fails until #52)", () => {
     expect(openShare((s) => s.Condenser.rejectValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
 })
