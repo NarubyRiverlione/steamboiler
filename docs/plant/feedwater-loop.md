@@ -35,7 +35,7 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 | Operating pressure | 165 bar (below the 180 bar design pressure) |
 | Control band | ±2 bar |
 
-| Hotwell (capacity 15 000 L) | Level |
+| Hotwell (capacity 50 000 L) | Level |
 |---|---|
 | Target | 70% |
 | Makeup opens | below 65% |
@@ -51,4 +51,4 @@ Real plants hold drum level and hotwell level with automatic control loops. In t
 - nudges cooling water against the steam mass in the condenser
 - opens makeup or reject on the hotwell limits, with hysteresis
 
-The `bypass-loop` scenario builds pressure at `StartGas` with the bypass at 10% (less steam leaves than is generated) and reaches the operating pressure (#12), where gas takes over. The pressure overshoots to about 176 bar, below the 180 bar relief setpoint (#9), and settles at 165 ± 0.1 bar after about 6600 s, so the run lasts 7200 s and the last 600 s are judged: pressure and boiler level stay in their bands, the relief valve never lifts, and steam out matches steam generated within 5% (about 20 kg/s, which takes about 600 L/s of gas). With the water held in kg (#34) the loop conserves water, and the condensate leaves at the saturation temperature of the condenser pressure (#35), so the hotwell settles near 30 °C. In that window makeup and reject are open less than 10% of the time, so those assertions pass; the hotwell thresholds and volume stay open under #52 and #53.
+The `bypass-loop` scenario builds pressure at `StartGas` with the bypass at 10% (less steam leaves than is generated) and reaches the operating pressure (#12), where gas takes over. The pressure overshoots to about 176 bar, below the 180 bar relief setpoint (#9), and settles at 165 ± 0.1 bar after about 6600 s, so the run lasts 7200 s and the last 600 s are judged: pressure and boiler level stay in their bands, the relief valve never lifts, and steam out matches steam generated within 5% (about 20 kg/s, which takes about 600 L/s of gas). With the water held in kg (#34) the loop conserves water, and the condensate leaves at the saturation temperature of the condenser pressure (#35), so the hotwell settles near 30 °C. In that window makeup and reject are open less than 10% of the time, so those assertions pass. With the 50 m³ hotwell (#53) the level stays between 65.6% and 75% over the whole run, makeup never opens and reject is open 3.8% of the samples (13.8 t); at 15 m³ makeup took 23.6 t and reject 37.3 t. The hotwell thresholds stay open under #52.

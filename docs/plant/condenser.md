@@ -33,7 +33,7 @@ The condenser pressure, shown as a vacuum readout in mbar, is controlled by two 
 
 A condensation pump moves hotwell water into the boiler as the **Return** (`returnRate`, kg per tick; the pump flow in L/s is converted at the hotwell temperature). It is the boiler's only water supply ([ADR 0002](../adr/0002-makeup-into-hotwell.md)); its limits are in [feedwater-loop.md](feedwater-loop.md#return-and-capacity).
 
-The hotwell holds `hotwellWaterMass` (kg); `hotwellWaterVolume` and the level are derived from it at `hotwellTemperature` ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), so a hot hotwell shows a higher level for the same water. Makeup and reject are valve flows in L/s converted to kg at the hotwell temperature; makeup stops at the hotwell room.
+The hotwell is 50 m³, starting at 35 m³ (70%), sized at about 3 minutes of full-gas condensate below the normal level ([ADR 0009](../adr/0009-hotwell-sized-from-condensate-flow.md)). It holds `hotwellWaterMass` (kg); `hotwellWaterVolume` and the level are derived from it at `hotwellTemperature` ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), so a hot hotwell shows a higher level for the same water. Makeup and reject are valve flows in L/s converted to kg at the hotwell temperature; makeup stops at the hotwell room.
 
 Known gap: `calculateCondensation` condenses 10 × the energy balance (`massCondensed * 10`, kept from before #34, see #47): a magic number against the realism rule.
 

@@ -71,8 +71,8 @@ Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemen
 
 | | Value | Note |
 |---|---|---|
-| Total volume | 15 m³ | |
-| Hotwell start volume | 10 m³ | |
+| Hotwell total volume | 50 m³ | sized from condensate flow, not playability: 35 m³ below the 70% normal level is about 3.4 min of the 171 kg/s full-gas condensate, inside HEI's 1 to 5 min ([hotwell sizing](../research/2026-11-hotwell-sizing.md)); was 15 m³ (about 1 min), changed in #53 ([ADR 0009](../adr/0009-hotwell-sized-from-condensate-flow.md)) |
+| Hotwell start volume | 35 m³ | 70%, the normal level |
 | Max vacuum | 1000 mbar (about 13 mbar absolute) | |
 | Recirculation pump max flow | 500 L/s | |
 | Condensation pump max flow | 300 L/s | about 1.5× the full-gas steam flow, a normal feedwater margin |

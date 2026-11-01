@@ -101,7 +101,7 @@ describe("bypass-loop assertions", () => {
   })
 
   // With gas holding the pressure the loop is steady, so the hotwell level settles between the makeup and reject limits
-  // (#52 and #53 stay open for the thresholds and the hotwell volume)
+  // (#52 stays open for the thresholds; the 50 m³ hotwell is #53)
   test("makeup is only an occasional top-up", () => {
     expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })

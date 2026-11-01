@@ -20,8 +20,8 @@ export const CstSimulation = {
   },
 
   CstCondenser: {
-    TotalVolume: 15e3, // liters
-    HotwellStartVolume: 10e3, // liter
+    TotalVolume: 50e3, // liters (about 3 min of full-gas condensate below normal level, see design-basis.md)
+    HotwellStartVolume: 35e3, // liter (70%, the normal level)
     MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
     VacuumDecayRate: 5, // mbar per second when pump is off
     OptimalPressure: 80, // mBar, centre of the band on the vacuum readout

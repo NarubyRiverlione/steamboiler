@@ -21,8 +21,8 @@
   },
   "Condenser": {
     "pressure": 213.25,
-    "hotwellWaterMass": 9982.032341784787,
-    "hotwellWaterVolume": 10000,
+    "hotwellWaterMass": 34937.113196246755,
+    "hotwellWaterVolume": 35000,
     "hotwellTemperature": 20,
     "steamMass": 0,
     "intakeFlowRate": 0,

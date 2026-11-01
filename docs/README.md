@@ -38,6 +38,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0006](adr/0006-heating-rate-alarm-only.md) | The heating-rate limit is a time-compressed alarm on one lumped boiler temperature |
 | [0007](adr/0007-water-state-is-mass-in-kg.md) | The water state is mass in kg; volume and level are derived |
 | [0008](adr/0008-pressure-hold-with-gas.md) | The scenarios hold working pressure with gas, not with the steam valve |
+| [0009](adr/0009-hotwell-sized-from-condensate-flow.md) | The hotwell is sized from condensate flow: 50 m³ |
 
 ## Research (dated, frozen)
 
@@ -47,6 +48,8 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Oct 2026 | [How real plants run the feedwater loop (sourced)](research/2026-10-feedwater-loop.md) |
 | Oct 2026 | [Sizing check: steam flow at full gas](research/2026-10-sizing-check.md) |
 | Oct 2026 | [Cold startup: how real plants do it (sourced)](research/2026-10-startup-procedure.md) |
+| Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
+| Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
 
 ## Agent configuration
 
