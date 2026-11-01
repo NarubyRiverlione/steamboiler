@@ -20,6 +20,7 @@ export type Panel = {
   palette?: Palette
   unit: string
   series: Series[]
+  limit?: number // drawn as a horizontal line and always kept on the axis
 }
 
 const one = (label: string, value: Series["value"]): Series[] => [{ label, value }]
@@ -39,6 +40,14 @@ export const panels: Panel[] = [
     kind: "temperature",
     unit: "°C",
     series: one("Temperature", (s) => s.Boiler.temperature),
+  },
+  {
+    group: "Boiler",
+    title: "Heating rate",
+    kind: "temperature",
+    unit: "K/min",
+    series: one("Heating rate", (s) => s.Boiler.heatingRate * 60),
+    limit: CstSimulation.CstBoiler.HeatingRateLimit * 60,
   },
   {
     group: "Boiler",
@@ -295,7 +304,7 @@ function renderPanel(
   lifts: Lift[],
 ) {
   const tEnd = times[times.length - 1] || 1
-  const [yMin, yMax] = yRange(values.flat())
+  const [yMin, yMax] = yRange([...values.flat(), ...(panel.limit === undefined ? [] : [panel.limit])])
   const x = (t: number) => PAD.left + (t / tEnd) * plotW
   const y = (v: number) => PAD.top + (1 - (v - yMin) / (yMax - yMin)) * plotH
 
@@ -325,6 +334,10 @@ function renderPanel(
       return `<rect class="lift" x="${from.toFixed(1)}" y="${String(PAD.top)}" width="${(to - from).toFixed(1)}" height="${String(plotH)}"/>`
     })
     .join("")
+  const limit =
+    panel.limit === undefined
+      ? ""
+      : `<line class="limit" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${y(panel.limit).toFixed(1)}" y2="${y(panel.limit).toFixed(1)}"/>`
   const lines = values
     .map((v, i) => `<path class="series s${String(i + 1)}" d="${linePath(times, v, x, y)}"/>`)
     .join("")
@@ -337,7 +350,7 @@ function renderPanel(
 <figcaption><span class="title">${escapeHtml(panel.title)} <span class="unit">${escapeHtml(panel.unit)}</span></span><span class="readout"></span></figcaption>
 ${legend}
 <svg viewBox="0 0 ${String(W)} ${String(H)}" tabindex="0" role="img" aria-label="${escapeHtml(`${panel.group} ${panel.title} over time`)}">
-${yGrid}<line class="axis" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${String(H - PAD.bottom)}" y2="${String(H - PAD.bottom)}"/>${xTicks}${liftBands}${actions}${lines}
+${yGrid}<line class="axis" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${String(H - PAD.bottom)}" y2="${String(H - PAD.bottom)}"/>${xTicks}${liftBands}${actions}${limit}${lines}
 <line class="crosshair" y1="${String(PAD.top)}" y2="${String(H - PAD.bottom)}" visibility="hidden"/>
 </svg></figure>`
 }
@@ -469,11 +482,11 @@ const kindVars = (theme: "light" | "dark") =>
 const SURFACE_LIGHT = `color-scheme: light;
   --surface: #fcfcfb; --card: #ffffff; --border: #e4e3df;
   --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #77756f;
-  --grid: #ecebe7; --axis: #b9b7b0; --action: #a8a59c; --lift: rgba(217, 45, 32, 0.12);`
+  --grid: #ecebe7; --axis: #b9b7b0; --action: #a8a59c; --lift: rgba(217, 45, 32, 0.12); --limit: #d92d20;`
 const SURFACE_DARK = `color-scheme: dark;
   --surface: #1a1a19; --card: #222220; --border: #34332f;
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8d85;
-  --grid: #2c2b28; --axis: #55534d; --action: #6d6a62; --lift: rgba(249, 112, 102, 0.18);`
+  --grid: #2c2b28; --axis: #55534d; --action: #6d6a62; --lift: rgba(249, 112, 102, 0.18); --limit: #f97066;`
 
 const themeCss = () => `:root {
   ${SURFACE_LIGHT}
@@ -524,6 +537,7 @@ svg:focus-visible { outline: 2px solid var(--text-secondary); outline-offset: 2p
 .tick { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .action { stroke: var(--action); stroke-width: 1; stroke-dasharray: 3 3; }
 .lift { fill: var(--lift); }
+.limit { stroke: var(--limit); stroke-width: 1.5; stroke-dasharray: 6 3; }
 .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 ${[1, 2, 3, 4, 5].map((i) => `.series.s${String(i)} { stroke: var(--series-${String(i)}); }`).join("\n")}
 .crosshair { stroke: var(--text-secondary); stroke-width: 1; pointer-events: none; }

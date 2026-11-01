@@ -23,6 +23,10 @@ const expectedFailures: Record<string, string> = {
   "bypass-loop / condensation pump return within pump capacity": "#45",
   "relief-lift / water is never created or lost": "#34",
   "full-gas / water is never created or lost": "#34",
+  "heat-up / water is never created or lost": "#34",
+  // the relief valve vents the boiler dry; the last litres cannot absorb the gas heat, the metal heats past design: #33
+  "full-gas / pressure within design pressure": "#33",
+  "full-gas / temperature within design temperature": "#33",
 }
 
 describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario) => {

@@ -2,7 +2,7 @@ import { Scenario } from "../scenario"
 import { loadSnapshot } from "../snapshot"
 import { AtPressure, openMainSteam, rollTurbine, since } from "./steps"
 
-// From pressure to a rolling turbine: starts from the at-pressure snapshot (end of `heat-up`), opens
+// From pressure to a rolling turbine: starts from the at-pressure snapshot (end of `heat-to-msv`), opens
 // the main steam valve, then the turbine valve to 25%. Times are from the snapshot.
 export const turbineStart: Scenario = {
   name: "turbine-start",

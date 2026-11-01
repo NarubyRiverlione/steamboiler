@@ -67,7 +67,7 @@ _Avoid_: Trip (on its own), shutdown
 ### Operation
 
 **Ambient temperature**:
-The temperature of the plant's surroundings: 20 °C. Natural cooling stops here.
+The temperature of the plant's surroundings: 20 °C. Heat loss stops here.
 _Avoid_: Room temperature, minimum temperature
 
 **Cold state**:

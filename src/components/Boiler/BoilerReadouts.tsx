@@ -19,12 +19,14 @@ const BoilerReadouts = () => {
         energy,
         reliefValveOpen,
         ventedTotal,
+        heatingRate,
+        heatingRateOverLimit,
       },
     },
   } = usePowerPlant()
 
   const {
-    CstBoiler: { TotalVolume, ReliefOpenPressure, ReliefClosePressure },
+    CstBoiler: { TotalVolume, ReliefOpenPressure, ReliefClosePressure, HeatingRateLimit },
   } = CstSimulation
 
   const [advancedExpanded, setAdvancedExpanded] = useState(false)
@@ -47,6 +49,20 @@ const BoilerReadouts = () => {
       <Readout title="Temperature" value={temperature} unit="°C" fixed={1} />
 
       <Readout title="Pressure" value={useEMA(pressure, 0.01)} unit="bar" fixed={1} />
+
+      <div className="readout-container">
+        <div className="readout-item">
+          <span className="label">Heating rate</span>
+          <Indicator
+            isActive={heatingRateOverLimit}
+            title={`Alarm above ${String(HeatingRateLimit * 60)} K/min`}
+            label="Over limit"
+          />
+        </div>
+        <div className="readout-right">
+          <div className={`value ${heatingRateOverLimit ? "alarm" : ""}`}>{(heatingRate * 60).toFixed(1)} K/min</div>
+        </div>
+      </div>
 
       <div className="readout-container">
         <div className="readout-item">

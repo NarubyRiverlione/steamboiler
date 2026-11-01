@@ -6,16 +6,17 @@ export const CstSimulation = {
     MaxGasFlow: 12000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
     DrainingRate: 0.005, // 0.5% per second
     GasEfficiency: 0.85,
-    SteamGenerationEfficiency: 0.75, // Fraction of available energy used for steam generation
-    CoolingRate: 1 / 15, // °C per second
     GasChangeRateFast: 500, // °C per second
     GasChangeRateSlow: 250, // °C per second,
-    HeatLossPercentage: 0.15, // Percentage of energy lost due to heat loss
     DesignPressure: 180, // bar, the boiler must never exceed it (see GLOSSARY.md)
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
     ReliefOpenPressure: 178, // bar, the relief valve lifts fully (2 bar margin for one tick's rise)
     ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
+    MetalMass: 100e3, // kg of drum and tube steel, at the water temperature (one lump)
+    HeatLossAtDesign: 500, // kW lost to the surroundings at design temperature, proportional to T - ambient
+    HeatingRateLimit: 0.4, // K/s, alarm above it (time-compressed: real about 100 K/h, see design-basis.md)
+    HeatingRateWindow: 30, // s, time constant of the smoothed heating rate
   },
 
   CstCondenser: {
@@ -82,6 +83,7 @@ export const CstSimulation = {
 export const CstPhysics = {
   Water_Density: 1000, // kg/m³ (used as fallback for temperatures below 80°C)
   Water_SpecificHeat: 4.18, // kJ/kg°C (used as fallback for temperatures below 80°C)
+  Steel_SpecificHeat: 0.5, // kJ/kg·K, carbon steel
   GasEnergyDensity: 35000, // kJ/m³ (approximate energy density of natural gas)
   AtmosphericPressure_mBar: 1013.25, // mbar
   AmbientTemperature: 20, // Celsius, the plant at rest and the floor of natural cooling

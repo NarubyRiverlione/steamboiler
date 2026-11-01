@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick, { BoilerRemoveSteam, BoilerVent, drainBoiler, warmBy, waterMassOf } from "./BoilerTick"
+import BoilerTick, {
+  BoilerRemoveSteam,
+  BoilerVent,
+  drainBoiler,
+  heatLossOf,
+  warmBy,
+  waterMassOf,
+} from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 import { calculateBoilerPressure, calculateSteamInventory } from "../../utils/boilerCalculations"
@@ -43,16 +50,63 @@ describe("BoilerTick natural cooling", () => {
     expect(next.temperature).toBeCloseTo(AmbientTemperature, 9)
   })
 
-  test("cools a full step when well above ambient", () => {
-    const warm = BoilerTick(settled(60))
-    expect(warm.temperature).toBeCloseTo(60 - CstBoiler.CoolingRate * DeltaTime)
+  // Ticket #13: about 0.5 MW lost at design temperature (357 °C), proportional to the difference with ambient
+  test("loses about 0.5 MW at design temperature", () => {
+    expect(heatLossOf(357)).toBeCloseTo(500, 6)
   })
 
-  test("stops at ambient, losing only the energy above it", () => {
-    const justAbove = AmbientTemperature + 0.001 // less than one tick of cooling
-    const next = BoilerTick({ ...cold, temperature: justAbove })
-    expect(next.temperature).toBeCloseTo(AmbientTemperature, 9)
-    expect(cold.energy - next.energy).toBeLessThan(cold.waterVolume * 4.2 * 0.001)
+  test("loses twice as much at 300 K above ambient as at 150 K", () => {
+    expect(heatLossOf(AmbientTemperature + 300)).toBeCloseTo(2 * heatLossOf(AmbientTemperature + 150), 9)
+  })
+
+  test("loses nothing at or below ambient", () => {
+    expect(heatLossOf(AmbientTemperature)).toBe(0)
+    expect(heatLossOf(AmbientTemperature - 5)).toBe(0)
+  })
+
+  test("reports the heat loss (kW) of the tick", () => {
+    expect(BoilerTick(settled(170)).heatLoss).toBeCloseTo(heatLossOf(170), 6)
+  })
+
+})
+
+describe("BoilerTick thermal mass", () => {
+  // Full gas is 357 MW, 35.7 MJ per tick. 50 t of water at 4.196 kJ/kg·K is 209.8 MJ/K; with 100 t of steel at
+  // 0.5 kJ/kg·K that becomes 259.8 MJ/K, so one tick warms 0.137 K instead of the water-only 0.170 K
+  test("the drum and tube metal slow the heat-up", () => {
+    const next = BoilerTick({ ...settled(60), gasFlow: CstBoiler.MaxGasFlow })
+    expect(next.temperature - 60).toBeCloseTo(0.137, 2)
+  })
+})
+
+describe("BoilerTick heating rate", () => {
+  const ticks = (seconds: number, gasFlow: number) => {
+    let state = { ...settled(60), gasFlow }
+    for (let i = 0; i < Math.round(seconds / DeltaTime); i++) state = BoilerTick(state)
+    return state
+  }
+  // 2000 L/s of gas is 59.5 MW into 259.8 MJ/K of water and metal: a steady rise of 0.229 K/s
+
+  test("settles at the true rate of rise", () => {
+    expect(ticks(300, 2000).heatingRate).toBeCloseTo(0.229, 2)
+  })
+
+  test("is smoothed over 30 s: after a step it has covered about 63% of it in 30 s", () => {
+    expect(ticks(30, 2000).heatingRate).toBeCloseTo(0.632 * 0.229, 2)
+  })
+
+  test("raises no alarm below the limit", () => {
+    expect(ticks(300, 2000).heatingRateOverLimit).toBe(false)
+  })
+
+  test("raises the alarm above 0.4 K/s: full gas into a cold boiler", () => {
+    expect(ticks(30, CstBoiler.MaxGasFlow).heatingRateOverLimit).toBe(true)
+  })
+
+  test("is negative while cooling, with no alarm", () => {
+    const cooling = BoilerTick(settled(300))
+    expect(cooling.heatingRate).toBeLessThan(0)
+    expect(cooling.heatingRateOverLimit).toBe(false)
   })
 })
 
@@ -208,9 +262,11 @@ describe("BoilerTick helpers", () => {
     })
   })
 
-  test("the drain takes the same share of the energy as of the water", () => {
+  // The cold start holds 50 t of water at 20 °C (4.196 MJ above 0 °C per tonne) and 100 t of steel (1 MJ per tonne)
+  test("the drain takes the water's share of the water's energy, none of the metal's", () => {
     const drain = drainBoiler({ ...cold, drainValveOpen: true })
-    expect(drain.energyLoss / cold.energy).toBeCloseTo(drain.drained / cold.waterVolume, 9)
+    const waterEnergy = 50e3 * 4.196 * 20
+    expect(drain.energyLoss / waterEnergy).toBeCloseTo(drain.drained / cold.waterVolume, 3)
   })
 
   // 1 m³ of water: 1000 kg cold, about 958 kg at 100 °C (textbook density)

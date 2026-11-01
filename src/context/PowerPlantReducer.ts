@@ -4,6 +4,7 @@ import { isAtSyncSpeed } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
+import { MetalHeatCapacity } from "./Boiler/BoilerTick"
 
 const { CstBoiler, CstTurbine } = CstSimulation
 
@@ -21,8 +22,11 @@ export const makeInitialState = (): PowerPlantState => ({
     reliefValveOpen: false,
     ventedTotal: 0, // kg
     reliefLifts: 0,
-    energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, AmbientTemperature), // kJ
+    energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, AmbientTemperature) + MetalHeatCapacity * AmbientTemperature, // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s
+    heatLoss: 0, // kW
+    heatingRate: 0, // K/s
+    heatingRateOverLimit: false,
     steamMass: calculateSteamInventory(AmbientTemperature, CstBoiler.StartWaterVolume), // kg - vapour over the water, in equilibrium
     deltaWaterVolume: 0,
     deltaSteamMass: 0,

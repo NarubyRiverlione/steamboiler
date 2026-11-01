@@ -1,19 +1,22 @@
 {
   "Boiler": {
-    "waterVolume": 49671.087843180154,
-    "temperature": 187.00265834700312,
-    "pressure": 11.760500208600622,
+    "waterVolume": 49619.54586242071,
+    "temperature": 193.58761567483523,
+    "pressure": 13.58036322181268,
     "gasFlow": 2000,
     "drainValveOpen": false,
     "drainedTotal": 0,
     "reliefValveOpen": false,
     "ventedTotal": 0,
     "reliefLifts": 0,
-    "energy": 38044860.968519725,
-    "energyDelta": 43666.01896957109,
-    "steamMass": 302.52225980765184,
-    "deltaWaterVolume": -0.166500366787659,
-    "deltaSteamMass": 1.4675625599197266
+    "energy": 48997958.36850845,
+    "energyDelta": 55985.1787562664,
+    "heatLoss": 257.51422794104633,
+    "heatingRate": 0.23086390434559936,
+    "heatingRateOverLimit": false,
+    "steamMass": 347.7560399315794,
+    "deltaWaterVolume": -0.18978849754057592,
+    "deltaSteamMass": 1.6583330866632255
   },
   "Condenser": {
     "pressure": 213.25,

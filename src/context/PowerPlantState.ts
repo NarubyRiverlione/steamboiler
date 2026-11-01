@@ -8,6 +8,9 @@ export type BoilerState = {
   steamMass: number // kg - Mass of steam currently in the boiler
   deltaSteamMass: number // kg/s generated steam
   energyDelta: number // kJ/s
+  heatLoss: number // kW lost to the surroundings
+  heatingRate: number // K/s rise of the water temperature, smoothed over HeatingRateWindow
+  heatingRateOverLimit: boolean // alarm: heating rate above HeatingRateLimit
   drainValveOpen: boolean
   drainedTotal: number // liters drained since start (totalizer)
   reliefValveOpen: boolean // relief valve lifted (automatic, see GLOSSARY.md)

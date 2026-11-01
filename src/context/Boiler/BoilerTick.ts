@@ -16,18 +16,21 @@ import { BoilerState, TurbineState } from "../PowerPlantState"
 
 const { CstBoiler, CstTurbine } = CstSimulation
 
+// kJ/K of the drum and tube steel, which shares the water temperature (one lump)
+export const MetalHeatCapacity = CstBoiler.MetalMass * CstPhysics.Steel_SpecificHeat
+
 type Drain = { waterVolume: number; drained: number; energyLoss: number }
 
 // The open drain removes a fixed share of the total volume per tick, with the same share of the energy
-// (uniform temperature); the boiler is fed only by the condensation pump
-export function drainBoiler({ drainValveOpen, waterVolume, energy }: BoilerState): Drain {
+// (uniform temperature) of the water, not of the metal; the boiler is fed only by the condensation pump
+export function drainBoiler({ drainValveOpen, waterVolume, energy, temperature }: BoilerState): Drain {
   if (!drainValveOpen || waterVolume <= 0) return { waterVolume, drained: 0, energyLoss: 0 }
   const drainAmount = CstBoiler.TotalVolume * CstBoiler.DrainingRate * CstSimulation.DeltaTime
   const newWaterVolume = Math.max(0, waterVolume - drainAmount)
   return {
     waterVolume: newWaterVolume,
     drained: waterVolume - newWaterVolume,
-    energyLoss: energy * (drainAmount / waterVolume),
+    energyLoss: (energy - MetalHeatCapacity * temperature) * (drainAmount / waterVolume),
   }
 }
 
@@ -37,29 +40,38 @@ export function waterMassOf(waterVolume: number, temperature: number): number {
   return (waterVolume * density) / 1000
 }
 
+// Heat loss (kW) per kelvin above ambient, from the loss at design temperature
+const HeatLossUA = CstBoiler.HeatLossAtDesign / (CstBoiler.DesignTemperature - CstPhysics.AmbientTemperature)
+
+// Heat lost to the surroundings (kW), proportional to the difference with ambient; none at or below it
+export function heatLossOf(temperature: number): number {
+  return HeatLossUA * Math.max(0, temperature - CstPhysics.AmbientTemperature)
+}
+
 // Temperature after an energy change (kJ) into a heat capacity (kJ/K); an empty boiler keeps its temperature
 export function warmBy(temperature: number, energy: number, heatCapacity: number): number {
   return heatCapacity > 0 ? temperature + energy / heatCapacity : temperature
 }
 
+// Rate of rise (K/s) smoothed with time constant HeatingRateWindow: each tick moves it a share of the way
+// to this tick's rate
+export function smoothHeatingRate(previous: number, temperatureChange: number): number {
+  const instant = temperatureChange / CstSimulation.DeltaTime
+  return previous + (instant - previous) * (CstSimulation.DeltaTime / CstBoiler.HeatingRateWindow)
+}
+
 function BoilerTick(boilerState: BoilerState): BoilerState {
   const drain = drainBoiler(boilerState)
   const waterMass = waterMassOf(drain.waterVolume, boilerState.temperature)
-  // kJ/K, water only (#13 adds the metal)
-  const heatCapacity = waterMass * getWaterSpecificHeat(boilerState.temperature)
+  // kJ/K, the water and the metal at one temperature
+  const heatCapacity = waterMass * getWaterSpecificHeat(boilerState.temperature) + MetalHeatCapacity
 
   // Energy from the gas actually flowing
   const gasEnergy = calculateGasEnergy(boilerState.gasFlow) * CstSimulation.DeltaTime
 
-  // Natural cooling at a constant rate; it stops at ambient so energy keeps matching temperature
-  const energyAboveAmbient = Math.max(
-    0,
-    heatCapacity * (boilerState.temperature - CstPhysics.AmbientTemperature),
-  )
-  const coolingEnergyLoss = Math.min(
-    energyAboveAmbient,
-    heatCapacity * CstBoiler.CoolingRate * CstSimulation.DeltaTime,
-  )
+  // Heat lost to the surroundings this tick
+  const heatLoss = heatLossOf(boilerState.temperature)
+  const coolingEnergyLoss = heatLoss * CstSimulation.DeltaTime
 
   // The net heat warms the water and stops at the critical point, where the saturated model ends
   // (a boiler run dry would otherwise run away)
@@ -91,6 +103,8 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     warmBy(heatedTemperature, -flashEnergy, heatCapacity),
   )
 
+  const heatingRate = smoothHeatingRate(boilerState.heatingRate, newTemperature - boilerState.temperature)
+
   return {
     ...boilerState,
     waterVolume: newWaterVolume,
@@ -100,6 +114,9 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     steamMass: Math.max(0, boilerState.steamMass + flashedMass),
     energy: Math.max(0, boilerState.energy + energyChange),
     energyDelta: energyChange / CstSimulation.DeltaTime,
+    heatLoss,
+    heatingRate,
+    heatingRateOverLimit: heatingRate > CstBoiler.HeatingRateLimit,
     deltaSteamMass: flashedMass / CstSimulation.DeltaTime, // kg/s flashed to steam (negative: condensing)
   }
 }
