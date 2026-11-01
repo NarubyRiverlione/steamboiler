@@ -27,6 +27,10 @@ export const openMainSteam: ScenarioAction[] = [
   },
 ]
 
+// True on the ticks that fall on a whole multiple of `every` sim-seconds: an operator's adjustment moments
+export const isAdjustTime = (time: number, every: number): boolean =>
+  Number.isInteger(Math.round(time * 1e6) / 1e6 / every)
+
 // The same steps timed from `start` instead of from the cold start, for a scenario starting from a snapshot taken at `start`
 export const since = (start: number, actions: ScenarioAction[]): ScenarioAction[] =>
   actions.map((a) => ({ ...a, at: a.at - start }))

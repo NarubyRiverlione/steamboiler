@@ -2,6 +2,7 @@ import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
+import { isAdjustTime } from "./steps"
 
 // Cold to working pressure with everything closed, the operator ramping the gas at the heating-rate limit:
 // the realistic startup pace (see docs/plant/design-basis.md). Decided from state and time alone.
@@ -15,14 +16,15 @@ export const RampSettings = {
 
 const S = RampSettings
 
+// Gas down by an amount, nothing when there is nothing to take off
+const gasDown = (amount: number): PowerPlantAction[] => (amount > 0 ? [{ type: "DECREASE_GAS_FLOW", amount }] : [])
+
 // At working pressure gas off; below it gas up while the smoothed rate is under the target, down above it
 export function rampOperator({ Boiler }: PowerPlantState, time: number): PowerPlantAction[] {
-  if (Boiler.pressure >= S.PressureTarget)
-    return Boiler.gasFlow > 0 ? [{ type: "DECREASE_GAS_FLOW", amount: Boiler.gasFlow }] : []
-  const adjustNow = Number.isInteger(Math.round(time * 1e6) / 1e6 / S.AdjustEvery)
-  if (!adjustNow) return []
+  if (Boiler.pressure >= S.PressureTarget) return gasDown(Boiler.gasFlow)
+  if (!isAdjustTime(time, S.AdjustEvery)) return []
   if (Boiler.heatingRate < S.RateTarget) return [{ type: "INCREASE_GAS_FLOW", amount: S.GasStep }]
-  return Boiler.gasFlow > 0 ? [{ type: "DECREASE_GAS_FLOW", amount: S.GasStep }] : []
+  return gasDown(Math.min(S.GasStep, Boiler.gasFlow))
 }
 
 export const heatUpAtLimit: Scenario = {

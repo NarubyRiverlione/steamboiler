@@ -41,7 +41,7 @@ describe("BoilerTick drain", () => {
   })
 })
 
-describe("BoilerTick natural cooling", () => {
+describe("BoilerTick heat loss", () => {
   const { AmbientTemperature } = CstPhysics
 
   test("loses no energy at ambient", () => {

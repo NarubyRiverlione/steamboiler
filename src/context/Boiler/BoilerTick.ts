@@ -19,6 +19,11 @@ const { CstBoiler, CstTurbine } = CstSimulation
 // kJ/K of the drum and tube steel, which shares the water temperature (one lump)
 export const MetalHeatCapacity = CstBoiler.MetalMass * CstPhysics.Steel_SpecificHeat
 
+// Heat content (kJ) of the metal above 0 °C, the datum of the boiler energy
+export function metalEnergyOf(temperature: number): number {
+  return MetalHeatCapacity * temperature
+}
+
 type Drain = { waterVolume: number; drained: number; energyLoss: number }
 
 // The open drain removes a fixed share of the total volume per tick, with the same share of the energy
@@ -30,7 +35,7 @@ export function drainBoiler({ drainValveOpen, waterVolume, energy, temperature }
   return {
     waterVolume: newWaterVolume,
     drained: waterVolume - newWaterVolume,
-    energyLoss: (energy - MetalHeatCapacity * temperature) * (drainAmount / waterVolume),
+    energyLoss: (energy - metalEnergyOf(temperature)) * (drainAmount / waterVolume),
   }
 }
 
@@ -71,13 +76,13 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
 
   // Heat lost to the surroundings this tick
   const heatLoss = heatLossOf(boilerState.temperature)
-  const coolingEnergyLoss = heatLoss * CstSimulation.DeltaTime
+  const heatLossEnergy = heatLoss * CstSimulation.DeltaTime
 
   // The net heat warms the water and stops at the critical point, where the saturated model ends
   // (a boiler run dry would otherwise run away)
   const heatedTemperature = Math.min(
     CriticalTemperature,
-    warmBy(boilerState.temperature, gasEnergy - coolingEnergyLoss, heatCapacity),
+    warmBy(boilerState.temperature, gasEnergy - heatLossEnergy, heatCapacity),
   )
 
   // The steam space holds saturated steam; water flashes to steam (or steam condenses) to restore that inventory,
@@ -89,7 +94,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     boilerState.steamMass,
   )
   const flashEnergy = flashedMass * getLatentHeat(heatedTemperature)
-  const energyChange = gasEnergy - drain.energyLoss - coolingEnergyLoss - flashEnergy
+  const energyChange = gasEnergy - drain.energyLoss - heatLossEnergy - flashEnergy
 
   // The liquid lost to steam, at the volume 1 kg of water takes at the current temperature
   const newWaterVolume = Math.min(
@@ -97,7 +102,7 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     Math.max(0, drain.waterVolume - flashedMass * calculateWaterVolume(1, heatedTemperature)),
   )
 
-  // Natural cooling never goes below ambient
+  // Heat loss never takes the boiler below ambient
   const newTemperature = Math.max(
     CstPhysics.AmbientTemperature,
     warmBy(heatedTemperature, -flashEnergy, heatCapacity),

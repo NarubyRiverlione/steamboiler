@@ -295,6 +295,13 @@ const clock = (seconds: number) =>
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
+// The panel's limit as a horizontal line across the plot, or nothing without one
+function limitLine(limit: number | undefined, y: (v: number) => number): string {
+  if (limit === undefined) return ""
+  const at = y(limit).toFixed(1)
+  return `<line class="limit" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${at}" y2="${at}"/>`
+}
+
 function renderPanel(
   panel: Panel,
   index: number,
@@ -304,7 +311,7 @@ function renderPanel(
   lifts: Lift[],
 ) {
   const tEnd = times[times.length - 1] || 1
-  const [yMin, yMax] = yRange([...values.flat(), ...(panel.limit === undefined ? [] : [panel.limit])])
+  const [yMin, yMax] = yRange([...values.flat(), panel.limit ?? NaN]) // yRange skips the NaN of no limit
   const x = (t: number) => PAD.left + (t / tEnd) * plotW
   const y = (v: number) => PAD.top + (1 - (v - yMin) / (yMax - yMin)) * plotH
 
@@ -334,10 +341,7 @@ function renderPanel(
       return `<rect class="lift" x="${from.toFixed(1)}" y="${String(PAD.top)}" width="${(to - from).toFixed(1)}" height="${String(plotH)}"/>`
     })
     .join("")
-  const limit =
-    panel.limit === undefined
-      ? ""
-      : `<line class="limit" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${y(panel.limit).toFixed(1)}" y2="${y(panel.limit).toFixed(1)}"/>`
+  const limit = limitLine(panel.limit, y)
   const lines = values
     .map((v, i) => `<path class="series s${String(i + 1)}" d="${linePath(times, v, x, y)}"/>`)
     .join("")

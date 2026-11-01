@@ -19,7 +19,7 @@ Add a row when you over-dimension a utility or reduce something for playability.
 | Item | Simulator | Realistic | Why | Constant |
 |---|---|---|---|---|
 | Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 4.3 min (measured, `full-gas`) instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
-| Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 15 min instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
+| Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.6 min (measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
 | Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; burner protection is #33 | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
 | Specific heat at the critical point (held) | 47.1 kJ/kg·K from 370 °C up | diverges to infinity at 373.946 °C | the simulation core must stay finite every tick; the table clamps at the critical point instead of throwing | last row of `steamTable` in `steamData.ts` |
 

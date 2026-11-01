@@ -247,6 +247,12 @@ describe("cooldown", () => {
     expect(samples.at(-1)?.state.Boiler.temperature).toBeLessThan(start)
   })
 
+  // A heat loss of a few hundred kW against about 270 MJ/K of water and metal: a few kelvin an hour, days to cool
+  test("cools slowly: less than 10 K in the hour", () => {
+    const start = samples.find((s) => s.time === AtPressure)?.state.Boiler.temperature ?? 0
+    expect(start - (samples.at(-1)?.state.Boiler.temperature ?? 0)).toBeLessThan(10)
+  })
+
   // About 0.5 MW at 337 K above ambient (design temperature): 1.48 kW per kelvin, at every sample
   test("loses heat in proportion to the difference with ambient", () => {
     const cooling = samples.filter((s) => s.time > AtPressure)

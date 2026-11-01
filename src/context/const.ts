@@ -86,5 +86,5 @@ export const CstPhysics = {
   Steel_SpecificHeat: 0.5, // kJ/kg·K, carbon steel
   GasEnergyDensity: 35000, // kJ/m³ (approximate energy density of natural gas)
   AtmosphericPressure_mBar: 1013.25, // mbar
-  AmbientTemperature: 20, // Celsius, the plant at rest and the floor of natural cooling
+  AmbientTemperature: 20, // Celsius, the plant at rest and the floor of heat loss
 }

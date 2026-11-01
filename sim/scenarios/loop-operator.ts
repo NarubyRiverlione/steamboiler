@@ -1,6 +1,7 @@
 import { CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
+import { isAdjustTime } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
 // Valve actions are deltas, so the operator asks for the difference to the position it wants.
@@ -129,7 +130,7 @@ function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
 }
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
-  const adjustNow = Number.isInteger(Math.round(time * 1e6) / 1e6 / S.AdjustEvery)
+  const adjustNow = isAdjustTime(time, S.AdjustEvery)
   return [
     ...startSteam(state),
     ...holdHotwell(state),
