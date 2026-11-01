@@ -1,7 +1,7 @@
 import { CondenserState } from "../context/PowerPlantState"
 import { CstPhysics, CstSimulation } from "../context/const"
 import { waterMassOf } from "./boilerCalculations"
-import { getLatentHeat } from "./steamTable"
+import { getBoilingPoint, getLatentHeat } from "./steamTable"
 
 // Air Extraction Pump (CAR) behavior
 const calcCARvacuum = (isAirExtractionPumpEnabled: boolean, previousVacuum: number) => {
@@ -120,21 +120,27 @@ export function calculateVacuumByReducers(
   }
 }
 
+// Saturation temperature (°C) at the condenser pressure (mbar absolute)
+export function saturationTemperature(condenserPressure: number): number {
+  return getBoilingPoint(condenserPressure / 1000)
+}
+
 /**
- * Calculates the condensation of steam based on energy balance approach
+ * Calculates the condensation of steam based on an energy balance at the saturation temperature of the condenser
+ * pressure. The condensate leaves at that temperature; the cooling water only sets how much steam condenses.
  *
  * @param currentSteamMass kg, Current steam mass in the condenser
  * @param currentLiquidMass kg, Current liquid mass in the hotwell
  * @param recirculationPumpValvePosition Valve position of the recirculation pump (0-1)
- * @param steamTemp  temperature in intake steam (°C)
+ * @param condenserPressure absolute pressure in the condenser (mbar)
  * @param hotwellRoom kg of water the hotwell can still take at its temperature, limits the condensation
- * @returns New steam and liquid masses (kg), and new outlet temperature
+ * @returns New steam and liquid masses (kg), and the outlet temperature (saturation temperature, °C)
  */
 export function calculateCondensation(
   currentSteamMass: number,
   currentLiquidMass: number,
   recirculationPumpValvePosition: number,
-  steamTemp: number,
+  condenserPressure: number,
   hotwellRoom: number,
 ): {
   steamMassAfterCondensation: number
@@ -143,55 +149,32 @@ export function calculateCondensation(
 } {
   const {
     DeltaTime,
-    CstCondenser: { RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature, DampingFactor },
+    CstCondenser: { RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature },
   } = CstSimulation
 
-  // 1. Calculate mass flow rate of recirculating cold water
+  // 1. Condensate leaves at the saturation temperature of the condenser pressure
+  const saturationTemp = saturationTemperature(condenserPressure)
+
+  // 2. Mass flow rate of recirculating cold water
   const massFlowRate = recirculationPumpValvePosition * RecirculationPump_MaxFlowRate
 
-  // 2. Calculate temperature difference between condensed water and cold recirculation water
-  const deltaTemp = Math.max(0, steamTemp - RecirculationPump_IntakeTemperature)
+  // 3. Temperature difference between the condensing steam and the cold recirculation water
+  const deltaTemp = Math.max(0, saturationTemp - RecirculationPump_IntakeTemperature)
 
-  // 3. Calculate energy absorbed by cold water (Q = m * cp * ΔT)
+  // 4. Energy absorbed by cold water (Q = m * cp * ΔT)
   const energyAbsorbed = massFlowRate * CstPhysics.Water_SpecificHeat * deltaTemp * DeltaTime
 
-  // 4. Calculate mass of steam condensed (m = Q / latentHeat)
-  const latentHeat = getLatentHeat(steamTemp)
-  const massCondensed = energyAbsorbed / latentHeat
+  // 5. Mass of steam condensed (m = Q / latentHeat)
+  const massCondensed = energyAbsorbed / getLatentHeat(saturationTemp)
 
-  // 5. The steam that condenses: the energy balance times the existing x10 condensation factor (not changed by the
+  // 6. The steam that condenses: the energy balance times the existing x10 condensation factor (not changed by the
   // move to kg), never more than the steam there is or the room in the hotwell
   const condensedMass = Math.min(currentSteamMass, massCondensed * 10, hotwellRoom)
-  const newSteamMass = currentSteamMass - condensedMass
-  const newLiquidMass = currentLiquidMass + condensedMass
-
-  // 6. Calculate new temperature of the condensed water returning to the boiler
-  // If there's no recirculation flow, temperature remains the same
-  if (massFlowRate <= 0) {
-    return {
-      steamMassAfterCondensation: Math.max(newSteamMass, 0),
-      waterMassAfterCondensation: Math.max(newLiquidMass, 0),
-      newOutletTemperature: steamTemp,
-    }
-  }
-
-  // Calculate temperature change based on energy balance
-  // As steam condenses, it releases energy that heats the condensed water
-  // The temperature change depends on the mass of water and the energy released
-  const condensationEnergy = massCondensed * latentHeat
-  const coolingEffect =
-    massFlowRate * CstPhysics.Water_SpecificHeat * (steamTemp - RecirculationPump_IntakeTemperature)
-
-  // Temperature rises due to condensation and falls due to cooling water
-  const temperatureChange =
-    (condensationEnergy - coolingEffect) / (newLiquidMass * CstPhysics.Water_SpecificHeat)
-
-  const newOutletTemperature = steamTemp + temperatureChange * DampingFactor
 
   return {
-    steamMassAfterCondensation: Math.max(newSteamMass, 0),
-    waterMassAfterCondensation: Math.max(newLiquidMass, 0),
-    newOutletTemperature: Math.max(RecirculationPump_IntakeTemperature, newOutletTemperature),
+    steamMassAfterCondensation: Math.max(currentSteamMass - condensedMass, 0),
+    waterMassAfterCondensation: Math.max(currentLiquidMass + condensedMass, 0),
+    newOutletTemperature: saturationTemp,
   }
 }
 

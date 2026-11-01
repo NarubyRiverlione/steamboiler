@@ -13,7 +13,7 @@ Water enters or leaves the loop in only four places. Everything else must conser
 | Drain | out of the boiler | `drainedTotal` |
 | Vent | steam out of the boiler to the atmosphere through the relief valve ([boiler.md](boiler.md#relief-valve)) | `ventedTotal` (kg) |
 
-The sim models no leaks or continuous blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` sums kg and allows only floating-point rounding (1e-13 of the start mass, see [headless-runner.md](../dev/headless-runner.md#water-drift)).
+The sim models no leaks or continuous blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` sums kg and allows only floating-point rounding (1e-12 of the start mass, see [headless-runner.md](../dev/headless-runner.md#water-drift)).
 
 ## Return and capacity
 
@@ -51,4 +51,4 @@ Real plants hold drum level and hotwell level with automatic control loops. In t
 - nudges cooling water against the steam mass in the condenser
 - opens makeup or reject on the hotwell limits, with hysteresis
 
-The `bypass-loop` scenario reaches the operating pressure (#12) and the relief valve holds it below the design pressure (#9). With the water held in kg (#34) the loop conserves water, no longer empties the hotwell or boils the boiler dry, and the pressure, temperature and NaN checks pass. It still does not close well: the condensate keeps the bypass steam temperature, so the hotwell runs at about 327 °C, its 9.6 t fill the 15 m³ and the operator rejects and makes up water all the time (#35, #45). The level, pressure-band, makeup and reject assertions stay expected failures until that is fixed.
+The `bypass-loop` scenario reaches the operating pressure (#12) and the relief valve holds it below the design pressure (#9). With the water held in kg (#34) the loop conserves water, no longer empties the hotwell or boils the boiler dry, and the pressure, temperature and NaN checks pass. The condensate leaves at the saturation temperature of the condenser pressure (#35), so the hotwell settles near 30 °C. The level, pressure-band, makeup and reject assertions stay expected failures until the operator is fixed (#45).

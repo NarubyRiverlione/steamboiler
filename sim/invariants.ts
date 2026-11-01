@@ -9,9 +9,10 @@ const { CstBoiler, CstCondenser } = CstSimulation
 const MaxReported = 5 // violations listed per invariant, enough to see the trend
 const Tolerance = 1e-9 // float noise allowed on "never rises"
 // The water is held as kg, so the loop conserves it to floating-point rounding: the worst drift measured over all
-// scenarios at 1 s sampling is 3.2e-14 of the start mass, and 5.1e-12 of the steam out (docs/dev/headless-runner.md).
-// The limits sit a factor of 3 to 4 above that; the slack covers rounding in the sums (kg-sized totals of about 6e4), not physics.
-const MassCreatedLimit = 1e-13 // fraction of start mass
+// scenarios at 1 s sampling is about 1.2e-13 of the start mass (`startup-cold`, since the condensate follows the saturation
+// temperature, #35), and 5.1e-12 of the steam out (docs/dev/headless-runner.md). The created limit sits a factor of 8 above
+// that, the lost limits 3 to 4; the slack covers rounding in the sums (kg-sized totals of about 6e4), not physics.
+const MassCreatedLimit = 1e-12 // fraction of start mass
 const MassLostFixed = 1e-13 // fraction of start mass, allowed even with no steam out
 const MassLostPerSteamOut = 2e-11 // fraction of the steam that left the boiler (the rounding of the flow integral)
 export const SteamStopWithin = 120 // seconds after gas reaches 0

@@ -4,6 +4,7 @@ import {
   calculateVacuumByReducers,
   CalculateCondensationFlow,
   calculateHotwellExchange,
+  saturationTemperature,
   mixTemperature,
 } from "../../utils/condenserCalculation"
 import { roomInKg, waterVolumeOf } from "../../utils/boilerCalculations"
@@ -42,20 +43,12 @@ export function CondenserTick(
   const totalIntakeRate = steamFromTurbine.flow + steamFromBypass.flow
   const newSteamMass = condenserState.steamMass + totalIntakeRate * CstSimulation.DeltaTime
 
-  // steam temp inside the condenser is combination of the steam from the bypass and the turbine
-  //  take into account the flow(volume) of the steam
-  const totalFlow = steamFromBypass.flow + steamFromTurbine.flow
-  const steamTemp =
-    totalFlow > 0
-      ? (steamFromBypass.flow * steamFromBypass.temp + steamFromTurbine.flow * steamFromTurbine.temp) /
-        totalFlow
-      : 0
-
-  // Room (kg) left in the hotwell at its temperature; condensation and makeup stop there
+  // Room (kg) left in the hotwell; condensation and makeup stop there. Sized at the hotter of the hotwell and the
+  // condensate, which takes more volume per kg, so the mix stays within the hotwell volume
   const hotwellRoom = roomInKg(
     CstSimulation.CstCondenser.TotalVolume,
     condenserState.hotwellWaterVolume,
-    condenserState.hotwellTemperature,
+    Math.max(condenserState.hotwellTemperature, saturationTemperature(newPressure)),
   )
 
   // Calculate water level based on recirculation pump flow rate and update the temperature
@@ -64,7 +57,7 @@ export function CondenserTick(
     newSteamMass,
     condenserState.hotwellWaterMass,
     condenserState.recirculationPumpValvePosition,
-    steamTemp,
+    newPressure,
     hotwellRoom,
   )
   const condensed: number = waterMassAfterCondensation - condenserState.hotwellWaterMass
