@@ -46,13 +46,13 @@ Scenarios (`pnpm sim <name>`); each either replays the earlier operator steps fr
 | --- | --- | --- |
 | `startup-cold` | cold | cold → 10 bar, main steam valve open, turbine valve cracked |
 | `heat-to-msv` | cold | cold → 10 bar with vacuum pulled, nothing opened; source of the `at-pressure` snapshot |
-| `heat-up` | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~996 s (16.6 min), smoothed rate peaks at 23.6 K/min, no alarm; gas off at 165 bar |
+| `heat-up` | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~996 s (16.6 min), smoothed rate peaks at 22.8 K/min, no alarm; gas off at 165 bar |
 | `turbine-start` | `at-pressure` | main steam valve, turbine valve to 25%, turbine rolling |
-| `turbine-sync` | cold | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21). The unfed boiler runs dry at ~1227 s and jumps to the critical point, past design pressure (#33, #43) |
+| `turbine-sync` | cold | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21). The unfed boiler runs dry at ~1280 s and jumps to the critical point, past design pressure (#33, #43) |
 | `cooldown` | cold | at pressure, then natural cooldown for 60 min: heat loss proportional to T − ambient, about 250 kW, so 194 → 190 °C in the hour |
-| `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Reaches 165 bar since #12, then the hotwell empties, the boiler boils dry and the condenser goes NaN (see feedwater-loop.md) |
-| `relief-lift` | cold | full gas with everything closed until the relief valve lifts (~264 s), then gas off: one lift, 178 → 171 bar, then cooldown |
-| `full-gas` | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 83 K/min), the relief valve lifts at ~264 s and holds the pressure below design (peak ≈ 178.2 bar per tick while 1 m³ of water remains) until the boiler runs dry at ~312 s; its last litre and then the dry metal heat to the critical point, 220.6 bar (burner protection is #33) |
+| `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Reaches 165 bar since #12; since #34 the loop conserves water and holds, but the hotwell runs at about 327 °C (see feedwater-loop.md) |
+| `relief-lift` | cold | full gas with everything closed until the relief valve lifts (~289 s), then gas off at 291 s: one lift, 178 → 171 bar, then cooldown |
+| `full-gas` | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 78 K/min), the relief valve lifts at ~289 s and holds the pressure below design (peak ≈ 178.1 bar per tick while 1 m³ of water remains) until the boiler runs dry at ~395 s; its last litre and then the dry metal heat to the critical point, 220.6 bar (burner protection is #33) |
 
 `startup-cold` does not run the water loop: it leaves cooling water and the condensation pump at 0,
 so nothing condenses and nothing returns. Use `bypass-loop` for the loop.
@@ -81,6 +81,18 @@ invariant against every registered scenario, one test per pair. A pair that fail
 `expectedFailures` table as a `test.fails` naming the fixing ticket; when that ticket lands the test
 turns red, so remove the entry to make the pair a guard.
 
+## Water drift
+
+The water is held as kg ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), so the loop conserves it to floating-point rounding. Measured over all eight scenarios at 1 s sampling (`loopWater`, which undoes makeup, reject, drain and vent):
+
+| | Worst case | Limit in `sim/invariants.ts` |
+|---|---|---|
+| Water created, fraction of start mass | 3.2e-14 (`bypass-loop`) | `MassCreatedLimit` = 1e-13 |
+| Water lost with no steam out, fraction of start mass | 2.3e-14 (`heat-up`) | `MassLostFixed` = 1e-13 |
+| Water lost per kg of steam out of the boiler | 5.1e-12 (`bypass-loop`) | `MassLostPerSteamOut` = 2e-11 |
+
+The slack above the measured drift (a factor of 3 to 4) covers rounding in the sums only; before #34 the limits were 0.1%, 0.1% and 2%, which hid the 1.13–1.4 L-per-kg error. Never loosen a limit to make a test pass: re-measure and explain.
+
 ## State snapshots
 
 A snapshot is a full `PowerPlantState` as plain JSON in `sim/snapshots/<name>.json`,
@@ -94,7 +106,7 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
   they are; `pnpm sim:snapshots` regenerates them all. `sim/snapshot.test.ts` fails when a committed
   file no longer matches a fresh run of its source, so after a physics or state change: run
   `pnpm sim:snapshots`, look at the diff, commit.
-- `at-pressure` is the end of `heat-to-msv` (t = 750 s, ~13.6 bar). `turbine-start` starts from it, and
+- `at-pressure` is the end of `heat-to-msv` (t = 780 s, ~13.7 bar). `turbine-start` starts from it, and
   a test checks that this gives exactly the same states as replaying the cold start.
 
 UI presets ("cold", "hot standby", "at pressure") are #24; the UI starts cold.

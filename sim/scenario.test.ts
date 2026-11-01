@@ -143,7 +143,7 @@ describe("cold initial state", () => {
     expect(cold.Boiler.temperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Condenser.hotwellTemperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Boiler.pressure).toBe(CstPhysics.AtmosphericPressure_mBar / 1e3)
-    expect(cold.Boiler.energy).toBeCloseTo(5_196_000, 0)
+    expect(cold.Boiler.energy).toBeCloseTo(5_188_461, 0) // 49 910 kg of water at 4.196 kJ/kg·K and 100 t of steel at 0.5, from 0 °C to 20 °C
   })
 
   test("makes no steam on the first tick", () => {
@@ -184,13 +184,13 @@ describe("startup-cold", () => {
     expect(samples[0].state.Turbine.rpm).toBe(0)
   })
 
-  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 750 s", () => {
-    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(750)
+  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 780 s", () => {
+    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(780)
   })
 
   test("main steam valve opens when commanded and the turbine spins up", () => {
-    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(750)
-    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(750)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(780)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(780)
   })
 })
 

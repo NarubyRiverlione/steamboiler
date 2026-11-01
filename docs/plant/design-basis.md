@@ -18,7 +18,8 @@ Add a row when you over-dimension a utility or reduce something for playability.
 
 | Item | Simulator | Realistic | Why | Constant |
 |---|---|---|---|---|
-| Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 4.3 min (measured, `full-gas`) instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
+| Condensation speed-up (existing) | condenses 10 × the energy balance (`massCondensed * 10` in `calculateCondensation`) | the energy balance (`Q / latent heat`) | a magic number kept from before #34 so that ticket changed units only; removal is #47 | `calculateCondensation` in `condenserCalculation.ts` |
+| Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 4.7 min (measured, `full-gas`) instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
 | Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.6 min (measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
 | Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; burner protection is #33 | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
 | Specific heat at the critical point (held) | 47.1 kJ/kg·K from 370 °C up | diverges to infinity at 373.946 °C | the simulation core must stay finite every tick; the table clamps at the critical point instead of throwing | last row of `steamTable` in `steamData.ts` |
@@ -32,7 +33,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | | Value | Note |
 |---|---|---|
 | Total volume | 100 m³ | on purpose reduced, see the register |
-| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space |
+| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space; the initial fills (`StartWaterVolume`, `HotwellStartVolume`) are specified in litres at ambient and converted to kg when the state is created ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)) |
 | Water capacity | 100 m³ of liquid | `CstBoiler.TotalVolume`, see [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
 | Working pressure | 165 bar | typical utility drum boiler (2400 psi); not a code constant yet |
 | Design pressure | 180 bar | must never be exceeded; the relief valve holds it while water remains (see [boiler.md](boiler.md#relief-valve)) |

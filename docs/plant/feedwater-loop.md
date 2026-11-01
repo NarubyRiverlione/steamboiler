@@ -13,11 +13,11 @@ Water enters or leaves the loop in only four places. Everything else must conser
 | Drain | out of the boiler | `drainedTotal` |
 | Vent | steam out of the boiler to the atmosphere through the relief valve ([boiler.md](boiler.md#relief-valve)) | `ventedTotal` (kg) |
 
-The sim models no leaks or continuous blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` allows 0.1% of the start mass.
+The sim models no leaks or continuous blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` sums kg and allows only floating-point rounding (1e-13 of the start mass, see [headless-runner.md](../dev/headless-runner.md#water-drift)).
 
 ## Return and capacity
 
-The condensation pump moves hotwell water into the boiler as the **Return**: the pump volume (valve position × `CondensationPump_MaxFlowRate` × tick), but never more than the hotwell holds after makeup and reject, and never more than the boiler has room for (capacity minus its water), so the boiler never passes its 100 000 L total volume. What cannot be returned stays in the hotwell. The boiler takes the Return in the same tick the hotwell gives it. A full boiler simply stops taking water; there is no overflow and no automatic reject ([ADR 0004](../adr/0004-return-stops-at-full-boiler.md)). Volumes count 1 L = 1 kg; temperature-dependent density is #34.
+The condensation pump moves hotwell water into the boiler as the **Return**: the pump flow (valve position × `CondensationPump_MaxFlowRate` × tick, litres, converted to kg at the hotwell temperature), but never more than the hotwell holds after makeup and reject, and never more than the boiler has room for: (capacity minus its volume) ÷ the specific volume at the boiler temperature, in kg, so a filling boiler stops at its 100 000 L total volume. What cannot be returned stays in the hotwell. The boiler takes the Return in the same tick the hotwell gives it. A full boiler simply stops taking water; there is no overflow and no automatic reject ([ADR 0004](../adr/0004-return-stops-at-full-boiler.md)). Water is held as kg and volumes are derived from the temperature-dependent specific volume ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)); makeup and reject are valve flows in L/s, converted to kg at the hotwell temperature, and the totalizers count kg.
 
 ## Level targets
 
@@ -51,4 +51,4 @@ Real plants hold drum level and hotwell level with automatic control loops. In t
 - nudges cooling water against the steam mass in the condenser
 - opens makeup or reject on the hotwell limits, with hysteresis
 
-The `bypass-loop` scenario now reaches the operating pressure (#12): the boiler heats along saturation to about 180 bar by 600 s, overshooting the design pressure with no relief valve until #9. The loop does not close yet: the condenser does not return the bypass steam fast enough, the hotwell runs empty by about 660 s, the boiler level falls and the boiler boils dry at about 1175 s. Refilling the empty hotwell then gives a NaN hotwell temperature in the condenser. Its pressure, level and NaN assertions stay expected failures until that is fixed.
+The `bypass-loop` scenario reaches the operating pressure (#12) and the relief valve holds it below the design pressure (#9). With the water held in kg (#34) the loop conserves water, no longer empties the hotwell or boils the boiler dry, and the pressure, temperature and NaN checks pass. It still does not close well: the condensate keeps the bypass steam temperature, so the hotwell runs at about 327 °C, its 9.6 t fill the 15 m³ and the operator rejects and makes up water all the time (#35, #45). The level, pressure-band, makeup and reject assertions stay expected failures until that is fixed.

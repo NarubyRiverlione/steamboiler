@@ -36,6 +36,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0004](adr/0004-return-stops-at-full-boiler.md) | The Return stops at a full boiler; no overflow |
 | [0005](adr/0005-relief-valve-vents-to-atmosphere.md) | The relief valve vents to the atmosphere and is sized at 110% of full-gas steam |
 | [0006](adr/0006-heating-rate-alarm-only.md) | The heating-rate limit is a time-compressed alarm on one lumped boiler temperature |
+| [0007](adr/0007-water-state-is-mass-in-kg.md) | The water state is mass in kg; volume and level are derived |
 
 ## Research (dated, frozen)
 

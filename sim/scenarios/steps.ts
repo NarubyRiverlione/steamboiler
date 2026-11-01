@@ -5,8 +5,8 @@ import { ScenarioAction } from "../scenario"
 
 export const StartGas = 2000 // liters/second during heat-up
 
-// Main steam valve time: ~11.8 bar by now (saturation pressure of the heated water, #12); the reducer refuses below 10 bar
-export const AtPressure = 750
+// Main steam valve time: ~13.7 bar by now (saturation pressure of the heated water, #12; the water is held as kg since #34, so its full heat capacity slows the heat-up); the reducer refuses below 10 bar
+export const AtPressure = 780
 
 // t=0: gas on, pull vacuum
 export const heatUp: ScenarioAction[] = [

@@ -2,6 +2,7 @@
 import { CstPhysics, CstSimulation } from "../context/const"
 import {
   getSteamData,
+  getWaterSpecificVolume,
   getSaturatedSteamDensity,
   getWaterSpecificHeat,
   getLatentHeat,
@@ -13,33 +14,19 @@ const { CstBoiler } = CstSimulation
 const EquilibriumTolerance = 1e-9 // kg
 const FlashIterations = 40 // bisection steps: the bracket is tonnes wide, 40 halvings is far below a gram
 
-// Calculate water volume based on temperature using specific volume data from steam table
-export function calculateWaterVolume(baseVolume: number, temperature: number): number {
-  // Reference conditions at 20°C
-  const referenceSpecificVolume = 0.001002 // Specific volume at 20°C (m³/kg)
+// Volume (L) a water mass (kg) takes at its temperature
+export function waterVolumeOf(waterMass: number, temperature: number): number {
+  return waterMass * getWaterSpecificVolume(temperature)
+}
 
-  // Get current specific volume from steam table or use approximation for temps below 80°C
-  let currentSpecificVolume
+// Water mass (kg) a volume (L) holds at its temperature
+export function waterMassOf(waterVolume: number, temperature: number): number {
+  return waterVolume / getWaterSpecificVolume(temperature)
+}
 
-  if (temperature < 80) {
-    // Linear approximation for temperatures below 80°C
-    // Specific volume increases with temperature
-    const specificVolumeAt0C = 0.001 // m³/kg at 0°C
-    const specificVolumeAt80C = 0.001029 // m³/kg at 80°C (from steam table)
-    const slope = (specificVolumeAt80C - specificVolumeAt0C) / 80
-    currentSpecificVolume = specificVolumeAt0C + slope * temperature
-  } else {
-    // Use steam table data for temperatures >= 80°C
-    const steamData = getSteamData(temperature)
-    currentSpecificVolume = steamData.specificVolume
-  }
-
-  // Calculate volume ratio based on specific volumes
-  // Volume is proportional to specific volume
-  const volumeRatio = currentSpecificVolume / referenceSpecificVolume
-
-  // Apply the volume ratio to the base volume
-  return baseVolume * volumeRatio
+// Mass (kg) a vessel of this capacity (L) can still take at the water temperature; none once it is full or over
+export function roomInKg(totalVolume: number, waterVolume: number, temperature: number): number {
+  return Math.max(0, totalVolume - waterVolume) / getWaterSpecificVolume(temperature)
 }
 
 // Calculate energy from gas flow
@@ -83,18 +70,19 @@ export function calculateSteamInventory(temperature: number, waterVolume: number
 export function calculateFlashedMass(
   heatedTemperature: number,
   waterMass: number,
-  waterVolume: number,
   steamMass: number,
 ): number {
   if (waterMass <= 0) return 0
   const latentHeat = getLatentHeat(heatedTemperature)
   const heatCapacity = waterMass * getWaterSpecificHeat(heatedTemperature)
-  const litresPerKg = calculateWaterVolume(1, heatedTemperature)
 
   // Steam still wanted after flashing this much, minus what is already there and what was just flashed
   const residual = (flashed: number): number => {
     const temperature = Math.max(0, heatedTemperature - (flashed * latentHeat) / heatCapacity)
-    const volume = Math.min(CstBoiler.TotalVolume, Math.max(0, waterVolume - flashed * litresPerKg))
+    const volume = Math.min(
+      CstBoiler.TotalVolume,
+      waterVolumeOf(Math.max(0, waterMass - flashed), temperature),
+    )
     return calculateSteamInventory(temperature, volume) - steamMass - flashed
   }
 

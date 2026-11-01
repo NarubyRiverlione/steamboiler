@@ -1,5 +1,5 @@
 import { CstPhysics, CstSimulation } from "./const"
-import { calculateHeatingEnergy, calculateSteamInventory } from "../utils/boilerCalculations"
+import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { isAtSyncSpeed } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
@@ -10,10 +10,19 @@ const { CstBoiler, CstTurbine } = CstSimulation
 
 const { AmbientTemperature } = CstPhysics
 
+// Initial fills are specified in litres at ambient and held as kg
+const startBoilerMass: number = waterMassOf(CstBoiler.StartWaterVolume, AmbientTemperature)
+const startHotwellMass: number = waterMassOf(
+  CstSimulation.CstCondenser.HotwellStartVolume,
+  AmbientTemperature,
+)
+
 // Truly cold plant: everything at ambient temperature and atmospheric pressure, all pumps, valves and gas off
 export const makeInitialState = (): PowerPlantState => ({
   Boiler: {
-    waterVolume: CstBoiler.StartWaterVolume, // liters
+    waterMass: startBoilerMass, // kg, the start volume (litres at ambient) converted
+    waterVolume: CstBoiler.StartWaterVolume, // liters, derived
+    deltaWaterMass: 0,
     temperature: AmbientTemperature, // Celsius
     pressure: CstPhysics.AtmosphericPressure_mBar / 1e3, // bar
     gasFlow: 0, // liters/second
@@ -22,17 +31,18 @@ export const makeInitialState = (): PowerPlantState => ({
     reliefValveOpen: false,
     ventedTotal: 0, // kg
     reliefLifts: 0,
-    energy: calculateHeatingEnergy(CstBoiler.StartWaterVolume, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
+    energy:
+      calculateHeatingEnergy(startBoilerMass, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s
     heatLoss: 0, // kW
     heatingRate: 0, // K/s
     heatingRateOverLimit: false,
     steamMass: calculateSteamInventory(AmbientTemperature, CstBoiler.StartWaterVolume), // kg - vapour over the water, in equilibrium
-    deltaWaterVolume: 0,
     deltaSteamMass: 0,
   },
   Condenser: {
     pressure: CstPhysics.AtmosphericPressure_mBar, // mBar (initial atmospheric pressure)
+    hotwellWaterMass: startHotwellMass,
     hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
     hotwellTemperature: AmbientTemperature, // Celsius
     steamMass: 0, // Start at 0
@@ -49,7 +59,7 @@ export const makeInitialState = (): PowerPlantState => ({
     rejectValvePosition: 0,
     makeupTotal: 0,
     rejectTotal: 0,
-    deltaWaterVolume: 0,
+    deltaWaterMass: 0,
   },
   Turbine: {
     electricOutput: 0, // MW,
@@ -96,7 +106,8 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#region Boiler
   INCREASE_GAS_FLOW: (state, { amount }) =>
     withBoiler(state, { gasFlow: Math.min(CstBoiler.MaxGasFlow, state.Boiler.gasFlow + amount) }),
-  DECREASE_GAS_FLOW: (state, { amount }) => withBoiler(state, { gasFlow: Math.max(0, state.Boiler.gasFlow - amount) }),
+  DECREASE_GAS_FLOW: (state, { amount }) =>
+    withBoiler(state, { gasFlow: Math.max(0, state.Boiler.gasFlow - amount) }),
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
   //#endregion
 
@@ -138,7 +149,8 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
   TOGGLE_MAIN_STEAM_VALVE: (state) =>
     withTurbine(state, {
-      mainSteamValve: !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
+      mainSteamValve:
+        !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
     }),
   ADJUST_STEAM_BYPASS_VALVE: (state, { payload }) =>
     withTurbine(state, {
@@ -150,20 +162,26 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     }),
   ADJUST_RPM_SETPOINT: (state, { payload }) =>
     withTurbine(state, {
-      rpmSetPoint: clamp(state.Turbine.rpmSetPoint + payload.rpmAdjustment, CstTurbine.MinRPM, CstTurbine.MaxRPM),
+      rpmSetPoint: clamp(
+        state.Turbine.rpmSetPoint + payload.rpmAdjustment,
+        CstTurbine.MinRPM,
+        CstTurbine.MaxRPM,
+      ),
     }),
   TOGGLE_HOLD_MODE: (state) => withTurbine(state, { holdMode: !state.Turbine.holdMode }),
   // Allow closing the breaker if RPM is within the margin of sync speed; toggling a closed breaker opens it
   TOGGLE_GENERATOR_BREAKER: (state) =>
     withTurbine(state, {
-      generatorBreaker:
-        !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm),
+      generatorBreaker: !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm),
     }),
   //#endregion
 }
 
 export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
   // TS cannot correlate action.type with its payload when indexing a mapped type, hence the widening
-  const handler = handlers[action.type] as (state: PowerPlantState, action: PowerPlantAction) => PowerPlantState
+  const handler = handlers[action.type] as (
+    state: PowerPlantState,
+    action: PowerPlantAction,
+  ) => PowerPlantState
   return handler(state, action)
 }

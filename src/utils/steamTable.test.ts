@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
 import { steamTable } from "./steamData"
-import { getBoilingPoint, getLatentHeat, getSteamData, getWaterSpecificHeat } from "./steamTable"
+import { getBoilingPoint, getLatentHeat, getSteamData, getWaterSpecificHeat, getWaterSpecificVolume } from "./steamTable"
 
 const CriticalTemperature = 373.946 // °C, IAPWS-IF97
 const CriticalPressure = 220.64 // bar, IAPWS-IF97
@@ -88,5 +88,32 @@ describe("clamping at the critical point", () => {
       expect(boiling).toBeGreaterThanOrEqual(previous)
       previous = boiling
     }
+  })
+})
+
+// IAPWS-IF97 saturated-liquid specific volume, litres per kg: [°C, L/kg]
+const LiquidVolumes: number[][] = [
+  [20, 1.0018],
+  [40, 1.0079],
+  [60, 1.0171],
+  [80, 1.029],
+  [100, 1.0435],
+  [200, 1.1565],
+  [300, 1.4036],
+]
+
+describe("getWaterSpecificVolume", () => {
+  test.each(LiquidVolumes)("%i °C: within 0.2% of IF97", (temperature, litresPerKg) => {
+    expect(Math.abs(getWaterSpecificVolume(temperature) / litresPerKg - 1)).toBeLessThan(0.002)
+  })
+
+  test("rises smoothly across 80 °C, with no density jump", () => {
+    const step: number = getWaterSpecificVolume(80.5) - getWaterSpecificVolume(79.5)
+    expect(step).toBeGreaterThan(0)
+    expect(step).toBeLessThan(0.0012) // the true slope is about 0.0008 L/kg per K; the old jump was 0.03
+  })
+
+  test("below 20 °C holds the 20 °C value", () => {
+    expect(getWaterSpecificVolume(5)).toBe(getWaterSpecificVolume(20))
   })
 })

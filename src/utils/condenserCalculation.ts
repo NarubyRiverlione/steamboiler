@@ -1,5 +1,6 @@
 import { CondenserState } from "../context/PowerPlantState"
 import { CstPhysics, CstSimulation } from "../context/const"
+import { waterMassOf } from "./boilerCalculations"
 import { getLatentHeat } from "./steamTable"
 
 // Air Extraction Pump (CAR) behavior
@@ -123,19 +124,21 @@ export function calculateVacuumByReducers(
  * Calculates the condensation of steam based on energy balance approach
  *
  * @param currentSteamMass kg, Current steam mass in the condenser
- * @param currentLiquidVolume liter, Current liquid volume in the condenser
+ * @param currentLiquidMass kg, Current liquid mass in the hotwell
  * @param recirculationPumpValvePosition Valve position of the recirculation pump (0-1)
  * @param steamTemp  temperature in intake steam (°C)
- * @returns New steam and liquid volumes, and new outlet temperature
+ * @param hotwellRoom kg of water the hotwell can still take at its temperature, limits the condensation
+ * @returns New steam and liquid masses (kg), and new outlet temperature
  */
 export function calculateCondensation(
   currentSteamMass: number,
-  currentLiquidVolume: number,
+  currentLiquidMass: number,
   recirculationPumpValvePosition: number,
   steamTemp: number,
+  hotwellRoom: number,
 ): {
-  steamVolumeAfterCondensation: number
-  waterVolumeAfterCondensation: number
+  steamMassAfterCondensation: number
+  waterMassAfterCondensation: number
   newOutletTemperature: number
 } {
   const {
@@ -156,21 +159,18 @@ export function calculateCondensation(
   const latentHeat = getLatentHeat(steamTemp)
   const massCondensed = energyAbsorbed / latentHeat
 
-  // 5. Convert condensed mass to volume using water density
-  const waterDensity = CstPhysics.Water_Density // kg/m³
-  const volumeCondensed = (massCondensed / waterDensity) * 1000 * 10 // Convert m³ to liters
+  // 5. The steam that condenses: the energy balance times the existing x10 condensation factor (not changed by the
+  // move to kg), never more than the steam there is or the room in the hotwell
+  const condensedMass = Math.min(currentSteamMass, massCondensed * 10, hotwellRoom)
+  const newSteamMass = currentSteamMass - condensedMass
+  const newLiquidMass = currentLiquidMass + condensedMass
 
-  // 6. Adjust vapor and liquid volumes
-  const condensedVolume = Math.min(currentSteamMass, volumeCondensed)
-  const newSteamVolume = currentSteamMass - condensedVolume
-  const newLiquidVolume = currentLiquidVolume + condensedVolume
-
-  // 7. Calculate new temperature of the condensed water returning to the boiler
+  // 6. Calculate new temperature of the condensed water returning to the boiler
   // If there's no recirculation flow, temperature remains the same
   if (massFlowRate <= 0) {
     return {
-      steamVolumeAfterCondensation: Math.max(newSteamVolume, 0),
-      waterVolumeAfterCondensation: Math.max(newLiquidVolume, 0),
+      steamMassAfterCondensation: Math.max(newSteamMass, 0),
+      waterMassAfterCondensation: Math.max(newLiquidMass, 0),
       newOutletTemperature: steamTemp,
     }
   }
@@ -184,58 +184,64 @@ export function calculateCondensation(
 
   // Temperature rises due to condensation and falls due to cooling water
   const temperatureChange =
-    (condensationEnergy - coolingEffect) /
-    (((newLiquidVolume * waterDensity) / 1000) * CstPhysics.Water_SpecificHeat)
+    (condensationEnergy - coolingEffect) / (newLiquidMass * CstPhysics.Water_SpecificHeat)
 
   const newOutletTemperature = steamTemp + temperatureChange * DampingFactor
 
   return {
-    steamVolumeAfterCondensation: Math.max(newSteamVolume, 0),
-    waterVolumeAfterCondensation: Math.max(newLiquidVolume, 0),
+    steamMassAfterCondensation: Math.max(newSteamMass, 0),
+    waterMassAfterCondensation: Math.max(newLiquidMass, 0),
     newOutletTemperature: Math.max(RecirculationPump_IntakeTemperature, newOutletTemperature),
   }
 }
 
-// The Return: the pump volume, limited by what the hotwell holds and the room left in the boiler.
-// Whatever cannot be returned stays in the hotwell.
+// The Return: the pump volume (L), in kg at the hotwell temperature, limited by what the hotwell holds and the room
+// (kg) left in the boiler. Whatever cannot be returned stays in the hotwell.
 export function CalculateCondensationFlow(
   condensationPumpValvePosition: number,
-  waterVolumeAfterCondensation: number,
+  waterMassAfterCondensation: number,
+  hotwellTemperature: number,
   boilerRoom: number,
-): { condensatePumpVolume: number; newHotwellWaterVolume: number } {
+): { condensatePumpMass: number; newHotwellWaterMass: number } {
   const pumpFlowRate = condensationPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate
-  const condensatePumpVolume = Math.max(
-    0,
-    Math.min(pumpFlowRate * CstSimulation.DeltaTime, waterVolumeAfterCondensation, boilerRoom),
-  )
-  const newHotwellWaterVolume = waterVolumeAfterCondensation - condensatePumpVolume
+  const pumpMass = waterMassOf(pumpFlowRate * CstSimulation.DeltaTime, hotwellTemperature)
+  const condensatePumpMass = Math.max(0, Math.min(pumpMass, waterMassAfterCondensation, boilerRoom))
+  const newHotwellWaterMass = waterMassAfterCondensation - condensatePumpMass
 
-  return { condensatePumpVolume, newHotwellWaterVolume }
+  return { condensatePumpMass, newHotwellWaterMass }
 }
 
-// Temperature after mixing two water volumes (1 L = 1 kg, same specific heat)
-export function mixTemperature(volumeA: number, tempA: number, volumeB: number, tempB: number): number {
-  const total = volumeA + volumeB
-  return total > 0 ? (volumeA * tempA + volumeB * tempB) / total : tempA
+// Temperature after mixing two water masses (kg, same specific heat)
+export function mixTemperature(massA: number, tempA: number, massB: number, tempB: number): number {
+  const total = massA + massB
+  return total > 0 ? (massA * tempA + massB * tempB) / total : tempA
 }
 
 /**
  * Hotwell boundary flows: makeup water in from outside the loop, reject water out to storage.
- * Reject never takes more than the hotwell holds.
- * @returns New hotwell volume and temperature, and the liters added and removed this tick
+ * The valve flows are litres, converted to kg at the hotwell temperature. Makeup stops at the room left in the
+ * hotwell; reject never takes more than the hotwell holds.
+ * @returns New hotwell mass (kg) and temperature, and the kg added and removed this tick
  */
 export function calculateHotwellExchange(
-  hotwellVolume: number,
+  hotwellMass: number,
   hotwellTemperature: number,
   makeupValvePosition: number,
   rejectValvePosition: number,
-): { volume: number; temperature: number; makeup: number; reject: number } {
+  hotwellRoom: number,
+): { mass: number; temperature: number; makeup: number; reject: number } {
   const {
     DeltaTime,
     CstCondenser: { Makeup_MaxFlowRate, Makeup_Temperature, Reject_MaxFlowRate },
   } = CstSimulation
-  const makeup = makeupValvePosition * Makeup_MaxFlowRate * DeltaTime
-  const temperature = mixTemperature(hotwellVolume, hotwellTemperature, makeup, Makeup_Temperature)
-  const reject = Math.min(hotwellVolume + makeup, rejectValvePosition * Reject_MaxFlowRate * DeltaTime)
-  return { volume: hotwellVolume + makeup - reject, temperature, makeup, reject }
+  const makeup = Math.min(
+    hotwellRoom,
+    waterMassOf(makeupValvePosition * Makeup_MaxFlowRate * DeltaTime, hotwellTemperature),
+  )
+  const temperature = mixTemperature(hotwellMass, hotwellTemperature, makeup, Makeup_Temperature)
+  const reject = Math.min(
+    hotwellMass + makeup,
+    waterMassOf(rejectValvePosition * Reject_MaxFlowRate * DeltaTime, hotwellTemperature),
+  )
+  return { mass: hotwellMass + makeup - reject, temperature, makeup, reject }
 }

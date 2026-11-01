@@ -1,15 +1,13 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick, {
-  BoilerRemoveSteam,
-  BoilerVent,
-  drainBoiler,
-  heatLossOf,
-  warmBy,
-  waterMassOf,
-} from "./BoilerTick"
+import BoilerTick, { BoilerRemoveSteam, BoilerVent, drainBoiler, heatLossOf, warmBy } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
-import { calculateBoilerPressure, calculateSteamInventory } from "../../utils/boilerCalculations"
+import {
+  calculateBoilerPressure,
+  calculateSteamInventory,
+  waterVolumeOf,
+} from "../../utils/boilerCalculations"
+import { getWaterSpecificVolume } from "../../utils/steamTable"
 
 const { CstBoiler, CstTurbine, DeltaTime } = CstSimulation
 const cold = makeInitialState().Boiler
@@ -18,8 +16,9 @@ const cold = makeInitialState().Boiler
 const settled = (temperature: number) => ({
   ...cold,
   temperature,
+  waterVolume: waterVolumeOf(cold.waterMass, temperature),
   pressure: calculateBoilerPressure(temperature),
-  steamMass: calculateSteamInventory(temperature, cold.waterVolume),
+  steamMass: calculateSteamInventory(temperature, waterVolumeOf(cold.waterMass, temperature)),
 })
 
 describe("BoilerTick drain", () => {
@@ -29,15 +28,16 @@ describe("BoilerTick drain", () => {
 
   test("open drain removes water and counts it in the totalizer", () => {
     const drained = BoilerTick({ ...cold, drainValveOpen: true })
-    const amount = CstBoiler.TotalVolume * CstBoiler.DrainingRate * DeltaTime
+    const amount: number =
+      (CstBoiler.TotalVolume * CstBoiler.DrainingRate * DeltaTime) / getWaterSpecificVolume(20)
     expect(drained.drainedTotal).toBeCloseTo(amount)
-    expect(drained.waterVolume).toBeCloseTo(cold.waterVolume - amount)
+    expect(drained.waterMass).toBeCloseTo(cold.waterMass - amount)
   })
 
   test("counts only the water actually drained from a nearly empty boiler", () => {
-    const drained = BoilerTick({ ...cold, waterVolume: 10, drainValveOpen: true, drainedTotal: 5 })
+    const drained = BoilerTick({ ...cold, waterMass: 10, drainValveOpen: true, drainedTotal: 5 })
     expect(drained.drainedTotal).toBe(15)
-    expect(drained.waterVolume).toBe(0)
+    expect(drained.waterMass).toBe(0)
   })
 })
 
@@ -88,7 +88,8 @@ describe("BoilerTick heating rate", () => {
   // 2000 L/s of gas is 59.5 MW into 259.8 MJ/K of water and metal: a steady rise of 0.229 K/s
 
   test("settles at the true rate of rise", () => {
-    expect(ticks(300, 2000).heatingRate).toBeCloseTo(0.229, 2)
+    // 0.229 K/s at 60 °C; after 300 s the water is at about 128 °C, where its specific heat is 2% higher
+    expect(ticks(300, 2000).heatingRate).toBeCloseTo(0.224, 2)
   })
 
   test("is smoothed over 30 s: after a step it has covered about 63% of it in 30 s", () => {
@@ -230,8 +231,10 @@ describe("BoilerTick pressure law", () => {
 
   // Textbook saturated steam density: 0.598 kg/m³ at 100 °C, 2.55 at 150, 19.95 at 250, 46.2 at 300
   test("the steam space holds saturated steam at the water temperature", () => {
-    const steamSpace = (CstBoiler.TotalVolume - cold.waterVolume) / 1000
-    const density = (temperature: number) => BoilerTick(settled(temperature)).steamMass / steamSpace
+    const steamSpace = (temperature: number) =>
+      (CstBoiler.TotalVolume - settled(temperature).waterVolume) / 1000
+    const density = (temperature: number) =>
+      BoilerTick(settled(temperature)).steamMass / steamSpace(temperature)
     const withinPercent = (value: number, expected: number) => Math.abs(value / expected - 1) < 0.03
     expect(withinPercent(density(100), 0.598)).toBe(true)
     expect(withinPercent(density(150), 2.55)).toBe(true)
@@ -255,8 +258,8 @@ describe("BoilerTick pressure law", () => {
 
 describe("BoilerTick helpers", () => {
   test("an open drain on an empty boiler drains nothing and loses no energy", () => {
-    expect(drainBoiler({ ...cold, waterVolume: 0, drainValveOpen: true })).toEqual({
-      waterVolume: 0,
+    expect(drainBoiler({ ...cold, waterMass: 0, drainValveOpen: true })).toEqual({
+      waterMass: 0,
       drained: 0,
       energyLoss: 0,
     })
@@ -265,14 +268,8 @@ describe("BoilerTick helpers", () => {
   // The cold start holds 50 t of water at 20 °C (4.196 MJ above 0 °C per tonne) and 100 t of steel (1 MJ per tonne)
   test("the drain takes the water's share of the water's energy, none of the metal's", () => {
     const drain = drainBoiler({ ...cold, drainValveOpen: true })
-    const waterEnergy = 50e3 * 4.196 * 20
-    expect(drain.energyLoss / waterEnergy).toBeCloseTo(drain.drained / cold.waterVolume, 3)
-  })
-
-  // 1 m³ of water: 1000 kg cold, about 958 kg at 100 °C (textbook density)
-  test("water mass follows the density at the water temperature", () => {
-    expect(waterMassOf(1000, 20)).toBe(1000)
-    expect(waterMassOf(1000, 100)).toBeCloseTo(958, -1)
+    const waterEnergy = cold.waterMass * 4.196 * 20
+    expect(drain.energyLoss / waterEnergy).toBeCloseTo(drain.drained / cold.waterMass, 3)
   })
 
   test("an empty boiler (no heat capacity) keeps its temperature", () => {
@@ -324,5 +321,53 @@ describe("BoilerVent relief valve", () => {
     const vented = BoilerVent({ ...at(180), steamMass: 10 })
     expect(vented.steamMass).toBe(0)
     expect(vented.ventedTotal).toBe(10)
+  })
+})
+
+describe("BoilerTick water in kg", () => {
+  test("a steam-making tick moves exactly the flashed mass from the water to the steam", () => {
+    const hot = { ...settled(186), gasFlow: CstBoiler.MaxGasFlow }
+    const next = BoilerTick(hot)
+    expect(next.deltaSteamMass).toBeGreaterThan(0)
+    const waterLost: number = hot.waterMass - next.waterMass
+    const steamGained: number = next.steamMass - hot.steamMass
+    expect(waterLost).toBeCloseTo(steamGained, 9)
+  })
+
+  test("the volume is the mass times the specific volume at the new temperature", () => {
+    const next = BoilerTick({ ...settled(250), gasFlow: CstBoiler.MaxGasFlow })
+    expect(next.waterVolume).toBeCloseTo(next.waterMass * getWaterSpecificVolume(next.temperature), 6)
+  })
+
+  test("the level rises about 40% as water heats from 20 to 300 °C", () => {
+    const ratio: number = getWaterSpecificVolume(300) / getWaterSpecificVolume(20)
+    expect(ratio).toBeGreaterThan(1.38)
+    expect(ratio).toBeLessThan(1.42)
+  })
+
+  test("a full drum that heats up keeps all its mass, with finite temperature and pressure", () => {
+    const fullMass: number = CstBoiler.TotalVolume / getWaterSpecificVolume(20)
+    const full = {
+      ...cold,
+      waterMass: fullMass,
+      waterVolume: CstBoiler.TotalVolume,
+      steamMass: 0,
+      gasFlow: CstBoiler.MaxGasFlow,
+    }
+    let state = full
+    for (let i = 0; i < 200; i++) state = BoilerTick(state)
+    expect(state.waterMass).toBeCloseTo(fullMass, 6)
+    expect(state.waterVolume).toBeGreaterThan(CstBoiler.TotalVolume)
+    for (const value of [state.temperature, state.pressure, state.steamMass, state.energy]) {
+      expect(Number.isFinite(value)).toBe(true)
+    }
+  })
+
+  test("the drain takes its volume share, in kg at the boiler temperature, and counts kg", () => {
+    const warm = { ...settled(100), drainValveOpen: true }
+    const next = BoilerTick(warm)
+    const expectedKg: number =
+      (CstBoiler.TotalVolume * CstBoiler.DrainingRate * DeltaTime) / getWaterSpecificVolume(100)
+    expect(next.drainedTotal).toBeCloseTo(expectedKg, 6)
   })
 })

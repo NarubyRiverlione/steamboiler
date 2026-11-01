@@ -99,7 +99,7 @@ function holdBoilerPressure({ Boiler, Turbine }: PowerPlantState): PowerPlantAct
 function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
-  const direction = bandDirection(level - S.BoilerLevelTarget, S.BoilerLevelBand, Boiler.deltaWaterVolume)
+  const direction = bandDirection(level - S.BoilerLevelTarget, S.BoilerLevelBand, Boiler.deltaWaterMass)
   const delta = nudge(Condenser.condensationPumpValvePosition, direction)
   return delta === 0
     ? []

@@ -1,14 +1,14 @@
 import {
   calculateBoilerPressure,
   calculateFlashedMass,
-  calculateWaterVolume,
+  waterMassOf,
+  waterVolumeOf,
   calculateGasEnergy,
 } from "../../utils/boilerCalculations"
 import {
   CriticalTemperature,
   getBoilingPoint,
   getLatentHeat,
-  getWaterDensity,
   getWaterSpecificHeat,
 } from "../../utils/steamTable"
 import { CstSimulation, CstPhysics } from "../const"
@@ -24,25 +24,20 @@ export function metalEnergyOf(temperature: number): number {
   return MetalHeatCapacity * temperature
 }
 
-type Drain = { waterVolume: number; drained: number; energyLoss: number }
+type Drain = { waterMass: number; drained: number; energyLoss: number }
 
-// The open drain removes a fixed share of the total volume per tick, with the same share of the energy
-// (uniform temperature) of the water, not of the metal; the boiler is fed only by the condensation pump
-export function drainBoiler({ drainValveOpen, waterVolume, energy, temperature }: BoilerState): Drain {
-  if (!drainValveOpen || waterVolume <= 0) return { waterVolume, drained: 0, energyLoss: 0 }
-  const drainAmount = CstBoiler.TotalVolume * CstBoiler.DrainingRate * CstSimulation.DeltaTime
-  const newWaterVolume = Math.max(0, waterVolume - drainAmount)
+// The open drain removes a fixed share of the total volume per tick, in kg at the boiler temperature, with the same
+// share of the energy (uniform temperature) of the water, not of the metal; the boiler is fed only by the
+// condensation pump
+export function drainBoiler({ drainValveOpen, waterMass, temperature, energy }: BoilerState): Drain {
+  if (!drainValveOpen || waterMass <= 0) return { waterMass, drained: 0, energyLoss: 0 }
+  const drainVolume = CstBoiler.TotalVolume * CstBoiler.DrainingRate * CstSimulation.DeltaTime
+  const drainAmount = Math.min(waterMass, waterMassOf(drainVolume, temperature))
   return {
-    waterVolume: newWaterVolume,
-    drained: waterVolume - newWaterVolume,
-    energyLoss: (energy - metalEnergyOf(temperature)) * (drainAmount / waterVolume),
+    waterMass: waterMass - drainAmount,
+    drained: drainAmount,
+    energyLoss: (energy - metalEnergyOf(temperature)) * (drainAmount / waterMass),
   }
-}
-
-// Water mass (kg) of a volume (L), from the temperature-dependent density (the table starts at 80 °C)
-export function waterMassOf(waterVolume: number, temperature: number): number {
-  const density = temperature < 80 ? CstPhysics.Water_Density : getWaterDensity(temperature)
-  return (waterVolume * density) / 1000
 }
 
 // Heat loss (kW) per kelvin above ambient, from the loss at design temperature
@@ -67,7 +62,7 @@ export function smoothHeatingRate(previous: number, temperatureChange: number): 
 
 function BoilerTick(boilerState: BoilerState): BoilerState {
   const drain = drainBoiler(boilerState)
-  const waterMass = waterMassOf(drain.waterVolume, boilerState.temperature)
+  const waterMass = drain.waterMass
   // kJ/K, the water and the metal at one temperature
   const heatCapacity = waterMass * getWaterSpecificHeat(boilerState.temperature) + MetalHeatCapacity
 
@@ -87,20 +82,12 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
 
   // The steam space holds saturated steam; water flashes to steam (or steam condenses) to restore that inventory,
   // and the latent heat comes from, or returns to, the water. A steam draw leaves a deficit, so it cools the water.
-  const flashedMass = calculateFlashedMass(
-    heatedTemperature,
-    waterMass,
-    drain.waterVolume,
-    boilerState.steamMass,
-  )
+  const flashedMass = calculateFlashedMass(heatedTemperature, waterMass, boilerState.steamMass)
   const flashEnergy = flashedMass * getLatentHeat(heatedTemperature)
   const energyChange = gasEnergy - drain.energyLoss - heatLossEnergy - flashEnergy
 
-  // The liquid lost to steam, at the volume 1 kg of water takes at the current temperature
-  const newWaterVolume = Math.min(
-    CstBoiler.TotalVolume,
-    Math.max(0, drain.waterVolume - flashedMass * calculateWaterVolume(1, heatedTemperature)),
-  )
+  // The liquid lost to steam is exactly the steam made: mass is conserved, and a full drum is not clamped
+  const newWaterMass = Math.max(0, waterMass - flashedMass)
 
   // Heat loss never takes the boiler below ambient
   const newTemperature = Math.max(
@@ -112,7 +99,9 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
 
   return {
     ...boilerState,
-    waterVolume: newWaterVolume,
+    waterMass: newWaterMass,
+    waterVolume: waterVolumeOf(newWaterMass, newTemperature), // derived here and nowhere else
+    deltaWaterMass: newWaterMass - boilerState.waterMass,
     drainedTotal: boilerState.drainedTotal + drain.drained,
     temperature: newTemperature,
     pressure: calculateBoilerPressure(newTemperature),

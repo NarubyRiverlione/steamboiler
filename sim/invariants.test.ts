@@ -8,22 +8,12 @@ import PowerPlantState from "../src/context/PowerPlantState"
 // (scenario, invariant) pairs that fail today, with the ticket that fixes them. When that ticket
 // lands the test.fails flips red: remove the entry so the pair guards as a normal test.
 const expectedFailures: Record<string, string> = {
-  "startup-cold / water is never created or lost": "#34",
-  "turbine-start / water is never created or lost": "#34",
-  "turbine-sync / water is never created or lost": "#34",
   "turbine-sync / temperature within design temperature": "#43",
   // the unfed boiler runs dry at 1 bar and jumps to the critical point as its last water goes; the relief valve never lifts in time
   "turbine-sync / pressure within design pressure": "#33, #43",
-  "bypass-loop / water is never created or lost": "#34",
-  "bypass-loop / no NaN or Infinity": "#45",
-  "bypass-loop / pressure within design pressure": "#45",
-  "bypass-loop / temperature within design temperature": "#45",
-  "bypass-loop / boiler water within capacity": "#45",
-  "bypass-loop / hotwell within capacity": "#45",
-  "bypass-loop / condensation pump return within pump capacity": "#45",
-  "relief-lift / water is never created or lost": "#34",
-  "full-gas / water is never created or lost": "#34",
-  "heat-up / water is never created or lost": "#34",
+  // a drum about 80% full of water holds a slowly rising steam inventory while it cools (+0.03 kg/s): the steam density
+  // kink and the invariant's premise, see #46
+  "relief-lift / natural cooldown stops steam generation": "#46",
   // the relief valve vents the boiler dry; the last litres cannot absorb the gas heat, the metal heats past design: #33
   "full-gas / pressure within design pressure": "#33",
   "full-gas / temperature within design temperature": "#33",
@@ -98,23 +88,23 @@ describe("invariant checks", () => {
 
     test("flags water created", () => {
       expect(
-        check(name, [sample(0, (s) => s), sample(10, boiler({ waterVolume: base.Boiler.waterVolume + 1000 }))]),
+        check(name, [sample(0, (s) => s), sample(10, boiler({ waterMass: base.Boiler.waterMass + 1000 }))]),
       ).toHaveLength(1)
     })
 
-    test("allows 0.1% loss with no steam out, not more", () => {
-      const lose = (kg: number) => boiler({ waterVolume: base.Boiler.waterVolume - kg })
-      expect(check(name, [sample(0, (s) => s), sample(10, lose(start * 0.0009))])).toEqual([])
-      expect(check(name, [sample(0, (s) => s), sample(10, lose(start * 0.002))])).toHaveLength(1)
+    test("allows only floating-point rounding (1e-13 of the start) lost with no steam out, not more", () => {
+      const lose = (kg: number) => boiler({ waterMass: base.Boiler.waterMass - kg })
+      expect(check(name, [sample(0, (s) => s), sample(10, lose(start * 0.9e-13))])).toEqual([])
+      expect(check(name, [sample(0, (s) => s), sample(10, lose(start * 2e-13))])).toHaveLength(1)
     })
 
     test("counts makeup, reject and drain as boundary flows, not created or lost water", () => {
       const boundary = (s: PowerPlantState) => ({
         ...s,
-        Boiler: { ...s.Boiler, waterVolume: s.Boiler.waterVolume - 300, drainedTotal: 300 },
+        Boiler: { ...s.Boiler, waterMass: s.Boiler.waterMass - 300, drainedTotal: 300 },
         Condenser: {
           ...s.Condenser,
-          hotwellWaterVolume: s.Condenser.hotwellWaterVolume + 1000 - 200,
+          hotwellWaterMass: s.Condenser.hotwellWaterMass + 1000 - 200,
           makeupTotal: 1000,
           rejectTotal: 200,
         },
@@ -123,16 +113,16 @@ describe("invariant checks", () => {
     })
 
     test("counts vented steam as a boundary flow, not lost water", () => {
-      const vented = boiler({ steamMass: base.Boiler.steamMass - 0.5, waterVolume: base.Boiler.waterVolume - 5000, ventedTotal: 5000.5 })
+      const vented = boiler({ steamMass: base.Boiler.steamMass - 0.5, waterMass: base.Boiler.waterMass - 5000, ventedTotal: 5000.5 })
       expect(check(name, [sample(0, (s) => s), sample(10, vented)])).toEqual([])
     })
 
-    test("allows 2% of the steam that left the boiler", () => {
+    test("allows 2e-11 of the steam that left the boiler", () => {
       const flowing = (s: PowerPlantState) => ({ ...s, Turbine: { ...s.Turbine, turbineSteamFlowOut: 100 } })
-      // 100 kg/s for 10 s = 1000 kg out, so 20 kg (+0.1% of start) may go missing
-      const lost = start * 0.001 + 15
+      // 100 kg/s for 10 s = 1000 kg out, so 2e-8 kg (+1e-13 of start) may go missing
+      const lost = start * 1e-13 + 1e-8
       expect(
-        check(name, [sample(0, flowing), sample(10, boiler({ waterVolume: base.Boiler.waterVolume - lost }))]),
+        check(name, [sample(0, flowing), sample(10, boiler({ waterMass: base.Boiler.waterMass - lost }))]),
       ).toEqual([])
     })
   })

@@ -1,25 +1,27 @@
 {
   "Boiler": {
-    "waterVolume": 49619.54586242071,
-    "temperature": 193.58761567483523,
-    "pressure": 13.58036322181268,
+    "waterMass": 49610.63651083133,
+    "waterVolume": 56930.6528608171,
+    "deltaWaterMass": -0.11784773437102558,
+    "temperature": 194.09333341610633,
+    "pressure": 13.725605357105739,
     "gasFlow": 2000,
     "drainValveOpen": false,
     "drainedTotal": 0,
     "reliefValveOpen": false,
     "ventedTotal": 0,
     "reliefLifts": 0,
-    "energy": 48997958.36850845,
-    "energyDelta": 55985.1787562664,
-    "heatLoss": 257.51422794104633,
-    "heatingRate": 0.23086390434559936,
+    "energy": 50867315.86237756,
+    "energyDelta": 56929.19938803328,
+    "heatLoss": 258.26760942755215,
+    "heatingRate": 0.21106648110554932,
     "heatingRateOverLimit": false,
-    "steamMass": 347.7560399315794,
-    "deltaWaterVolume": -0.18978849754057592,
-    "deltaSteamMass": 1.6583330866632255
+    "steamMass": 300.3861540413212,
+    "deltaSteamMass": 1.1784773437252642
   },
   "Condenser": {
     "pressure": 213.25,
+    "hotwellWaterMass": 9982.032341784787,
     "hotwellWaterVolume": 10000,
     "hotwellTemperature": 20,
     "steamMass": 0,
@@ -36,7 +38,7 @@
     "rejectValvePosition": 0,
     "makeupTotal": 0,
     "rejectTotal": 0,
-    "deltaWaterVolume": 0
+    "deltaWaterMass": 0
   },
   "Turbine": {
     "electricOutput": 0,

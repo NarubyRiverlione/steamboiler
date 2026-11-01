@@ -4,13 +4,14 @@ A gas-fired, closed-loop drum boiler. Sizes and limits are in [design-basis.md](
 
 ## Elements
 
-- **Water and steam**: the boiler holds liquid water that turns to steam when enough energy is added. Water volume follows temperature (specific volume from the steam tables) and shrinks as water boils. Steam takes far more volume than the water it came from (about 1600× at atmospheric pressure).
+- **Water and steam**: the boiler holds liquid water that turns to steam when enough energy is added. The water is held as mass in kg (`waterMass`) and its volume follows temperature (`getWaterSpecificVolume`, saturated-liquid specific volume from 20 °C up), so the level rises as the water heats (about +40% from 20 to 300 °C) and falls as water boils ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)). Steam takes far more volume than the water it came from (about 1600× at atmospheric pressure).
 - **Temperature**: one lumped temperature for the water and the drum and tube metal. It rises with gas energy, falls through heat loss to the surroundings and through the latent heat of water flashing to steam, and is diluted by returned water. A closed drum keeps heating past 100 °C; pressure follows it.
 - **Pressure**: see **Pressure model** below.
 - **Thermal mass**: the water plus about 100 t of drum and tube steel at 0.5 kJ/kg·K (50 MJ/K), at the water temperature. No separate metal temperature. At the cold start the metal adds about a quarter to the water's 210 MJ/K.
 - **Energy**: the heat content above 0 °C of the water and the metal. The source is the gas burner. The sinks are heat loss, the latent heat of the flash (which includes steam vented by the relief valve), and drained water (the water's share only; the metal stays).
-- **Volume**: a fixed 100 m³ shared between water and steam; 50 m³ of water at the start.
-- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second. Steam leaves through the relief valve to the atmosphere (`BoilerVent`, see **Relief valve**), and through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the steam inventory. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
+- **Energy**: the source is the gas burner (thermal mass: the water only; metal mass is #13). The sinks are natural cooling, the latent heat of the flash (which includes steam vented by the relief valve), and drained water.
+- **Volume**: a fixed 100 m³ shared between water and steam; 50 m³ of water at the start (49 910 kg at ambient). `waterVolume` is derived from `waterMass` every tick, in `BoilerTick` only.
+- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second, converted to kg at the boiler temperature (`drainedTotal` counts kg). Steam leaves through the relief valve to the atmosphere (`BoilerVent`, see **Relief valve**), and through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the steam inventory. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
 
 ## Calculations
 
@@ -18,7 +19,7 @@ A gas-fired, closed-loop drum boiler. Sizes and limits are in [design-basis.md](
 Heat capacity      = water mass × specific heat + metal mass × steel specific heat
 Heat loss          = UA × (T − T_ambient)        (UA = 0.5 MW / (357 − 20) K ≈ 1.48 kW/K)
 Heated temperature = T + (gas input − heat loss) / heat capacity
-Steam inventory    = saturated steam density(T) × (total volume − water volume)
+Steam inventory    = saturated steam density(T) × (total volume − water volume),  water volume = waterMass × specific volume(T)
 Flashed mass       = inventory wanted − steam mass held     (negative: steam condenses)
 Temperature        = heated temperature − flashed mass × latent heat / heat capacity
 Pressure           = max(1.013 bar, Psat(temperature))
@@ -58,7 +59,7 @@ Vented this tick = min(relief capacity × tick, steam mass in the boiler)   (whi
 
 The vented steam goes to the atmosphere, not the condenser: it leaves the loop and is counted in the `ventedTotal` totalizer (kg) ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). `reliefValveOpen` is the valve state and `reliefLifts` counts lifts. Like a steam draw, the vent leaves a deficit that the flash refills with latent heat from the water, so the water cools and the pressure falls. At full gas the capacity exceeds the steam made by 10%, so the pressure falls slowly and the valve lifts and reseats about every 10 s until the gas is reduced or the boiler runs dry. The operator cannot open, close or test it.
 
-A boiler that runs dry with gas on keeps heating its metal: with no water left to flash, the gas heats the 50 MJ/K of steel by about 7 K/s up to the critical-point clamp (373.9 °C, 220.6 bar). This starts in the last litre or so, which cannot absorb the gas heat: `full-gas` passes design pressure at about 310 s with 0.6 m³ left, after the relief valve has vented the rest. `turbine-sync` runs dry unfed at 1 bar and jumps the same way. The relief valve cannot prevent either; burner protection on low level is #33.
+A boiler that runs dry with gas on keeps heating its metal: with no water left to flash, the gas heats the 50 MJ/K of steel by about 7 K/s up to the critical-point clamp (373.9 °C, 220.6 bar). This starts in the last litre or so, which cannot absorb the gas heat: `full-gas` passes design pressure at about 396 s with 0.2 m³ left, after the relief valve has vented the rest. `turbine-sync` runs dry unfed at 1 bar and jumps the same way. The relief valve cannot prevent either; burner protection on low level is #33.
 
 Constants: `CstBoiler.ReliefOpenPressure`, `ReliefClosePressure`, `ReliefCapacityMargin`; the capacity itself is derived (`ReliefCapacity` in `BoilerTick.ts`). It is realistic sizing, not a departure.
 
@@ -88,10 +89,9 @@ Pressure is the saturation pressure of the water temperature, never below atmosp
 | Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s, alarm only |
 | Atmospheric pressure | 1.013 bar |
 | Ambient temperature | 20 °C (`CstPhysics.AmbientTemperature`): heat loss stops here, and the temperature never falls below it |
-| Start state | cold: ambient temperature, atmospheric pressure, 50 m³ water, the vapour inventory at ambient, energy = heating 50 m³ of water and 100 t of steel from 0 °C to ambient |
+| Start state | cold: ambient temperature, atmospheric pressure, 50 m³ water (49 910 kg at ambient), the vapour inventory at ambient, energy = heating that water and 100 t of steel from 0 °C to ambient |
 
 ## Remaining empirical areas
 
 - `calculateGasEnergy` uses `GasEfficiency`, which may be an empirical factor
-- `calculateWaterVolume` uses a linear approximation below 80 °C (#34)
 - The metal shares the water temperature; a lagging metal temperature (thermal stress) is not modelled
