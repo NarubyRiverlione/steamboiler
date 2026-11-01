@@ -58,9 +58,12 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 |---|---|
 | Max steam removal per valve (turbine valve or bypass fully open, main steam valve open) | 200 kg/s each, so up to 400 kg/s with both |
 | Main steam valve minimum pressure | 10 bar |
+| Vacuum limit (turbine trip) | 327 mbar absolute (`CstCondenser.VacuumLimit`); see the source below |
 | Sync speed | 3000 RPM (50 Hz grid) |
 | Overspeed limit | 3300 RPM (110%) |
 | Electric output at rated steam flow | ≈ 150 MWe | derived from the enthalpy drop (#14): isentropic efficiency about 0.85, generator efficiency about 0.98; about 130 MWe at the 171 kg/s of full gas. Hand estimate from textbook steam tables; re-check now that #22 is fixed |
+
+Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemens design) fossil turbine acts when "the Condenser pressure falls to -0.7Kg/cm2", from three vacuum switches in 2-out-of-3 logic ([KWU turbine interlocks, slide 7](https://www.slideshare.net/slideshow/steam-turbine-turbine-interlocks-for-kwu-turbine/71755509)). −0.7 kg/cm² gauge is 1013.25 − 0.7 × 980.665 ≈ 327 mbar absolute. The source is a training deck, not an OEM setting sheet, and does not state the unit size; this turbine type is built as 210 and 500 MW sets. Cross-check: the ABWR Design Control Document (Tier 2, §10.4.1.5.2) trips the turbine at 0.074 MPa vacuum, about 273 mbar absolute ([NRC ML103080368](https://www.nrc.gov/docs/ML1030/ML103080368.pdf)), on a ~1350 MWe nuclear unit. The limit is a real-plant value, not a departure. It sits above the 213 mbar the air extraction pump reaches on its own, so the SJAE is not needed to reach it, only to go deeper. Decision: [ADR 0003](../adr/0003-turbine-trip-on-vacuum-limit.md).
 
 ## Condenser and water loop
 

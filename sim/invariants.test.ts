@@ -11,9 +11,6 @@ const expectedFailures: Record<string, string> = {
   "startup-cold / water is never created or lost": "#34",
   "turbine-start / water is never created or lost": "#34",
   "turbine-sync / water is never created or lost": "#34",
-  "turbine-sync / temperature within design temperature": "#43",
-  // the unfed boiler runs dry at 1 bar and jumps to the critical point as its last water goes; the relief valve never lifts in time
-  "turbine-sync / pressure within design pressure": "#33, #43",
   "bypass-loop / water is never created or lost": "#34",
   "bypass-loop / no NaN or Infinity": "#45",
   "bypass-loop / pressure within design pressure": "#45",

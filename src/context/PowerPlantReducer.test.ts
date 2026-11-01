@@ -5,7 +5,7 @@ import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 
-const { CstBoiler, CstTurbine } = CstSimulation
+const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 const base = makeInitialState()
 const reduce = (action: PowerPlantAction, state: PowerPlantState = base) => powerPlantReducer(state, action)
 
@@ -109,10 +109,53 @@ describe("powerPlantReducer", () => {
         type === "ADJUST_STEAM_BYPASS_VALVE"
           ? { type, payload: { bypassValvePosition: delta } }
           : { type, payload: { turbineValvePosition: delta } }
-      const opened = reduce(act(0.3))
+      // under vacuum, so the turbine valve may open
+      const vacuum = { ...base, Condenser: { ...base.Condenser, pressure: CstCondenser.VacuumLimit } }
+      const opened = reduce(act(0.3), vacuum)
       expect(opened.Turbine[field]).toBe(0.3)
-      expect(reduce(act(5)).Turbine[field]).toBe(1)
+      expect(reduce(act(5), vacuum).Turbine[field]).toBe(1)
       expect(reduce(act(-5), opened).Turbine[field]).toBe(0)
+    })
+
+    describe("vacuum limit", () => {
+      const limit = CstCondenser.VacuumLimit
+      const atCondenser = (pressure: number, turbineValvePosition = 0): PowerPlantState => ({
+        ...base,
+        Condenser: { ...base.Condenser, pressure },
+        Turbine: { ...base.Turbine, turbineValvePosition },
+      })
+      const turbineValve = (delta: number, state: PowerPlantState) =>
+        reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: delta } }, state).Turbine
+
+      test("the limit is 327 mbar absolute (-0.7 kg/cm² gauge, design-basis.md)", () => {
+        expect(limit).toBe(327)
+      })
+
+      test("opening is refused just above the limit and the state is unchanged", () => {
+        const state = atCondenser(limit + 0.1, 0.2)
+        expect(reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 0.1 } }, state)).toBe(
+          state,
+        )
+      })
+
+      test("opening is allowed at and just below the limit", () => {
+        expect(turbineValve(0.1, atCondenser(limit)).turbineValvePosition).toBe(0.1)
+        expect(turbineValve(0.1, atCondenser(limit - 0.1)).turbineValvePosition).toBe(0.1)
+      })
+
+      test("closing is allowed above the limit", () => {
+        expect(turbineValve(-0.1, atCondenser(limit + 100, 0.3)).turbineValvePosition).toBeCloseTo(0.2)
+      })
+
+      test("a successful opening clears the trip flag; a refused one leaves it set", () => {
+        const tripped = (pressure: number) => {
+          const state = atCondenser(pressure)
+          return { ...state, Turbine: { ...state.Turbine, turbineTripped: true } }
+        }
+        expect(turbineValve(0.1, tripped(limit)).turbineTripped).toBe(false)
+        expect(turbineValve(0.1, tripped(limit + 1)).turbineTripped).toBe(true)
+        expect(turbineValve(-0.1, tripped(limit)).turbineTripped).toBe(true)
+      })
     })
 
     test("RPM setpoint adjusts within MinRPM..MaxRPM", () => {

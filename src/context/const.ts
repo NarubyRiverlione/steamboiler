@@ -25,6 +25,7 @@ export const CstSimulation = {
     VacuumDecayRate: 5, // mbar per second when pump is off
     OptimalPressure: 80, // mBar, centre of the band on the vacuum readout
     OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
+    VacuumLimit: 327, // mbar absolute, turbine trip above it (-0.7 kg/cm² gauge, see design-basis.md)
     CAR_MaxVacuum: 800, // mbar vacuum  (70-90 kPa vacuum = 11-31 kPa absolute pressure)
     CAR_TimeNeeded: 15, // seconds to reach max vacuum
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position

@@ -5,7 +5,7 @@ import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 
-const { CstBoiler, CstTurbine } = CstSimulation
+const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
 const { AmbientTemperature } = CstPhysics
 
@@ -60,6 +60,7 @@ export const makeInitialState = (): PowerPlantState => ({
     generatorBreaker: false, // Phase 4: Initially open
     pidIntegralError: 0,
     pidPreviousError: 0,
+    turbineTripped: false,
   },
 })
 
@@ -140,10 +141,16 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     withTurbine(state, {
       bypassValvePosition: clamp(state.Turbine.bypassValvePosition + payload.bypassValvePosition, 0, 1),
     }),
-  ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) =>
-    withTurbine(state, {
-      turbineValvePosition: clamp(state.Turbine.turbineValvePosition + payload.turbineValvePosition, 0, 1),
-    }),
+  // Above the vacuum limit the turbine may not take more steam; closing is always allowed (ADR 0003)
+  ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) => {
+    const turbineValvePosition = clamp(state.Turbine.turbineValvePosition + payload.turbineValvePosition, 0, 1)
+    const opening = turbineValvePosition > state.Turbine.turbineValvePosition
+    if (opening && state.Condenser.pressure > CstCondenser.VacuumLimit) return state
+    return withTurbine(state, {
+      turbineValvePosition,
+      turbineTripped: state.Turbine.turbineTripped && !opening,
+    })
+  },
   ADJUST_RPM_SETPOINT: (state, { payload }) =>
     withTurbine(state, {
       rpmSetPoint: clamp(state.Turbine.rpmSetPoint + payload.rpmAdjustment, CstTurbine.MinRPM, CstTurbine.MaxRPM),

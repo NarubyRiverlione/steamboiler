@@ -42,17 +42,23 @@ Scenarios (`pnpm sim <name>`); each either replays the earlier operator steps fr
 
 | Scenario | Starts from | Goal |
 | --- | --- | --- |
-| `startup-cold` | cold | cold → 10 bar, main steam valve open, turbine valve cracked |
+| `startup-cold` | cold | cold → 10 bar, then main steam valve open, vacuum held (SJAE, recirculation pump, condensation pump at 5%), turbine valve cracked |
 | `heat-up` | cold | cold → 10 bar with vacuum pulled, nothing opened; source of the `at-pressure` snapshot |
-| `turbine-start` | `at-pressure` | main steam valve, turbine valve to 25%, turbine rolling |
-| `turbine-sync` | cold | more gas, turbine valve full, try the breaker; sync is unreachable today (#18, #21). The unfed boiler runs dry at ~1290 s and jumps to the critical point, past design pressure (#33, #43) |
+| `turbine-start` | `at-pressure` | main steam valve and vacuum held as in `startup-cold`, then turbine valve and condensation pump to 25%, turbine rolling |
+| `turbine-sync` | cold | more gas, turbine valve and condensation pump full, try the breaker; sync is unreachable today (#18, #21). The condensate returns, so the boiler stays fed and settles near 1 bar |
 | `cooldown` | cold | at pressure, then natural cooldown for 60 min |
 | `bypass-loop` | cold | cold start at full gas, bypass only; above 10 bar gas to 5000 L/s and the main steam valve opens, then an operator holds 165 bar with the bypass, boiler level at 50% and the hotwell at 70% (#19). Reaches 165 bar since #12, then the hotwell empties, the boiler boils dry and the condenser goes NaN (see feedwater-loop.md) |
 | `relief-lift` | cold | full gas with everything closed until the relief valve lifts (~226 s), then gas off: one lift, 178 → 171 bar, then cooldown |
 | `full-gas` | cold | full gas for an hour with everything closed: the relief valve lifts at ~225 s and holds the pressure below design (peak ≈ 178.1 bar per tick) until the boiler runs dry at ~272 s; after that the dry boiler stays frozen at about 126 bar (burner protection is #33) |
 
-`startup-cold` does not run the water loop: it leaves cooling water and the condensation pump at 0,
-so nothing condenses and nothing returns. Use `bypass-loop` for the loop.
+The turbine valve only opens under the vacuum limit and an open valve trips above it (ADR 0003),
+so the turbine scenarios hold the vacuum: `heatUp` starts the air extraction pump at t=0 (213 mbar
+within seconds), and `openMainSteam` enables the SJAE and opens its valve once the boiler is above
+main-steam-valve pressure (below it the SJAE trips), opens the recirculation pump so the exhaust
+condenses, and opens the condensation pump just far enough to return the condensate without
+emptying the 20 °C hotwell into the boiler. A scenario test checks that none of them trips. The
+condensation pump follows the turbine valve by hand; there is no level control. Use `bypass-loop`
+for the controlled loop.
 
 ## Operator hook
 

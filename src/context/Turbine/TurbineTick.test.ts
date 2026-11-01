@@ -18,17 +18,19 @@ describe("TurbineTick", () => {
     generatorBreaker: false,
     pidIntegralError: 0,
     pidPreviousError: 0,
+    turbineTripped: false,
   }
   
   const valvePositions = [0, 0.25, 0.5, 0.75, 1]
   const boilerPressure = 20 // Example boiler pressure for testing
+  const vacuum = CstSimulation.CstCondenser.VacuumLimit - 100 // condenser pressure well under the limit
   
   valvePositions.forEach((position) => {
     // No electricity at 0 RPM regardless of valve position
     const expectPower = 0 // No power at 0 RPM
     
     it(`should create ${String(expectPower)} MW at 0 RPM with ${String(position * 100)}% turbine Valve Position`, () => {
-      const newState = TurbineTick(initialState, position, boilerPressure)
+      const newState = TurbineTick(initialState, position, boilerPressure, vacuum)
       expect(newState.electricOutput).toBe(expectPower)
     })
   })
@@ -45,7 +47,7 @@ describe("TurbineTick", () => {
       generatorBreaker: true,
     }
     
-    const newState = TurbineTick(highRpmState, position, boilerPressure)
+    const newState = TurbineTick(highRpmState, position, boilerPressure, vacuum)
     expect(newState.electricOutput).toBe(expectPower)
   })
   
@@ -57,7 +59,7 @@ describe("TurbineTick", () => {
     }
     
     // Act
-    const result = TurbineTick(testState, 0.5, boilerPressure)
+    const result = TurbineTick(testState, 0.5, boilerPressure, vacuum)
     
     // Assert
     expect(result.rpm).toBeGreaterThan(0) // RPM should increase with steam flow
@@ -75,7 +77,7 @@ describe("TurbineTick", () => {
     }
     
     // Act
-    const result = TurbineTick(testState, 0.3, boilerPressure)
+    const result = TurbineTick(testState, 0.3, boilerPressure, vacuum)
     
     // Assert
     // In hold mode, the valve position should be adjusted to reach the setpoint
@@ -93,7 +95,7 @@ describe("TurbineTick", () => {
     }
 
     it("writes the updated PID errors into the returned state", () => {
-      const result = TurbineTick(holding, 0.3, boilerPressure)
+      const result = TurbineTick(holding, 0.3, boilerPressure, vacuum)
       const error = holding.rpmSetPoint - result.rpm
       expect(result.pidPreviousError).toBe(error)
       expect(result.pidIntegralError).toBe(Math.min(1, error * CstSimulation.DeltaTime))
@@ -101,16 +103,16 @@ describe("TurbineTick", () => {
 
     it("passes the PID errors through untouched outside hold mode", () => {
       const memory = { pidIntegralError: 0.4, pidPreviousError: 123 }
-      const result = TurbineTick({ ...holding, ...memory, holdMode: false }, 0.3, boilerPressure)
+      const result = TurbineTick({ ...holding, ...memory, holdMode: false }, 0.3, boilerPressure, vacuum)
       expect(result).toMatchObject(memory)
     })
 
     it("depends on its input alone: the same state gives the same tick", () => {
       // Small error so the integral stays below its ±1 clamp and leftover memory would show
       const nearSetPoint: TurbineState = { ...holding, rpm: 2000, rpmSetPoint: 2001 }
-      const first = TurbineTick(nearSetPoint, 0.3, boilerPressure)
-      TurbineTick(first, 0.3, boilerPressure) // a tick in between must not leak into the next call
-      expect(TurbineTick(nearSetPoint, 0.3, boilerPressure)).toEqual(first)
+      const first = TurbineTick(nearSetPoint, 0.3, boilerPressure, vacuum)
+      TurbineTick(first, 0.3, boilerPressure, vacuum) // a tick in between must not leak into the next call
+      expect(TurbineTick(nearSetPoint, 0.3, boilerPressure, vacuum)).toEqual(first)
     })
   })
   
@@ -134,7 +136,8 @@ describe("TurbineTick", () => {
     currentState = TurbineTick(
       { ...currentState, turbineSteamFlowOut: 0 }, 
       0, 
-      boilerPressure
+      boilerPressure,
+      vacuum
     );
     
     // Assert - RPM should decrease but not immediately drop to zero
@@ -144,7 +147,7 @@ describe("TurbineTick", () => {
     // Run additional ticks to observe continued deceleration
     for (let i = 0; i < numTicks - 1; i++) {
       const previousRpm = currentState.rpm;
-      currentState = TurbineTick(currentState, 0, boilerPressure);
+      currentState = TurbineTick(currentState, 0, boilerPressure, vacuum);
       
       // Each tick should reduce RPM further due to friction
       expect(currentState.rpm).toBeLessThan(previousRpm);
@@ -165,9 +168,74 @@ describe("TurbineTick", () => {
     const singleTickState = TurbineTick(
       { ...runningState, turbineSteamFlowOut: 0 }, 
       0, 
-      boilerPressure
+      boilerPressure,
+      vacuum
     );
     const singleTickDecrease = initialRpm - singleTickState.rpm;
     expect(actualDecrease).toBeGreaterThan(singleTickDecrease);
+  })
+
+  describe("turbine trip above the vacuum limit", () => {
+    const limit = CstSimulation.CstCondenser.VacuumLimit
+    const running: TurbineState = {
+      ...initialState,
+      rpm: 1000,
+      rpmSetPoint: 2000,
+      holdMode: true,
+      mainSteamValve: true,
+      turbineValvePosition: 0.3,
+      turbineSteamFlowOut: 20,
+      pidIntegralError: 0.4,
+      pidPreviousError: 123,
+    }
+
+    it("closes an open valve, turns hold mode off, clears the PID memory and sets the trip flag", () => {
+      const result = TurbineTick(running, 0.3, boilerPressure, limit + 0.1)
+      expect(result).toMatchObject({
+        turbineValvePosition: 0,
+        holdMode: false,
+        pidIntegralError: 0,
+        pidPreviousError: 0,
+        turbineTripped: true,
+      })
+    })
+
+    it("trips outside hold mode too", () => {
+      const result = TurbineTick({ ...running, holdMode: false }, 0.3, boilerPressure, limit + 50)
+      expect(result.turbineValvePosition).toBe(0)
+      expect(result.turbineTripped).toBe(true)
+    })
+
+    it("does nothing at or below the limit", () => {
+      for (const pressure of [limit, limit - 0.1]) {
+        const result = TurbineTick({ ...running, holdMode: false }, 0.3, boilerPressure, pressure)
+        expect(result.turbineValvePosition).toBe(0.3)
+        expect(result.turbineTripped).toBe(false)
+        expect(result).toMatchObject({ pidIntegralError: 0.4, pidPreviousError: 123 })
+      }
+    })
+
+    it("does not trip a closed valve", () => {
+      const closed = { ...running, holdMode: false, turbineValvePosition: 0 }
+      expect(TurbineTick(closed, 0, boilerPressure, limit + 100).turbineTripped).toBe(false)
+    })
+
+    it("in hold mode above the limit the PID never raises a closed valve", () => {
+      // rpm far under the setpoint: the PID would open the valve
+      const closedHolding = { ...running, turbineValvePosition: 0 }
+      expect(TurbineTick(closedHolding, 0, boilerPressure, limit + 1).turbineValvePosition).toBe(0)
+    })
+
+    it("a hold-mode PID opening under vacuum clears the trip flag", () => {
+      const tripped = { ...running, turbineValvePosition: 0, turbineTripped: true }
+      const result = TurbineTick(tripped, 0, boilerPressure, limit)
+      expect(result.turbineValvePosition).toBeGreaterThan(0)
+      expect(result.turbineTripped).toBe(false)
+    })
+
+    it("the flag stays set while the valve stays shut", () => {
+      const tripped = { ...running, holdMode: false, turbineValvePosition: 0, turbineTripped: true }
+      expect(TurbineTick(tripped, 0, boilerPressure, limit - 100).turbineTripped).toBe(true)
+    })
   })
 })

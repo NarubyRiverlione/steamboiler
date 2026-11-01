@@ -9,7 +9,7 @@ import { AtPressure, heatUp as heatUpSteps, openMainSteam, rollTurbine, since, T
 import { turbineStart } from "./scenarios/turbine-start"
 import { turbineSync } from "./scenarios/turbine-sync"
 import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
-import { CstPhysics } from "../src/context/const"
+import { CstPhysics, CstSimulation } from "../src/context/const"
 import { calculateHeatingEnergy } from "../src/utils/boilerCalculations"
 
 const heatUp: Scenario = {
@@ -173,7 +173,7 @@ describe("snapshot start", () => {
   })
 
   test("since() moves steps to the snapshot's clock", () => {
-    expect(since(AtPressure, openMainSteam).map((a) => a.at)).toEqual([0, 10])
+    expect(since(AtPressure, openMainSteam).map((a) => a.at)).toEqual([0, 0, 0, 0, 0, 10])
   })
 })
 
@@ -222,6 +222,22 @@ describe("turbine-sync", () => {
 
   test.fails("generator breaker closes (fails until #18, #21)", () => {
     expect(samples.at(-1)?.state.Turbine.generatorBreaker).toBe(true)
+  })
+})
+
+// The turbine valve may only open under vacuum (ADR 0003): the scenarios pull it first and never trip
+describe.each([startupCold, turbineStart, turbineSync])("$name under the vacuum limit", (scenario) => {
+  const samples = runScenario(scenario)
+  const limit = CstSimulation.CstCondenser.VacuumLimit
+
+  test("condenser pressure is at or below the vacuum limit when the turbine valve first opens", () => {
+    const opened = samples.find((s) => s.state.Turbine.turbineValvePosition > 0)
+    expect(opened).toBeDefined()
+    expect(opened?.state.Condenser.pressure).toBeLessThanOrEqual(limit)
+  })
+
+  test("the turbine never trips", () => {
+    expect(samples.some((s) => s.state.Turbine.turbineTripped)).toBe(false)
   })
 })
 
