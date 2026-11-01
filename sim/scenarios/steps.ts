@@ -8,7 +8,7 @@ export const StartGas = 2000 // liters/second during heat-up
 // Main steam valve time: ~11.8 bar by now (saturation pressure of the heated water, #12); the reducer refuses below 10 bar
 export const AtPressure = 750
 
-// t=0: gas on, air extraction pump on. The SJAE waits for main-steam-valve pressure (it trips below it).
+// t=0: gas on, air extraction pump on. The SJAE waits for main-steam-valve pressure (below it, it switches itself off).
 export const heatUp: ScenarioAction[] = [
   { at: 0, action: { type: "INCREASE_GAS_FLOW", amount: StartGas } },
   {
@@ -19,8 +19,8 @@ export const heatUp: ScenarioAction[] = [
 
 // At pressure: open the main steam valve and hold the vacuum (SJAE on and open, recirculation pump
 // open so the exhaust condenses, condensation pump open so the condensate returns to the boiler),
-// then crack the turbine valve. The air extraction pump has pulled
-// the condenser to 213 mbar by now, under the vacuum limit (ADR 0003), so the turbine valve may open.
+// then crack the turbine valve. The air extraction pump has pulled the condenser under the vacuum
+// limit by now (ADR 0003), so the turbine valve may open.
 export const openMainSteam: ScenarioAction[] = [
   { at: AtPressure, action: { type: "TOGGLE_MAIN_STEAM_VALVE" } },
   { at: AtPressure, action: { type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } } },

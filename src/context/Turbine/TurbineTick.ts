@@ -3,7 +3,10 @@ import {
   calculateElectricityOutput,
   calculateRPM,
   calculateValveAdjustment,
+  isAboveVacuumLimit,
   isAtSyncSpeed,
+  maxTurbineValvePosition,
+  turbineTrippedAfter,
 } from "../../utils/turbineCalculations"
 import { TurbineState } from "../PowerPlantState"
 
@@ -37,44 +40,43 @@ function TurbineTick(
     generatorBreaker
   )
 
-  // Above the vacuum limit an open valve trips; otherwise the hold-mode PID may move it (ADR 0003)
-  const aboveVacuumLimit = condenserPressure > CstSimulation.CstCondenser.VacuumLimit
-  const valveControl =
-    aboveVacuumLimit && turbineState.turbineValvePosition > 0
-      ? tripTurbine()
-      : updateTurbineValve(turbineState, newRPM, aboveVacuumLimit)
-
-  return {
+  const ticked: TurbineState = {
     ...turbineState,
-    ...valveControl,
     electricOutput: newElectricityOutput,
     rpm: newRPM,
     generatorBreaker, // Update breaker status
   }
+
+  // Above the vacuum limit an open valve trips (ADR 0003)
+  const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
+  if (isAboveVacuumLimit(condenserPressure) && currentPosition > 0) return { ...ticked, ...turbineTrip }
+
+  // Otherwise the hold-mode PID may move the valve, never past the cap; an opening clears the trip flag
+  const pid = updateTurbineValve(turbineState, newRPM, maxTurbineValvePosition(currentPosition, condenserPressure))
+  return {
+    ...ticked,
+    ...pid,
+    turbineTripped: turbineTrippedAfter(turbineTripped, currentPosition, pid.turbineValvePosition),
+  }
 }
 
-type ValveControl = Pick<
-  TurbineState,
-  "turbineValvePosition" | "pidIntegralError" | "pidPreviousError" | "holdMode" | "turbineTripped"
->
+type PidControl = Pick<TurbineState, "turbineValvePosition" | "pidIntegralError" | "pidPreviousError">
 
 // Turbine trip: valve fully closed, hold mode off and PID memory cleared, so nothing reopens it on its own
-const tripTurbine = (): ValveControl => ({
+const turbineTrip: Pick<TurbineState, keyof PidControl | "holdMode" | "turbineTripped"> = {
   turbineValvePosition: 0,
   holdMode: false,
   pidIntegralError: 0,
   pidPreviousError: 0,
   turbineTripped: true,
-})
+}
 
 // Hold-mode PID: the controller memory lives in the turbine state, so a tick depends on its input alone.
-// Above the vacuum limit it may only close the valve; any opening clears the trip flag.
-function updateTurbineValve(turbineState: TurbineState, newRPM: number, aboveVacuumLimit: boolean): ValveControl {
-  const { holdMode, mainSteamValve, turbineValvePosition, pidIntegralError, pidPreviousError, turbineTripped } =
-    turbineState
+// It never moves the valve above maxPosition (the current position above the vacuum limit).
+function updateTurbineValve(turbineState: TurbineState, newRPM: number, maxPosition: number): PidControl {
+  const { holdMode, mainSteamValve, turbineValvePosition, pidIntegralError, pidPreviousError } = turbineState
   // only adjust when in Hold mode (and there Main Steam Valve is open); the PID memory carries over
-  if (!holdMode || !mainSteamValve)
-    return { turbineValvePosition, pidIntegralError, pidPreviousError, holdMode, turbineTripped }
+  if (!holdMode || !mainSteamValve) return { turbineValvePosition, pidIntegralError, pidPreviousError }
 
   const { valveAdjustment, newIntegralError, newPreviousError } = calculateValveAdjustment(
     newRPM,
@@ -84,14 +86,10 @@ function updateTurbineValve(turbineState: TurbineState, newRPM: number, aboveVac
     CstSimulation.DeltaTime,
   )
 
-  const adjusted = Math.max(0, Math.min(1, turbineValvePosition + valveAdjustment))
-  const newPosition = aboveVacuumLimit ? Math.min(turbineValvePosition, adjusted) : adjusted
   return {
-    turbineValvePosition: newPosition,
+    turbineValvePosition: Math.max(0, Math.min(maxPosition, turbineValvePosition + valveAdjustment)),
     pidIntegralError: newIntegralError,
     pidPreviousError: newPreviousError,
-    holdMode,
-    turbineTripped: turbineTripped && newPosition <= turbineValvePosition,
   }
 }
 

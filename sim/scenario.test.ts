@@ -225,19 +225,22 @@ describe("turbine-sync", () => {
   })
 })
 
-// The turbine valve may only open under vacuum (ADR 0003): the scenarios pull it first and never trip
+// The turbine valve may only open under vacuum (ADR 0003): the scenarios pull it first and the turbine
+// never trips. Sampled every tick, so a trip that a later opening clears again cannot slip between samples.
 describe.each([startupCold, turbineStart, turbineSync])("$name under the vacuum limit", (scenario) => {
-  const samples = runScenario(scenario)
+  const samples = runScenario({ ...scenario, sampleEvery: CstSimulation.DeltaTime })
   const limit = CstSimulation.CstCondenser.VacuumLimit
+  const firstOpen = samples.findIndex((s) => s.state.Turbine.turbineValvePosition > 0)
 
   test("condenser pressure is at or below the vacuum limit when the turbine valve first opens", () => {
-    const opened = samples.find((s) => s.state.Turbine.turbineValvePosition > 0)
-    expect(opened).toBeDefined()
-    expect(opened?.state.Condenser.pressure).toBeLessThanOrEqual(limit)
+    expect(firstOpen).toBeGreaterThanOrEqual(0)
+    expect(samples[firstOpen].state.Condenser.pressure).toBeLessThanOrEqual(limit)
   })
 
-  test("the turbine never trips", () => {
-    expect(samples.some((s) => s.state.Turbine.turbineTripped)).toBe(false)
+  test("the turbine valve never closes on a turbine trip after it opens", () => {
+    const afterOpening = samples.slice(firstOpen)
+    expect(afterOpening.filter((s) => s.state.Turbine.turbineValvePosition === 0)).toEqual([])
+    expect(afterOpening.filter((s) => s.state.Turbine.turbineTripped)).toEqual([])
   })
 })
 

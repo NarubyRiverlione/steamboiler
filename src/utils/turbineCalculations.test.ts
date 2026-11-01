@@ -1,8 +1,14 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
-import { calculateElectricityOutput, isAtSyncSpeed } from "./turbineCalculations"
+import {
+  calculateElectricityOutput,
+  isAboveVacuumLimit,
+  isAtSyncSpeed,
+  maxTurbineValvePosition,
+  turbineTrippedAfter,
+} from "./turbineCalculations"
 
-const { CstTurbine } = CstSimulation
+const { CstCondenser, CstTurbine } = CstSimulation
 
 describe("isAtSyncSpeed", () => {
   test("true within the breaker margin of sync speed", () => {
@@ -26,5 +32,27 @@ describe("calculateElectricityOutput", () => {
     expect(calculateElectricityOutput(0.5, CstTurbine.SyncRPM, true)).toBe(expected)
     expect(calculateElectricityOutput(0.5, CstTurbine.SyncRPM, false)).toBe(0)
     expect(calculateElectricityOutput(0.5, CstTurbine.MaxRPM, true)).toBe(0)
+  })
+})
+
+describe("vacuum limit", () => {
+  const limit = CstCondenser.VacuumLimit
+
+  test("isAboveVacuumLimit is one-sided: at or below the limit is allowed", () => {
+    expect(isAboveVacuumLimit(limit + 0.1)).toBe(true)
+    expect(isAboveVacuumLimit(limit)).toBe(false)
+    expect(isAboveVacuumLimit(13)).toBe(false)
+  })
+
+  test("above the limit the turbine valve may not open past where it is", () => {
+    expect(maxTurbineValvePosition(0.3, limit + 1)).toBe(0.3)
+    expect(maxTurbineValvePosition(0.3, limit)).toBe(1)
+  })
+
+  test("the trip flag clears on an opening and stays on otherwise", () => {
+    expect(turbineTrippedAfter(true, 0, 0.01)).toBe(false)
+    expect(turbineTrippedAfter(true, 0.2, 0.2)).toBe(true)
+    expect(turbineTrippedAfter(true, 0.2, 0.1)).toBe(true)
+    expect(turbineTrippedAfter(false, 0, 0.5)).toBe(false)
   })
 })

@@ -200,7 +200,7 @@ describe("TurbineTick", () => {
       })
     })
 
-    it("trips outside hold mode too", () => {
+    it("a turbine trip also happens outside hold mode", () => {
       const result = TurbineTick({ ...running, holdMode: false }, 0.3, boilerPressure, limit + 50)
       expect(result.turbineValvePosition).toBe(0)
       expect(result.turbineTripped).toBe(true)
@@ -215,7 +215,7 @@ describe("TurbineTick", () => {
       }
     })
 
-    it("does not trip a closed valve", () => {
+    it("a closed valve gives no turbine trip", () => {
       const closed = { ...running, holdMode: false, turbineValvePosition: 0 }
       expect(TurbineTick(closed, 0, boilerPressure, limit + 100).turbineTripped).toBe(false)
     })
