@@ -25,5 +25,6 @@ GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs 
 Work in `ROADMAP.md` order: first `ready-*` ticket under **Next up**. New tickets get a `P1`–`P4` label
 (`P4`: a parked idea for a possible future feature) and blocked-by links. A `P4` ticket stays
 `needs-triage` until it is promoted to `P1`–`P3`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
-Before closing, run the `crap-score-typescript` skill on the changed files, report the scores (also in
+Before closing, run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
+~150 s on slow hardware), report the scores (also in
 the closing comment) and flag any method above the risk threshold.

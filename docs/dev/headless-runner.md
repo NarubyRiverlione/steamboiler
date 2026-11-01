@@ -90,6 +90,16 @@ invariant against every registered scenario, one test per pair. A pair that fail
 `expectedFailures` table as a `test.fails` naming the fixing ticket; when that ticket lands the test
 turns red, so remove the entry to make the pair a guard.
 
+### Time limits
+
+`scenario.test.ts` has a wall-clock guard: one simulated hour (`heatUp`, 3600 s, `sampleEvery: 10`) must
+finish within 15 s. Measured on an i7-10710U (15 W laptop CPU): 2.6 s plain, 7.8–8.6 s under
+`vitest --coverage`, because v8 instrumentation of the simulation core slows it about 3×. The crap-score
+tool always runs with coverage, so the earlier 5 s limit failed there while passing in `pnpm test`.
+15 s is about twice the slowest measured coverage run: it still catches an order-of-magnitude
+regression and tolerates slower hardware. The vitest `testTimeout` in `vite.config.ts` is 30 s for the same reason.
+A full coverage run takes about 125–150 s on that machine, so score changed files only (`--changed`).
+
 ## Water drift
 
 The water is held as kg ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), so the loop conserves it to floating-point rounding. Measured over all eight scenarios at 1 s sampling (`loopWater`, which undoes makeup, reject, drain and vent):
