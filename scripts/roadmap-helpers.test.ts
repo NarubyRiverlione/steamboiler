@@ -92,17 +92,22 @@ describe("renderRoadmap", () => {
     "2026-10-28",
   )
 
-  test("lists unblocked tickets under Next up with what they unblock", () => {
+  test("lists tickets in plan order with what they wait on and unblock", () => {
     expect(md).toContain(
-      "| 1 | [#6](https://github.com/o/r/issues/6) Ticket 6 | P2 (↑P1) | needs-info | [#8](https://github.com/o/r/issues/8) |",
+      "| 1 | [#6](https://github.com/o/r/issues/6) Ticket 6 | P2 (↑P1) | needs-info |  | [#8](https://github.com/o/r/issues/8) |",
     )
-    expect(md).toContain("| 2 | [#15](https://github.com/o/r/issues/15) Ticket 15 | — | — |  |")
+    expect(md).toContain(
+      "| 2 | [#8](https://github.com/o/r/issues/8) Steam \\| water | P1 | — | [#6](https://github.com/o/r/issues/6) |  |",
+    )
+    expect(md).toContain("| 3 | [#15](https://github.com/o/r/issues/15) Ticket 15 | — | — |  |  |")
   })
 
-  test("lists blocked tickets with numbering continued and escaped titles", () => {
-    expect(md).toContain(
-      "| 3 | [#8](https://github.com/o/r/issues/8) Steam \\| water | P1 | — | [#6](https://github.com/o/r/issues/6) |",
-    )
+  test("lists a blocked P2 above a free P3", () => {
+    const rows = renderRoadmap([ticket(1, ["P3"]), ticket(2, ["P2"], [3]), ticket(3, ["P4"])], "u", "d")
+      .split("\n")
+      .filter((l) => /^\| \d/.test(l))
+      .map((l) => /#(\d+)/.exec(l)?.[1])
+    expect(rows).toEqual(["3", "2", "1"])
   })
 
   test("stamps the date and count", () => {

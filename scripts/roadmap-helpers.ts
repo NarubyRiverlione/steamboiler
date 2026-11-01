@@ -96,11 +96,8 @@ export function renderRoadmap(tickets: Ticket[], repoUrl: string, date: string):
   const links = (ns: number[]) => ns.map(link).join(" ")
   const title = (t: Ticket) => t.title.replaceAll("|", "\\|")
 
-  const row = (t: PlannedTicket, i: number, related: number[]) =>
-    `| ${String(i + 1)} | ${link(t.number)} ${title(t)} | ${priorityLabel(t)} | ${t.status} | ${links(related)} |`
-
-  const next = planned.filter((t) => t.waitingOn.length === 0)
-  const blocked = planned.filter((t) => t.waitingOn.length > 0)
+  const row = (t: PlannedTicket, i: number) =>
+    `| ${String(i + 1)} | ${link(t.number)} ${title(t)} | ${priorityLabel(t)} | ${t.status} | ${links(t.waitingOn)} | ${links(t.unblocks)} |`
 
   return [
     "# Roadmap",
@@ -111,18 +108,11 @@ export function renderRoadmap(tickets: Ticket[], repoUrl: string, date: string):
     "",
     "Order: a ticket comes after every open ticket blocking it, otherwise by priority (`P1` first).",
     "A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`.",
+    "Next: the first ticket with nothing under Waiting on.",
     "",
-    "## Next up",
-    "",
-    "| # | Ticket | Priority | Status | Unblocks |",
-    "| - | ------ | -------- | ------ | -------- |",
-    ...next.map((t, i) => row(t, i, t.unblocks)),
-    "",
-    "## Blocked",
-    "",
-    "| # | Ticket | Priority | Status | Waiting on |",
-    "| - | ------ | -------- | ------ | ---------- |",
-    ...blocked.map((t, i) => row(t, next.length + i, t.waitingOn)),
+    "| # | Ticket | Priority | Status | Waiting on | Unblocks |",
+    "| - | ------ | -------- | ------ | ---------- | -------- |",
+    ...planned.map(row),
     "",
   ].join("\n")
 }

@@ -22,7 +22,7 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Tickets
 
 GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs in `docs/agents/`.
-Work in `ROADMAP.md` order: first `ready-*` ticket under **Next up**. New tickets get a `P1`–`P4` label
+Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. New tickets get a `P1`–`P4` label
 (`P4`: a parked idea for a possible future feature) and blocked-by links. A `P4` ticket stays
 `needs-triage` until it is promoted to `P1`–`P3`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
 Before closing, run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes

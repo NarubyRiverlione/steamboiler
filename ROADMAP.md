@@ -6,31 +6,25 @@ _Updated 2026-11-01 · 18 open tickets_
 
 Order: a ticket comes after every open ticket blocking it, otherwise by priority (`P1` first).
 A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`.
+Next: the first ticket with nothing under Waiting on.
 
-## Next up
-
-| # | Ticket | Priority | Status | Unblocks |
-| - | ------ | -------- | ------ | -------- |
-| 1 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 (↑P2) | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 2 | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) Condensation runs at 10 times the energy balance (magic number in calculateCondensation) | P2 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
-| 3 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |
-| 4 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | needs-triage |  |
-| 5 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |
-| 6 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |
-| 7 | [#55](https://github.com/NarubyRiverlione/steamboiler/issues/55) Correct the MaxGasFlow note (says 700 to 900 L/s, value is 12,000) | P3 | ready-for-agent |  |
-| 8 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P4 | needs-triage |  |
-| 9 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage |  |
-| 10 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |
-| 11 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |
-| 12 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |
-| 13 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P4 | needs-triage |  |
-
-## Blocked
-
-| # | Ticket | Priority | Status | Waiting on |
-| - | ------ | -------- | ------ | ---------- |
-| 14 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) |
-| 15 | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) Hotwell makeup and reject thresholds: protection limits plus a working band | P3 (↑P2) | ready-for-agent | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) |
-| 16 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
-| 17 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 18 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P4 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 1 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 (↑P2) | needs-triage |  | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
+| 2 | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) Condensation runs at 10 times the energy balance (magic number in calculateCondensation) | P2 | needs-triage |  | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
+| 3 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) |
+| 4 | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) Hotwell makeup and reject thresholds: protection limits plus a working band | P3 (↑P2) | ready-for-agent | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) |
+| 5 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |  |
+| 6 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |  |
+| 7 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |  |
+| 8 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | needs-triage |  |  |
+| 9 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
+| 10 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 11 | [#55](https://github.com/NarubyRiverlione/steamboiler/issues/55) Correct the MaxGasFlow note (says 700 to 900 L/s, value is 12,000) | P3 | ready-for-agent |  |  |
+| 12 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P4 | needs-triage |  |  |
+| 13 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage |  |  |
+| 14 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |  |
+| 15 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |  |
+| 16 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
+| 17 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P4 | needs-triage |  |  |
+| 18 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P4 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |  |
