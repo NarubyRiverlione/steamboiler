@@ -116,4 +116,30 @@ describe("getWaterSpecificVolume", () => {
   test("below 20 °C holds the 20 °C value", () => {
     expect(getWaterSpecificVolume(5)).toBe(getWaterSpecificVolume(20))
   })
+
+  test("above the critical point clamps to the critical value", () => {
+    expect(getWaterSpecificVolume(400)).toBe(3.106) // critical liquid volume, L/kg
+    expect(getWaterSpecificVolume(CriticalTemperature)).toBe(3.106)
+  })
+
+  test("an exact curve row returns its own value", () => {
+    expect(getWaterSpecificVolume(25)).toBe(1.003)
+    expect(getWaterSpecificVolume(80)).toBe(1.029)
+  })
+
+  test("halfway between curve rows interpolates linearly", () => {
+    const [t1, v1] = [80, 1.029]
+    const [t2, v2] = [85, 1.032] // 85 °C row of the steam table, L/kg
+    const expected = (v1 + v2) / 2
+    expect(getWaterSpecificVolume((t1 + t2) / 2)).toBeCloseTo(expected, 6)
+  })
+
+  test("rises monotonically over the whole range", () => {
+    let previous = getWaterSpecificVolume(0)
+    for (let temperature = 1; temperature <= 380; temperature += 1) {
+      const current = getWaterSpecificVolume(temperature)
+      expect(current).toBeGreaterThanOrEqual(previous)
+      previous = current
+    }
+  })
 })
