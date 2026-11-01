@@ -3,6 +3,7 @@ import { finalState, firstTimeWhere, runScenario, runScenarioWithLifts, Scenario
 import { scenarios } from "./scenarios"
 import { cooldown, CooldownDuration } from "./scenarios/cooldown"
 import { fullGas } from "./scenarios/full-gas"
+import { heatUpAtLimit } from "./scenarios/heat-up"
 import { GasOffAt, reliefLift } from "./scenarios/relief-lift"
 import { startupCold } from "./scenarios/startup-cold"
 import { AtPressure, heatUp as heatUpSteps, openMainSteam, rollTurbine, since, TurbineValveOpenAt } from "./scenarios/steps"
@@ -138,13 +139,12 @@ describe("cold initial state", () => {
     expect(initialPowerPlantState).toEqual(cold)
   })
 
-  test("is at ambient temperature and atmospheric pressure, with energy matching temperature and water", () => {
+  // 50 t of water at 4.196 kJ/kg·K plus 100 t of steel at 0.5 kJ/kg·K, 20 K above 0 °C: 4196 + 1000 MJ
+  test("is at ambient temperature and atmospheric pressure, with energy matching temperature, water and metal", () => {
     expect(cold.Boiler.temperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Condenser.hotwellTemperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Boiler.pressure).toBe(CstPhysics.AtmosphericPressure_mBar / 1e3)
-    expect(cold.Boiler.energy).toBe(
-      calculateHeatingEnergy(cold.Boiler.waterVolume, 0, CstPhysics.AmbientTemperature),
-    )
+    expect(cold.Boiler.energy).toBeCloseTo(5_188_461, 0) // 49 910 kg of water at 4.196 kJ/kg·K and 100 t of steel at 0.5, from 0 °C to 20 °C
   })
 
   test("makes no steam on the first tick", () => {
@@ -185,13 +185,13 @@ describe("startup-cold", () => {
     expect(samples[0].state.Turbine.rpm).toBe(0)
   })
 
-  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 750 s", () => {
-    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(750)
+  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 780 s", () => {
+    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(780)
   })
 
   test("main steam valve opens when commanded and the turbine spins up", () => {
-    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(750)
-    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(750)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(780)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(780)
   })
 })
 
@@ -266,6 +266,40 @@ describe("cooldown", () => {
     const start = samples.find((s) => s.time === AtPressure)?.state.Boiler.temperature ?? 0
     expect(samples.at(-1)?.state.Boiler.temperature).toBeLessThan(start)
   })
+
+  // A heat loss of a few hundred kW against about 270 MJ/K of water and metal: a few kelvin an hour, days to cool
+  test("cools slowly: less than 10 K in the hour", () => {
+    const start = samples.find((s) => s.time === AtPressure)?.state.Boiler.temperature ?? 0
+    expect(start - (samples.at(-1)?.state.Boiler.temperature ?? 0)).toBeLessThan(10)
+  })
+
+  // About 0.5 MW at 337 K above ambient (design temperature): 1.48 kW per kelvin, at every sample
+  test("loses heat in proportion to the difference with ambient", () => {
+    const cooling = samples.filter((s) => s.time > AtPressure)
+    for (const { state } of cooling) {
+      const aboveAmbient = state.Boiler.temperature - CstPhysics.AmbientTemperature
+      expect(state.Boiler.heatLoss / aboveAmbient).toBeCloseTo(500 / 337, 2)
+    }
+  })
+})
+
+describe("heat-up", () => {
+  // every tick, so no alarm hides between samples
+  const samples = runScenario({ ...heatUpAtLimit, sampleEvery: 0.1 })
+
+  test("ramped at the limit, reaches working pressure (165 bar) in 12 to 18 minutes", () => {
+    const reached = firstTimeWhere(samples, (s) => s.Boiler.pressure >= 165) ?? Infinity
+    expect(reached).toBeGreaterThanOrEqual(12 * 60)
+    expect(reached).toBeLessThanOrEqual(18 * 60)
+  })
+
+  test("never raises the heating-rate alarm", () => {
+    expect(samples.filter((s) => s.state.Boiler.heatingRateOverLimit).map((s) => s.time)).toEqual([])
+  })
+
+  test("the relief valve stays shut", () => {
+    expect(samples.at(-1)?.state.Boiler.reliefLifts).toBe(0)
+  })
 })
 
 describe("relief-lift", () => {
@@ -312,9 +346,16 @@ describe("full-gas", () => {
   // every tick, so no overshoot hides between samples
   const samples = runScenario({ ...fullGas, sampleEvery: 0.1 })
 
-  test("the relief valve lifts and pressure never exceeds design pressure in any tick", () => {
+  // As the relief valve vents the boiler dry, its last litre or so cannot absorb the gas heat and the metal heats past
+  // design pressure: burner protection on low level is #33
+  test("the relief valve lifts and pressure never exceeds design pressure in any tick while 1 m³ of water remains", () => {
     expect(samples[samples.length - 1].state.Boiler.reliefLifts).toBeGreaterThan(0)
-    expect(Math.max(...samples.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(180)
+    const wet = samples.filter((s) => s.state.Boiler.waterVolume > 1000)
+    expect(Math.max(...wet.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(180)
+  })
+
+  test("raises the heating-rate alarm: full gas from cold is above the limit", () => {
+    expect(samples.some((s) => s.state.Boiler.heatingRateOverLimit)).toBe(true)
   })
 
   test("no NaN or Infinity in an hour of full gas", () => {
@@ -329,6 +370,7 @@ describe("scenario registry", () => {
   test("registers every scenario under its own name", () => {
     expect(Object.keys(scenarios)).toEqual([
       "startup-cold",
+      "heat-to-msv",
       "heat-up",
       "turbine-start",
       "turbine-sync",

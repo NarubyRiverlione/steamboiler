@@ -4,6 +4,7 @@ import BoilerTick, { BoilerRemoveSteam, BoilerVent } from "./Boiler/BoilerTick"
 
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import { CstSimulation } from "./const"
+import { roomInKg } from "../utils/boilerCalculations"
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
   // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
@@ -31,8 +32,13 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     flow: turbineResult.turbineState.turbineSteamFlowOut,
     pressure: CstSimulation.CstTurbine.steamOutflowPressure,
   }
-  // The return fills the boiler at most to its total volume; steam and drain only lower it afterwards
-  const boilerRoom = CstSimulation.CstBoiler.TotalVolume - state.Boiler.waterVolume
+  // The return fills the boiler at most to its total volume (kg at the boiler temperature); steam and drain only lower
+  // it afterwards
+  const boilerRoom: number = roomInKg(
+    CstSimulation.CstBoiler.TotalVolume,
+    state.Boiler.waterVolume,
+    state.Boiler.temperature,
+  )
   const condenserNewState: CondenserState = CondenserTick(
     state.Condenser,
     state.Boiler.pressure,
@@ -45,11 +51,10 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // add this tick's return before recalculating the boiler state
   const boilerRemovedSteam: BoilerState = {
     ...turbineResult.boilerState,
-    waterVolume: turbineResult.boilerState.waterVolume + condenserNewState.returnRate,
+    waterMass: turbineResult.boilerState.waterMass + condenserNewState.returnRate,
   }
   
   const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam)
-  const deltaWaterVolume = boilerNewState.waterVolume - state.Boiler.waterVolume
   
   // Update turbine state with the new flow values
   const updatedTurbineState: TurbineState = {
@@ -60,7 +65,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   
   return {
     ...state,
-    Boiler: { ...boilerNewState, deltaWaterVolume },
+    Boiler: boilerNewState,
     Condenser: condenserNewState,
     Turbine: updatedTurbineState,
   }

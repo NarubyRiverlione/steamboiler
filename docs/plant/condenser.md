@@ -27,10 +27,14 @@ The condenser pressure, shown as a vacuum readout in mbar, is controlled by two 
 2. Temperature difference between condensed water and cold intake water
 3. Energy absorbed: Q = m · cp · ΔT
 4. Condensed steam mass = Q ÷ latent heat
-5. Steam and liquid volumes adjusted; hotwell collects the condensate
+5. Steam and liquid masses (kg) adjusted, limited by the room left in the hotwell (`CstCondenser.TotalVolume` minus its volume, ÷ the specific volume at the hotwell temperature); the hotwell collects the condensate
 6. New outlet temperature from the energy transfer, tracked as `outletTemperature`
 
-A condensation pump moves hotwell water into the boiler as the **Return** (`returnRate`, liters per tick). It is the boiler's only water supply ([ADR 0002](../adr/0002-makeup-into-hotwell.md)); its limits are in [feedwater-loop.md](feedwater-loop.md#return-and-capacity).
+A condensation pump moves hotwell water into the boiler as the **Return** (`returnRate`, kg per tick; the pump flow in L/s is converted at the hotwell temperature). It is the boiler's only water supply ([ADR 0002](../adr/0002-makeup-into-hotwell.md)); its limits are in [feedwater-loop.md](feedwater-loop.md#return-and-capacity).
+
+The hotwell holds `hotwellWaterMass` (kg); `hotwellWaterVolume` and the level are derived from it at `hotwellTemperature` ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), so a hot hotwell shows a higher level for the same water. Makeup and reject are valve flows in L/s converted to kg at the hotwell temperature; makeup stops at the hotwell room.
+
+Known gap: `calculateCondensation` condenses 10 × the energy balance (`massCondensed * 10`, kept from before #34, see #47): a magic number against the realism rule.
 
 Known gap: the hotwell runs near 100 °C because condensate enters at the bypass steam temperature instead of the condenser saturation temperature (#35).
 

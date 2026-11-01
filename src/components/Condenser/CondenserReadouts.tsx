@@ -10,7 +10,7 @@ const CondenserReadouts = () => {
   const {
     state: {
       Condenser: {
-        deltaWaterVolume,
+        deltaWaterMass,
         pressure, // mbar
         steamMass,
         hotwellWaterVolume,
@@ -56,11 +56,11 @@ const CondenserReadouts = () => {
         value={useEMA(hotwellWaterVolume / TotalVolume, 0.1)}
         unit=""
         fixed={1}
-        delta={useEMA(deltaWaterVolume, 0.5)}
+        delta={useEMA(deltaWaterMass, 0.5)}
         deltaFixed={1}
       />
 
-      <Readout title="Return flow" value={returnRate} unit="l" fixed={1} />
+      <Readout title="Return flow" value={returnRate} unit="kg" fixed={1} />
     </div>
   )
 }

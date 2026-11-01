@@ -1,43 +1,71 @@
 import { describe, expect, test } from "vitest"
-import { CstSimulation } from "./const"
+import { CstPhysics, CstSimulation } from "./const"
+import { getWaterSpecificVolume } from "../utils/steamTable"
+import { calculateSteamInventory } from "../utils/boilerCalculations"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { makeInitialState } from "./PowerPlantReducer"
 
 const { CstBoiler } = CstSimulation
 const cold = makeInitialState()
-const pumping = (boilerWater: number, hotwell = cold.Condenser.hotwellWaterVolume): PowerPlantState => ({
+const { AmbientTemperature } = CstPhysics
+const litresPerKg: number = getWaterSpecificVolume(AmbientTemperature)
+
+// A plant at ambient holding this much water (litres) in the boiler and hotwell, the condensation pump full open
+const pumping = (boilerLitres: number, hotwellLitres = cold.Condenser.hotwellWaterVolume): PowerPlantState => ({
   ...cold,
-  Boiler: { ...cold.Boiler, waterVolume: boilerWater },
-  Condenser: { ...cold.Condenser, hotwellWaterVolume: hotwell, condensationPumpValvePosition: 1 },
+  Boiler: {
+    ...cold.Boiler,
+    waterMass: boilerLitres / litresPerKg,
+    waterVolume: boilerLitres,
+    steamMass: calculateSteamInventory(AmbientTemperature, boilerLitres), // in equilibrium with the steam space
+  },
+  Condenser: {
+    ...cold.Condenser,
+    hotwellWaterMass: hotwellLitres / litresPerKg,
+    hotwellWaterVolume: hotwellLitres,
+    condensationPumpValvePosition: 1,
+  },
 })
 
 describe("PowerPlantTick return", () => {
   test("the boiler receives the return in the same tick the hotwell gives it", () => {
-    // full pump: 300 l/s for one 0.1 s tick
-    const next = PowerPlantTick(pumping(50_000, 10_000))
-    expect(next.Condenser.returnRate).toBe(30)
-    expect(next.Condenser.hotwellWaterVolume).toBe(9_970)
-    expect(next.Boiler.waterVolume).toBeCloseTo(50_030, 2)
+    // full pump: 300 l/s for one 0.1 s tick = 30 L = 29.946 kg at 20 °C
+    const start = pumping(50_000, 10_000)
+    const next = PowerPlantTick(start)
+    expect(next.Condenser.returnRate).toBeCloseTo(30 / litresPerKg, 6)
+    expect(next.Condenser.hotwellWaterMass).toBeCloseTo(start.Condenser.hotwellWaterMass - 30 / litresPerKg, 6)
+    expect(next.Boiler.waterMass).toBeCloseTo(start.Boiler.waterMass + 30 / litresPerKg, 2)
   })
 
   test("a full boiler takes no return, the water stays in the hotwell", () => {
-    const next = PowerPlantTick(pumping(CstBoiler.TotalVolume, 10_000))
+    const start = pumping(CstBoiler.TotalVolume, 10_000)
+    const next = PowerPlantTick(start)
     expect(next.Condenser.returnRate).toBe(0)
-    expect(next.Condenser.hotwellWaterVolume).toBe(10_000)
-    expect(next.Boiler.waterVolume).toBe(CstBoiler.TotalVolume)
+    expect(next.Condenser.hotwellWaterMass).toBe(start.Condenser.hotwellWaterMass)
+    expect(next.Boiler.waterVolume).toBeCloseTo(CstBoiler.TotalVolume, 2)
   })
 
   test("a nearly full boiler is filled to capacity, not past it", () => {
     const next = PowerPlantTick(pumping(CstBoiler.TotalVolume - 5, 10_000))
-    expect(next.Condenser.returnRate).toBe(5)
-    expect(next.Boiler.waterVolume).toBe(CstBoiler.TotalVolume)
+    expect(next.Condenser.returnRate).toBeCloseTo(5 / litresPerKg, 6)
+    expect(next.Boiler.waterVolume).toBeCloseTo(CstBoiler.TotalVolume, 2)
   })
 
   test("an empty hotwell returns nothing", () => {
-    const next = PowerPlantTick(pumping(50_000, 0))
+    const start = pumping(50_000, 0)
+    const next = PowerPlantTick(start)
     expect(next.Condenser.returnRate).toBe(0)
-    expect(next.Boiler.waterVolume).toBeCloseTo(50_000, 2)
+    expect(next.Boiler.waterMass).toBeCloseTo(start.Boiler.waterMass, 2)
+  })
+
+  test("a hot boiler has less room: the same free volume takes fewer kg", () => {
+    const hot = pumping(CstBoiler.TotalVolume - 5, 10_000)
+    const hotBoiler: PowerPlantState = {
+      ...hot,
+      Boiler: { ...hot.Boiler, temperature: 300, waterMass: (CstBoiler.TotalVolume - 5) / getWaterSpecificVolume(300), waterVolume: CstBoiler.TotalVolume - 5, steamMass: calculateSteamInventory(300, CstBoiler.TotalVolume - 5) },
+    }
+    expect(PowerPlantTick(hotBoiler).Condenser.returnRate).toBeCloseTo(5 / getWaterSpecificVolume(300), 4)
   })
 })
 
@@ -45,12 +73,12 @@ describe("PowerPlantTick dry boiler", () => {
   test("makes no steam from water that is not there", () => {
     const dry: PowerPlantState = {
       ...cold,
-      Boiler: { ...cold.Boiler, waterVolume: 0, steamMass: 0, temperature: 100, gasFlow: CstBoiler.MaxGasFlow },
+      Boiler: { ...cold.Boiler, waterMass: 0, waterVolume: 0, steamMass: 0, temperature: 100, gasFlow: CstBoiler.MaxGasFlow },
     }
     const next = PowerPlantTick(dry)
     expect(next.Boiler.deltaSteamMass).toBe(0)
     expect(next.Boiler.steamMass).toBe(0)
-    expect(next.Boiler.waterVolume).toBe(0)
+    expect(next.Boiler.waterMass).toBe(0)
   })
 })
 
@@ -73,7 +101,7 @@ describe("PowerPlantTick relief valve", () => {
   // At 178 bar with the main steam valve closed, as after a heat-up with everything shut
   const atLift: PowerPlantState = {
     ...cold,
-    Boiler: { ...cold.Boiler, temperature: 356, pressure: 178, steamMass: 8000, waterVolume: 37_600 },
+    Boiler: { ...cold.Boiler, temperature: 356, pressure: 178, steamMass: 8000, waterMass: 37_600 / getWaterSpecificVolume(356), waterVolume: 37_600 },
   }
 
   test("vents to the atmosphere with the main steam valve closed", () => {

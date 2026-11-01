@@ -446,6 +446,11 @@
   color: #f44336;
 }
 
+/* A readout over its alarm limit */
+.value.alarm {
+  color: #f44336;
+}
+
 .debug {
   background-color: #ffe0b2 !important;
 }

@@ -11,7 +11,7 @@ const BoilerVisual = () => {
       Boiler: { waterVolume, temperature, pressure },
     },
   } = usePowerPlant()
-  const water = (100 * waterVolume) / TotalVolume
+  const water = Math.min(100, (100 * waterVolume) / TotalVolume) // a full drum that heats up can pass its volume (#33)
   return (
     <div className="boiler-panel">
       <div className="water-level" style={{ height: `${String(water)}%` }}>

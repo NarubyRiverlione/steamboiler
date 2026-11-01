@@ -36,7 +36,7 @@ flowchart TD
 Each subsystem uses an energy balance:
 
 ```
-Boiler:    ΔE = gas input − (cooling + steam generation + drain)
+Boiler:    ΔE = gas input − (heat loss + steam generation + drain)   (E: water and metal)
 Condenser: ΔE = steam input − (cooling + condensation)
 ```
 

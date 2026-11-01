@@ -1,15 +1,19 @@
 export type BoilerState = {
   gasFlow: number // liters/second
-  waterVolume: number // liters
-  deltaWaterVolume: number
+  waterMass: number // kg, the state; volume and level are derived from it
+  waterVolume: number // liters, derived: mass × specific volume at the boiler temperature
+  deltaWaterMass: number // kg change over the last tick
   temperature: number // Celsius
   pressure: number // bar
   energy: number // kJ
   steamMass: number // kg - Mass of steam currently in the boiler
   deltaSteamMass: number // kg/s generated steam
   energyDelta: number // kJ/s
+  heatLoss: number // kW lost to the surroundings
+  heatingRate: number // K/s rise of the water temperature, smoothed over HeatingRateWindow
+  heatingRateOverLimit: boolean // alarm: heating rate above HeatingRateLimit
   drainValveOpen: boolean
-  drainedTotal: number // liters drained since start (totalizer)
+  drainedTotal: number // kg drained since start (totalizer)
   reliefValveOpen: boolean // relief valve lifted (automatic, see GLOSSARY.md)
   ventedTotal: number // kg of steam vented to the atmosphere since start (totalizer)
   reliefLifts: number // lifts of the relief valve since start (counter)
@@ -17,11 +21,12 @@ export type BoilerState = {
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)
   steamMass: number // kg
-  hotwellWaterVolume: number
+  hotwellWaterMass: number // kg, the state
+  hotwellWaterVolume: number // liters, derived: mass × specific volume at the hotwell temperature
   hotwellTemperature: number // Celsius
   intakeFlowRate: number // kg/s turbine exhaust plus bypass steam into the condenser
-  returnRate: number
-  condensationRate: number // l/s steam condensed into the hotwell
+  returnRate: number // kg returned to the boiler over the last tick
+  condensationRate: number // kg/s steam condensed into the hotwell
   coolingRate: number
   isAirExtractionPumpEnabled: boolean
   isSjaeEnabled: boolean
@@ -30,9 +35,9 @@ export type CondenserState = {
   condensationPumpValvePosition: number // 0-1 (0-100%) open
   makeupValvePosition: number // 0-1 (0-100%) open, water from outside into the hotwell
   rejectValvePosition: number // 0-1 (0-100%) open, hotwell water out of the loop
-  makeupTotal: number // liters of makeup since start (totalizer)
-  rejectTotal: number // liters rejected since start (totalizer)
-  deltaWaterVolume: number
+  makeupTotal: number // kg of makeup since start (totalizer)
+  rejectTotal: number // kg rejected since start (totalizer)
+  deltaWaterMass: number // kg change of the hotwell over the last tick
 }
 export type TurbineState = {
   electricOutput: number // MW

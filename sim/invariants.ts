@@ -8,9 +8,12 @@ export type Invariant = { name: string; check: (samples: Sample[]) => string[] }
 const { CstBoiler, CstCondenser } = CstSimulation
 const MaxReported = 5 // violations listed per invariant, enough to see the trend
 const Tolerance = 1e-9 // float noise allowed on "never rises"
-const MassCreatedLimit = 0.001 // fraction of start mass
-const MassLostFixed = 0.001 // fraction of start mass, allowed even with no steam out
-const MassLostPerSteamOut = 0.02 // fraction of the steam that left the boiler
+// The water is held as kg, so the loop conserves it to floating-point rounding: the worst drift measured over all
+// scenarios at 1 s sampling is 3.2e-14 of the start mass, and 5.1e-12 of the steam out (docs/dev/headless-runner.md).
+// The limits sit a factor of 3 to 4 above that; the slack covers rounding in the sums (kg-sized totals of about 6e4), not physics.
+const MassCreatedLimit = 1e-13 // fraction of start mass
+const MassLostFixed = 1e-13 // fraction of start mass, allowed even with no steam out
+const MassLostPerSteamOut = 2e-11 // fraction of the steam that left the boiler (the rounding of the flow integral)
 export const SteamStopWithin = 120 // seconds after gas reaches 0
 
 const at = (time: number) => `t=${String(time)} s`
@@ -29,9 +32,9 @@ const everySample =
 const within = (label: string, value: number, max: number) =>
   value >= 0 && value <= max ? undefined : `${label} ${String(value)} outside 0..${String(max)}`
 
-// 1 L = 1 kg throughout, as in the ticket
+// Water in the plant, kg: the boiler and hotwell liquid are held as mass, the steam as mass
 export const totalWater = ({ Boiler, Condenser }: PowerPlantState) =>
-  Boiler.waterVolume + Boiler.steamMass + Condenser.steamMass + Condenser.hotwellWaterVolume
+  Boiler.waterMass + Boiler.steamMass + Condenser.steamMass + Condenser.hotwellWaterMass
 
 // Total water with the boundary flows undone: makeup came in, reject, drain and vent went out on purpose
 export const loopWater = (state: PowerPlantState) =>

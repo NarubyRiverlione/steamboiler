@@ -177,6 +177,32 @@ describe("toReportHtml", () => {
   })
 })
 
+describe("toReportHtml heating rate", () => {
+  // The test run heats at 5000 L/s, about 0.57 K/s: above the 24 K/min limit
+  const html = toReportHtml(scenario, runScenario(scenario))
+  const heatingRate = panels.find((p) => p.title === "Heating rate")
+
+  test("the boiler group has a heating-rate chart in K/min, from the smoothed rate", () => {
+    expect(heatingRate?.group).toBe("Boiler")
+    expect(heatingRate?.unit).toBe("K/min")
+    const state = runScenario(scenario).at(-1)?.state
+    if (!state || !heatingRate) throw new Error("no state or panel")
+    expect(heatingRate.series[0].value(state)).toBeCloseTo(state.Boiler.heatingRate * 60, 9)
+  })
+
+  test("draws the 24 K/min limit as a line on that chart only", () => {
+    expect(heatingRate?.limit).toBe(24)
+    expect(html.match(/<line class="limit"/g)).toHaveLength(1)
+  })
+
+  test("keeps the limit inside the plot even when the rate stays far below it", () => {
+    const calm = { ...scenario, actions: [{ at: 0, action: { type: "INCREASE_GAS_FLOW", amount: 100 } as const }] }
+    const y = /<line class="limit"[^>]* y1="([\d.]+)"/.exec(toReportHtml(calm, runScenario(calm)))?.[1]
+    expect(Number(y)).toBeGreaterThanOrEqual(10)
+    expect(Number(y)).toBeLessThanOrEqual(156)
+  })
+})
+
 describe("toReportHtml relief valve lifts", () => {
   const samples = runScenario(scenario)
   const lifts = [

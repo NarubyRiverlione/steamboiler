@@ -11,24 +11,24 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 
 | # | Ticket | Priority | Status | Unblocks |
 | - | ------ | -------- | ------ | -------- |
-| 1 | [#13](https://github.com/NarubyRiverlione/steamboiler/issues/13) Realistic heating: thermal mass and heat loss | P1 | ready-for-agent |  |
-| 2 | [#34](https://github.com/NarubyRiverlione/steamboiler/issues/34) Conserve water mass in kg using temperature-dependent density | P1 | ready-for-agent | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) |
-| 3 | [#35](https://github.com/NarubyRiverlione/steamboiler/issues/35) Hotwell temperature should follow condenser saturation temperature | P1 | ready-for-agent | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) [#45](https://github.com/NarubyRiverlione/steamboiler/issues/45) |
-| 4 | [#37](https://github.com/NarubyRiverlione/steamboiler/issues/37) Block the turbine valve without condenser vacuum | P2 | ready-for-agent |  |
-| 5 | [#43](https://github.com/NarubyRiverlione/steamboiler/issues/43) Startup scenarios: build pressure, then hold it at the main steam valve | P2 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 6 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |
-| 7 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | ready-for-agent |  |
-| 8 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P3 | needs-triage |  |
-| 9 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 | needs-triage |  |
-| 10 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |
-| 11 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |
-| 12 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P4 | needs-triage |  |
+| 1 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P1 | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) |
+| 2 | [#35](https://github.com/NarubyRiverlione/steamboiler/issues/35) Hotwell temperature should follow condenser saturation temperature | P1 | ready-for-agent | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) [#45](https://github.com/NarubyRiverlione/steamboiler/issues/45) |
+| 3 | [#37](https://github.com/NarubyRiverlione/steamboiler/issues/37) Block the turbine valve without condenser vacuum | P2 | ready-for-agent |  |
+| 4 | [#43](https://github.com/NarubyRiverlione/steamboiler/issues/43) Startup scenarios: build pressure, then hold it at the main steam valve | P2 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
+| 5 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |
+| 6 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control and correct the MaxGasFlow note | P3 | ready-for-agent |  |
+| 7 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 | needs-triage |  |
+| 8 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | needs-triage |  |
+| 9 | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) Condensation runs at 10 times the energy balance (magic number in calculateCondensation) | P3 | needs-triage |  |
+| 10 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage |  |
+| 11 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |
+| 12 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |
+| 13 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P4 | needs-triage |  |
 
 ## Blocked
 
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
-| 13 | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) Conserve water mass across boiler and condenser | P1 | ready-for-agent | [#34](https://github.com/NarubyRiverlione/steamboiler/issues/34) |
 | 14 | [#45](https://github.com/NarubyRiverlione/steamboiler/issues/45) bypass-loop: condenser doesn't return the bypass steam; hotwell empties and the boiler boils dry | P1 | needs-triage | [#35](https://github.com/NarubyRiverlione/steamboiler/issues/35) |
 | 15 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) |
 | 16 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#10](https://github.com/NarubyRiverlione/steamboiler/issues/10) [#43](https://github.com/NarubyRiverlione/steamboiler/issues/43) |

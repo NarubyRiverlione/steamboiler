@@ -18,12 +18,13 @@ Add a row when you over-dimension a utility or reduce something for playability.
 
 | Item | Simulator | Realistic | Why | Constant |
 |---|---|---|---|---|
-| Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: heat-up takes about 4.5 min instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
-| Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 15 min instead of 4 to 8 h | heating-rate limit constant (to be added in #13) |
-| Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; burner protection is #33 | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
+| Condensation speed-up (existing) | condenses 10 × the energy balance (`massCondensed * 10` in `calculateCondensation`) | the energy balance (`Q / latent heat`) | a magic number kept from before #34 so that ticket changed units only; removal is #47 | `calculateCondensation` in `condenserCalculation.ts` |
+| Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 4.7 min (measured, `full-gas`) instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
+| Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.6 min (measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
+| Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; burner protection is #33 | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
 | Specific heat at the critical point (held) | 47.1 kJ/kg·K from 370 °C up | diverges to infinity at 373.946 °C | the simulation core must stay finite every tick; the table clamps at the critical point instead of throwing | last row of `steamTable` in `steamData.ts` |
 
-Basis for the realistic boiler volume (an engineering estimate, not a sourced data sheet): a drum of about 1.6–1.8 m inside diameter and 15–20 m long holds 35–50 m³, about half full of water; waterwall tubes and downcomers add roughly 80–120 m³. Heating 100 m³ of water plus the 100 t of steel from 20 °C to about 350 °C takes about 180 GJ, which is 8–9 minutes at the full 357 MW. The reduced 50 m³ heats in about 4.5 minutes. The single-lump boiler has a steam space equal to total minus water, filled with saturated steam (#12): at 165 bar (about 110 kg/m³) the 50 m³ steam space holds about 5.5 t, and a realistic 100 m³ steam space would hold about 11 t, more than a real drum, whose steam space is mostly the drum's upper half. Steam mass no longer feeds pressure, so this only sets how much water the steam inventory takes from the level.
+Basis for the realistic boiler volume (an engineering estimate, not a sourced data sheet): a drum of about 1.6–1.8 m inside diameter and 15–20 m long holds 35–50 m³, about half full of water; waterwall tubes and downcomers add roughly 80–120 m³. Heating 100 m³ of water plus the 100 t of steel from 20 °C to about 350 °C takes about 180 GJ, which is 8–9 minutes at the full 357 MW. The reduced 50 m³ with the 100 t of steel heats to 165 bar in about 4.3 minutes (measured). The single-lump boiler has a steam space equal to total minus water, filled with saturated steam (#12): at 165 bar (about 110 kg/m³) the 50 m³ steam space holds about 5.5 t, and a realistic 100 m³ steam space would hold about 11 t, more than a real drum, whose steam space is mostly the drum's upper half. Steam mass no longer feeds pressure, so this only sets how much water the steam inventory takes from the level.
 
 Gas flow and the condensation pump are not departures: the sizing check found them sized for a conventional 200 MWe unit.
 
@@ -32,7 +33,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | | Value | Note |
 |---|---|---|
 | Total volume | 100 m³ | on purpose reduced, see the register |
-| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space |
+| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space; the initial fills (`StartWaterVolume`, `HotwellStartVolume`) are specified in litres at ambient and converted to kg when the state is created ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)) |
 | Water capacity | 100 m³ of liquid | `CstBoiler.TotalVolume`, see [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
 | Working pressure | 165 bar | typical utility drum boiler (2400 psi); not a code constant yet |
 | Design pressure | 180 bar | must never be exceeded; the relief valve holds it while water remains (see [boiler.md](boiler.md#relief-valve)) |
@@ -43,14 +44,14 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Steam generation at full gas | 171 kg/s (about 615 t/h) | measured at 10 bar; a real unit of this size passes 170–180 kg/s |
 | Relief valve | opens 178 bar, closes 171 bar, ≈ 497 kg/s | 110% of the steam full gas makes at 178 bar; realistic sizing, not a departure |
 
-## Startup and heat loss (target values, not in code yet, see #13)
+## Startup and heat loss
 
 | | Value | Note |
 |---|---|---|
-| Metal mass (drum and tubes) | ≈ 100 t steel | 0.5 kJ/kg·K, added to the water's heat capacity |
-| Heat loss | ≈ 0.5 MW at design temperature | proportional to the difference with ambient; cooldown takes days |
-| Heating-rate limit | 0.4 K/s (24 K/min) | alarm only; see the register |
-| Cold start to working pressure | ≈ 15 min at the limit | time-compressed: real cold startups take 4 to 8 h |
+| Metal mass (drum and tubes) | 100 t steel | 0.5 kJ/kg·K, added to the water's heat capacity at one lumped temperature (`CstBoiler.MetalMass`) |
+| Heat loss | 0.5 MW at design temperature | proportional to the difference with ambient (`CstBoiler.HeatLossAtDesign`); about 3.6 K per hour at 190 °C, so a cooldown takes days |
+| Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s | alarm only (`CstBoiler.HeatingRateLimit`, `HeatingRateWindow`); see the register and [ADR 0006](../adr/0006-heating-rate-alarm-only.md) |
+| Cold start to working pressure | about 16.6 min with the gas ramped at the limit (measured, `heat-up`); about 4.3 min at full gas, over the limit | time-compressed: real cold startups take 4 to 8 h |
 
 ## Steam path and turbine
 

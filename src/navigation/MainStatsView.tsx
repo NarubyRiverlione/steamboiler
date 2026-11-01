@@ -5,7 +5,7 @@ import useEMA from "../utils/useEMA"
 const MainStatsView = () => {
   const {
     state: {
-      Boiler: { waterVolume, pressure, deltaWaterVolume },
+      Boiler: { waterVolume, pressure, deltaWaterMass },
     },
   } = usePowerPlant()
   const {
@@ -18,8 +18,8 @@ const MainStatsView = () => {
         <div className="mainState-readout-item">
           <span className="mainState-readout-item-label">Water Volume</span>
           <span className="mainState-readout-item-value">
-            {useEMA(waterVolume / TotalVolume, 0.1).toFixed(1)} - Δ{" "}
-            {useEMA(deltaWaterVolume, 0.05).toFixed(0)} l
+            {useEMA(waterVolume / TotalVolume, 0.1).toFixed(1)} - Δ {useEMA(deltaWaterMass, 0.05).toFixed(0)}{" "}
+            kg
           </span>
         </div>
 
