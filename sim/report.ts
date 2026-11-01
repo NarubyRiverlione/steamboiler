@@ -21,6 +21,7 @@ export type Panel = {
   unit: string
   series: Series[]
   limit?: number // drawn as a horizontal line and always kept on the axis
+  span?: number // in the auto-fill grid: columns this panel spans (wide viewports only)
 }
 
 const one = (label: string, value: Series["value"]): Series[] => [{ label, value }]
@@ -108,9 +109,10 @@ export const panels: Panel[] = [
     kind: "flow",
     palette: "flowSteam",
     unit: "kg/s",
+    // Semantic colours: bypass red, turbine green, total blue
     series: [
-      { label: "Turbine", value: (s) => s.Turbine.turbineSteamFlowOut },
       { label: "Bypass", value: (s) => s.Turbine.bypassSteamFlowOut },
+      { label: "Turbine", value: (s) => s.Turbine.turbineSteamFlowOut },
       { label: "Total", value: (s) => s.Turbine.bypassSteamFlowOut + s.Turbine.turbineSteamFlowOut },
     ],
   },
@@ -235,6 +237,7 @@ export const panels: Panel[] = [
       { label: "Hotwell", value: (s) => s.Condenser.hotwellWaterMass },
       { label: "Total excl. makeup, reject, drain, vent", value: loopWater },
     ],
+    span: 3,
   },
 ]
 
@@ -350,7 +353,7 @@ function renderPanel(
       ? `<ul class="legend">${panel.series.map((s, i) => `<li><span class="key s${String(i + 1)}"></span>${escapeHtml(s.label)}</li>`).join("")}</ul>`
       : ""
 
-  return `<figure class="panel kind-${panel.palette ?? panel.kind}" data-panel="${String(index)}">
+  return `<figure class="panel kind-${panel.palette ?? panel.kind}${panel.span ? ` span-${String(panel.span)}` : ""}" data-panel="${String(index)}">
 <figcaption><span class="title">${escapeHtml(panel.title)} <span class="unit">${escapeHtml(panel.unit)}</span></span><span class="readout"></span></figcaption>
 ${legend}
 <svg viewBox="0 0 ${String(W)} ${String(H)}" tabindex="0" role="img" aria-label="${escapeHtml(`${panel.group} ${panel.title} over time`)}">
@@ -439,9 +442,10 @@ const PALETTE: Record<Palette, { light: string[]; dark: string[] }> = {
     light: ["#2a78d6", "#84caff", "#1849a9", "#b2ddff", "#1570ef"],
     dark: ["#3987e5", "#b2ddff", "#2e90fa", "#d1e9ff", "#1570ef"],
   },
+  // Steam flow: bypass red, turbine green, total blue
   flowSteam: {
-    light: ["#7a5af8", "#bdb4fe", "#4a1fb8", "#d9d6fe", "#6938ef"],
-    dark: ["#9b8afb", "#d9d6fe", "#7a5af8", "#ebe9fe", "#6938ef"],
+    light: ["#d92d20", "#12a150", "#2a78d6"],
+    dark: ["#f04438", "#32d583", "#3987e5"],
   },
   flowIntake: {
     light: ["#06aed4", "#67e3f9", "#0e7090", "#a5f0fc", "#088ab2"],
@@ -522,6 +526,8 @@ h2 { font-size: 15px; margin: 24px 0 8px; color: var(--text-secondary); }
 details { margin-top: 8px; color: var(--text-secondary); }
 details li { font-variant-numeric: tabular-nums; }
 .grid-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 12px; }
+/* Only spans when the grid actually has that many columns to offer */
+@media (min-width: 1200px) { .grid-panels .span-3 { grid-column: span 3; } }
 .grid-row { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
 @media (max-width: 800px) { .grid-row { grid-template-columns: minmax(0, 1fr); } }
 .panel { margin: 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px 6px; }

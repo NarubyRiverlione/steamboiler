@@ -32,10 +32,13 @@ heating-rate limit. Lifts are recorded per tick
 file is re-read per request, so re-run `pnpm sim` and refresh. `pnpm sim:view` does both.
 
 Panels are grouped Boiler, Turbine, Condenser, Hotwell and Loop (the list is the `panels` array in
-`sim/report.ts`). The **Loop** group's water inventory shows a total that should stay flat
+`sim/report.ts`). The **Turbine** steam flow panel uses semantic colours (bypass red, turbine
+green, total blue); every other flow chart is one hue per chart. The **Loop** group's water
+inventory shows a total that should stay flat
 (boundary flows undone). The water
 invariant counts makeup, reject, drain and vent as boundary flows via the totalizers `makeupTotal`,
 `rejectTotal`, `drainedTotal` and `ventedTotal`, so they are not flagged as created or lost water.
+A panel with `span: 3` (the Loop chart) stretches across three grid columns on wide viewports.
 
 ## Scenarios
 
