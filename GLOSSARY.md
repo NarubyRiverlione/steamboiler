@@ -60,6 +60,10 @@ _Avoid_: Power, electricity, MW readout
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
 _Avoid_: Bell curve, optimal pressure, vacuum permissive
 
+**Hold mode**:
+The turbine's speed governor: switched on, it moves the turbine valve to keep the turbine at the speed setpoint (sync speed by default).
+_Avoid_: Autopilot, speed hold, cruise
+
 **Turbine trip**:
 The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also switches hold mode off; the turbine only takes steam again when the operator reopens the valve.
 _Avoid_: Trip (on its own), shutdown
@@ -73,6 +77,10 @@ _Avoid_: Room temperature, minimum temperature
 **Cold state**:
 The plant at rest: all water at ambient temperature, atmospheric pressure, every pump, valve and the gas off. The UI and the cold scenarios start here.
 _Avoid_: Cold start (that is the operation of bringing the plant up from the cold state), warm start
+
+**Pressure hold**:
+The phase after the boiler has been brought up to working pressure, in which the operator keeps it there by matching the steam the boiler generates to the steam leaving it, with the gas.
+_Avoid_: Pressure control, steady state (that is the outcome, not the operation)
 
 **Snapshot**:
 A saved full plant state that a scenario can start from instead of replaying the operation leading up to it.
