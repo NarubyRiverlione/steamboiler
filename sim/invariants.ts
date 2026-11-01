@@ -13,9 +13,7 @@ const Tolerance = 1e-9 // float noise allowed on "never rises"
 // temperature, #35), and 5.1e-12 of the steam out (docs/dev/headless-runner.md). The created limit sits a factor of 8 above
 // that, the lost limits 3 to 4; the slack covers rounding in the sums (kg-sized totals of about 6e4), not physics.
 const MassCreatedLimit = 1e-12 // fraction of start mass per MassCreatedSpan of sim time, and the floor for shorter runs
-// The rounding bias adds up tick by tick, so on a long run the allowed creation grows with the time: `startup-cold` runs
-// 14000 s and measures 1.9e-12 at the end, about 1.4e-16 per second
-const MassCreatedSpan = 1800 // sim-seconds
+const MassCreatedSpan = 1800 // sim-seconds: rounding adds up per tick, `startup-cold` (14000 s) measures 1.9e-12 at the end
 const MassLostFixed = 1e-13 // fraction of start mass, allowed even with no steam out
 const MassLostPerSteamOut = 2e-11 // fraction of the steam that left the boiler (the rounding of the flow integral)
 export const SteamStopWithin = 120 // seconds after gas reaches 0

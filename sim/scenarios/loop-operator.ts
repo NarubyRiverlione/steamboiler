@@ -1,7 +1,8 @@
 import { CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
-import { bandDirection, holdPressureWithGas } from "./pressure-hold"
+import { bandDirection } from "./band"
+import { holdPressureWithGas } from "./pressure-hold"
 import { isAdjustTime, StartGas } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
@@ -76,7 +77,7 @@ function startSteam(state: PowerPlantState): PowerPlantAction[] {
   return [...openMainSteam(state), ...restartSjae(state)]
 }
 
-export function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {
+function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
   const direction = bandDirection(level - S.BoilerLevelTarget, S.BoilerLevelBand, Boiler.deltaWaterMass)
@@ -86,7 +87,7 @@ export function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState)
     : [{ type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: delta } }]
 }
 
-export function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
+function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
   const direction =
     Condenser.steamMass > S.CondenserSteamHigh ? 1 : Condenser.steamMass < S.CondenserSteamLow ? -1 : 0
   const delta = nudge(Condenser.recirculationPumpValvePosition, direction)
@@ -95,7 +96,7 @@ export function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction
     : [{ type: "SET_RECIRCULATION_PUMP_VALVE_POSITION", payload: { recirculationPumpValvePosition: delta } }]
 }
 
-export function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
+function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
   const level = Condenser.hotwellWaterVolume / CstCondenser.TotalVolume
   const makeup = hysteresis(Condenser.makeupValvePosition > 0, level, S.HotwellMakeupBelow, S.HotwellTarget, -1)
   const reject = hysteresis(Condenser.rejectValvePosition > 0, level, S.HotwellRejectAbove, S.HotwellTarget, 1)
@@ -109,11 +110,13 @@ export function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] 
   return actions
 }
 
-export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
+// The holds once steam flows: hotwell every tick, gas, boiler level and cooling water every AdjustEvery seconds
+export function holdLoop(state: PowerPlantState, time: number): PowerPlantAction[] {
   const adjustNow = isAdjustTime(time, S.AdjustEvery)
-  return [
-    ...startSteam(state),
-    ...holdHotwell(state),
-    ...(adjustNow ? [...(state.Turbine.mainSteamValve ? holdPressureWithGas(state) : []), ...holdBoilerLevel(state), ...holdCondensing(state)] : []),
-  ]
+  const gas = state.Turbine.mainSteamValve ? holdPressureWithGas(state) : []
+  return [...holdHotwell(state), ...(adjustNow ? [...gas, ...holdBoilerLevel(state), ...holdCondensing(state)] : [])]
+}
+
+export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return [...startSteam(state), ...holdLoop(state, time)]
 }
