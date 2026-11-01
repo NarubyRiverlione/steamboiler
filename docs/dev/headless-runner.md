@@ -93,7 +93,7 @@ The water is held as kg ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), 
 
 | | Worst case | Limit in `sim/invariants.ts` |
 |---|---|---|
-| Water created, fraction of start mass | 3.2e-14 (`bypass-loop`) | `MassCreatedLimit` = 1e-13 |
+| Water created, fraction of start mass | 1.2e-13 (`startup-cold`) | `MassCreatedLimit` = 1e-12 |
 | Water lost with no steam out, fraction of start mass | 2.3e-14 (`heat-up`) | `MassLostFixed` = 1e-13 |
 | Water lost per kg of steam out of the boiler | 5.1e-12 (`bypass-loop`) | `MassLostPerSteamOut` = 2e-11 |
 

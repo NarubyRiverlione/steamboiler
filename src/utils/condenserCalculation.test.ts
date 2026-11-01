@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
-import { CalculateCondensationFlow, calculateHotwellExchange, mixTemperature } from "./condenserCalculation"
+import {
+  CalculateCondensationFlow,
+  calculateCondensation,
+  calculateHotwellExchange,
+  mixTemperature,
+} from "./condenserCalculation"
 
 const { DeltaTime, CstCondenser } = CstSimulation
 
@@ -79,5 +84,40 @@ describe("CalculateCondensationFlow", () => {
 
   test("a closed valve returns nothing", () => {
     expect(CalculateCondensationFlow(0, 1000, 40, 1000)).toEqual({ condensatePumpMass: 0, newHotwellWaterMass: 1000 })
+  })
+})
+
+describe("calculateCondensation outlet temperature", () => {
+  // saturation temperatures from the steam tables (°C) at the condenser pressure (mbar absolute)
+  test.each([
+    [50, 32.9],
+    [80, 41.5],
+    [100, 45.8],
+    [200, 60.1],
+  ])("condensate leaves at the saturation temperature at %i mbar", (pressure: number, saturation: number) => {
+    const { newOutletTemperature } = calculateCondensation(100, 1000, 0.5, pressure, 1e6)
+    expect(newOutletTemperature).toBeCloseTo(saturation, 0)
+  })
+
+  test("does not depend on the recirculation flow, also with no flow", () => {
+    const flowing = calculateCondensation(100, 1000, 1, 80, 1e6).newOutletTemperature
+    const half = calculateCondensation(100, 1000, 0.3, 80, 1e6).newOutletTemperature
+    const stopped = calculateCondensation(100, 1000, 0, 80, 1e6).newOutletTemperature
+    expect(half).toBe(flowing)
+    expect(stopped).toBe(flowing)
+  })
+})
+
+describe("calculateCondensation energy balance", () => {
+  const condensedAt = (pressure: number): number =>
+    100 - calculateCondensation(100, 1000, 1, pressure, 1e6).steamMassAfterCondensation
+
+  test("condenses more where the saturation temperature is higher (bigger difference to the cooling water)", () => {
+    expect(condensedAt(200)).toBeGreaterThan(condensedAt(80))
+  })
+
+  test("condenses nothing when the saturation temperature is at or below the cooling water intake", () => {
+    // 10 mbar saturates at about 7 °C, below the 10 °C intake
+    expect(condensedAt(10)).toBe(0)
   })
 })

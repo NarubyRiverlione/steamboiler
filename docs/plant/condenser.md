@@ -23,12 +23,13 @@ The condenser pressure, shown as a vacuum readout in mbar, is controlled by two 
 
 `calculateCondensation` implements the condensation:
 
-1. Cold recirculation mass flow from the recirculation valve position
-2. Temperature difference between condensed water and cold intake water
-3. Energy absorbed: Q = m · cp · ΔT
-4. Condensed steam mass = Q ÷ latent heat
-5. Steam and liquid masses (kg) adjusted, limited by the room left in the hotwell (`CstCondenser.TotalVolume` minus its volume, ÷ the specific volume at the hotwell temperature); the hotwell collects the condensate
-6. New outlet temperature from the energy transfer, tracked as `outletTemperature`
+1. Saturation temperature of the condenser pressure (`saturationTemperature`: mbar to bar, then `getBoilingPoint`; about 41 °C at 80 mbar)
+2. Cold recirculation mass flow from the recirculation valve position
+3. Temperature difference between the saturated steam and the cold intake water (no condensation at or below the intake temperature)
+4. Energy absorbed: Q = m · cp · ΔT
+5. Condensed steam mass = Q ÷ latent heat at the saturation temperature
+6. Steam and liquid masses (kg) adjusted, limited by the room left in the hotwell (`CstCondenser.TotalVolume` minus its volume, ÷ the specific volume at the hotter of the hotwell and the condensate, so the mix stays within the hotwell volume); the hotwell collects the condensate
+7. The condensate outlet temperature is exactly the saturation temperature: a pure function of the condenser pressure. The cooling water only sets how much steam condenses, not the condensate temperature, and the bypass or turbine steam temperature plays no part. With no recirculation flow nothing condenses and the temperature is still the saturation temperature. There is no sub-cooling.
 
 A condensation pump moves hotwell water into the boiler as the **Return** (`returnRate`, kg per tick; the pump flow in L/s is converted at the hotwell temperature). It is the boiler's only water supply ([ADR 0002](../adr/0002-makeup-into-hotwell.md)); its limits are in [feedwater-loop.md](feedwater-loop.md#return-and-capacity).
 
@@ -36,7 +37,7 @@ The hotwell holds `hotwellWaterMass` (kg); `hotwellWaterVolume` and the level ar
 
 Known gap: `calculateCondensation` condenses 10 × the energy balance (`massCondensed * 10`, kept from before #34, see #47): a magic number against the realism rule.
 
-Known gap: the hotwell runs near 100 °C because condensate enters at the bypass steam temperature instead of the condenser saturation temperature (#35).
+The hotwell temperature is the mass-weighted mix of the existing hotwell water, the condensate at saturation temperature and the makeup water (20 °C). In `bypass-loop` it settles near 30 °C (condenser at 15 to 65 mbar). At full recirculation the condensing capacity at 40 °C saturation is about 260 kg/s, below the bypass steam intake only when the pressure rises: the condenser pressure settles where condensation equals the intake (mean intake and condensation both about 167 kg/s in `bypass-loop`). No utility was resized for #35.
 
 ## Hotwell makeup and reject
 
@@ -51,4 +52,4 @@ The condenser takes steam from two paths: the turbine exhaust and the boiler byp
 
 ## Remaining empirical areas
 
-`calcCARvacuum` (`CAR_MaxVacuum`, `CAR_TimeNeeded`), `calcSJAEvacuum` (`SJAE_MaxPressureDifference`, `SJAE_VacuumIncreaseRate`), `calculateCondensation` (`DampingFactor`), and the steam-mass pressure term in `CondenserTick`.
+`calcCARvacuum` (`CAR_MaxVacuum`, `CAR_TimeNeeded`), `calcSJAEvacuum` (`SJAE_MaxPressureDifference`, `SJAE_VacuumIncreaseRate`), `calculateCondensation`, and the steam-mass pressure term in `CondenserTick`.

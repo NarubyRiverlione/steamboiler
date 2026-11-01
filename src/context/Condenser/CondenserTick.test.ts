@@ -6,6 +6,7 @@ import { BoilerRemoveSteam } from "../Boiler/BoilerTick"
 import { CondenserState } from "../PowerPlantState"
 import { getWaterSpecificVolume } from "../../utils/steamTable"
 import { waterMassOf } from "../../utils/boilerCalculations"
+import { saturationTemperature } from "../../utils/condenserCalculation"
 
 // The boiler has room for any return in these tests
 const boilerRoom = CstSimulation.CstBoiler.TotalVolume
@@ -268,5 +269,12 @@ describe("CondenserTick", () => {
     const before: number = full.hotwellWaterMass + full.steamMass
     const after: number = next.hotwellWaterMass + next.steamMass + next.returnRate - next.makeupTotal + next.rejectTotal
     expect(after).toBeCloseTo(before, 6)
+  })
+
+  it("the hotwell follows the condenser saturation temperature, not the temperature of the steam", () => {
+    const state = { ...initialState, steamMass: 50, recirculationPumpValvePosition: 1 }
+    const next = CondenserTick(state, 1, { flow: 0, temp: 0 }, { flow: 10, temp: 150, pressure: 0.1 }, boilerRoom)
+    expect(next.hotwellTemperature).toBeGreaterThan(CstPhysics.AmbientTemperature)
+    expect(next.hotwellTemperature).toBeLessThanOrEqual(saturationTemperature(next.pressure))
   })
 })
