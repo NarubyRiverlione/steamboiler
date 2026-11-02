@@ -1,18 +1,33 @@
 # Branches and releases
 
-Two long-lived branches. Why: [ADR 0012](../adr/0012-dev-branch-main-for-releases.md); releases by pull request: [ADR 0013](../adr/0013-release-by-pull-request.md).
+Two long-lived branches plus one short-lived branch per ticket. Why: [ADR 0012](../adr/0012-dev-branch-main-for-releases.md) (`main` for releases), [ADR 0013](../adr/0013-release-by-pull-request.md) (releases by pull request), [ADR 0014](../adr/0014-ticket-branches-and-test-gates.md) (ticket branches and test gates).
 
 | Branch | Holds | Who commits |
 |---|---|---|
-| `dev` | Day-to-day work: features, fixes, docs, `ROADMAP.md` updates | Everyone, agents included |
+| `<slug>-<ticket>` (e.g. `hotwell-volume-53`) | One ticket's work, branched from `dev` (a branch or a worktree) | Everyone, agents included |
+| `dev` | Integration: merged tickets only | Nobody directly; merges by pull request |
 | `main` | Milestone releases only, via pull request; every merge publishes the app | Only on the owner's explicit say-so |
 
 ## Rules
 
-- **Work on `dev`.** Start from `dev`, commit to `dev`. A larger ticket may get its own branch (`<ticket>-<slug>`, e.g. `hotwell-volume-53`), branched from `dev` and merged back into `dev`.
+- **One ticket, one branch.** Start every ticket on its own branch or worktree from `dev`; commit there, never on `dev` itself. Merge back into `dev` by pull request when the gate below is green.
 - **Never commit, merge or push to `main`** unless the owner explicitly says so for that release. Approval for one release does not carry over to the next.
-- **Release:** open a pull request from `dev` into `main` (`gh pr create --base main --head dev`) and merge it once the `check` job is green. `main` accepts no direct pushes.
-- **Fixes go through `dev`** as well; a fix reaches `main` with the next release.
+- **Release:** open a pull request from `dev` into `main` (`gh pr create --base main --head dev`) and merge it once its gate is green. `main` accepts no direct pushes.
+- **Fixes go through a ticket branch and `dev`** as well; a fix reaches `main` with the next release.
+
+## Gates
+
+Each gate includes everything of the one above it. Test layers: unit (`src/` and sim tooling), golden-path scenarios, edge scenarios (#60).
+
+| Moment | Must pass |
+|---|---|
+| Every commit | lint, unit tests; known failures are `test.fails` naming a ticket |
+| Ticket branch → `dev` | golden-path scenarios, crap report on the changed files (flags methods over the threshold, does not fail) |
+| `dev` → `main` | edge scenarios |
+
+Edge scenarios also run on every pull request into `dev`, reported but not required, so a regression shows near the commit that caused it.
+
+Not enforced yet: the pre-commit hook, the CI jobs per layer and branch protection on `dev` come with #61, after the test layers of #60. Until then, run `pnpm lint` and `pnpm test` before every merge.
 
 ## GitHub settings on `main`
 

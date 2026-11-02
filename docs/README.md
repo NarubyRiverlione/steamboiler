@@ -44,6 +44,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
 | [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
 | [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
+| [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
 
 ## Research (dated, frozen)
 
