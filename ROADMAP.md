@@ -10,15 +10,15 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage |  |  |
-| 2 | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) Hold mode only engages within ±50 rpm of the set point | P3 (↑P2) | ready-for-agent |  | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 3 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) |
-| 4 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |  |
-| 5 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |  |
-| 6 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | ready-for-agent |  | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
-| 7 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
-| 8 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
-| 9 | [#55](https://github.com/NarubyRiverlione/steamboiler/issues/55) Correct the MaxGasFlow note (says 700 to 900 L/s, value is 12,000) | P3 | ready-for-agent |  |  |
+| 1 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage |  | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) |
+| 2 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage |  |  |
+| 3 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |  |
+| 4 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |  |
+| 5 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | ready-for-agent |  | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
+| 6 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
+| 7 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 8 | [#55](https://github.com/NarubyRiverlione/steamboiler/issues/55) Correct the MaxGasFlow note (says 700 to 900 L/s, value is 12,000) | P3 | ready-for-agent |  |  |
+| 9 | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) Hold mode only engages within ±50 rpm of the set point | P3 | ready-for-agent |  |  |
 | 10 | [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) RPM set point control: 100 rpm per click | P3 | ready-for-agent |  |  |
 | 11 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) |  |
 | 12 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P4 | needs-triage |  |  |
