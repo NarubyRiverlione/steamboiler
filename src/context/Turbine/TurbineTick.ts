@@ -60,28 +60,27 @@ function TurbineTick(
   }
 }
 
-type PidControl = Pick<TurbineState, "turbineValvePosition" | "pidIntegralError" | "pidPreviousError">
+type PidControl = Pick<TurbineState, "turbineValvePosition" | "pidIntegralError">
 
-// Turbine trip: valve fully closed, hold mode off and PID memory cleared, so nothing reopens it on its own
+// Turbine trip: valve fully closed, hold mode off and the integral cleared, so nothing reopens it on its own
 const turbineTrip: Pick<TurbineState, keyof PidControl | "holdMode" | "turbineTripped"> = {
   turbineValvePosition: 0,
   holdMode: false,
   pidIntegralError: 0,
-  pidPreviousError: 0,
   turbineTripped: true,
 }
 
-// Hold-mode PID: the controller memory lives in the turbine state, so a tick depends on its input alone.
+// Hold-mode PID: the integral lives in the turbine state, the derivative uses the rpm before this tick.
 // It never moves the valve above maxPosition (the current position above the vacuum limit).
 function updateTurbineValve(turbineState: TurbineState, newRPM: number, maxPosition: number): PidControl {
-  const { holdMode, mainSteamValve, turbineValvePosition, pidIntegralError, pidPreviousError } = turbineState
-  // only adjust when in Hold mode (and there Main Steam Valve is open); the PID memory carries over
-  if (!holdMode || !mainSteamValve) return { turbineValvePosition, pidIntegralError, pidPreviousError }
+  const { holdMode, mainSteamValve, turbineValvePosition, pidIntegralError, rpm } = turbineState
+  // inactive (hold mode off or Main Steam Valve closed): the integral resets, so every (re)engage starts fresh
+  if (!holdMode || !mainSteamValve) return { turbineValvePosition, pidIntegralError: 0 }
 
-  const { valveAdjustment, newIntegralError, newPreviousError } = calculateValveAdjustment(
+  const { valveAdjustment, newIntegralError } = calculateValveAdjustment(
     newRPM,
+    rpm,
     turbineState.rpmSetPoint,
-    pidPreviousError,
     pidIntegralError,
     CstSimulation.DeltaTime,
   )
@@ -89,7 +88,6 @@ function updateTurbineValve(turbineState: TurbineState, newRPM: number, maxPosit
   return {
     turbineValvePosition: Math.max(0, Math.min(maxPosition, turbineValvePosition + valveAdjustment)),
     pidIntegralError: newIntegralError,
-    pidPreviousError: newPreviousError,
   }
 }
 

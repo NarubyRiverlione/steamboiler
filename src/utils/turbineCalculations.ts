@@ -82,27 +82,26 @@ export function calculateRPM(
 
 /**
  * Calculates the valve adjustment needed to maintain the RPM setpoint in hold mode.
- * Uses a PID controller for smooth and accurate control.
+ * Uses a PID controller whose derivative acts on the measured rpm (not the error), so engaging
+ * the controller or changing the setpoint gives no derivative kick and D needs no controller memory.
  * 
- * @param currentRPM - The current RPM of the turbine
+ * @param currentRPM - The RPM after this tick
+ * @param previousRPM - The RPM before this tick
  * @param setPointRPM - The target RPM
- * @param previousError - The error from the previous calculation
  * @param integralError - The accumulated error over time
  * @param deltaTime - The simulation time step in seconds
- * @returns Object containing the valve adjustment and updated PID state
+ * @returns Object containing the valve adjustment and the updated integral error
  */
 export function calculateValveAdjustment(
   currentRPM: number,
+  previousRPM: number,
   setPointRPM: number,
-  previousError: number,
   integralError: number,
   deltaTime: number
 ): {
   valveAdjustment: number,
-  newIntegralError: number,
-  newPreviousError: number
+  newIntegralError: number
 } {
-  // PID controller implementation
   const error = setPointRPM - currentRPM
   
   // Proportional term
@@ -112,16 +111,11 @@ export function calculateValveAdjustment(
   const newIntegralError = Math.max(-1, Math.min(1, integralError + error * deltaTime))
   const I = CstTurbine.PID_Ki * newIntegralError
   
-  // Derivative term
-  const errorChange = (error - previousError) / deltaTime
-  const D = CstTurbine.PID_Kd * errorChange
-  
-  // Calculate valve adjustment
-  const valveAdjustment = P + I + D
+  // Derivative term on measurement: damps a rising rpm
+  const D = -CstTurbine.PID_Kd * (currentRPM - previousRPM) / deltaTime
   
   return {
-    valveAdjustment,
-    newIntegralError,
-    newPreviousError: error
+    valveAdjustment: P + I + D,
+    newIntegralError
   }
 }

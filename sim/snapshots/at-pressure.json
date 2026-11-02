@@ -52,7 +52,6 @@
     "holdMode": false,
     "generatorBreaker": false,
     "pidIntegralError": 0,
-    "pidPreviousError": 0,
     "turbineTripped": false
   }
 }

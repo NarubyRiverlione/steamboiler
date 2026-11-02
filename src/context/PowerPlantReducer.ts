@@ -73,7 +73,6 @@ export const makeInitialState = (): PowerPlantState => ({
     holdMode: false,
     generatorBreaker: false, // Phase 4: Initially open
     pidIntegralError: 0,
-    pidPreviousError: 0,
     turbineTripped: false,
   },
 })
