@@ -78,7 +78,7 @@ steam (gas down to `StartGas`, main steam valve, bypass at its fixed 10%, conden
 nudges the gas toward the working pressure (`sim/scenarios/pressure-hold.ts`, shared with `startup-cold`),
 the condensation pump toward the boiler level target and cooling water against condenser steam once a second, and opens makeup or reject on the
 hotwell limits with hysteresis. Operator actions are not drawn as dashed lines in the report; the
-valve panels in each group show the positions instead. Loop targets: [feedwater-loop.md](../plant/feedwater-loop.md).
+valve panels in each group show the positions instead. Operator settings, not plant physics: gas step 20 L/s and valve nudge 0.02 per adjustment, fast enough that `bypass-loop` stays under the relief setpoint and inside the boiler level band with the condenser on its real energy balance. Loop targets: [feedwater-loop.md](../plant/feedwater-loop.md).
 
 ## Tests
 

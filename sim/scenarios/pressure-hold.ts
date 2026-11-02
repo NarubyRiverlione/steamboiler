@@ -10,7 +10,7 @@ import { StartGas } from "./steps"
 export const PressureHoldSettings = {
   Target: 165, // bar: working pressure, below the 180 bar design pressure
   Band: 2, // bar: no gas change within target ± band, except against the trend
-  GasStep: 10, // liters/second per adjustment
+  GasStep: 20, // liters/second per adjustment
   GasCeiling: StartGas, // liters/second: gas never goes above the heat-up gas
   GasFloor: 100, // liters/second: the burner's minimum firing rate, the hold never puts the flame out
 }

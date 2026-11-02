@@ -18,7 +18,6 @@ Add a row when you over-dimension a utility or reduce something for playability.
 
 | Item | Simulator | Realistic | Why | Constant |
 |---|---|---|---|---|
-| Condensation speed-up (existing) | condenses 10 × the energy balance (`massCondensed * 10` in `calculateCondensation`) | the energy balance (`Q / latent heat`) | a magic number kept from before #34 so that ticket changed units only; removal is #47 | `calculateCondensation` in `condenserCalculation.ts` |
 | Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 4.7 min (measured, `full-gas`) instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
 | Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.6 min (measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
 | Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; burner protection is #33 | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
@@ -74,5 +73,5 @@ Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemen
 | Hotwell total volume | 50 m³ | sized from condensate flow, not playability: 35 m³ below the 70% normal level is about 3.4 min of the 171 kg/s full-gas condensate, inside HEI's 1 to 5 min ([hotwell sizing](../research/2026-11-hotwell-sizing.md)); was 15 m³ (about 1 min), changed in #53 ([ADR 0009](../adr/0009-hotwell-sized-from-condensate-flow.md)) |
 | Hotwell start volume | 35 m³ | 70%, the normal level |
 | Max vacuum | 1000 mbar (about 13 mbar absolute) | |
-| Recirculation pump max flow | 500 L/s | |
+| Recirculation pump max flow | 3600 L/s | sized so the condenser keeps up on its real energy balance (no speed-up factor, removed in #47): full gas passes about 171 kg/s of exhaust, which at about 50 °C saturation with 10 °C intake water needs about 2400 L/s (a 213 mbar back-pressure, 61 °C, needs less) (Q = ṁ·cp·ΔT, ÷ latent heat); with the 1.5× margin of the condensation pump that is 3600 L/s. Checked in `pnpm sim`: 3600 L/s holds `turbine-sync` at 213 mbar with no steam left over, 2400 L/s just keeps up and 1800 L/s lets steam pile up. A single-unit sea or river cooling circuit for a 200 MWe unit is larger, so no departure |
 | Condensation pump max flow | 300 L/s | about 1.5× the full-gas steam flow, a normal feedwater margin |

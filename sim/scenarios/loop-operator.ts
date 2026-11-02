@@ -21,7 +21,7 @@ export const LoopSettings = {
   HotwellRejectAbove: 0.75, // open reject
   CondenserSteamHigh: 100, // kg in the condenser: more cooling water
   CondenserSteamLow: 10, // kg: less cooling water
-  ValveNudge: 0.01, // position change per adjustment
+  ValveNudge: 0.02, // position change per adjustment
   AdjustEvery: 1, // sim-seconds between gas, pump and cooling adjustments
 }
 

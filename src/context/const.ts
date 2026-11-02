@@ -32,7 +32,7 @@ export const CstSimulation = {
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 20, // mbar above AirExtractionPump.MaxVacuum
     SJAE_ValveStep: 5, // % per click open/close
-    RecirculationPump_MaxFlowRate: 500, // l/s (typical 9.000-12.000)
+    RecirculationPump_MaxFlowRate: 3600, // l/s: full-gas exhaust with a 1.5x margin on the energy balance (design-basis.md); a full circuit is typically 9.000-12.000
     RecirculationPump_Step: 5,
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
     HeatTransferCoefficient: 0.85, // Condensation rate per unit of recirculation flow

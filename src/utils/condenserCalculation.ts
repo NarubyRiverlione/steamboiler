@@ -167,9 +167,8 @@ export function calculateCondensation(
   // 5. Mass of steam condensed (m = Q / latentHeat)
   const massCondensed = energyAbsorbed / getLatentHeat(saturationTemp)
 
-  // 6. The steam that condenses: the energy balance times the existing x10 condensation factor (not changed by the
-  // move to kg), never more than the steam there is or the room in the hotwell
-  const condensedMass = Math.min(currentSteamMass, massCondensed * 10, hotwellRoom)
+  // 6. The steam that condenses: the energy balance, never more than the steam there is or the room in the hotwell
+  const condensedMass = Math.min(currentSteamMass, massCondensed, hotwellRoom)
 
   return {
     steamMassAfterCondensation: Math.max(currentSteamMass - condensedMass, 0),
