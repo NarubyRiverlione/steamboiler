@@ -7,11 +7,13 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Rules
 
 - **Branches**: every ticket on its own branch or worktree from `dev`, merged back locally (no pull request) once its
-  gate passes; never commit on `dev` directly. Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
+  gate passes, and only when the owner says so; never commit on `dev` directly. Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
   (`main` = milestone releases, auto-deployed to GitHub Pages). Gates per merge: `docs/dev/branching.md`.
 - **Realism**: never add a magic number to speed up a process; playability comes from sizing utilities.
   Record every over-dimensioned utility or deliberate reduction in `docs/plant/design-basis.md`.
-- Judge physics/parameter changes with the headless runner (`docs/dev/headless-runner.md`), not the app.
+- Judge physics/parameter changes with the headless runner (`docs/dev/headless-runner.md`), not the app, on the
+  golden path: `bypass-loop` (primary: the water balance without the turbine) and `startup-cold` (`turbine-runup`
+  after #60). Edge scenarios are only required for `main`; tune them only when the ticket is about a protection.
 - A change to the plant or code updates its reference doc in `docs/plant/` or `docs/dev/` in the same commit.
 - A decision gets an ADR in `docs/adr/`.
 
@@ -25,7 +27,9 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Tickets
 
 GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs in `docs/agents/`.
-Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. New tickets get a `P1`–`P4` label
+Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. The owner picks the next
+ticket; when that pick skips a higher, unblocked ticket in `ROADMAP.md`, name the skipped one briefly, then follow
+the owner's call. New tickets get a `P1`–`P4` label
 (`P4`: a parked idea for a possible future feature) and blocked-by links. A `P4` ticket stays
 `needs-triage` until it is promoted to `P1`–`P3`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
 Before closing, run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
