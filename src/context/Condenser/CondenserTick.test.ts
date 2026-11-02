@@ -319,7 +319,8 @@ describe("CondenserTick", () => {
     it("from high-high the reject flows at full rate while the stored valve position stays as set", () => {
       const { HotwellHighHigh, Reject_MaxFlowRate } = CstSimulation.CstCondenser
       const next = CondenserTick(atLevel(HotwellHighHigh, { rejectValvePosition: 0 }), 1, noSteam, exhaust, boilerRoom)
-      const rejectKg: number = (Reject_MaxFlowRate * CstSimulation.DeltaTime) / getWaterSpecificVolume(20)
+      const rejectKg: number =
+        (Reject_MaxFlowRate * CstSimulation.DeltaTime) / getWaterSpecificVolume(CstPhysics.AmbientTemperature)
       expect(next.rejectTotal).toBeCloseTo(rejectKg, 9)
       expect(next.rejectValvePosition).toBe(0)
     })

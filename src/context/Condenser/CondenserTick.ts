@@ -6,6 +6,7 @@ import {
   calculateHotwellExchange,
   saturationTemperature,
   mixTemperature,
+  hotwellLevel,
 } from "../../utils/condenserCalculation"
 import { roomInKg, waterVolumeOf } from "../../utils/boilerCalculations"
 import { CstPhysics, CstSimulation } from "../const"
@@ -71,11 +72,9 @@ export function CondenserTick(
   )
 
   // High-high: the overfill clamp forces the reject fully open, the stored valve position stays as set
-  const { HotwellHighHigh } = CstSimulation.CstCondenser
-  const rejectValvePosition: number =
-    condenserState.hotwellWaterVolume / CstSimulation.CstCondenser.TotalVolume >= HotwellHighHigh
-      ? 1
-      : condenserState.rejectValvePosition
+  const { HotwellHighHigh, HotwellLowLow } = CstSimulation.CstCondenser
+  const level: number = hotwellLevel(condenserState.hotwellWaterVolume)
+  const rejectValvePosition: number = level >= HotwellHighHigh ? 1 : condenserState.rejectValvePosition
 
   // Makeup in and reject out, before the condensation pump draws from the hotwell
   const exchange = calculateHotwellExchange(
@@ -87,9 +86,7 @@ export function CondenserTick(
   )
 
   // Low-low: the pump may not run dry, so it trips (valve shut, flag set) and returns nothing this tick
-  const { TotalVolume, HotwellLowLow } = CstSimulation.CstCondenser
-  const pumpTripped: boolean =
-    condenserState.condensationPumpTripped || condenserState.hotwellWaterVolume / TotalVolume < HotwellLowLow
+  const pumpTripped: boolean = condenserState.condensationPumpTripped || level < HotwellLowLow
   const pumpValvePosition: number = pumpTripped ? 0 : condenserState.condensationPumpValvePosition
 
   // Condensation pump transfer: the return, limited by the hotwell and the room in the boiler

@@ -19,5 +19,6 @@ The owner's 10% and 95% were first proposed as working setpoints. Real plants re
 ## Consequences
 
 - A scenario that runs the condensation pump with no operator can drain the hotwell below 10%; the pump then stays tripped and the boiler gets no feedwater. Scenarios must hold the hotwell and reopen the pump after a trip, as they must pull vacuum before opening the turbine valve ([ADR 0003](0003-turbine-trip-on-vacuum-limit.md)).
-- `bypass-loop`: the level stays between 69.9% and 79.4%, makeup never opens and reject takes 12 t (7% open in the last 600 s). Before, on/off with hysteresis swung the level between 53% and 99.96%, with reject open in 39% of the samples.
+- `bypass-loop`: the level settles inside the band (within a small proportional offset past the upper edge) and makeup and reject are occasional, where on/off with hysteresis swung the level between 53% and 99.96% with reject open in 39% of the samples. Current figures: [headless-runner.md](../dev/headless-runner.md), `pnpm sim bypass-loop`.
+- The tick sets the trip flag whenever the level is below low-low, also at a cold start with a near-empty hotwell and a pump that was never open. The flag then only means "the level is below low-low and the operator has not reopened the pump yet".
 - `CondenserState` gains `condensationPumpTripped`.

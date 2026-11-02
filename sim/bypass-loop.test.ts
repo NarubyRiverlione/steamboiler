@@ -5,6 +5,7 @@ import { LoopSettings, loopOperator } from "./scenarios/loop-operator"
 import { holdPressureWithGas, PressureHoldSettings } from "./scenarios/pressure-hold"
 import { StartGas } from "./scenarios/steps"
 import { CstSimulation } from "../src/context/const"
+import { hotwellLevel } from "../src/utils/condenserCalculation"
 import { CondenserTick } from "../src/context/Condenser/CondenserTick"
 import { makeInitialState } from "../src/context/PowerPlantReducer"
 import PowerPlantAction from "../src/context/PowerPlantActions"
@@ -100,8 +101,18 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  // With gas holding the pressure the loop is steady, so the hotwell level settles between the makeup and reject limits
-  // (#52 stays open for the thresholds; the 50 m³ hotwell is #53)
+  // With gas holding the pressure the loop is steady, so the hotwell level settles inside the working band (#52). The
+  // proportional valves leave a small offset past an edge, hence the tolerance of a tenth of the ramp.
+  test("hotwell level stays inside the working band once the loop is steady", () => {
+    const { HotwellBandLow, HotwellBandHigh, HotwellRamp } = LoopSettings
+    const tolerance = HotwellRamp / 10
+    for (const { state } of steady) {
+      const level = hotwellLevel(state.Condenser.hotwellWaterVolume)
+      expect(level).toBeGreaterThanOrEqual(HotwellBandLow - tolerance)
+      expect(level).toBeLessThanOrEqual(HotwellBandHigh + tolerance)
+    }
+  })
+
   test("makeup is only an occasional top-up", () => {
     expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
@@ -225,13 +236,13 @@ describe("loopOperator", () => {
         withCondenser({ hotwellWaterVolume: hotwellAt(fraction), makeupValvePosition: makeup, rejectValvePosition: reject }),
         0,
       )
-    const payloads = (fraction: number, makeup = 0, reject = 0) =>
-      valves(fraction, makeup, reject).map((a) =>
+    const payloads = (fraction: number, makeup = 0, reject = 0): number[] =>
+      valves(fraction, makeup, reject).flatMap((a) =>
         a.type === "SET_MAKEUP_VALVE_POSITION"
-          ? a.payload.makeupValvePosition
+          ? [a.payload.makeupValvePosition]
           : a.type === "SET_REJECT_VALVE_POSITION"
-            ? a.payload.rejectValvePosition
-            : NaN,
+            ? [a.payload.rejectValvePosition]
+            : [],
       )
     expect(valves(0.65)).toEqual([])
     expect(valves(0.475)[0].type).toBe("SET_MAKEUP_VALVE_POSITION")

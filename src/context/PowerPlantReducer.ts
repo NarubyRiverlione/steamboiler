@@ -1,5 +1,6 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
+import { hotwellLevel } from "../utils/condenserCalculation"
 import { isAtSyncSpeed, maxTurbineValvePosition, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
@@ -132,7 +133,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   SET_CONDENSATION_PUMP_VALVE_POSITION: (state, { payload }) => {
     const { condensationPumpValvePosition: current, condensationPumpTripped, hotwellWaterVolume } = state.Condenser
     const requested = clamp(current + payload.condensationPumpValvePosition, 0, 1)
-    if (requested > current && hotwellWaterVolume / CstCondenser.TotalVolume < CstCondenser.HotwellLowLow) return state
+    if (requested > current && hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow) return state
     return withCondenser(state, {
       condensationPumpValvePosition: requested,
       condensationPumpTripped: condensationPumpTripped && requested <= current,

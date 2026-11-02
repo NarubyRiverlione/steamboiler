@@ -193,6 +193,10 @@ export function CalculateCondensationFlow(
   return { condensatePumpMass, newHotwellWaterMass }
 }
 
+// Hotwell level as a fraction (0-1) of the hotwell volume; it is volumetric, so it drifts with the hotwell temperature (ADR 0007)
+export const hotwellLevel = (hotwellWaterVolume: number): number =>
+  hotwellWaterVolume / CstSimulation.CstCondenser.TotalVolume
+
 // Temperature after mixing two water masses (kg, same specific heat)
 export function mixTemperature(massA: number, tempA: number, massB: number, tempB: number): number {
   const total = massA + massB

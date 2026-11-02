@@ -1,6 +1,7 @@
 import { CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
+import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { bandDirection } from "./band"
 import { holdPressureWithGas } from "./pressure-hold"
 import { isAdjustTime, StartGas } from "./steps"
@@ -8,7 +9,7 @@ import { isAdjustTime, StartGas } from "./steps"
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
 // Valve actions are deltas, so the operator asks for the difference to the position it wants.
 
-const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
+const { CstBoiler, CstTurbine } = CstSimulation
 
 export const LoopSettings = {
   BypassLoadOpening: 0.1, // bypass position once the main steam valve opens: 20 kg/s, close to the turbine's ~18 kg/s at sync speed
@@ -95,8 +96,7 @@ function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
 }
 
 function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
-  const level = Condenser.hotwellWaterVolume / CstCondenser.TotalVolume
-  const { makeup, reject } = hotwellValvePositions(level)
+  const { makeup, reject } = hotwellValvePositions(hotwellLevel(Condenser.hotwellWaterVolume))
   return [
     ...toPosition(Condenser.makeupValvePosition, makeup, (makeupValvePosition) => ({
       type: "SET_MAKEUP_VALVE_POSITION",
