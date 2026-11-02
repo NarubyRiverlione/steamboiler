@@ -5,6 +5,7 @@ import { LoopSettings, loopOperator } from "./scenarios/loop-operator"
 import { holdPressureWithGas, PressureHoldSettings } from "./scenarios/pressure-hold"
 import { StartGas } from "./scenarios/steps"
 import { CstSimulation } from "../src/context/const"
+import { hotwellLevel } from "../src/utils/condenserCalculation"
 import { CondenserTick } from "../src/context/Condenser/CondenserTick"
 import { makeInitialState } from "../src/context/PowerPlantReducer"
 import PowerPlantAction from "../src/context/PowerPlantActions"
@@ -100,8 +101,18 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  // With gas holding the pressure the loop is steady, so the hotwell level settles between the makeup and reject limits
-  // (#52 stays open for the thresholds; the 50 m³ hotwell is #53)
+  // With gas holding the pressure the loop is steady, so the hotwell level settles inside the working band (#52). The
+  // proportional valves leave a small offset past an edge, hence the tolerance of a tenth of the ramp.
+  test("hotwell level stays inside the working band once the loop is steady", () => {
+    const { HotwellBandLow, HotwellBandHigh, HotwellRamp } = LoopSettings
+    const tolerance = HotwellRamp / 10
+    for (const { state } of steady) {
+      const level = hotwellLevel(state.Condenser.hotwellWaterVolume)
+      expect(level).toBeGreaterThanOrEqual(HotwellBandLow - tolerance)
+      expect(level).toBeLessThanOrEqual(HotwellBandHigh + tolerance)
+    }
+  })
+
   test("makeup is only an occasional top-up", () => {
     expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
   })
@@ -219,14 +230,27 @@ describe("loopOperator", () => {
     expect(cooling(0, 0)).toBeUndefined()
   })
 
-  test("makeup below the low limit, reject above the high limit, both closed back at target", () => {
+  test("makeup and reject ramp with the distance outside the band and shut inside it", () => {
     const valves = (fraction: number, makeup = 0, reject = 0) =>
-      types(withCondenser({ hotwellWaterVolume: hotwellAt(fraction), makeupValvePosition: makeup, rejectValvePosition: reject }))
-    expect(valves(0.6)).toContain("SET_MAKEUP_VALVE_POSITION")
-    expect(valves(0.8)).toContain("SET_REJECT_VALVE_POSITION")
-    expect(valves(0.67, 1)).toEqual([]) // makeup keeps running until the target
-    expect(valves(0.72, 1)).toContain("SET_MAKEUP_VALVE_POSITION")
-    expect(valves(0.72, 0, 1)).toEqual([]) // reject keeps running until the target
-    expect(valves(0.69, 0, 1)).toContain("SET_REJECT_VALVE_POSITION")
+      loopOperator(
+        withCondenser({ hotwellWaterVolume: hotwellAt(fraction), makeupValvePosition: makeup, rejectValvePosition: reject }),
+        0,
+      )
+    const payloads = (fraction: number, makeup = 0, reject = 0): number[] =>
+      valves(fraction, makeup, reject).flatMap((a) =>
+        a.type === "SET_MAKEUP_VALVE_POSITION"
+          ? [a.payload.makeupValvePosition]
+          : a.type === "SET_REJECT_VALVE_POSITION"
+            ? [a.payload.rejectValvePosition]
+            : [],
+      )
+    expect(valves(0.65)).toEqual([])
+    expect(valves(0.475)[0].type).toBe("SET_MAKEUP_VALVE_POSITION")
+    expect(payloads(0.475)[0]).toBeCloseTo(0.5)
+    expect(valves(0.825)[0].type).toBe("SET_REJECT_VALVE_POSITION")
+    expect(payloads(0.825)[0]).toBeCloseTo(0.5)
+    expect(payloads(0.65, 0.5)).toEqual([-0.5])
+    expect(valves(0.65, 0, 0.5)[0].type).toBe("SET_REJECT_VALVE_POSITION")
+    expect(payloads(0.65, 0, 0.5)).toEqual([-0.5])
   })
 })

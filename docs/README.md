@@ -39,7 +39,8 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0007](adr/0007-water-state-is-mass-in-kg.md) | The water state is mass in kg; volume and level are derived |
 | [0008](adr/0008-pressure-hold-with-gas.md) | The scenarios hold working pressure with gas, not with the steam valve |
 | [0009](adr/0009-hotwell-sized-from-condensate-flow.md) | The hotwell is sized from condensate flow: 50 m³ |
-| [0010](adr/0010-ui-redo-industrial-style.md) | Proposed, not decided: a UI redo in an industrial style (analog board after MC-v2, or a modern DCS screen) |
+| [0010](adr/0010-pid-derivative-on-measurement.md) | The hold-mode PID takes its derivative on the measurement |
+| [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
 
 ## Research (dated, frozen)
 

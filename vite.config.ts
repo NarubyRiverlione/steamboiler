@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/steamboiler/',
   plugins: [react()],
   test: {
     // Long headless scenarios exceed vitest's 5s default under coverage instrumentation

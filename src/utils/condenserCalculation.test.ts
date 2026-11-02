@@ -1,11 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { CstSimulation } from "../context/const"
+import { CstPhysics, CstSimulation } from "../context/const"
 import {
   CalculateCondensationFlow,
   calculateCondensation,
   calculateHotwellExchange,
   mixTemperature,
+  saturationTemperature,
 } from "./condenserCalculation"
+import { getLatentHeat } from "./steamTable"
 
 const { DeltaTime, CstCondenser } = CstSimulation
 
@@ -119,5 +121,21 @@ describe("calculateCondensation energy balance", () => {
   test("condenses nothing when the saturation temperature is at or below the cooling water intake", () => {
     // 10 mbar saturates at about 7 °C, below the 10 °C intake
     expect(condensedAt(10)).toBe(0)
+  })
+
+  test("condenses exactly the energy balance, Q / latent heat, with no speed-up factor", () => {
+    const { RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature } = CstCondenser
+    const saturation: number = saturationTemperature(200)
+    const energy: number =
+      RecirculationPump_MaxFlowRate *
+      CstPhysics.Water_SpecificHeat *
+      (saturation - RecirculationPump_IntakeTemperature) *
+      DeltaTime
+    expect(condensedAt(200)).toBeCloseTo(energy / getLatentHeat(saturation), 9)
+  })
+
+  test("the full-gas pump sizing condenses the 171 kg/s exhaust with a 1.5x margin at the turbine-sync back-pressure", () => {
+    const condensed: number = 1e6 - calculateCondensation(1e6, 1000, 1, 213, 1e6).steamMassAfterCondensation
+    expect(condensed).toBeGreaterThanOrEqual(1.5 * 171 * DeltaTime)
   })
 })

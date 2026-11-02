@@ -1,12 +1,13 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
+import { hotwellLevel } from "../utils/condenserCalculation"
 import { isAtSyncSpeed, maxTurbineValvePosition, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { metalEnergyOf } from "./Boiler/BoilerTick"
 
-const { CstBoiler, CstTurbine } = CstSimulation
+const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
 const { AmbientTemperature } = CstPhysics
 
@@ -55,6 +56,7 @@ export const makeInitialState = (): PowerPlantState => ({
     sjaeValvePosition: 0, // 0% open
     recirculationPumpValvePosition: 0, // 0% open
     condensationPumpValvePosition: 0,
+    condensationPumpTripped: false,
     makeupValvePosition: 0,
     rejectValvePosition: 0,
     makeupTotal: 0,
@@ -73,7 +75,6 @@ export const makeInitialState = (): PowerPlantState => ({
     holdMode: false,
     generatorBreaker: false, // Phase 4: Initially open
     pidIntegralError: 0,
-    pidPreviousError: 0,
     turbineTripped: false,
   },
 })
@@ -128,14 +129,16 @@ const handlers: { [T in ActionType]: Handler<T> } = {
         1,
       ),
     }),
-  SET_CONDENSATION_PUMP_VALVE_POSITION: (state, { payload }) =>
-    withCondenser(state, {
-      condensationPumpValvePosition: clamp(
-        state.Condenser.condensationPumpValvePosition + payload.condensationPumpValvePosition,
-        0,
-        1,
-      ),
-    }),
+  // Below low-low the pump may not be opened, closing is always allowed; an opening clears the trip flag
+  SET_CONDENSATION_PUMP_VALVE_POSITION: (state, { payload }) => {
+    const { condensationPumpValvePosition: current, condensationPumpTripped, hotwellWaterVolume } = state.Condenser
+    const requested = clamp(current + payload.condensationPumpValvePosition, 0, 1)
+    if (requested > current && hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow) return state
+    return withCondenser(state, {
+      condensationPumpValvePosition: requested,
+      condensationPumpTripped: condensationPumpTripped && requested <= current,
+    })
+  },
   SET_MAKEUP_VALVE_POSITION: (state, { payload }) =>
     withCondenser(state, {
       makeupValvePosition: clamp(state.Condenser.makeupValvePosition + payload.makeupValvePosition, 0, 1),
