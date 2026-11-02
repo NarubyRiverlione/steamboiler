@@ -34,6 +34,7 @@
     "sjaeValvePosition": 0,
     "recirculationPumpValvePosition": 0,
     "condensationPumpValvePosition": 0,
+    "condensationPumpTripped": false,
     "makeupValvePosition": 0,
     "rejectValvePosition": 0,
     "makeupTotal": 0,

@@ -33,6 +33,7 @@ export type CondenserState = {
   sjaeValvePosition: number // 0-1 (0-100%) open
   recirculationPumpValvePosition: number // 0-1 (0-100%) open
   condensationPumpValvePosition: number // 0-1 (0-100%) open
+  condensationPumpTripped: boolean // set by the low-low trip, cleared by the next successful opening
   makeupValvePosition: number // 0-1 (0-100%) open, water from outside into the hotwell
   rejectValvePosition: number // 0-1 (0-100%) open, hotwell water out of the loop
   makeupTotal: number // kg of makeup since start (totalizer)

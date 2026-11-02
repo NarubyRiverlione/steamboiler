@@ -71,7 +71,10 @@ Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemen
 | | Value | Note |
 |---|---|---|
 | Hotwell total volume | 50 m³ | sized from condensate flow, not playability: 35 m³ below the 70% normal level is about 3.4 min of the 171 kg/s full-gas condensate, inside HEI's 1 to 5 min ([hotwell sizing](../research/2026-11-hotwell-sizing.md)); was 15 m³ (about 1 min), changed in #53 ([ADR 0009](../adr/0009-hotwell-sized-from-condensate-flow.md)) |
-| Hotwell start volume | 35 m³ | 70%, the normal level |
+| Hotwell start volume | 35 m³ | 70%, inside the working band |
+| Hotwell working band | 55% to 75%, centre 65% | operator policy, not plant: both valves shut inside it, fully open 15 points beyond an edge. Research shows normal level near 60 to 70% of height with makeup and reject within 5 to 15 points of it ([hotwell level control](../research/2026-11-hotwell-level-control.md), UNVERIFIED, no standard read) (#52, [ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)) |
+| Hotwell low-low | 10% | pump trip, set by NPSH in a real plant (about 7.5% in the one worked example, UNVERIFIED); 10% here (#52) |
+| Hotwell high-high | 95% | overfill clamp, reject forced open; real high-high is lower (about 75% of height, UNVERIFIED), 95% is the owner's figure used as the last-resort tier (#52) |
 | Max vacuum | 1000 mbar (about 13 mbar absolute) | |
 | Recirculation pump max flow | 3600 L/s | sized so the condenser keeps up on its real energy balance (no speed-up factor, removed in #47): full gas passes about 171 kg/s of exhaust, which at about 50 °C saturation with 10 °C intake water needs about 2400 L/s (a 213 mbar back-pressure, 61 °C, needs less) (Q = ṁ·cp·ΔT, ÷ latent heat); with the 1.5× margin of the condensation pump that is 3600 L/s. Checked in `pnpm sim`: 3600 L/s holds `turbine-sync` at 213 mbar with no steam left over, 2400 L/s just keeps up and 1800 L/s lets steam pile up. A single-unit sea or river cooling circuit for a 200 MWe unit is larger, so no departure |
 | Condensation pump max flow | 300 L/s | about 1.5× the full-gas steam flow, a normal feedwater margin |

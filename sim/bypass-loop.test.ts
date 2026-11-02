@@ -219,14 +219,27 @@ describe("loopOperator", () => {
     expect(cooling(0, 0)).toBeUndefined()
   })
 
-  test("makeup below the low limit, reject above the high limit, both closed back at target", () => {
+  test("makeup and reject ramp with the distance outside the band and shut inside it", () => {
     const valves = (fraction: number, makeup = 0, reject = 0) =>
-      types(withCondenser({ hotwellWaterVolume: hotwellAt(fraction), makeupValvePosition: makeup, rejectValvePosition: reject }))
-    expect(valves(0.6)).toContain("SET_MAKEUP_VALVE_POSITION")
-    expect(valves(0.8)).toContain("SET_REJECT_VALVE_POSITION")
-    expect(valves(0.67, 1)).toEqual([]) // makeup keeps running until the target
-    expect(valves(0.72, 1)).toContain("SET_MAKEUP_VALVE_POSITION")
-    expect(valves(0.72, 0, 1)).toEqual([]) // reject keeps running until the target
-    expect(valves(0.69, 0, 1)).toContain("SET_REJECT_VALVE_POSITION")
+      loopOperator(
+        withCondenser({ hotwellWaterVolume: hotwellAt(fraction), makeupValvePosition: makeup, rejectValvePosition: reject }),
+        0,
+      )
+    const payloads = (fraction: number, makeup = 0, reject = 0) =>
+      valves(fraction, makeup, reject).map((a) =>
+        a.type === "SET_MAKEUP_VALVE_POSITION"
+          ? a.payload.makeupValvePosition
+          : a.type === "SET_REJECT_VALVE_POSITION"
+            ? a.payload.rejectValvePosition
+            : NaN,
+      )
+    expect(valves(0.65)).toEqual([])
+    expect(valves(0.475)[0].type).toBe("SET_MAKEUP_VALVE_POSITION")
+    expect(payloads(0.475)[0]).toBeCloseTo(0.5)
+    expect(valves(0.825)[0].type).toBe("SET_REJECT_VALVE_POSITION")
+    expect(payloads(0.825)[0]).toBeCloseTo(0.5)
+    expect(payloads(0.65, 0.5)).toEqual([-0.5])
+    expect(valves(0.65, 0, 0.5)[0].type).toBe("SET_REJECT_VALVE_POSITION")
+    expect(payloads(0.65, 0, 0.5)).toEqual([-0.5])
   })
 })

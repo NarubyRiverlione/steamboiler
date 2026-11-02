@@ -21,6 +21,7 @@ const initialState: CondenserState = {
   makeupTotal: 0,
   rejectTotal: 0,
   condensationPumpValvePosition: 0, // no feedwater pull-out
+  condensationPumpTripped: false,
   recirculationPumpValvePosition: 1,
   intakeFlowRate: 0,
   pressure: CstSimulation.CstCondenser.OptimalPressure,
@@ -276,5 +277,56 @@ describe("CondenserTick", () => {
     const next = CondenserTick(state, 1, { flow: 0, temp: 0 }, { flow: 10, temp: 150, pressure: 0.1 }, boilerRoom)
     expect(next.hotwellTemperature).toBeGreaterThan(CstPhysics.AmbientTemperature)
     expect(next.hotwellTemperature).toBeLessThanOrEqual(saturationTemperature(next.pressure))
+  })
+
+  describe("hotwell protections", () => {
+    const noSteam = { flow: 0, temp: 0 }
+    const exhaust = { flow: 0, temp: 0, pressure: 0 }
+    const { TotalVolume, HotwellLowLow } = CstSimulation.CstCondenser
+    const atLevel = (level: number, extra: Partial<CondenserState> = {}): CondenserState => ({
+      ...initialState,
+      hotwellWaterMass: waterMassOf(level * TotalVolume, CstPhysics.AmbientTemperature),
+      hotwellWaterVolume: level * TotalVolume,
+      ...extra,
+    })
+
+    it("below low-low the condensation pump trips: valve shut, flag set, nothing returned", () => {
+      const next = CondenserTick(
+        atLevel(HotwellLowLow - 0.01, { condensationPumpValvePosition: 1 }),
+        1,
+        noSteam,
+        exhaust,
+        boilerRoom,
+      )
+      expect(next.condensationPumpTripped).toBe(true)
+      expect(next.condensationPumpValvePosition).toBe(0)
+      expect(next.returnRate).toBe(0)
+    })
+
+    it("at low-low and above the pump keeps running", () => {
+      const next = CondenserTick(
+        atLevel(HotwellLowLow, { condensationPumpValvePosition: 1 }),
+        1,
+        noSteam,
+        exhaust,
+        boilerRoom,
+      )
+      expect(next.condensationPumpTripped).toBe(false)
+      expect(next.condensationPumpValvePosition).toBe(1)
+      expect(next.returnRate).toBeGreaterThan(0)
+    })
+
+    it("from high-high the reject flows at full rate while the stored valve position stays as set", () => {
+      const { HotwellHighHigh, Reject_MaxFlowRate } = CstSimulation.CstCondenser
+      const next = CondenserTick(atLevel(HotwellHighHigh, { rejectValvePosition: 0 }), 1, noSteam, exhaust, boilerRoom)
+      const rejectKg: number = (Reject_MaxFlowRate * CstSimulation.DeltaTime) / getWaterSpecificVolume(20)
+      expect(next.rejectTotal).toBeCloseTo(rejectKg, 9)
+      expect(next.rejectValvePosition).toBe(0)
+    })
+
+    it("below high-high a closed reject valve rejects nothing", () => {
+      const next = CondenserTick(atLevel(CstSimulation.CstCondenser.HotwellHighHigh - 0.01), 1, noSteam, exhaust, boilerRoom)
+      expect(next.rejectTotal).toBe(0)
+    })
   })
 })

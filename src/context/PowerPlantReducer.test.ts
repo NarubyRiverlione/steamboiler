@@ -85,6 +85,43 @@ describe("powerPlantReducer", () => {
     })
   })
 
+  describe("condensation pump low-low", () => {
+    const lowLow = CstCondenser.HotwellLowLow
+    const atLevel = (level: number, extra: Partial<PowerPlantState["Condenser"]> = {}): PowerPlantState => ({
+      ...base,
+      Condenser: { ...base.Condenser, hotwellWaterVolume: level * CstCondenser.TotalVolume, ...extra },
+    })
+    const pump = (delta: number, state: PowerPlantState) =>
+      reduce({ type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: delta } }, state)
+        .Condenser
+
+    test("opening is refused below low-low and the state is unchanged", () => {
+      const state = atLevel(lowLow - 0.01)
+      expect(
+        reduce(
+          { type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: 0.1 } },
+          state,
+        ),
+      ).toBe(state)
+    })
+
+    test("opening is allowed at and above low-low", () => {
+      expect(pump(0.1, atLevel(lowLow)).condensationPumpValvePosition).toBe(0.1)
+      expect(pump(0.1, atLevel(0.7)).condensationPumpValvePosition).toBe(0.1)
+    })
+
+    test("closing is allowed below low-low", () => {
+      expect(pump(-0.1, atLevel(lowLow - 0.01, { condensationPumpValvePosition: 0.3 })).condensationPumpValvePosition).toBeCloseTo(0.2)
+    })
+
+    test("a successful opening clears the trip flag; a refused one and a closing leave it set", () => {
+      const tripped = (level: number) => atLevel(level, { condensationPumpTripped: true })
+      expect(pump(0.1, tripped(lowLow)).condensationPumpTripped).toBe(false)
+      expect(pump(0.1, tripped(lowLow - 0.01)).condensationPumpTripped).toBe(true)
+      expect(pump(-0.1, tripped(lowLow)).condensationPumpTripped).toBe(true)
+    })
+  })
+
   describe("turbine", () => {
     const atPressure = (pressure: number): PowerPlantState => ({ ...base, Boiler: { ...base.Boiler, pressure } })
 

@@ -70,18 +70,31 @@ export function CondenserTick(
     newOutletTemperature,
   )
 
+  // High-high: the overfill clamp forces the reject fully open, the stored valve position stays as set
+  const { HotwellHighHigh } = CstSimulation.CstCondenser
+  const rejectValvePosition: number =
+    condenserState.hotwellWaterVolume / CstSimulation.CstCondenser.TotalVolume >= HotwellHighHigh
+      ? 1
+      : condenserState.rejectValvePosition
+
   // Makeup in and reject out, before the condensation pump draws from the hotwell
   const exchange = calculateHotwellExchange(
     waterMassAfterCondensation,
     condensateTemperature,
     condenserState.makeupValvePosition,
-    condenserState.rejectValvePosition,
+    rejectValvePosition,
     Math.max(0, hotwellRoom - condensed),
   )
 
+  // Low-low: the pump may not run dry, so it trips (valve shut, flag set) and returns nothing this tick
+  const { TotalVolume, HotwellLowLow } = CstSimulation.CstCondenser
+  const pumpTripped: boolean =
+    condenserState.condensationPumpTripped || condenserState.hotwellWaterVolume / TotalVolume < HotwellLowLow
+  const pumpValvePosition: number = pumpTripped ? 0 : condenserState.condensationPumpValvePosition
+
   // Condensation pump transfer: the return, limited by the hotwell and the room in the boiler
   const { condensatePumpMass, newHotwellWaterMass } = CalculateCondensationFlow(
-    condenserState.condensationPumpValvePosition,
+    pumpValvePosition,
     exchange.mass,
     exchange.temperature,
     boilerRoom,
@@ -91,6 +104,8 @@ export function CondenserTick(
     ...condenserState,
     pressure: newPressure,
     isSjaeEnabled: newIsSjaeEnabled,
+    condensationPumpValvePosition: pumpValvePosition,
+    condensationPumpTripped: pumpTripped,
     intakeFlowRate: totalIntakeRate,
     // recirculationPumpFlowRate: newRecirculationPumpFlowRate,
     steamMass: steamMassAfterCondensation,

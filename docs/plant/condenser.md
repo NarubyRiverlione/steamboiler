@@ -42,7 +42,9 @@ The hotwell temperature is the mass-weighted mix of the existing hotwell water, 
 - **Makeup valve**: demineralised water from outside the loop into the hotwell (`makeupValvePosition`, totalizer `makeupTotal`)
 - **Reject valve**: hotwell water out of the loop to storage (`rejectValvePosition`, totalizer `rejectTotal`)
 
-Loop targets and the operator that holds them are in [feedwater-loop.md](feedwater-loop.md).
+Two protections act in `CondenserTick` ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)): below `HotwellLowLow` (10% of the volume) the condensation pump trips (`condensationPumpTripped`, valve shut, no return), and from `HotwellHighHigh` (95%) the reject flows fully open without changing the stored valve position. The reducer refuses to open the pump while the level is below low-low.
+
+Loop targets, the working band and the operator that holds them are in [feedwater-loop.md](feedwater-loop.md).
 
 ## Intakes
 

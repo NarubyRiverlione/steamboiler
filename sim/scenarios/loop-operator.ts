@@ -16,9 +16,9 @@ export const LoopSettings = {
   CondensationPumpOpening: 0.1, // condensation pump position when the main steam valve opens
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // no pump change within target ± band
-  HotwellMakeupBelow: 0.65, // fraction of condenser capacity: open makeup
-  HotwellTarget: 0.7, // close makeup / reject once back here
-  HotwellRejectAbove: 0.75, // open reject
+  HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (centre 65%)
+  HotwellBandHigh: 0.75, // reject opens above the working band
+  HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
   CondenserSteamHigh: 100, // kg in the condenser: more cooling water
   CondenserSteamLow: 10, // kg: less cooling water
   ValveNudge: 0.02, // position change per adjustment
@@ -31,12 +31,10 @@ const S = LoopSettings
 const nudge = (position: number, direction: -1 | 0 | 1) =>
   Math.max(0, Math.min(1, position + direction * S.ValveNudge)) - position
 
-// Open past `limit`, close once back at `target`, else keep: a valve with hysteresis.
-// `side` is -1 for a low limit (makeup) and +1 for a high limit (reject).
-function hysteresis(open: boolean, level: number, limit: number, target: number, side: -1 | 1): boolean {
-  if ((level - limit) * side > 0) return true
-  if ((level - target) * side <= 0) return false
-  return open
+// Makeup and reject open in proportion to the distance outside the working band, shut inside it
+export function hotwellValvePositions(level: number): { makeup: number; reject: number } {
+  const ramp = (distance: number): number => Math.max(0, Math.min(1, distance / S.HotwellRamp))
+  return { makeup: ramp(S.HotwellBandLow - level), reject: ramp(level - S.HotwellBandHigh) }
 }
 
 // Valve actions are deltas: ask for the difference to the wanted position, nothing when already there
@@ -98,16 +96,17 @@ function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
 
 function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
   const level = Condenser.hotwellWaterVolume / CstCondenser.TotalVolume
-  const makeup = hysteresis(Condenser.makeupValvePosition > 0, level, S.HotwellMakeupBelow, S.HotwellTarget, -1)
-  const reject = hysteresis(Condenser.rejectValvePosition > 0, level, S.HotwellRejectAbove, S.HotwellTarget, 1)
-  const actions: PowerPlantAction[] = []
-  const makeupDelta = (makeup ? 1 : 0) - Condenser.makeupValvePosition
-  const rejectDelta = (reject ? 1 : 0) - Condenser.rejectValvePosition
-  if (makeupDelta !== 0)
-    actions.push({ type: "SET_MAKEUP_VALVE_POSITION", payload: { makeupValvePosition: makeupDelta } })
-  if (rejectDelta !== 0)
-    actions.push({ type: "SET_REJECT_VALVE_POSITION", payload: { rejectValvePosition: rejectDelta } })
-  return actions
+  const { makeup, reject } = hotwellValvePositions(level)
+  return [
+    ...toPosition(Condenser.makeupValvePosition, makeup, (makeupValvePosition) => ({
+      type: "SET_MAKEUP_VALVE_POSITION",
+      payload: { makeupValvePosition },
+    })),
+    ...toPosition(Condenser.rejectValvePosition, reject, (rejectValvePosition) => ({
+      type: "SET_REJECT_VALVE_POSITION",
+      payload: { rejectValvePosition },
+    })),
+  ]
 }
 
 // The holds once steam flows: hotwell every tick, gas, boiler level and cooling water every AdjustEvery seconds

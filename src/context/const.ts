@@ -46,6 +46,8 @@ export const CstSimulation = {
     Makeup_Step: 5, // % per click open/close
     Reject_MaxFlowRate: 50, // l/s hotwell water out to storage
     Reject_Step: 5, // % per click open/close
+    HotwellLowLow: 0.1, // fraction of TotalVolume: below it the condensation pump trips (NPSH, see design-basis.md)
+    HotwellHighHigh: 0.95, // fraction of TotalVolume: from it the reject valve is forced fully open (overfill clamp)
   },
 
   CstTurbine: {
