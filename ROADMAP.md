@@ -12,7 +12,7 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 | # | Ticket | Priority | Status | Unblocks |
 | - | ------ | -------- | ------ | -------- |
 | 1 | [#25](https://github.com/NarubyRiverlione/steamboiler/issues/25) Derivative kick when hold mode engages | P3 (↑P2) | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) |
-| 2 | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) Condensation runs at 10 times the energy balance (magic number in calculateCondensation) | P2 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
+| 2 | [#47](https://github.com/NarubyRiverlione/steamboiler/issues/47) Condensation runs at 10 times the energy balance (magic number in calculateCondensation) | P2 | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
 | 3 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |
 | 4 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | needs-triage |  |
 | 5 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |
