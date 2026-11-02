@@ -25,6 +25,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 |---|---|
 | State management, simulation loop, source layout, conventions | [dev/architecture.md](dev/architecture.md) |
 | Headless scenario runner: scenarios, report, invariants, snapshots | [dev/headless-runner.md](dev/headless-runner.md) |
+| Branches (`dev` for work, `main` for releases) and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
 
 ## Decisions
 
@@ -41,6 +42,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0009](adr/0009-hotwell-sized-from-condensate-flow.md) | The hotwell is sized from condensate flow: 50 m³ |
 | [0010](adr/0010-pid-derivative-on-measurement.md) | The hold-mode PID takes its derivative on the measurement |
 | [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
+| [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
 
 ## Research (dated, frozen)
 

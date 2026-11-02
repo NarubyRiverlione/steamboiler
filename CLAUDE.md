@@ -6,6 +6,8 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 
 ## Rules
 
+- **Branches**: work on `dev`; never commit, merge or push to `main` unless the owner explicitly says so
+  (`main` = milestone releases, auto-deployed to GitHub Pages). See `docs/dev/branching.md`.
 - **Realism**: never add a magic number to speed up a process; playability comes from sizing utilities.
   Record every over-dimensioned utility or deliberate reduction in `docs/plant/design-basis.md`.
 - Judge physics/parameter changes with the headless runner (`docs/dev/headless-runner.md`), not the app.
