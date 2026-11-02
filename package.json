@@ -11,6 +11,7 @@
     "dev": "vite --host",
     "build": "tsc -b && pnpm audit -P && vite build",
     "lint": "eslint . --fix && pnpm tsc -b --noEmit",
+    "lint:ci": "eslint . && tsc -b --noEmit",
     "preview": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",

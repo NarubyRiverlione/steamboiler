@@ -25,7 +25,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 |---|---|
 | State management, simulation loop, source layout, conventions | [dev/architecture.md](dev/architecture.md) |
 | Headless scenario runner: scenarios, report, invariants, snapshots | [dev/headless-runner.md](dev/headless-runner.md) |
-| Branches (`dev` for work, `main` for releases) and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
+| Branches (`dev` for work, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
 
 ## Decisions
 
@@ -43,6 +43,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0010](adr/0010-pid-derivative-on-measurement.md) | The hold-mode PID takes its derivative on the measurement |
 | [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
 | [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
+| [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
 
 ## Research (dated, frozen)
 
