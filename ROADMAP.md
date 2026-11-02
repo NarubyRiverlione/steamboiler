@@ -11,7 +11,7 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 
 | # | Ticket | Priority | Status | Unblocks |
 | - | ------ | -------- | ------ | -------- |
-| 1 | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) Hotwell makeup and reject thresholds: protection limits plus a working band | P3 (↑P2) | ready-for-agent | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) |
+| 1 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage |  |
 | 2 | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) Hold mode only engages within ±50 rpm of the set point | P3 (↑P2) | ready-for-agent | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
 | 3 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |
 | 4 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | ready-for-agent | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
@@ -25,13 +25,13 @@ A blocker inherits the highest priority of anything it unblocks, shown as `↑P1
 | 12 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |
 | 13 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |
 | 14 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P4 | needs-triage |  |
+| 15 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P4 | needs-triage |  |
+| 16 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P4 | needs-triage |  |
 
 ## Blocked
 
 | # | Ticket | Priority | Status | Waiting on |
 | - | ------ | -------- | ------ | ---------- |
-| 15 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
-| 16 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) |
-| 17 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
-| 18 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) |
-| 19 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P4 | needs-triage | [#52](https://github.com/NarubyRiverlione/steamboiler/issues/52) |
+| 17 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) |
+| 18 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |
+| 19 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) |
