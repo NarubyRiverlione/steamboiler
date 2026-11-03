@@ -35,7 +35,7 @@ Each tick (`BoilerTick`, `calculateFlashedMass`):
 
 Saturated steam density: the table holds only the liquid side, so the steam side comes from Clausius-Clapeyron, `vg = vf + hfg / (T · dP/dT)`, with `dP/dT` a centred difference over ±5 K (within 3% of IAPWS-IF97 from 100 to 300 °C). Below 80 °C it is the ideal-gas vapour density at the Antoine saturation pressure: the vapour over the water in the vented drum. The cold start holds this vapour inventory (about 0.9 kg at 20 °C), so it starts in equilibrium.
 
-Steam table (`src/utils/steamData.ts`): saturated water from 80 °C up to the critical point (373.946 °C, 220.64 bar), generated from IAPWS-IF97 (liquid specific volume, enthalpy and specific heat, plus latent heat). Boiling point at 180 bar is 357.0 °C. Lookups clamp at the critical point and never throw: a temperature or pressure above it returns the critical-point row (latent heat 0). Over-pressure is handled by the relief valve (see below) and burner protection (#33). Specific heat is held at its 370 °C value in the last row, see [design-basis.md](design-basis.md).
+Steam table (`src/utils/steamData.ts`): saturated water from 80 °C up to the critical point (373.946 °C, 220.64 bar), generated from IAPWS-IF97 (liquid specific volume, enthalpy and specific heat, plus latent heat). Boiling point at 180 bar is 357.0 °C. Lookups clamp at the critical point and never throw: a temperature or pressure above it returns the critical-point row (latent heat 0). Over-pressure is handled by the relief valve (see below) and the burner trip (see below). Specific heat is held at its 370 °C value in the last row, see [design-basis.md](design-basis.md).
 
 Steam removal (`BoilerRemoveSteam`, once for the bypass, then for the turbine valve):
 
@@ -59,7 +59,13 @@ Vented this tick = min(relief capacity × tick, steam mass in the boiler)   (whi
 
 The vented steam goes to the atmosphere, not the condenser: it leaves the loop and is counted in the `ventedTotal` totalizer (kg) ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). `reliefValveOpen` is the valve state and `reliefLifts` counts lifts. Like a steam draw, the vent leaves a deficit that the flash refills with latent heat from the water, so the water cools and the pressure falls. At full gas the capacity exceeds the steam made by 10%, so the pressure falls slowly and the valve lifts and reseats about every 10 s until the gas is reduced or the boiler runs dry. The operator cannot open, close or test it.
 
-A boiler that runs dry with gas on keeps heating its metal: with no water left to flash, the gas heats the 50 MJ/K of steel by about 7 K/s up to the critical-point clamp (373.9 °C, 220.6 bar). This starts in the last litre or so, which cannot absorb the gas heat: `boiler-low` passes design pressure at about 396 s with 0.2 m³ left, after the relief valve has vented the rest. the former `turbine-sync` (removed in #60) ran dry unfed at 1 bar and jumps the same way. The relief valve cannot prevent either; burner protection on low level is #33.
+A boiler that runs dry with gas on keeps heating its metal: with no water left to flash, the gas heats the 50 MJ/K of steel by about 7 K/s up to the critical-point clamp (373.9 °C, 220.6 bar). This starts in the last litre or so, which cannot absorb the gas heat. The relief valve cannot prevent it; the burner trip does (below).
+
+## Burner trip
+
+The burner trips when the water volume falls below the burner low-low level, 20% of the boiler volume (`CstBoiler.BurnerLowLowLevel`, UNVERIFIED, see [design-basis.md](design-basis.md)) ([ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)). `BoilerBurnerTrip` runs first in `PowerPlantTick`, upstream of the relief valve, on the volume at the start of the tick: the gas is forced to 0 and `burnerTripped` is set, whatever the operator or a scenario does. `INCREASE_GAS_FLOW` is refused while the volume is below the level; the next successful raise clears the flag. There is no pressure or temperature trip: pressure follows saturation, and the relief valve holds it while water remains. A drained boiler trips the burner as well. The boiler panel shows the trip and the sim report notes its time; the CSV has `boiler_burnerTripped`.
+
+In `boiler-low` (full gas, everything closed) the burner trips at about 371 s with about 20 m³ left, and the peak is 178.1 bar and 356.0 °C, inside design.
 
 Constants: `CstBoiler.ReliefOpenPressure`, `ReliefClosePressure`, `ReliefCapacityMargin`; the capacity itself is derived (`ReliefCapacity` in `BoilerTick.ts`). It is realistic sizing, not a departure.
 
@@ -72,11 +78,11 @@ Heating rate = previous + (ΔT / tick − previous) × tick / 30 s
 Alarm        = heating rate > 0.4 K/s (24 K/min)
 ```
 
-The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: nothing limits the gas and nothing trips (#33 owns trips). Full gas from cold rises at about 80 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.6 min (`heat-up`). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
+The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 80 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.6 min (`heat-up`). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
 
 ## Pressure model
 
-Pressure is the saturation pressure of the water temperature, never below atmospheric: `P = max(1.013 bar, Psat(T))` ([ADR 0001](../adr/0001-boiler-pressure-follows-saturation.md), `calculateBoilerPressure`). Steam mass does not feed into it. Below 100 °C the drum is vented and stays at atmospheric. The pressure is finite everywhere: the steam table clamps at the critical point (220.64 bar). Over-pressure is not capped here; the relief valve (below) and burner protection (#33) own it. Since pressure follows saturation, the relief valve is the temperature cap too: there is no separate temperature clamp. How fast pressure responds depends on the thermal mass of the water and the metal.
+Pressure is the saturation pressure of the water temperature, never below atmospheric: `P = max(1.013 bar, Psat(T))` ([ADR 0001](../adr/0001-boiler-pressure-follows-saturation.md), `calculateBoilerPressure`). Steam mass does not feed into it. Below 100 °C the drum is vented and stays at atmospheric. The pressure is finite everywhere: the steam table clamps at the critical point (220.64 bar). Over-pressure is not capped here; the relief valve (below) owns it, and the burner trip keeps the boiler from running dry. Since pressure follows saturation, the relief valve is the temperature cap too: there is no separate temperature clamp. How fast pressure responds depends on the thermal mass of the water and the metal.
 
 ## Constants and simplifications
 

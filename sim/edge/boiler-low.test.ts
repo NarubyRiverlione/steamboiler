@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import { CstSimulation } from "../../src/context/const"
 import { runScenario } from "../scenario"
 import { boilerLow } from "../scenarios/boiler-low"
 
@@ -6,12 +7,20 @@ describe("boiler-low", () => {
   // every tick, so no overshoot hides between samples
   const samples = runScenario({ ...boilerLow, sampleEvery: 0.1 })
 
-  // As the relief valve vents the boiler dry, its last litre or so cannot absorb the gas heat and the metal heats past
-  // design pressure: burner protection on low level is #33
-  test("the relief valve lifts and pressure never exceeds design pressure in any tick while 1 m³ of water remains", () => {
+  test("the relief valve lifts and pressure never exceeds design pressure in any tick", () => {
     expect(samples[samples.length - 1].state.Boiler.reliefLifts).toBeGreaterThan(0)
-    const wet = samples.filter((s) => s.state.Boiler.waterVolume > 1000)
-    expect(Math.max(...wet.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(180)
+    expect(Math.max(...samples.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(180)
+  })
+
+  // The relief valve vents the boiler towards empty; the burner trip stops the gas before the last litres, which cannot
+  // absorb the gas heat, are reached (#33)
+  test("the burner trips below the burner low-low level and the boiler never runs dry", () => {
+    const tripped = samples.find((s) => s.state.Boiler.burnerTripped)
+    expect(tripped).toBeDefined()
+    expect(samples[samples.length - 1].state.Boiler.gasFlow).toBe(0)
+    expect(Math.min(...samples.map((s) => s.state.Boiler.waterVolume))).toBeGreaterThan(
+      CstSimulation.CstBoiler.TotalVolume * CstSimulation.CstBoiler.BurnerLowLowLevel * 0.75,
+    )
   })
 
   test("raises the heating-rate alarm: full gas from cold is above the limit", () => {

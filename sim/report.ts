@@ -560,6 +560,12 @@ const liftLine = ({ open, close, vented }: Lift): string => {
   return `<li>${clock(open)} – ${until} — vented ${Math.round(vented).toLocaleString("en")} kg</li>`
 }
 
+// The first sample with the burner trip set, as a report line (empty when it never tripped)
+const burnerTripLine = (samples: Sample[]): string => {
+  const tripped = samples.find((s) => s.state.Boiler.burnerTripped)
+  return tripped === undefined ? "" : `<p class="meta">Burner trip at ${clock(tripped.time)}: gas shut off, water below the burner low-low level</p>`
+}
+
 export function toReportHtml(scenario: Scenario, samples: Sample[], lifts: Lift[] = []): string {
   const times = samples.map((s) => s.time)
   const values = panels.map((p) => p.series.map((s) => samples.map((sample) => s.value(sample.state))))
@@ -618,6 +624,7 @@ export function toReportHtml(scenario: Scenario, samples: Sample[], lifts: Lift[
 </header>
 <details><summary>Operator actions (${String(scenario.actions.length)})</summary><ul>${actionList}</ul></details>
 <details><summary>Relief valve lifts (${String(lifts.length)})</summary><ul>${lifts.map(liftLine).join("")}</ul></details>
+${burnerTripLine(samples)}
 ${groups}
 <script type="application/json" id="data">${jsonForScript(data)}</script>
 <script>${CLIENT_SCRIPT}</script>

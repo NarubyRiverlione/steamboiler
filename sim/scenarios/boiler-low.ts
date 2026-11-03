@@ -2,10 +2,10 @@ import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import { CstSimulation } from "../../src/context/const"
 import { Scenario } from "../scenario"
 
-// Full gas for an hour with everything closed: only the relief valve holds the pressure, until the boiler runs dry
+// Full gas for an hour with everything closed: the relief valve holds the pressure until the burner trips on low water
 export const boilerLow: Scenario = {
   name: "boiler-low",
-  description: "Full gas from cold for an hour with everything closed; only the relief valve holds the pressure",
+  description: "Full gas from cold for an hour with everything closed; the relief valve holds the pressure until the burner trips on low water",
   duration: 3600,
   sampleEvery: 10,
   initial: makeInitialState(),

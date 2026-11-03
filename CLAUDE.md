@@ -31,3 +31,5 @@ Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Wait
 Before closing, run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
 ~150 s on slow hardware), report the scores (also in
 the closing comment) and flag any method above the risk threshold.
+The skill runs `npx --yes @barney-media/crap-typescript` (never installed as a dependency); the owner allows exactly
+that command, with its flags (`--changed`, a file path, `--threshold`, `--format json`), and no other `npx` package.

@@ -230,6 +230,21 @@ describe("toReportHtml relief valve lifts", () => {
   })
 })
 
+describe("toReportHtml burner trip", () => {
+  const samples = runScenario(scenario)
+
+  test("notes when the burner tripped, with the time of the first tripped sample", () => {
+    const tripped = samples.map((s, i) =>
+      i < 3 ? s : { ...s, state: { ...s.state, Boiler: { ...s.state.Boiler, burnerTripped: true } } },
+    )
+    expect(toReportHtml(scenario, tripped)).toContain(`Burner trip at 0:${String(samples[3].time)}`)
+  })
+
+  test("a run where the burner never tripped has no burner trip line", () => {
+    expect(toReportHtml(scenario, samples)).not.toContain("Burner trip at")
+  })
+})
+
 describe("niceTicks", () => {
   test("steps by 1/2/5 × 10^k within the range", () => {
     expect(niceTicks(0, 30, 5)).toEqual([0, 10, 20, 30])

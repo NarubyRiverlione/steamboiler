@@ -12,9 +12,6 @@ export const expectedFailures: Record<string, string> = {
   // a drum about 80% full of water holds a slowly rising steam inventory while it cools (+0.03 kg/s): the steam density
   // kink and the invariant's premise, see #46
   "relief-lift / natural cooldown stops steam generation": "#46",
-  // the relief valve vents the boiler dry; the last litres cannot absorb the gas heat, the metal heats past design: #33
-  "boiler-low / pressure within design pressure": "#33",
-  "boiler-low / temperature within design temperature": "#33",
 }
 
 export function describeInvariants(scenarios: Scenario[]): void {
