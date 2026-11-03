@@ -141,10 +141,10 @@ describe("PowerPlantTick turbine trip", () => {
 
 describe("PowerPlantTick burner trip", () => {
   // A burning plant holding this much water (litres) in the boiler
-  const burning = (boilerLitres: number): PowerPlantState => ({
-    ...pumping(boilerLitres, 0),
-    Boiler: { ...pumping(boilerLitres, 0).Boiler, gasFlow: CstBoiler.MaxGasFlow },
-  })
+  const burning = (boilerLitres: number): PowerPlantState => {
+    const plant: PowerPlantState = pumping(boilerLitres, 0)
+    return { ...plant, Boiler: { ...plant.Boiler, gasFlow: CstBoiler.MaxGasFlow } }
+  }
   const litresAtLevel = (level: number): number => CstBoiler.TotalVolume * level
 
   test("the gas goes to 0 and the trip is set when the water is below the burner low-low level", () => {
@@ -159,11 +159,17 @@ describe("PowerPlantTick burner trip", () => {
     expect(next.Boiler.burnerTripped).toBe(false)
   })
 
+  test("after a trip the gas stays 0 and the flag stays set, also once the water is back above the level", () => {
+    let state: PowerPlantState = PowerPlantTick(burning(litresAtLevel(CstBoiler.BurnerLowLowLevel) - 1))
+    state = { ...state, Boiler: { ...state.Boiler, waterVolume: litresAtLevel(CstBoiler.BurnerLowLowLevel) + 1000 } }
+    for (let i = 0; i < 10; i++) state = PowerPlantTick(state)
+    expect(state.Boiler.gasFlow).toBe(0)
+    expect(state.Boiler.burnerTripped).toBe(true)
+  })
+
   test("a drained boiler trips the burner", () => {
-    let state: PowerPlantState = {
-      ...burning(litresAtLevel(CstBoiler.BurnerLowLowLevel) + 100),
-      Boiler: { ...burning(litresAtLevel(CstBoiler.BurnerLowLowLevel) + 100).Boiler, drainValveOpen: true },
-    }
+    const nearLow: PowerPlantState = burning(litresAtLevel(CstBoiler.BurnerLowLowLevel) + 100)
+    let state: PowerPlantState = { ...nearLow, Boiler: { ...nearLow.Boiler, drainValveOpen: true } }
     for (let i = 0; i < 100 && !state.Boiler.burnerTripped; i++) state = PowerPlantTick(state)
     expect(state.Boiler.burnerTripped).toBe(true)
     expect(state.Boiler.gasFlow).toBe(0)

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import { CstSimulation } from "../../src/context/const"
 import { runScenario } from "../scenario"
 import { boilerLow } from "../scenarios/boiler-low"
 
@@ -17,7 +18,9 @@ describe("boiler-low", () => {
     const tripped = samples.find((s) => s.state.Boiler.burnerTripped)
     expect(tripped).toBeDefined()
     expect(samples[samples.length - 1].state.Boiler.gasFlow).toBe(0)
-    expect(Math.min(...samples.map((s) => s.state.Boiler.waterVolume))).toBeGreaterThan(0.15 * 100_000)
+    expect(Math.min(...samples.map((s) => s.state.Boiler.waterVolume))).toBeGreaterThan(
+      CstSimulation.CstBoiler.TotalVolume * CstSimulation.CstBoiler.BurnerLowLowLevel * 0.75,
+    )
   })
 
   test("raises the heating-rate alarm: full gas from cold is above the limit", () => {
