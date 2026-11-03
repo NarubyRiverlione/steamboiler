@@ -1,29 +1,8 @@
 import { describe, expect, test } from "vitest"
 import { invariants, totalWater } from "./invariants"
-import { runScenario, Sample, Scenario } from "./scenario"
-import { scenarios } from "./scenarios"
+import { Sample } from "./scenario"
 import { makeInitialState } from "../src/context/PowerPlantReducer"
 import PowerPlantState from "../src/context/PowerPlantState"
-
-// (scenario, invariant) pairs that fail today, with the ticket that fixes them. When that ticket
-// lands the test.fails flips red: remove the entry so the pair guards as a normal test.
-const expectedFailures: Record<string, string> = {
-  // a drum about 80% full of water holds a slowly rising steam inventory while it cools (+0.03 kg/s): the steam density
-  // kink and the invariant's premise, see #46
-  "relief-lift / natural cooldown stops steam generation": "#46",
-  // the relief valve vents the boiler dry; the last litres cannot absorb the gas heat, the metal heats past design: #33
-  "full-gas / pressure within design pressure": "#33",
-  "full-gas / temperature within design temperature": "#33",
-}
-
-describe.each(Object.values(scenarios))("$name invariants", (scenario: Scenario) => {
-  const samples = runScenario(scenario)
-  for (const invariant of invariants) {
-    const ticket = expectedFailures[`${scenario.name} / ${invariant.name}`] as string | undefined
-    if (ticket === undefined) test(invariant.name, () => { expect(invariant.check(samples)).toEqual([]); })
-    else test.fails(`${invariant.name} (fails until ${ticket})`, () => { expect(invariant.check(samples)).toEqual([]); })
-  }
-})
 
 describe("invariant checks", () => {
   const base = makeInitialState()

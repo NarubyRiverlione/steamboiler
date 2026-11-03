@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { makeInitialState } from "../src/context/PowerPlantReducer"
 import PowerPlantState from "../src/context/PowerPlantState"
@@ -39,6 +39,7 @@ export const loadSnapshot = (name: string) => parseSnapshot(readFileSync(snapsho
 
 export function saveSnapshot(name: string, state: PowerPlantState): string {
   const path = snapshotPath(name)
+  mkdirSync(SnapshotDir, { recursive: true })
   writeFileSync(path, toSnapshotJson(state))
   return path
 }

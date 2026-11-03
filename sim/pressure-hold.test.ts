@@ -5,7 +5,7 @@ import PowerPlantState from "../src/context/PowerPlantState"
 import { holdPressureWithGas, PressureHoldSettings as P } from "./scenarios/pressure-hold"
 import { StartGas } from "./scenarios/steps"
 
-// The gas pressure hold shared by the bypass-loop and startup-cold operators
+// The gas pressure hold shared by the bypass-loop and turbine-runup operators
 
 const cold = makeInitialState()
 const boiler = (pressure: number, gasFlow: number, heatingRate = 0): PowerPlantState => ({
