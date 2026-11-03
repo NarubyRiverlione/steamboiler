@@ -17,7 +17,7 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 
 ## Commands
 
-- `pnpm test` · `pnpm lint` (eslint + tsc)
+- `pnpm test` (all layers) · `pnpm test:unit` · `pnpm test:sim:golden` · `pnpm test:sim:edge` · `pnpm lint` (eslint + tsc)
 - `pnpm sim [scenario]` — headless run, writes CSV + HTML to `sim/reports/`
 - `pnpm sim:snapshots` — regenerate `sim/snapshots/` (a test fails when stale)
 - `pnpm roadmap` — regenerate `ROADMAP.md` from GitHub issues
