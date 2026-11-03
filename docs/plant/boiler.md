@@ -1,6 +1,16 @@
 # Boiler
 
-A gas-fired, closed-loop drum boiler. Sizes and limits are in [design-basis.md](design-basis.md). Code: `src/context/Boiler/BoilerTick.ts`, `src/utils/boilerCalculations.ts`, constants in `CstSimulation.CstBoiler` (`src/context/const.ts`).
+A gas-fired boiler in a closed water loop, modelled as a single lumped vessel ([ADR 0019](../adr/0019-boiler-is-one-lumped-vessel.md)). Its volume and steel mass are sized from a real drum boiler (steam drum, waterwall tubes and downcomers), but it behaves as one pot: one volume and one temperature. Sizes and limits are in [design-basis.md](design-basis.md). Code: `src/context/Boiler/BoilerTick.ts`, `src/utils/boilerCalculations.ts`, constants in `CstSimulation.CstBoiler` (`src/context/const.ts`).
+
+## What the model is not
+
+A real drum boiler is a steam drum at the top and a lower (mud) drum at the bottom, joined by waterwall tubes (risers) in the furnace and downcomers outside it. Water heats and partly boils in the risers, and the lighter mixture rises while the denser water in the downcomers sinks (natural circulation). This simulator models none of that:
+
+- **No separate drum, risers or downcomers**: the boiler is one 100 m³ volume. The water sits at the bottom and saturated steam fills the rest, so the steam space is the total minus the water, larger than a real drum's ([design-basis.md](design-basis.md)).
+- **No circulation**: heat goes into the water as a whole; there is no flow through tubes and no steam quality in the risers.
+- **No swell and shrink**: a real drum level jumps up when the steam valve opens, because the bubbles in the risers expand as pressure falls, and drops when it closes. Here the level moves only through thermal expansion of the water ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), boiling off, and water in and out.
+- **No drum level**: the level is the water's share of the 100 m³ (a volume fraction), not millimetres from a normal water level in the drum. Levels such as the burner low-low level are therefore estimates without a real-plant equivalent.
+- **No metal temperature**: the water and the steel share one temperature, so thermal stress in the drum walls is not modelled ([ADR 0006](../adr/0006-heating-rate-alarm-only.md)).
 
 ## Elements
 
@@ -9,7 +19,6 @@ A gas-fired, closed-loop drum boiler. Sizes and limits are in [design-basis.md](
 - **Pressure**: see **Pressure model** below.
 - **Thermal mass**: the water plus about 100 t of drum and tube steel at 0.5 kJ/kg·K (50 MJ/K), at the water temperature. No separate metal temperature. At the cold start the metal adds about a quarter to the water's 210 MJ/K.
 - **Energy**: the heat content above 0 °C of the water and the metal. The source is the gas burner. The sinks are heat loss, the latent heat of the flash (which includes steam vented by the relief valve), and drained water (the water's share only; the metal stays).
-- **Energy**: the source is the gas burner (thermal mass: the water only; metal mass is #13). The sinks are natural cooling, the latent heat of the flash (which includes steam vented by the relief valve), and drained water.
 - **Volume**: a fixed 100 m³ shared between water and steam; 50 m³ of water at the start (49 910 kg at ambient). `waterVolume` is derived from `waterMass` every tick, in `BoilerTick` only.
 - **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second, converted to kg at the boiler temperature (`drainedTotal` counts kg). Steam leaves through the relief valve to the atmosphere (`BoilerVent`, see **Relief valve**), and through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the steam inventory. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
 
