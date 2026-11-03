@@ -42,12 +42,15 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0008](adr/0008-pressure-hold-with-gas.md) | The scenarios hold working pressure with gas, not with the steam valve |
 | [0009](adr/0009-hotwell-sized-from-condensate-flow.md) | The hotwell is sized from condensate flow: 50 m³ |
 | [0010](adr/0010-pid-derivative-on-measurement.md) | The hold-mode PID takes its derivative on the measurement |
+| [0010](adr/0010-ui-redo-industrial-style.md) | A UI redo in an industrial style (proposed, not decided) |
 | [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
 | [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
 | [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
 | [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
 | [0015](adr/0015-ui-redo-analog-board-preferred.md) | The UI redo: a strong preference for the analog board (proposed, with a [mockup](adr/0015-boiler-panel-mockup.html)) |
 | [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
+| [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |
+| [0018](adr/0018-cold-fill-at-35-percent.md) | The boiler is filled cold to 35% so it expands to the working level |
 | [0019](adr/0019-turbine-runup-from-steam-power.md) | The turbine runs up on steam power (physical torque, losses, inertia), paced by a hold-mode run-up rate (proposed) |
 
 ## Research (dated, frozen)
@@ -60,6 +63,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Oct 2026 | [Cold startup: how real plants do it (sourced)](research/2026-10-startup-procedure.md) |
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
 | Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
+| Nov 2026 | [SJAE motive steam: where it comes from on a cold start (sourced)](research/2026-11-sjae-motive-steam.md) |
 
 ## Agent configuration
 

@@ -14,8 +14,9 @@ The condenser pressure, shown as a vacuum readout in mbar, is controlled by two 
 **Steam jet air extraction (SJAE)**
 - Toggle enables or disables it, plus open and close buttons for the valve in `SJAE_ValveStep` (5%) steps
 - With the SJAE disabled the valve position is ignored and pressure climbs gradually
-- Enabled, it builds vacuum over time based on steam flow and valve position
-- Auto-disables when there is no steam flow in the master steam valve, or when condenser pressure is more than `SJAE_MaxPressureDifference` above `CAR_MaxVacuum`
+- Enabled, it builds vacuum over time based on boiler pressure and valve position
+- Its motive steam is taken from the boiler, so it does not depend on the main steam valve: it runs with the valve shut, as on a real cold start on auxiliary steam ([research](../research/2026-11-sjae-motive-steam.md)). It uses no steam from the water balance; a real holding ejector's steam drains back to the hotwell, under 1% of the bypass flow
+- Auto-disables when the boiler pressure is at or below `MainSteamValveMinimumPressure` (10 bar, too little motive pressure), or when condenser pressure is more than `SJAE_MaxPressureDifference` above `CAR_MaxVacuum` (the air extraction pump pulls the first vacuum)
 
 `CondenserTick` calls `calculateVacuumByReducers` (`condenserCalculation.ts`) each tick: CAR first, then SJAE, then decay if neither is active. Pressure is atmospheric plus a steam-mass term (`steamMass / 1000`, not physically derived) minus that vacuum. The vacuum does not limit the intake: all turbine exhaust and bypass steam enters the condenser. `OptimalPressure` and `OptimalPressureBellWidth` only set the band shown on the vacuum readout. The turbine valve is interlocked with the condenser pressure: above the vacuum limit (`VacuumLimit`, value and source in [design-basis.md](design-basis.md#steam-path-and-turbine)) it cannot be opened, and an open valve closes in a turbine trip (see [turbine.md](turbine.md#vacuum-interlock-and-turbine-trip)). The air extraction pump alone (`CAR_MaxVacuum`) gets under the limit; with steam coming in, the pressure only stays there while the recirculation pump condenses it.
 
