@@ -11,7 +11,7 @@ Next: the first ticket with nothing under Waiting on.
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 1 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P1 | needs-triage |  |  |
-| 2 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage |  |  |
+| 2 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | ready-for-agent |  |  |
 | 3 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |  |
 | 4 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down to cold | P3 | needs-triage |  |  |
 | 5 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | ready-for-agent |  | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
