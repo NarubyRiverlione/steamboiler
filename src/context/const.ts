@@ -12,6 +12,7 @@ export const CstSimulation = {
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
     ReliefOpenPressure: 178, // bar, the relief valve lifts fully (2 bar margin for one tick's rise)
     ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
+    BurnerLowLowLevel: 0.2, // share of TotalVolume, below it the burner trips (UNVERIFIED estimate, see design-basis.md)
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
     MetalMass: 100e3, // kg of drum and tube steel, at the water temperature (one lump)
     HeatLossAtDesign: 500, // kW lost to the surroundings at design temperature, proportional to T - ambient

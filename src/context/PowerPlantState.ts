@@ -17,6 +17,7 @@ export type BoilerState = {
   reliefValveOpen: boolean // relief valve lifted (automatic, see GLOSSARY.md)
   ventedTotal: number // kg of steam vented to the atmosphere since start (totalizer)
   reliefLifts: number // lifts of the relief valve since start (counter)
+  burnerTripped: boolean // set by the low-low level trip, cleared by the next successful gas raise
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)

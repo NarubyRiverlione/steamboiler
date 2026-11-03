@@ -138,3 +138,34 @@ describe("PowerPlantTick turbine trip", () => {
     expect(next.Turbine.turbineTripped).toBe(false)
   })
 })
+
+describe("PowerPlantTick burner trip", () => {
+  // A burning plant holding this much water (litres) in the boiler
+  const burning = (boilerLitres: number): PowerPlantState => ({
+    ...pumping(boilerLitres, 0),
+    Boiler: { ...pumping(boilerLitres, 0).Boiler, gasFlow: CstBoiler.MaxGasFlow },
+  })
+  const litresAtLevel = (level: number): number => CstBoiler.TotalVolume * level
+
+  test("the gas goes to 0 and the trip is set when the water is below the burner low-low level", () => {
+    const next = PowerPlantTick(burning(litresAtLevel(CstBoiler.BurnerLowLowLevel) - 1))
+    expect(next.Boiler.gasFlow).toBe(0)
+    expect(next.Boiler.burnerTripped).toBe(true)
+  })
+
+  test("the gas keeps burning at the burner low-low level", () => {
+    const next = PowerPlantTick(burning(litresAtLevel(CstBoiler.BurnerLowLowLevel)))
+    expect(next.Boiler.gasFlow).toBe(CstBoiler.MaxGasFlow)
+    expect(next.Boiler.burnerTripped).toBe(false)
+  })
+
+  test("a drained boiler trips the burner", () => {
+    let state: PowerPlantState = {
+      ...burning(litresAtLevel(CstBoiler.BurnerLowLowLevel) + 100),
+      Boiler: { ...burning(litresAtLevel(CstBoiler.BurnerLowLowLevel) + 100).Boiler, drainValveOpen: true },
+    }
+    for (let i = 0; i < 100 && !state.Boiler.burnerTripped; i++) state = PowerPlantTick(state)
+    expect(state.Boiler.burnerTripped).toBe(true)
+    expect(state.Boiler.gasFlow).toBe(0)
+  })
+})

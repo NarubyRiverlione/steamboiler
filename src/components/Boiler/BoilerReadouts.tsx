@@ -19,6 +19,7 @@ const BoilerReadouts = () => {
         energy,
         reliefValveOpen,
         ventedTotal,
+        burnerTripped,
         heatingRate,
         heatingRateOverLimit,
       },
@@ -26,7 +27,7 @@ const BoilerReadouts = () => {
   } = usePowerPlant()
 
   const {
-    CstBoiler: { TotalVolume, ReliefOpenPressure, ReliefClosePressure, HeatingRateLimit },
+    CstBoiler: { TotalVolume, ReliefOpenPressure, ReliefClosePressure, HeatingRateLimit, BurnerLowLowLevel },
   } = CstSimulation
 
   const [advancedExpanded, setAdvancedExpanded] = useState(false)
@@ -75,6 +76,17 @@ const BoilerReadouts = () => {
         </div>
         <div className="readout-right">
           <div className="value">{(ventedTotal / 1e3).toFixed(1)} t vented</div>
+        </div>
+      </div>
+
+      <div className="readout-container">
+        <div className="readout-item">
+          <span className="label">Burner trip</span>
+          <Indicator
+            isActive={burnerTripped}
+            title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, raise the gas to restart`}
+            label="Tripped"
+          />
         </div>
       </div>
 

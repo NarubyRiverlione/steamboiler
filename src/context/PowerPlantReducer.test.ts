@@ -28,6 +28,32 @@ describe("powerPlantReducer", () => {
       expect(reduce({ type: "DECREASE_GAS_FLOW", amount: 5000 }, burning).Boiler.gasFlow).toBe(0)
     })
 
+    describe("burner trip", () => {
+      const lowLowVolume: number = CstBoiler.TotalVolume * CstBoiler.BurnerLowLowLevel - 1
+      const tripped: PowerPlantState = {
+        ...base,
+        Boiler: { ...base.Boiler, waterVolume: lowLowVolume, burnerTripped: true },
+      }
+
+      test("raising the gas is refused while the water is below the burner low-low level", () => {
+        const next: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }, tripped)
+        expect(next.Boiler.gasFlow).toBe(0)
+        expect(next.Boiler.burnerTripped).toBe(true)
+      })
+
+      test("a raise once the water is back above the level restarts the burner and clears the trip", () => {
+        const refilled: PowerPlantState = { ...tripped, Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 } }
+        const next: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }, refilled)
+        expect(next.Boiler.gasFlow).toBe(500)
+        expect(next.Boiler.burnerTripped).toBe(false)
+      })
+
+      test("lowering the gas is always allowed and leaves the trip as it was", () => {
+        const next: PowerPlantState = reduce({ type: "DECREASE_GAS_FLOW", amount: 500 }, tripped)
+        expect(next.Boiler.burnerTripped).toBe(true)
+      })
+    })
+
     test("drain valve toggles", () => {
       const opened = reduce({ type: "TOGGLE_DRAIN_VALVE" })
       expect(opened.Boiler.drainValveOpen).toBe(true)

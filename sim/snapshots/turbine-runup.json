@@ -11,6 +11,7 @@
     "reliefValveOpen": false,
     "ventedTotal": 0,
     "reliefLifts": 0,
+    "burnerTripped": false,
     "energy": 104912063.65014137,
     "energyDelta": -1170.5849867351958,
     "heatLoss": 489.38797492441927,

@@ -20,7 +20,7 @@ Add a row when you over-dimension a utility or reduce something for playability.
 |---|---|---|---|---|
 | Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 4.7 min (measured, `boiler-low`) instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
 | Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.6 min (measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
-| Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; burner protection is #33 | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
+| Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; the burner trip ([boiler.md](boiler.md#burner-trip)) stops the gas before a boiler runs dry | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
 | Specific heat at the critical point (held) | 47.1 kJ/kg·K from 370 °C up | diverges to infinity at 373.946 °C | the simulation core must stay finite every tick; the table clamps at the critical point instead of throwing | last row of `steamTable` in `steamData.ts` |
 | Burner minimum firing (operator setting) | the scenario pressure hold never takes gas below 100 L/s (`PressureHoldSettings.GasFloor`); the plant itself can go to 0 | a burner cannot modulate to zero and stay lit; turn-down is about 1:10 to 1:20 | with gas at 0 for 2 minutes the hold's overshoot trips the cooldown invariant, which assumes a plant with gas off is cooling; not plant physics | `sim/scenarios/pressure-hold.ts` |
 
@@ -43,6 +43,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Heat into the water at max gas flow | ≈ 357 MW | 85% gas efficiency |
 | Steam generation at full gas | 171 kg/s (about 615 t/h) | measured at 10 bar; a real unit of this size passes 170–180 kg/s |
 | Relief valve | opens 178 bar, closes 171 bar, ≈ 497 kg/s | 110% of the steam full gas makes at 178 bar; realistic sizing, not a departure |
+| Burner low-low level | 20% of the boiler volume (20 m³ of 100 m³) | UNVERIFIED: an own engineering estimate with no source; a real drum trips on a level in mm below normal, which this one-lump boiler has no measure for. The burner trips below it (`CstBoiler.BurnerLowLowLevel`, [ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)) |
 
 ## Startup and heat loss
 
