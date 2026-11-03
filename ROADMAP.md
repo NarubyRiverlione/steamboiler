@@ -11,18 +11,18 @@ Next: the first ticket with nothing under Waiting on.
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 1 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P1 | needs-triage |  |  |
-| 2 | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) Cold start cannot reach generator sync | P2 | needs-triage |  | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) |
-| 3 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage |  |  |
-| 4 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |  |
-| 5 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage | [#18](https://github.com/NarubyRiverlione/steamboiler/issues/18) |  |
-| 6 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | ready-for-agent |  | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
-| 7 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
-| 8 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
-| 9 | [#55](https://github.com/NarubyRiverlione/steamboiler/issues/55) Correct the MaxGasFlow note (says 700 to 900 L/s, value is 12,000) | P3 | ready-for-agent |  |  |
-| 10 | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) Hold mode only engages within ±50 rpm of the set point | P3 | ready-for-agent |  |  |
-| 11 | [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) RPM set point control: 100 rpm per click | P3 | ready-for-agent |  |  |
-| 12 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) |  |
-| 13 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | needs-triage |  |  |
+| 2 | [#33](https://github.com/NarubyRiverlione/steamboiler/issues/33) Burner protection: trip or limit gas on an empty boiler or over-pressure | P2 | needs-triage |  |  |
+| 3 | [#14](https://github.com/NarubyRiverlione/steamboiler/issues/14) Turbine electrical output model | P3 | ready-for-agent |  |  |
+| 4 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) More scenarios: startup-hot, steady-state, bypass-transient, shutdown | P3 | needs-triage |  |  |
+| 5 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | ready-for-agent |  | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
+| 6 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
+| 7 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 8 | [#55](https://github.com/NarubyRiverlione/steamboiler/issues/55) Correct the MaxGasFlow note (says 700 to 900 L/s, value is 12,000) | P3 | ready-for-agent |  |  |
+| 9 | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) Hold mode only engages within ±50 rpm of the set point | P3 | ready-for-agent |  |  |
+| 10 | [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) RPM set point control: 100 rpm per click | P3 | ready-for-agent |  |  |
+| 11 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) |  |
+| 12 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | needs-triage |  |  |
+| 13 | [#63](https://github.com/NarubyRiverlione/steamboiler/issues/63) Hold-mode PID overshoots and chatters the breaker on engage | P3 | needs-triage |  |  |
 | 14 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P4 | needs-triage |  |  |
 | 15 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage |  |  |
 | 16 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |  |
