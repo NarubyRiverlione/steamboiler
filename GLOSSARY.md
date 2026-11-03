@@ -32,7 +32,7 @@ _Avoid_: Safety valve, pressure cap, blow-off
 
 **Lift**:
 One opening of the relief valve, from opening to closing.
-_Avoid_: Trip (a turbine trip closes the turbine valve; a burner trip is #33), pop
+_Avoid_: Trip (a turbine trip closes the turbine valve; a burner trip shuts the gas), pop
 
 **Blowdown**:
 The pressure drop between the relief valve opening and closing: 7 bar, about 4% of the opening pressure.
@@ -129,6 +129,14 @@ _Avoid_: Full, overflow
 **Makeup block**:
 The protection at the high-high level: makeup closes and cannot be opened, and reject is forced fully open, until the hotwell level is back below the high alarm (85%).
 _Avoid_: Makeup trip, overfill clamp
+
+**Burner low-low level**:
+The boiler water level below which the burner trips: 20% of the boiler volume.
+_Avoid_: Empty, dry boiler
+
+**Burner trip**:
+The automatic shutting of the gas to 0 when the boiler water level falls below the burner low-low level. The gas only comes back when the operator raises it, and that is refused while the level is still below low-low.
+_Avoid_: Gas limit, burner stop, trip (on its own)
 
 **Heat loss**:
 Heat the boiler gives off to its surroundings, proportional to how far the water is above ambient temperature.
