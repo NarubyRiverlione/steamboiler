@@ -37,8 +37,8 @@ export function startupOperator(state: PowerPlantState, time: number): PowerPlan
   return [...openToLoad(state), ...(holding(state) ? holdLoop(state, time) : [])]
 }
 
-export const startupCold: Scenario = {
-  name: "startup-cold",
+export const turbineRunup: Scenario = {
+  name: "turbine-runup",
   description: "Heat from 20°C, open main steam valve, crack turbine valve to build pressure, then gas holds 165 bar with the turbine valve at its load opening",
   duration: 14000,
   sampleEvery: 10,

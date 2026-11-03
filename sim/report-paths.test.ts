@@ -24,7 +24,7 @@ describe("reportPaths", () => {
 describe("latestReport", () => {
   it("picks the newest html across scenarios and ignores other files", () => {
     const files = [
-      "startup-cold-2026-10-30_090000.html",
+      "turbine-runup-2026-10-30_090000.html",
       "bypass-loop-2026-10-31_140507.html",
       "bypass-loop-2026-10-31_140507.csv",
       "report.html",

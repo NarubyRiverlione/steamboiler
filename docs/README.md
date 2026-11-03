@@ -25,6 +25,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 |---|---|
 | State management, simulation loop, source layout, conventions | [dev/architecture.md](dev/architecture.md) |
 | Headless scenario runner: scenarios, report, invariants, snapshots | [dev/headless-runner.md](dev/headless-runner.md) |
+| Test layers, scenario definition, definition of done | [dev/testing.md](dev/testing.md) |
 | Branches (`dev` for work, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
 
 ## Decisions
@@ -46,6 +47,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
 | [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
 | [0015](adr/0015-ui-redo-analog-board-preferred.md) | The UI redo: a strong preference for the analog board (proposed, with a [mockup](adr/0015-boiler-panel-mockup.html)) |
+| [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
 
 ## Research (dated, frozen)
 

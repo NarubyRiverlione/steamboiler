@@ -17,7 +17,7 @@ Two long-lived branches plus one short-lived branch per ticket. Why: [ADR 0012](
 
 ## Gates
 
-Each gate includes everything of the one above it. Test layers: unit (`src/` and sim tooling), golden-path scenarios, edge scenarios (#60).
+Each gate includes everything of the one above it. Test layers ([testing.md](testing.md)): unit (`pnpm test:unit`), golden-path scenarios (`pnpm test:sim:golden`), edge scenarios (`pnpm test:sim:edge`).
 
 | Moment | Must pass |
 |---|---|

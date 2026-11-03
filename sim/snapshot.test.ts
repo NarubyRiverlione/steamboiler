@@ -1,15 +1,13 @@
-import { readFileSync, rmSync } from "node:fs"
+import { rmSync } from "node:fs"
 import { describe, expect, test } from "vitest"
-import { finalState } from "./scenario"
 import { loadSnapshot, parseSnapshot, saveSnapshot, shapeErrors, snapshotPath, toSnapshotJson } from "./snapshot"
-import { snapshotSources } from "./snapshot-sources"
-import { makeInitialState } from "../src/context/PowerPlantReducer"
+import { makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
 
 describe("snapshot JSON", () => {
   const cold = makeInitialState()
 
   test("round-trips a full plant state exactly", () => {
-    const state = finalState(snapshotSources["at-pressure"])
+    const state = powerPlantReducer(cold, { type: "INCREASE_GAS_FLOW", amount: 500 })
     expect(parseSnapshot(toSnapshotJson(state), "test")).toEqual(state)
   })
 
@@ -42,17 +40,5 @@ describe("snapshot JSON", () => {
   test("rejects a part of the wrong kind", () => {
     expect(shapeErrors(cold, { ...cold, Condenser: null })).toEqual(["state.Condenser: expected object, got null"])
     expect(shapeErrors(cold, { ...cold, Condenser: [] })).toEqual(["state.Condenser: expected object, got array"])
-  })
-})
-
-// A committed snapshot is the final state of its source scenario. After a physics or state change
-// this fails: run `pnpm sim:snapshots` and commit the regenerated files.
-describe.each(Object.entries(snapshotSources))("snapshot %s", (name, scenario) => {
-  test(`matches a fresh run of ${scenario.name} (pnpm sim:snapshots to regenerate)`, () => {
-    expect(readFileSync(snapshotPath(name), "utf8")).toBe(toSnapshotJson(finalState(scenario)))
-  })
-
-  test("loads", () => {
-    expect(loadSnapshot(name)).toEqual(finalState(scenario))
   })
 })

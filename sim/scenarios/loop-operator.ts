@@ -119,3 +119,10 @@ export function holdLoop(state: PowerPlantState, time: number): PowerPlantAction
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
   return [...startSteam(state), ...holdLoop(state, time)]
 }
+
+// The loop operator with its hotwell hold taken away, for edge scenarios that force makeup and reject themselves
+export function loopOperatorWithoutHotwellHold(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return loopOperator(state, time).filter(
+    (a) => a.type !== "SET_MAKEUP_VALVE_POSITION" && a.type !== "SET_REJECT_VALVE_POSITION",
+  )
+}

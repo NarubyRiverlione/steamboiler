@@ -1,7 +1,6 @@
 import { ScenarioAction } from "../scenario"
 
-// Operator steps shared by scenarios. A later scenario either replays the earlier steps or starts
-// from a snapshot of them (see sim/snapshot-sources.ts) with its steps moved by `since`.
+// Operator steps shared by scenarios; a scenario that continues from a settled plant loads a snapshot instead (sim/snapshot-sources.ts).
 
 export const StartGas = 2000 // liters/second during heat-up
 
@@ -42,20 +41,3 @@ export const openMainSteam: ScenarioAction[] = [
 // True on the ticks that fall on a whole multiple of `every` sim-seconds: an operator's adjustment moments
 export const isAdjustTime = (time: number, every: number): boolean =>
   Number.isInteger(Math.round(time * 1e6) / 1e6 / every)
-
-// The same steps timed from `start` instead of from the cold start, for a scenario starting from a snapshot taken at `start`
-export const since = (start: number, actions: ScenarioAction[]): ScenarioAction[] =>
-  actions.map((a) => ({ ...a, at: a.at - start }))
-
-// Turbine valve to 25% so the turbine rolls; the condensation pump to 25% to return its condensate
-export const TurbineValveOpenAt = AtPressure + 20
-export const rollTurbine: ScenarioAction[] = [
-  {
-    at: TurbineValveOpenAt,
-    action: { type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: 0.2 } },
-  },
-  {
-    at: TurbineValveOpenAt,
-    action: { type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 0.2 } },
-  },
-]
