@@ -55,8 +55,6 @@ Scenarios (`pnpm sim <name>`), defined and classed in [testing.md](testing.md). 
 | `boiler-low` | edge | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 78 K/min), the relief valve lifts at ~289 s and holds the pressure below design (peak ≈ 178.1 bar per tick while 1 m³ of water remains) until the boiler runs dry at ~395 s; its last litre and then the dry metal heat to the critical point, 220.6 bar. No protection yet: expected failures #33 |
 | `heat-up` | edge | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~996 s (16.6 min), smoothed rate peaks at 22.8 K/min, no alarm; gas off at 165 bar |
 
-`turbine-load` (#14) and `boiler-high` (#62) are added with their tickets.
-
 The turbine valve only opens under the vacuum limit, and above it an open valve closes in a turbine
 trip (ADR 0003). So the turbine scenarios hold the vacuum: `heatUp` starts the air extraction pump at
 t=0 (under the limit within seconds), and `openMainSteam` enables the SJAE and opens its valve once
