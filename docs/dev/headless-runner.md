@@ -42,13 +42,14 @@ A panel with `span: 3` (the Loop chart) stretches across three grid columns on w
 
 ## Scenarios
 
-Scenarios (`pnpm sim <name>`), defined and classed in [testing.md](testing.md). Golden path scenarios run the plant as meant; edge scenarios cross one limit. Golden `turbine-sync` and the new edge scenarios start from a committed snapshot.
+Scenarios (`pnpm sim <name>`), defined and classed in [testing.md](testing.md). Golden path scenarios run the plant as meant; edge scenarios cross one limit. Golden `turbine-sync` and `turbine-load` and the edge scenarios start from a committed snapshot.
 
 | Scenario | Class | Starts from | Goal |
 | --- | --- | --- | --- |
 | `bypass-loop` | golden | cold | cold start at full gas, bypass only; the main steam valve stays shut during heat-up (35% cold fill expands to 50%, ADR 0018) and opens at working pressure (163 bar, 220 s), gas goes to `StartGas` (2000 L/s) and the bypass to a fixed 10%; pressure reaches 165 bar, then gas holds 165 ± 2 bar, with boiler level at 50% and the hotwell at 70% (#19, #43). Runs 7200 s: the loop settles after about 680 s, no relief lift, no reject during heat-up (see feedwater-loop.md). Source of the `bypass-loop` snapshot |
 | `turbine-runup` | golden | cold | two phases (`startupOperator`). Build pressure: cold → 10 bar (timed `AtPressure`), main steam valve open, turbine valve cracked to 5% at 790 s, gas 2000 L/s, so pressure rises. Pressure hold: when pressure first enters 165 ± 2 bar (~1500 s; the main steam valve opens at 780 s with no level hold until then, and no reject occurs) the turbine valve opens once to 9.1% (18.2 kg/s; speed settles near steam flow × pressure = 3003 rpm) and gas becomes the throttle (`PressureHoldSettings`), with the holds of `loopOperator`. Hold mode off, breaker open. The turbine speed has a time constant of about 2600 s, so the run lasts 14000 s: over the last 600 s pressure is 165 ± 2 bar and speed 3000 ± 50 rpm. Source of the `turbine-runup` snapshot |
 | `turbine-sync` | golden | `turbine-runup` | hold mode on, the PID takes the speed to 3000 rpm (it overshoots to ~3018 rpm and chatters for the first minute), the operator closes the breaker within ±2 rpm; over the last 600 s the breaker stays closed (it reopens itself outside ±2) |
+| `turbine-load` | golden | `turbine-sync` | the generator carries load (#14): MW follows the real steam flow and the live condenser pressure; over the last 600 s pressure is 165 ± 2 bar, boiler and hotwell levels hold their operator bands, speed stays within ±2 rpm of sync, the breaker stays closed and the relief valve never lifts (the former `steady-state` idea, #38) |
 | `relief-lift` | edge | cold | full gas with everything closed until the relief valve lifts (~229 s), then gas off at 233 s: one lift, 178 → 171 bar, then cooldown (the #46 expected failure no longer fires with the 35% cold fill; the steam density kink itself is still tracked in #46) |
 | `hotwell-high` | edge | `bypass-loop` | makeup forced open, reject shut: the level reaches 95% (`HotwellHighHigh`), the clamp forces the reject open, no overflow |
 | `hotwell-low` | edge | `bypass-loop` | makeup shut and reject forced open (a closed loop never drains by itself): the condensation pump trips as the level crosses 10% (`HotwellLowLow`) |
@@ -125,7 +126,7 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
   numbers match within a relative 1e-9 (absolute 1e-12 near 0, `valueErrors` in `sim/snapshot.ts`), so last-digit
   noise between machines or Node versions passes and a failure names the field path; shape, strings and booleans stay exact.
   A physics change smaller than 1e-9 relative is not caught here, the scenario goal checks cover that.
-- Sources: `turbine-runup` (for `turbine-sync`) and `bypass-loop` (for the edge set). A source starts from cold.
+- Sources: `turbine-runup` (for `turbine-sync`), `turbine-sync` (for `turbine-load`) and `bypass-loop` (for the edge set). A source starts from cold or from an earlier source; `pnpm sim:snapshots` writes them in the listed order, so a chained one loads the fresh file ([ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)).
 
 UI presets ("cold", "hot standby", "at pressure") are #24; the UI starts cold.
 

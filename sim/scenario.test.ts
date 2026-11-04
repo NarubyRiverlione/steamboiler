@@ -163,6 +163,7 @@ describe("scenario registry", () => {
       "bypass-loop",
       "turbine-runup",
       "turbine-sync",
+      "turbine-load",
       "relief-lift",
       "hotwell-high",
       "hotwell-low",

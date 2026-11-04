@@ -53,6 +53,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0018](adr/0018-cold-fill-at-35-percent.md) | The boiler is filled cold to 35% so it expands to the working level |
 | [0020](adr/0020-snapshots-compare-with-tolerance.md) | Committed snapshots compare with a relative tolerance (1e-9), not exact digits |
 | [0021](adr/0021-turbine-runup-from-steam-power.md) | The turbine runs up on steam power (physical torque, losses, inertia), paced by a hold-mode run-up rate |
+| [0022](adr/0022-electric-output-from-enthalpy-drop.md) | Electric output from the isentropic enthalpy drop, flow and live condenser pressure |
 
 ## Research (dated, frozen)
 
