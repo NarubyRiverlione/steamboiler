@@ -3,7 +3,7 @@ import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { bandDirection } from "./band"
-import { holdPressureWithGas } from "./pressure-hold"
+import { atWorkingPressure, holdPressureWithGas } from "./pressure-hold"
 import { isAdjustTime, StartGas } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
@@ -71,9 +71,11 @@ function restartSjae({ Condenser }: PowerPlantState): PowerPlantAction[] {
   ]
 }
 
+// The SJAE restarts at main-steam-valve pressure (motive steam from the boiler); the main steam valve itself stays shut
+// until working pressure, so the expanding water is not fed back up during heat-up (ADR 0018)
 function startSteam(state: PowerPlantState): PowerPlantAction[] {
   if (state.Boiler.pressure <= CstTurbine.MainSteamValveMinimumPressure) return []
-  return [...openMainSteam(state), ...restartSjae(state)]
+  return [...(atWorkingPressure(state.Boiler.pressure) ? openMainSteam(state) : []), ...restartSjae(state)]
 }
 
 function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {

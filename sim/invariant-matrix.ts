@@ -8,11 +8,7 @@ import { runScenario, Scenario } from "./scenario"
 
 // (scenario, invariant) pairs that fail today, with the ticket that fixes them. When that ticket
 // lands the test.fails flips red: remove the entry so the pair guards as a normal test.
-export const expectedFailures: Record<string, string> = {
-  // a drum about 80% full of water holds a slowly rising steam inventory while it cools (+0.03 kg/s): the steam density
-  // kink and the invariant's premise, see #46
-  "relief-lift / natural cooldown stops steam generation": "#46",
-}
+export const expectedFailures: Record<string, string> = {}
 
 export function describeInvariants(scenarios: Scenario[]): void {
   describe.each(scenarios)("$name invariants", (scenario: Scenario) => {

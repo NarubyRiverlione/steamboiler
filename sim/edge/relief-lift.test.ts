@@ -8,7 +8,7 @@ describe("relief-lift", () => {
   test("records the one lift with its open and close time, though it is shorter than a sample", () => {
     expect(lifts).toHaveLength(1)
     const [lift] = lifts
-    // full gas reaches 178 bar after about 3¾ minutes; with the gas off the 7 bar blowdown takes seconds
+    // full gas reaches 178 bar after about 3¾ minutes (229 s from the 35% cold fill); with the gas off the 7 bar blowdown takes seconds
     expect(lift.open).toBeGreaterThan(200)
     expect(lift.open).toBeLessThan(GasOffAt)
     expect(lift.close).toBeGreaterThan(GasOffAt)

@@ -59,8 +59,17 @@ describe("loopOperator", () => {
     expect(loopOperator(withCondenser({ hotwellWaterVolume: hotwellAt(0.7) }), 0)).toEqual([])
   })
 
-  test("above main-steam-valve pressure: gas down, main steam valve open, bypass, SJAE and pump to their start positions", () => {
-    const atPressure = withBoiler({ pressure: CstTurbine.MainSteamValveMinimumPressure + 1, gasFlow: CstBoiler.MaxGasFlow })
+  test("between main-steam-valve pressure and working pressure: the main steam valve stays shut, only the SJAE restarts", () => {
+    const heating = withBoiler({ pressure: CstTurbine.MainSteamValveMinimumPressure + 1, gasFlow: CstBoiler.MaxGasFlow })
+    const state = { ...heating, Condenser: { ...heating.Condenser, hotwellWaterVolume: hotwellAt(0.7) } }
+    expect(loopOperator(state, 0.5)).toEqual([
+      { type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } },
+      { type: "SET_SJAE_VALVE_POSITION", payload: { sjaeValvePosition: LoopSettings.SjaeOpening } },
+    ])
+  })
+
+  test("at working pressure: gas down, main steam valve open, bypass, SJAE and pump to their start positions", () => {
+    const atPressure = withBoiler({ pressure: PressureHoldSettings.Target - PressureHoldSettings.Band, gasFlow: CstBoiler.MaxGasFlow })
     const state = { ...atPressure, Condenser: { ...atPressure.Condenser, hotwellWaterVolume: hotwellAt(0.7) } }
     expect(loopOperator(state, 0.5)).toEqual([
       { type: "DECREASE_GAS_FLOW", amount: CstBoiler.MaxGasFlow - StartGas },
