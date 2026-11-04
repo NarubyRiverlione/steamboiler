@@ -175,7 +175,7 @@ describe("steam draw cools the boiler", () => {
 describe("BoilerRemoveSteam", () => {
   const plant = makeInitialState()
   const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
-  // A half-open valve passes half the rated steam flow (kg/s), so this much per tick
+  // A half-open valve passes half the valve capacity (kg/s), so this much per tick
   const halfOpenFlow = 0.5 * CstTurbine.MaxSteamRemovalRate
   const halfOpenPerTick = halfOpenFlow * DeltaTime
 

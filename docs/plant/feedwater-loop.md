@@ -40,7 +40,7 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 |---|---|---|
 | Overfill clamp (`HotwellHighHigh`) | from 95% | plant: `CondenserTick` forces the reject fully open |
 | Reject fully open | 90% (band edge + `HotwellRamp`) | operator |
-| Working band | 55% to 75%, centre 65%; start level 70% | operator: both valves shut |
+| Working band | 55% to 75%; normal and start level 70% | operator: both valves shut |
 | Makeup fully open | 40% (band edge − `HotwellRamp`) | operator |
 | Low-low (`HotwellLowLow`) | below 10% | plant: `CondenserTick` trips the condensation pump |
 

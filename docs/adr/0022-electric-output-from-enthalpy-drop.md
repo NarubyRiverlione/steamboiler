@@ -6,7 +6,7 @@ The electric output is `flow × isentropic enthalpy drop × turbine efficiency (
 
 ## Why
 
-The old value ignored the real steam flow and steam conditions and was dimensionally off: a fully open valve gave "70 MW". The new one makes poor vacuum and low boiler pressure cost output, and gives about 153 MWe at the rated 200 kg/s (165 bar, 100 mbar), see [design-basis.md](../plant/design-basis.md).
+The old value ignored the real steam flow and steam conditions and was dimensionally off: a fully open valve gave "70 MW". The new one makes poor vacuum and low boiler pressure cost output, and gives about 131 MWe at the rated 171 kg/s and about 153 MWe at the 200 kg/s valve capacity (165 bar, 100 mbar), see [design-basis.md](../plant/design-basis.md).
 
 ## Decisions
 
