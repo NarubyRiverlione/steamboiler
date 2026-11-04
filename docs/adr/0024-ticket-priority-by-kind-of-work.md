@@ -21,3 +21,4 @@ The line between `P2` and `P4` is one test: does the ticket correct something th
 - A tooling ticket is not urgent by label. When other work really needs it, the roadmap's inherited priority pulls it forward.
 - `P1` is empty most of the time.
 - A known gap can stay parked: the boiler has no high-level protection (#62) and the turbine no overspeed trip (#72).
+- One exception to the `P2`/`P4` test: free feedwater heating (#74) is wrong physics in what the plant already has, but the owner treats it as a scope expansion, so it stays `P4`. It is listed as a departure in [design-basis.md](../plant/design-basis.md).
