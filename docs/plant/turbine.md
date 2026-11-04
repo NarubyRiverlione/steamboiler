@@ -84,5 +84,5 @@ Sync is not reachable from a cold start today (#18).
 - **Drop:** `getIsentropicEnthalpyDrop(boilerPressure, condenserPressure)` (`steamTable.ts`): saturated steam from the boiler pressure (no superheater) expanded at constant entropy to the live condenser pressure, so poor vacuum and low boiler pressure cost output. Data: `steamEntropyData.ts`, IAPWS-IF97, 0.01 bar to 220 bar, interpolated in ln(pressure); pressures outside it clamp.
 - **Constants:** `IsentropicEfficiency` 0.85, `GeneratorEfficiency` 0.98 (`CstTurbine`). `steamToElectricityEfficiency` is gone.
 - **Gating:** breaker closed and at sync speed, otherwise 0 MW. Clamped at 0 MW for no flow or a non-positive drop, never negative.
-- **Scope:** MW readout only. Shaft load torque and a net demand in MW are a follow-up; the RPM and torque model is untouched.
+- **Scope:** MW readout only; the RPM and torque model is untouched (no shaft load torque, no net demand in MW).
 - Rated values: see [design-basis.md](design-basis.md). Scenario: `turbine-load` (golden path).

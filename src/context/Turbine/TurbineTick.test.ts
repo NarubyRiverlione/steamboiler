@@ -54,7 +54,15 @@ describe("TurbineTick", () => {
     expect(Math.abs(toMW(rated, 165, 100) - 152.8)).toBeLessThan(152.8 * 0.005)
   })
 
-  it("should use the steam flow, not the valve position", () => {
+  it("should give 130.6 MWe at the 171 kg/s of full gas (165 bar, 100 mbar)", () => {
+    expect(Math.abs(toMW({ ...loadedState, turbineSteamFlowOut: 171 }, 165, 100) - 130.6)).toBeLessThan(130.6 * 0.005)
+  })
+
+  it("should produce nothing off sync speed", () => {
+    expect(toMW({ ...loadedState, rpm: CstSimulation.CstTurbine.SyncRPM - 100 }, 20, 100)).toBe(0)
+  })
+
+  it("should follow the steam flow in the state, whatever the valve position is", () => {
     const closedValve: number = TurbineTick(loadedState, 20, 100).electricOutput
     expect(Math.abs(closedValve - 65.95)).toBeLessThan(65.95 * 0.005)
     expect(toMW({ ...loadedState, turbineSteamFlowOut: 50 }, 20, 100)).toBeCloseTo(toMW(loadedState, 20, 100) / 2, 1)
