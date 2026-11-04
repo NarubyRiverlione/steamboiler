@@ -8,7 +8,10 @@ import {
   maxTurbineValvePosition,
   turbineTrippedAfter,
 } from "../../utils/turbineCalculations"
+import { getIsentropicEnthalpyDrop } from "../../utils/steamTable"
 import { TurbineState } from "../PowerPlantState"
+
+const MbarPerBar = 1000
 
 /**
  * turbineTick - Updates the turbine state for each simulation tick.
@@ -16,14 +19,12 @@ import { TurbineState } from "../PowerPlantState"
  * and generator breaker functionality.
  *
  * @param turbineState - The current turbine state.
- * @param turbineValvePosition - The current position of the turbine valve.
  * @param boilerPressure - The current boiler pressure.
  * @param condenserPressure - The current condenser pressure (mbar absolute), checked against the vacuum limit.
  * @returns The updated turbine state.
  */
 function TurbineTick(
   turbineState: TurbineState,
-  turbineValvePosition: number,
   boilerPressure: number,
   condenserPressure: number,
 ): TurbineState {
@@ -34,10 +35,12 @@ function TurbineTick(
   const generatorBreaker = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
   
   // Calculate electricity output with updated breaker status
-  const newElectricityOutput = calculateElectricityOutput(
-    turbineValvePosition, 
+  const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, condenserPressure / MbarPerBar)
+  const newElectricityOutput: number = calculateElectricityOutput(
+    turbineState.turbineSteamFlowOut,
+    enthalpyDrop,
     newRPM,
-    generatorBreaker
+    generatorBreaker,
   )
 
   const ticked: TurbineState = {

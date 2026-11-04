@@ -29,25 +29,48 @@ describe("TurbineTick", () => {
     const expectPower = 0 // No power at 0 RPM
     
     it(`should create ${String(expectPower)} MW at 0 RPM with ${String(position * 100)}% turbine Valve Position`, () => {
-      const newState = TurbineTick(initialState, position, boilerPressure, vacuum)
+      const newState = TurbineTick(initialState, boilerPressure, vacuum)
       expect(newState.electricOutput).toBe(expectPower)
     })
   })
   
-  // Test with RPM at sync speed
-  it("should generate electricity when RPM is at sync speed", () => {
-    const position = 0.5 // 50% valve position
-    const steamFlow = position * CstSimulation.CstTurbine.MaxSteamRemovalRate
-    const expectPower = CstSimulation.CstTurbine.steamToElectricityEfficiency * steamFlow
-    
-    const highRpmState: TurbineState = {
-      ...initialState,
-      rpm: CstSimulation.CstTurbine.SyncRPM,
-      generatorBreaker: true,
-    }
-    
-    const newState = TurbineTick(highRpmState, position, boilerPressure, vacuum)
-    expect(newState.electricOutput).toBe(expectPower)
+  // Sync speed with the breaker closed: output follows the actual steam flow and the live conditions
+  const loadedState: TurbineState = {
+    ...initialState,
+    rpm: CstSimulation.CstTurbine.SyncRPM,
+    generatorBreaker: true,
+    mainSteamValve: true,
+    turbineSteamFlowOut: 100, // kg/s
+  }
+  const toMW = (state: TurbineState, boiler: number, condenserMbar: number): number =>
+    TurbineTick(state, boiler, condenserMbar).electricOutput
+
+  it("should generate the IF97 output at sync speed: 100 kg/s, 20 bar to 100 mbar = 65.95 MW", () => {
+    expect(Math.abs(toMW(loadedState, 20, 100) - 65.95)).toBeLessThan(65.95 * 0.005)
+  })
+
+  it("should give the rated output at the rated flow: 200 kg/s, 165 bar to 100 mbar = 152.8 MWe", () => {
+    const rated: TurbineState = { ...loadedState, turbineSteamFlowOut: CstSimulation.CstTurbine.MaxSteamRemovalRate }
+    expect(Math.abs(toMW(rated, 165, 100) - 152.8)).toBeLessThan(152.8 * 0.005)
+  })
+
+  it("should use the steam flow, not the valve position", () => {
+    const closedValve: number = TurbineTick(loadedState, 20, 100).electricOutput
+    expect(Math.abs(closedValve - 65.95)).toBeLessThan(65.95 * 0.005)
+    expect(toMW({ ...loadedState, turbineSteamFlowOut: 50 }, 20, 100)).toBeCloseTo(toMW(loadedState, 20, 100) / 2, 1)
+  })
+
+  it("should lose output when the condenser vacuum worsens: 200 mbar = 59.30 MW", () => {
+    expect(Math.abs(toMW(loadedState, 20, 200) - 59.3)).toBeLessThan(59.3 * 0.005)
+  })
+
+  it("should lose output when the boiler pressure drops, at equal flow", () => {
+    expect(toMW(loadedState, 10, 100)).toBeLessThan(toMW(loadedState, 20, 100))
+  })
+
+  it("should produce nothing with the breaker open or without flow", () => {
+    expect(toMW({ ...loadedState, generatorBreaker: false }, 20, 100)).toBe(0)
+    expect(toMW({ ...loadedState, turbineSteamFlowOut: 0 }, 20, 100)).toBe(0)
   })
   
   it("should calculate RPM based on steam flow and boiler pressure", () => {
@@ -58,7 +81,7 @@ describe("TurbineTick", () => {
     }
     
     // Act
-    const result = TurbineTick(testState, 0.5, boilerPressure, vacuum)
+    const result = TurbineTick(testState, boilerPressure, vacuum)
     
     // Assert
     expect(result.rpm).toBeGreaterThan(0) // RPM should increase with steam flow
@@ -76,7 +99,7 @@ describe("TurbineTick", () => {
     }
     
     // Act
-    const result = TurbineTick(testState, 0.3, boilerPressure, vacuum)
+    const result = TurbineTick(testState, boilerPressure, vacuum)
     
     // Assert
     // In hold mode, the valve position should be adjusted to reach the setpoint
@@ -94,25 +117,25 @@ describe("TurbineTick", () => {
     }
 
     it("writes the updated integral error into the returned state", () => {
-      const result = TurbineTick(holding, 0.3, boilerPressure, vacuum)
+      const result = TurbineTick(holding, boilerPressure, vacuum)
       const error = holding.rpmSetPoint - result.rpm
       expect(result.pidIntegralError).toBe(Math.min(1, error * CstSimulation.DeltaTime))
     })
 
     it("resets the integral while hold mode is off", () => {
-      const result = TurbineTick({ ...holding, pidIntegralError: 0.4, holdMode: false }, 0.3, boilerPressure, vacuum)
+      const result = TurbineTick({ ...holding, pidIntegralError: 0.4, holdMode: false }, boilerPressure, vacuum)
       expect(result.pidIntegralError).toBe(0)
     })
 
     it("resets the integral while the main steam valve is closed", () => {
-      const result = TurbineTick({ ...holding, pidIntegralError: 0.4, mainSteamValve: false }, 0.3, boilerPressure, vacuum)
+      const result = TurbineTick({ ...holding, pidIntegralError: 0.4, mainSteamValve: false }, boilerPressure, vacuum)
       expect(result.pidIntegralError).toBe(0)
     })
 
     // The first tick of a (re)engaged PID: P, a zero-start I and D on the rpm change of this tick only
     const { PID_Kp, PID_Ki, PID_Kd } = CstSimulation.CstTurbine
     const firstTickMove = (state: TurbineState): number => {
-      const result = TurbineTick(state, 0.3, boilerPressure, vacuum)
+      const result = TurbineTick(state, boilerPressure, vacuum)
       const error = state.rpmSetPoint - result.rpm
       const integral = Math.min(1, error * CstSimulation.DeltaTime)
       const damping = -PID_Kd * (result.rpm - state.rpm) / CstSimulation.DeltaTime
@@ -134,21 +157,21 @@ describe("TurbineTick", () => {
 
     it("re-engaging hold mode after a while off does not use stale PID memory", () => {
       const off: TurbineState = { ...holding, rpm: 1500, holdMode: false, pidIntegralError: 0.9 }
-      const afterOff: TurbineState = TurbineTick(off, 0.3, boilerPressure, vacuum)
+      const afterOff: TurbineState = TurbineTick(off, boilerPressure, vacuum)
       firstTickMove({ ...afterOff, holdMode: true })
     })
 
     it("re-opening the main steam valve with hold mode on starts the PID fresh", () => {
-      const closed: TurbineState = TurbineTick({ ...holding, rpm: 1500, mainSteamValve: false, pidIntegralError: 0.9 }, 0.3, boilerPressure, vacuum)
+      const closed: TurbineState = TurbineTick({ ...holding, rpm: 1500, mainSteamValve: false, pidIntegralError: 0.9 }, boilerPressure, vacuum)
       firstTickMove({ ...closed, mainSteamValve: true })
     })
 
     it("depends on its input alone: the same state gives the same tick", () => {
       // Small error so the integral stays below its ±1 clamp and leftover memory would show
       const nearSetPoint: TurbineState = { ...holding, rpm: 2000, rpmSetPoint: 2001 }
-      const first = TurbineTick(nearSetPoint, 0.3, boilerPressure, vacuum)
-      TurbineTick(first, 0.3, boilerPressure, vacuum) // a tick in between must not leak into the next call
-      expect(TurbineTick(nearSetPoint, 0.3, boilerPressure, vacuum)).toEqual(first)
+      const first = TurbineTick(nearSetPoint, boilerPressure, vacuum)
+      TurbineTick(first, boilerPressure, vacuum) // a tick in between must not leak into the next call
+      expect(TurbineTick(nearSetPoint, boilerPressure, vacuum)).toEqual(first)
     })
   })
   
@@ -171,7 +194,6 @@ describe("TurbineTick", () => {
     // Important: We need to set turbineSteamFlowOut to 0 to simulate cutting the steam flow
     currentState = TurbineTick(
       { ...currentState, turbineSteamFlowOut: 0 }, 
-      0, 
       boilerPressure,
       vacuum
     );
@@ -183,7 +205,7 @@ describe("TurbineTick", () => {
     // Run additional ticks to observe continued deceleration
     for (let i = 0; i < numTicks - 1; i++) {
       const previousRpm = currentState.rpm;
-      currentState = TurbineTick(currentState, 0, boilerPressure, vacuum);
+      currentState = TurbineTick(currentState, boilerPressure, vacuum);
       
       // Each tick should reduce RPM further due to friction
       expect(currentState.rpm).toBeLessThan(previousRpm);
@@ -203,7 +225,6 @@ describe("TurbineTick", () => {
     // than a single tick would
     const singleTickState = TurbineTick(
       { ...runningState, turbineSteamFlowOut: 0 }, 
-      0, 
       boilerPressure,
       vacuum
     );
@@ -225,7 +246,7 @@ describe("TurbineTick", () => {
     }
 
     it("closes an open valve, turns hold mode off, clears the PID memory and sets the trip flag", () => {
-      const result = TurbineTick(running, 0.3, boilerPressure, limit + 0.1)
+      const result = TurbineTick(running, boilerPressure, limit + 0.1)
       expect(result).toMatchObject({
         turbineValvePosition: 0,
         holdMode: false,
@@ -235,14 +256,14 @@ describe("TurbineTick", () => {
     })
 
     it("a turbine trip also happens outside hold mode", () => {
-      const result = TurbineTick({ ...running, holdMode: false }, 0.3, boilerPressure, limit + 50)
+      const result = TurbineTick({ ...running, holdMode: false }, boilerPressure, limit + 50)
       expect(result.turbineValvePosition).toBe(0)
       expect(result.turbineTripped).toBe(true)
     })
 
     it("does nothing at or below the limit", () => {
       for (const pressure of [limit, limit - 0.1]) {
-        const result = TurbineTick({ ...running, holdMode: false }, 0.3, boilerPressure, pressure)
+        const result = TurbineTick({ ...running, holdMode: false }, boilerPressure, pressure)
         expect(result.turbineValvePosition).toBe(0.3)
         expect(result.turbineTripped).toBe(false)
         expect(result.pidIntegralError).toBe(0) // hold mode is off, so the integral is reset
@@ -251,25 +272,25 @@ describe("TurbineTick", () => {
 
     it("a closed valve gives no turbine trip", () => {
       const closed = { ...running, holdMode: false, turbineValvePosition: 0 }
-      expect(TurbineTick(closed, 0, boilerPressure, limit + 100).turbineTripped).toBe(false)
+      expect(TurbineTick(closed, boilerPressure, limit + 100).turbineTripped).toBe(false)
     })
 
     it("in hold mode above the limit the PID never raises a closed valve", () => {
       // rpm far under the setpoint: the PID would open the valve
       const closedHolding = { ...running, turbineValvePosition: 0 }
-      expect(TurbineTick(closedHolding, 0, boilerPressure, limit + 1).turbineValvePosition).toBe(0)
+      expect(TurbineTick(closedHolding, boilerPressure, limit + 1).turbineValvePosition).toBe(0)
     })
 
     it("a hold-mode PID opening under vacuum clears the trip flag", () => {
       const tripped = { ...running, turbineValvePosition: 0, turbineTripped: true }
-      const result = TurbineTick(tripped, 0, boilerPressure, limit)
+      const result = TurbineTick(tripped, boilerPressure, limit)
       expect(result.turbineValvePosition).toBeGreaterThan(0)
       expect(result.turbineTripped).toBe(false)
     })
 
     it("the flag stays set while the valve stays shut", () => {
       const tripped = { ...running, holdMode: false, turbineValvePosition: 0, turbineTripped: true }
-      expect(TurbineTick(tripped, 0, boilerPressure, limit - 100).turbineTripped).toBe(true)
+      expect(TurbineTick(tripped, boilerPressure, limit - 100).turbineTripped).toBe(true)
     })
   })
 })

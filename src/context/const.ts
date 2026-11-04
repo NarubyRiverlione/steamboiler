@@ -57,7 +57,8 @@ export const CstSimulation = {
     TurbineValveStep: 1, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa
 
-    steamToElectricityEfficiency: 0.35, // Typical conversion ratio from steam energy to electrical energy (black-box approach)
+    IsentropicEfficiency: 0.85, // turbine isentropic efficiency (actual vs ideal enthalpy drop)
+    GeneratorEfficiency: 0.98, // generator efficiency, shaft to electric
     steamOutflowPressure: 0.1, // bar (typical  5-10 kPa absolute (0.05-0.1 bar or approximately )
     steamOutflowTemperature: 40, // Celsius (typical 35-45C)
 

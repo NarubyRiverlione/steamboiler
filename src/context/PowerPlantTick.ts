@@ -16,7 +16,6 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // Turbine
   const turbineNewState: TurbineState = TurbineTick(
     bypassResult.turbineState,
-    bypassResult.turbineState.turbineValvePosition,
     bypassResult.boilerState.pressure,
     state.Condenser.pressure,
   )

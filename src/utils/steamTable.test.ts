@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
 import { steamTable } from "./steamData"
-import { getBoilingPoint, getLatentHeat, getSteamData, getWaterSpecificHeat, getWaterSpecificVolume } from "./steamTable"
+import { getBoilingPoint, getIsentropicEnthalpyDrop, getLatentHeat, getSteamData, getWaterSpecificHeat, getWaterSpecificVolume } from "./steamTable"
 
 const CriticalTemperature = 373.946 // °C, IAPWS-IF97
 const CriticalPressure = 220.64 // bar, IAPWS-IF97
@@ -141,5 +141,33 @@ describe("getWaterSpecificVolume", () => {
       expect(current).toBeGreaterThanOrEqual(previous)
       previous = current
     }
+  })
+})
+
+// IAPWS-IF97 isentropic drop of saturated steam [boiler bar, exhaust bar, kJ/kg]
+const IsentropicDrops: number[][] = [
+  [10, 0.1, 692.05],
+  [40, 0.1, 880.18],
+  [40, 0.3, 757.39],
+  [10, 0.05, 769.93],
+]
+
+describe("getIsentropicEnthalpyDrop", () => {
+  test.each(IsentropicDrops)("%f bar to %f bar matches IF97 (%f kJ/kg) within 0.5%%", (boiler, exhaust, expected) => {
+    expect(Math.abs(getIsentropicEnthalpyDrop(boiler, exhaust) - expected)).toBeLessThan(expected * 0.005)
+  })
+
+  test("a worse vacuum or a lower boiler pressure gives a smaller drop", () => {
+    expect(getIsentropicEnthalpyDrop(40, 0.3)).toBeLessThan(getIsentropicEnthalpyDrop(40, 0.1))
+    expect(getIsentropicEnthalpyDrop(10, 0.1)).toBeLessThan(getIsentropicEnthalpyDrop(40, 0.1))
+  })
+
+  test("is zero or negative with the exhaust at or above the boiler pressure", () => {
+    expect(getIsentropicEnthalpyDrop(10, 10)).toBeCloseTo(0, 6)
+    expect(getIsentropicEnthalpyDrop(1, 10)).toBeLessThan(0)
+  })
+
+  test("clamps outside the table instead of throwing", () => {
+    expect(Number.isFinite(getIsentropicEnthalpyDrop(500, 0.001))).toBe(true)
   })
 })

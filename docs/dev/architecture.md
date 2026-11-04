@@ -73,7 +73,7 @@ scripts/roadmap.ts                    # generates ROADMAP.md from the GitHub iss
 
 ## Steam tables
 
-`steamData.ts` holds IAPWS-IF97 saturation data from 80 °C to the critical point (373.946 °C, 220.64 bar): pressure, specific volume, enthalpy, specific heat, latent heat. `steamTable.ts` interpolates it linearly. Outside that range:
+`steamData.ts` holds IAPWS-IF97 saturation data from 80 °C to the critical point (373.946 °C, 220.64 bar): pressure, specific volume, enthalpy, specific heat, latent heat. `steamTable.ts` interpolates it linearly. `steamEntropyData.ts` is a second, pressure-keyed saturation table (hf, hg, sf, sg, 0.01–220 bar) for `getIsentropicEnthalpyDrop`, interpolated in ln(pressure) (#14). Outside that range:
 
 - Above the critical point (temperature or pressure): clamp to the critical-point row, never throw
 - Boiling point below the table: Antoine equation

@@ -27,11 +27,21 @@ describe("isAtSyncSpeed", () => {
 })
 
 describe("calculateElectricityOutput", () => {
-  test("produces power only with the breaker closed at sync speed", () => {
-    const expected = 0.5 * CstTurbine.MaxSteamRemovalRate * CstTurbine.steamToElectricityEfficiency
-    expect(calculateElectricityOutput(0.5, CstTurbine.SyncRPM, true)).toBe(expected)
-    expect(calculateElectricityOutput(0.5, CstTurbine.SyncRPM, false)).toBe(0)
-    expect(calculateElectricityOutput(0.5, CstTurbine.MaxRPM, true)).toBe(0)
+  const atSync = CstTurbine.SyncRPM
+
+  test("hand-calculated case: 100 kg/s x 1000 kJ/kg x 0.85 x 0.98 / 1000 = 83.3 MW", () => {
+    expect(calculateElectricityOutput(100, 1000, atSync, true)).toBeCloseTo(83.3, 6)
+  })
+
+  test("is zero with the breaker open or off sync speed", () => {
+    expect(calculateElectricityOutput(100, 1000, atSync, false)).toBe(0)
+    expect(calculateElectricityOutput(100, 1000, CstTurbine.MaxRPM, true)).toBe(0)
+  })
+
+  test("is zero with no flow and clamped at zero for a non-positive enthalpy drop", () => {
+    expect(calculateElectricityOutput(0, 1000, atSync, true)).toBe(0)
+    expect(calculateElectricityOutput(100, 0, atSync, true)).toBe(0)
+    expect(calculateElectricityOutput(100, -50, atSync, true)).toBe(0)
   })
 })
 

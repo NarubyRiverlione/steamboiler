@@ -12,7 +12,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 
 ## Phase 1: black-box
 
-- Typical steam-to-electricity efficiency ratio in `CstTurbine` (`const.ts`)
+- A fixed steam-to-electricity ratio of 35% in `CstTurbine` (replaced in #14, see Electric output)
 - `Turbine` directories in `context/` and `components/`, mirroring the condenser files
 - Turbine reducer wired into the PowerPlant provider and context; a 'Turbine' routing tab
 - Readout shows produced electricity in MW
@@ -65,7 +65,6 @@ Done:
 Not built yet:
 
 - If the steam flow cannot hold sync speed with the breaker closed, the breaker opens automatically
-- With the breaker closed, more steam flow gives more electricity while RPM stays at sync speed (the output model is #14)
 
 Sync is not reachable from a cold start today (#18).
 
@@ -74,3 +73,16 @@ Sync is not reachable from a cold start today (#18).
 - Add a net demand in MW to the readout (constant in `CstTurbine`)
 - Calculate the generator phase from turbine speed
 - Add a synchroscope to the turbine controls showing the phase difference between generator and grid
+
+## Electric output (#14)
+
+`calculateElectricityOutput` (`turbineCalculations.ts`), called every tick by `TurbineTick`:
+
+`MW = turbineSteamFlowOut [kg/s] × isentropic enthalpy drop [kJ/kg] × IsentropicEfficiency × GeneratorEfficiency / 1000`
+
+- **Flow:** the actual `turbineSteamFlowOut`, the same flow RPM and the condenser see, not the valve position.
+- **Drop:** `getIsentropicEnthalpyDrop(boilerPressure, condenserPressure)` (`steamTable.ts`): saturated steam from the boiler pressure (no superheater) expanded at constant entropy to the live condenser pressure, so poor vacuum and low boiler pressure cost output. Data: `steamEntropyData.ts`, IAPWS-IF97, 0.01 bar to 220 bar, interpolated in ln(pressure); pressures outside it clamp.
+- **Constants:** `IsentropicEfficiency` 0.85, `GeneratorEfficiency` 0.98 (`CstTurbine`). `steamToElectricityEfficiency` is gone.
+- **Gating:** breaker closed and at sync speed, otherwise 0 MW. Clamped at 0 MW for no flow or a non-positive drop, never negative.
+- **Scope:** MW readout only. Shaft load torque and a net demand in MW are a follow-up; the RPM and torque model is untouched.
+- Rated values: see [design-basis.md](design-basis.md). Scenario: `turbine-load` (golden path).
