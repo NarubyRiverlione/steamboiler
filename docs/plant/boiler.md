@@ -87,7 +87,7 @@ Heating rate = previous + (ΔT / tick − previous) × tick / 30 s
 Alarm        = heating rate > 0.4 K/s (24 K/min)
 ```
 
-The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 80 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.6 min (`heat-up`). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
+The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 98 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.3 min (`heat-up`). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
 
 ## Pressure model
 

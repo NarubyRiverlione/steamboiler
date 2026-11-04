@@ -54,7 +54,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Metal mass (drum and tubes) | 100 t steel | 0.5 kJ/kg·K, added to the water's heat capacity at one lumped temperature (`CstBoiler.MetalMass`) |
 | Heat loss | 0.5 MW at design temperature | proportional to the difference with ambient (`CstBoiler.HeatLossAtDesign`); about 3.6 K per hour at 190 °C, so a cooldown takes days |
 | Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s | alarm only (`CstBoiler.HeatingRateLimit`, `HeatingRateWindow`); see the register and [ADR 0006](../adr/0006-heating-rate-alarm-only.md) |
-| Cold start to working pressure | about 16.6 min with the gas ramped at the limit (measured, `heat-up`); about 4.3 min at full gas, over the limit | time-compressed: real cold startups take 4 to 8 h |
+| Cold start to working pressure | about 16.3 min with the gas ramped at the limit (measured, `heat-up`); about 3.8 min at full gas, over the limit | time-compressed: real cold startups take 4 to 8 h |
 
 ## Steam path and turbine
 
