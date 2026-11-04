@@ -49,9 +49,9 @@ describe("TurbineTick", () => {
     expect(Math.abs(toMW(loadedState, 20, 100) - 65.95)).toBeLessThan(65.95 * 0.005)
   })
 
-  it("should give the rated output at the rated flow: 200 kg/s, 165 bar to 100 mbar = 152.8 MWe", () => {
-    const rated: TurbineState = { ...loadedState, turbineSteamFlowOut: CstSimulation.CstTurbine.MaxSteamRemovalRate }
-    expect(Math.abs(toMW(rated, 165, 100) - 152.8)).toBeLessThan(152.8 * 0.005)
+  it("should give the output at valve capacity: 200 kg/s, 165 bar to 100 mbar = 152.8 MWe", () => {
+    const atCapacity: TurbineState = { ...loadedState, turbineSteamFlowOut: CstSimulation.CstTurbine.MaxSteamRemovalRate }
+    expect(Math.abs(toMW(atCapacity, 165, 100) - 152.8)).toBeLessThan(152.8 * 0.005)
   })
 
   it("should give 130.6 MWe at the 171 kg/s of full gas (165 bar, 100 mbar)", () => {

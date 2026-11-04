@@ -2,7 +2,7 @@
 
 What plant is being simulated: its size, its limits, and where it deliberately differs from a real plant. Values come from `src/context/const.ts` unless a row says otherwise.
 
-The plant is a utility-scale, gas-fired drum boiler of roughly 150 MWe at the rated steam flow (about 130 MWe at full-gas steam). Its utilities are sized for a conventional 180–200 MWe unit ([sizing check](../research/2026-10-sizing-check.md)), but the plant has no superheater and expands saturated steam, which yields less per kilogram (decided in #14).
+The plant is a utility-scale, gas-fired drum boiler of roughly 130 MWe at the rated steam flow (about 150 MWe at the valve capacity). Its utilities are sized for a conventional 180–200 MWe unit ([sizing check](../research/2026-10-sizing-check.md)), but the plant has no superheater and expands saturated steam, which yields less per kilogram (decided in #14).
 
 ## Realism rule
 
@@ -21,6 +21,7 @@ Add a row when you over-dimension a utility or reduce something for playability.
 | Boiler model (simplified) | one lumped vessel: one volume shared by water and steam, one temperature for water and steel | a steam drum and a lower drum joined by risers and downcomers, with natural circulation, swell and shrink, and a drum level in mm | model choice, not playability: the lumped vessel carries the energy, mass and pressure behaviour the operator works with; see [boiler.md](boiler.md#what-the-model-is-not) ([ADR 0019](../adr/0019-boiler-is-one-lumped-vessel.md)) | `BoilerTick` |
 | Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 3.8 min (230 s, measured, `boiler-low`) instead of 8–9 min; the 35 t cold fill (next row) shortens it further | `CstBoiler.TotalVolume`, `StartWaterVolume` |
 | Cold fill (35% of the drum) | 35 m³ of water at ambient (35% of `TotalVolume`), thermal expansion brings it to the 50 m³ working level at 165 bar | a real unit fills the drum cold to a start-up level well below the working one, for the same reason: the water expands when heated | the water has to fit hot: cold at 50% the boiler held 49.9 t against 34.4 t at the working state, so about 15 t had to leave on the way up, and the hotwell had 2.5 t of room below the reject band ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)). Also a deliberate reduction: less water to heat takes the cold start to 165 bar from about 4.7 to 3.8 min at full gas | `CstBoiler.StartWaterVolume` |
+| Feedwater heating (free) | the Return enters the boiler at no heat cost: about 900 kJ per kg of steam, about 397 kg/s at full gas and 165 bar (scaled from a run at 200 kg/s) | about 2400 kJ per kg, about 149 kg/s at full gas (hand calculation) | model gap, not playability: the rated steam flow stays at the 171 kg/s design figure until #74 | `PowerPlantTick.ts` |
 | Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.3 min (980 s, measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
 | Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; the burner trip ([boiler.md](boiler.md#burner-trip)) stops the gas before a boiler runs dry | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
 | Specific heat at the critical point (held) | 47.1 kJ/kg·K from 370 °C up | diverges to infinity at 373.946 °C | the simulation core must stay finite every tick; the table clamps at the critical point instead of throwing | last row of `steamTable` in `steamData.ts` |
@@ -43,7 +44,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Max gas flow | 12 m³/s (12 000 L/s) | about 420 MW of fuel, in line with a conventional 200 MWe unit |
 | Fuel power at max gas flow | ≈ 420 MW | 12 m³/s × 35 000 kJ/m³ |
 | Heat into the water at max gas flow | ≈ 357 MW | 85% gas efficiency |
-| Steam generation at full gas | 171 kg/s (about 615 t/h) | measured at 10 bar; a real unit of this size passes 170–180 kg/s |
+| Rated steam flow (steam generation at full gas) | 171 kg/s (about 615 t/h) | measured at 10 bar; a real unit of this size passes 170–180 kg/s. A design figure: at 165 bar the sim passes more, see the feedwater heating departure |
 | Relief valve | opens 178 bar, closes 171 bar, ≈ 497 kg/s | 110% of the steam full gas makes at 178 bar; realistic sizing, not a departure |
 | Burner low-low level | 20% of the boiler volume (20 m³ of 100 m³) | UNVERIFIED: an own engineering estimate with no source; a real drum trips on a level in mm below normal, which this one-lump boiler has no measure for. The burner trips below it (`CstBoiler.BurnerLowLowLevel`, [ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)) |
 
@@ -60,12 +61,12 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 
 | | Value |
 |---|---|
-| Max steam removal per valve (turbine valve or bypass fully open, main steam valve open) | 200 kg/s each, so up to 400 kg/s with both |
+| Valve capacity (turbine valve or bypass fully open, main steam valve open) | 200 kg/s each, so up to 400 kg/s with both; a valve limit, not a steady flow |
 | Main steam valve minimum pressure | 10 bar |
 | Vacuum limit (turbine trip) | 327 mbar absolute (`CstCondenser.VacuumLimit`); see the source below |
 | Sync speed | 3000 RPM (50 Hz grid) |
 | Overspeed limit | 3300 RPM (110%) |
-| Electric output at rated steam flow | ≈ 153 MWe (200 kg/s, 165 bar, 100 mbar); ≈ 131 MWe at the 171 kg/s of full gas | derived from the isentropic enthalpy drop of saturated steam (917 kJ/kg from 165 bar to 100 mbar, IF97) × `IsentropicEfficiency` 0.85 × `GeneratorEfficiency` 0.98 (#14, [ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)). The 100 mbar back-pressure is the one the estimate assumed; at the 15 mbar the plant reaches at low load the same flow gives ≈ 179 MWe, at 327 mbar (vacuum limit) ≈ 134 MWe. The 200 kg/s and 171 kg/s values at 100 mbar are pinned by `TurbineTick.test.ts`; the 15 and 327 mbar values come from the same function and are not. |
+| Electric output at rated steam flow | ≈ 131 MWe (171 kg/s, 165 bar, 100 mbar); ≈ 153 MWe at the 200 kg/s valve capacity | derived from the isentropic enthalpy drop of saturated steam (917 kJ/kg from 165 bar to 100 mbar, IF97) × `IsentropicEfficiency` 0.85 × `GeneratorEfficiency` 0.98 (#14, [ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)). The 100 mbar back-pressure is the one the estimate assumed; at the 15 mbar the plant reaches at low load the valve capacity gives ≈ 179 MWe, at 327 mbar (vacuum limit) ≈ 134 MWe. The 200 kg/s and 171 kg/s values at 100 mbar are pinned by `TurbineTick.test.ts`; the 15 and 327 mbar values come from the same function and are not. |
 
 Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemens design) fossil turbine acts when "the Condenser pressure falls to -0.7Kg/cm2", from three vacuum switches in 2-out-of-3 logic ([KWU turbine interlocks, slide 7](https://www.slideshare.net/slideshow/steam-turbine-turbine-interlocks-for-kwu-turbine/71755509)). −0.7 kg/cm² gauge is 1013.25 − 0.7 × 980.665 ≈ 327 mbar absolute. The source is a training deck, not an OEM setting sheet, and does not state the unit size; this turbine type is built as 210 and 500 MW sets. Cross-check: the ABWR Design Control Document (Tier 2, §10.4.1.5.2) trips the turbine at 0.074 MPa vacuum, about 273 mbar absolute ([NRC ML103080368](https://www.nrc.gov/docs/ML1030/ML103080368.pdf)), on a ~1350 MWe nuclear unit. The limit is a real-plant value, not a departure. It sits above the 213 mbar the air extraction pump reaches on its own, so the SJAE is not needed to reach it, only to go deeper. Decision: [ADR 0003](../adr/0003-turbine-trip-on-vacuum-limit.md).
 
@@ -75,7 +76,7 @@ Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemen
 |---|---|---|
 | Hotwell total volume | 50 m³ | sized from condensate flow, not playability: 35 m³ below the 70% normal level is about 3.4 min of the 171 kg/s full-gas condensate, inside HEI's 1 to 5 min ([hotwell sizing](../research/2026-11-hotwell-sizing.md)); was 15 m³ (about 1 min), changed in #53 ([ADR 0009](../adr/0009-hotwell-sized-from-condensate-flow.md)) |
 | Hotwell start volume | 35 m³ | 70%, inside the working band |
-| Hotwell working band | 55% to 75%, centre 65% | operator policy, not plant: both valves shut inside it, fully open 15 points beyond an edge. Research shows normal level near 60 to 70% of height with makeup and reject within 5 to 15 points of it ([hotwell level control](../research/2026-11-hotwell-level-control.md), UNVERIFIED, no standard read) (#52, [ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)) |
+| Hotwell working band | 55% to 75%, around the 70% normal level | operator policy, not plant: both valves shut inside it, fully open 15 points beyond an edge. Research shows normal level near 60 to 70% of height with makeup and reject within 5 to 15 points of it ([hotwell level control](../research/2026-11-hotwell-level-control.md), UNVERIFIED, no standard read) (#52, [ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)) |
 | Hotwell low-low | 10% | pump trip, set by NPSH in a real plant (about 7.5% in the one worked example, UNVERIFIED); 10% here (#52) |
 | Hotwell high-high | 95% | overfill clamp, reject forced open; real high-high is lower (about 75% of height, UNVERIFIED), 95% is the owner's figure used as the last-resort tier (#52) |
 | Max vacuum | 1000 mbar (about 13 mbar absolute) | |

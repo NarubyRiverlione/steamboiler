@@ -11,6 +11,6 @@ Boiler pressure is the saturation pressure of the water temperature, never below
 ## Consequences
 
 - Correct pressure at 165 to 180 bar depends on the steam table being right at high pressure (#22).
-- Overfill (no steam space left) is not handled by the pressure law; the water level is clamped and #34 owns the solid-water case.
+- Overfill (no steam space left) is not handled by the pressure law; the water level is clamped and #62 owns high-level protection.
 - Over-pressure is not capped by the pressure law; the relief valve (#9) and burner protection (#33) own it.
 - How fast pressure moves under draw depends on thermal mass; #12 uses water only and #13 adds metal mass and heat loss.

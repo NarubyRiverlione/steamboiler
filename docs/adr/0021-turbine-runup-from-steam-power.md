@@ -1,6 +1,6 @@
 # The turbine runs up on steam power, at a rate set by hold mode
 
-**Status: accepted.** Implemented in #68, #69 and #70 (split from #66).
+**Status: accepted, not yet implemented.** To be built in #68, #69 and #70 (split from #66).
 
 The turbine's speed follows from the **shaft power** the steam delivers (flow × enthalpy drop × efficiency), minus losses that rise steeply with speed, on a shaft line with a real inertia. The run-up to sync speed is paced by **hold mode**: its speed setpoint moves toward the operator's setpoint at a fixed run-up rate. The fixed turbine valve opening that has to land on an asymptote is no longer used.
 
@@ -15,9 +15,9 @@ That follows from `calculateRPM`:
 - equilibrium speed = flow × pressure = 3003 rpm (which is why the load opening is 9.1%);
 - time constant τ = I·2π / (60·`FrictionFactor`) ≈ 2620 s, **set only by inertia and friction**. More steam raises the speed the rotor settles at but does not get it there sooner. Reaching 3000 rpm takes about 7τ, around 5 h.
 
-Rough estimates for a shaft line of this class (~150 MWe, see #14) say otherwise. These are **estimates, not sourced figures**; sourcing them is part of #66:
+Rough estimates for a shaft line of this class (~130 MWe, see #14) say otherwise. These are **estimates, not sourced figures**; sourcing them is #68:
 
-- inertia constant H ≈ 3–4 s, so about 0.5–0.8 GJ stored at 3000 rpm (J of the order of 10⁴ kg·m², the same order as today's 5000);
+- inertia constant H ≈ 3–4 s, so about 0.4–0.5 GJ stored at 3000 rpm (J of the order of 10⁴ kg·m², the same order as today's 5000);
 - 18 kg/s across a few hundred kJ/kg gives roughly 10–20 MW at the shaft, so free acceleration to sync speed takes about a minute;
 - windage and bearing losses rise with roughly ω³ in power. A no-load flow of 5–10% of rated flow is typical, and 18 kg/s against ~171 kg/s at full gas fits that;
 - real run-up time is set by the operator or governor (run-up rates of the order of 100–300 rpm/min, with soak holds), giving minutes on a hot start and tens of minutes on a cold start.
@@ -57,7 +57,7 @@ This makes the run-up faster, so it has to clear the rule against magic numbers 
 - The [ADR 0010](0010-pid-derivative-on-measurement.md) derivative-on-measurement still applies. A setpoint that ramps gives no derivative kick.
 - **One run-up rate.** A real governor picks it from rotor metal temperature (hot and cold starts differ), which the sim does not model. The sim always starts the turbine from the cold state, so it uses the cold-start value; the hot-start rate is recorded in `design-basis.md` as a deliberate simplification.
 - **The ramp starts at the current speed** when hold mode is switched on, runs at the same rate up and down, and resets to the current speed when hold mode is switched off or the turbine trips, as the PID memory does. The operator's setpoint stays the target; the ramped value is internal state.
-- **S in J = 2·H·S/ω_s²** is the rated electric output of `design-basis.md` (from #14), not a second number. It ignores power factor (a real S is in MVA, about 15% more); that is within the uncertainty of H. `design-basis.md` says so.
+- **S in J = 2·H·S/ω_s²** is the rated electric output of `design-basis.md` (about 131 MWe at the rated 171 kg/s, from #14), not a second number. It ignores power factor (a real S is in MVA, about 15% more); that is within the uncertainty of H. `design-basis.md` says so.
 - **No generator load on the shaft yet.** The no-load calibration assumes no load torque: with the breaker closed, flow above the no-load flow still accelerates the shaft and opens the breaker at +2 rpm, as today. Grid-locked speed and load torque are #71.
 - **No overspeed protection yet.** The linear characteristic drops to zero torque at twice sync speed, so full flow with hold mode off settles near 6000 rpm and nothing trips it (`MaxRPM` only caps the setpoint). The trip is #72.
 - Free acceleration is fast on purpose: with hold mode off, a manual full opening reaches sync speed in about a minute, and the operator is responsible for throttling.

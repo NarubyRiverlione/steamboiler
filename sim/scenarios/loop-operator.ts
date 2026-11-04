@@ -17,7 +17,7 @@ export const LoopSettings = {
   CondensationPumpOpening: 0.1, // condensation pump position when the main steam valve opens
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // no pump change within target ± band
-  HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (centre 65%)
+  HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (normal level 70%)
   HotwellBandHigh: 0.75, // reject opens above the working band
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
   CondenserSteamHigh: 100, // kg in the condenser: more cooling water

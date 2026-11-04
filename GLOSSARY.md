@@ -49,8 +49,12 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow through the turbine with the turbine valve fully open: 200 kg/s.
-_Avoid_: Max steam removal, nominal flow
+The steam flow the plant is rated for, the full-gas steam flow: 171 kg/s. A design figure: the sim can pass more at 165 bar (see the departures in `design-basis.md`).
+_Avoid_: Nominal flow
+
+**Valve capacity**:
+The steam flow through the turbine valve or the bypass when fully open: 200 kg/s each. A valve limit, not a steady flow.
+_Avoid_: Max steam removal, rated steam flow
 
 **Electric output**:
 The power the generator delivers to the grid, in MW. Only produced with the breaker closed at sync speed; it follows from the steam flow and from the energy the turbine takes out of each kilogram, which depends on boiler pressure and condenser pressure.
@@ -111,11 +115,11 @@ How full the hotwell is, as the water volume over the hotwell's total volume. Me
 _Avoid_: Hotwell fill, hotwell mass
 
 **Normal level**:
-The hotwell level the loop is run at: 70%. Makeup and reject bring the level back to it.
+The hotwell level the loop is run at: 70%, inside the working band.
 _Avoid_: Target level, setpoint (on its own)
 
 **Working band**:
-The hotwell levels the operator keeps without acting: 65% to 75%. Makeup opens below it and reject above it; both close again at the normal level.
+The hotwell levels the operator keeps without acting: 55% to 75%. Makeup opens below it and reject above it, in proportion to the distance; both are shut inside it.
 _Avoid_: Deadband, control band
 
 **Hotwell level alarm**:

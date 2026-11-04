@@ -49,11 +49,11 @@ Steam table (`src/utils/steamData.ts`): saturated water from 80 °C up to the cr
 Steam removal (`BoilerRemoveSteam`, once for the bypass, then for the turbine valve):
 
 ```
-Removed this tick = min(valve position × rated steam flow × tick, steam mass in the boiler)
-Reported flow     = removed / tick   (kg/s, never above valve position × rated steam flow)
+Removed this tick = min(valve position × valve capacity × tick, steam mass in the boiler)
+Reported flow     = removed / tick   (kg/s, never above valve position × valve capacity)
 ```
 
-Rated steam flow is in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before `BoilerTick`, which flashes water to refill the inventory. That flash takes its latent heat from the water, so a draw cools the water and lowers the pressure; the gas holds pressure only while its heat matches the latent heat of the steam leaving.
+Valve capacity is in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before `BoilerTick`, which flashes water to refill the inventory. That flash takes its latent heat from the water, so a draw cools the water and lowers the pressure; the gas holds pressure only while its heat matches the latent heat of the steam leaving.
 
 Boiling point: steam-table interpolation in range, Antoine equation below it, clamped to the critical point (373.946 °C) from 220.64 bar up. `getBoilingPoint(180)` gives 357.0 °C.
 
