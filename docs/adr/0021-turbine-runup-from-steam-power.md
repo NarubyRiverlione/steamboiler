@@ -1,6 +1,6 @@
 # The turbine runs up on steam power, at a rate set by hold mode
 
-**Status: accepted.** Implemented in #66 (split into sub-tickets).
+**Status: accepted.** Implemented in #68, #69 and #70 (split from #66).
 
 The turbine's speed follows from the **shaft power** the steam delivers (flow × enthalpy drop × efficiency), minus losses that rise steeply with speed, on a shaft line with a real inertia. The run-up to sync speed is paced by **hold mode**: its speed setpoint moves toward the operator's setpoint at a fixed run-up rate. The fixed turbine valve opening that has to land on an asymptote is no longer used.
 
@@ -51,7 +51,7 @@ This makes the run-up faster, so it has to clear the rule against magic numbers 
 - **Supersedes part of [ADR 0008](0008-pressure-hold-with-gas.md):** its consequence that the turbine speed has a time constant of about 2600 s, and the turbine valve's fixed load opening (9.1%, "steam × pressure = 3003 rpm"). The gas pressure hold itself stays.
 - `turbine-runup` uses hold mode for the run-up instead of keeping it off. `StartupSettings.TurbineLoadOpening` is re-derived or goes, and the scenario gets much shorter.
 - `turbine-sync` starts from the `turbine-runup` snapshot, so it changes too. `sim/snapshots/` has to be regenerated.
-- The PID gains (`PID_Kp`, `PID_Ki`, `PID_Kd`) were tuned against the old ~2600 s lag. They are retuned against the new dynamics in #63, which #66 now blocks.
+- The PID gains (`PID_Kp`, `PID_Ki`, `PID_Kd`) were tuned against the old ~2600 s lag. They are retuned against the new dynamics in #63, which #70 now blocks.
 - #14 blocks #66: its enthalpy drop is the input for the drive torque. #14's scope note ("the RPM/torque model is untouched") still holds there; this ADR is the follow-up.
 - `docs/plant/turbine.md` and the `const.ts` comments are brought in line with the code in the same change.
 - The [ADR 0010](0010-pid-derivative-on-measurement.md) derivative-on-measurement still applies. A setpoint that ramps gives no derivative kick.
