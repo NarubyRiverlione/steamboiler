@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint"
 import eslintConfigPrettier from "eslint-config-prettier/flat"
 
 export default tseslint.config(
-  { ignores: ["dist", "node_modules", "**/*.config.*", "jest.config.js"] },
+  { ignores: ["dist", "coverage", "node_modules", "**/*.config.*", "jest.config.js"] },
 
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
