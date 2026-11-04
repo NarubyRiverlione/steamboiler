@@ -121,7 +121,10 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
 - Committed snapshots are listed in `sim/snapshot-sources.ts` with the scenario whose final state
   they are; `pnpm sim:snapshots` regenerates them all. `sim/golden/snapshot.test.ts` fails when a committed
   file no longer matches a fresh run of its source, so after a physics or state change: run
-  `pnpm sim:snapshots`, look at the diff, commit.
+  `pnpm sim:snapshots`, look at the diff, commit. The comparison is tolerant ([ADR 0020](../adr/0020-snapshots-compare-with-tolerance.md)):
+  numbers match within a relative 1e-9 (absolute 1e-12 near 0, `valueErrors` in `sim/snapshot.ts`), so last-digit
+  noise between machines or Node versions passes and a failure names the field path; shape, strings and booleans stay exact.
+  A physics change smaller than 1e-9 relative is not caught here, the scenario goal checks cover that.
 - Sources: `turbine-runup` (for `turbine-sync`) and `bypass-loop` (for the edge set). A source starts from cold.
 
 UI presets ("cold", "hot standby", "at pressure") are #24; the UI starts cold.
