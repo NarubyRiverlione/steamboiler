@@ -64,6 +64,14 @@ _Avoid_: Bell curve, optimal pressure, vacuum permissive
 The turbine's speed governor: switched on, it moves the turbine valve to keep the turbine at the speed setpoint (sync speed by default).
 _Avoid_: Autopilot, speed hold, cruise
 
+**Run-up rate**:
+The rate, in rpm per minute, at which hold mode moves its working speed target toward the operator's setpoint. The turbine is brought up gradually to protect the rotor, not as fast as the steam would take it.
+_Avoid_: Acceleration, ramp rate, spin-up
+
+**No-load flow**:
+The steam flow that holds the turbine at sync speed with the breaker open: it only covers the turbine's own losses (windage and bearings).
+_Avoid_: Idle flow, minimum flow
+
 **Turbine trip**:
 The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also switches hold mode off; the turbine only takes steam again when the operator reopens the valve.
 _Avoid_: Trip (on its own), shutdown
