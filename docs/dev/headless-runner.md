@@ -90,13 +90,12 @@ turns red, so remove the entry to make the pair a guard. `sim/invariants.test.ts
 
 ### Time limits
 
-`sim/golden/runtime.test.ts` has a wall-clock guard: one simulated hour (`heatUp`, 3600 s, `sampleEvery: 10`) must
-finish within 15 s. Measured on an i7-10710U (15 W laptop CPU): 2.6 s plain, 7.8–8.6 s under
-`vitest --coverage`, because v8 instrumentation of the simulation core slows it about 3×. The crap-score
-tool always runs with coverage, so the earlier 5 s limit failed there while passing in `pnpm test`.
-15 s is about twice the slowest measured coverage run: it still catches an order-of-magnitude
-regression and tolerates slower hardware. The vitest `testTimeout` in `vite.config.ts` is 30 s for the same reason.
-A full coverage run takes about 125–150 s on that machine, so score changed files only (`--changed`).
+`sim/perf/runtime.test.ts` has a wall-clock guard: one simulated hour (`heatUp`, 3600 s, `sampleEvery: 10`) must
+finish within 15 s. It is its own opt-in layer (`pnpm test:perf`, [ADR 0023](../adr/0023-runner-speed-guard-is-opt-in.md)), outside the `dev` gate.
+
+Measured on a Mac, one simulated hour: 0.37 s under `tsx`, 0.5 s under Vitest, 1.4 s under Vitest with coverage. Vitest adds to `tsx` because it rewrites imports so that every read of an imported binding is a getter call, so a hot loop over an imported table pays for it; `bracket` in `src/utils/steamTable.ts` reads `steamTable` into a local once. Before `bracket` became a binary search (#73) the same run took 2.9 s and 7 s, nearly all of it scanning the steam table: each tick can run a 40-step bisection, and each step does three table lookups.
+
+The 15 s limit dates from that slower code, on an i7-10710U (15 W laptop CPU). The vitest `testTimeout` in `vite.config.ts` is 30 s, for long scenarios under coverage.
 
 ## Water drift
 
