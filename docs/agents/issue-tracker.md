@@ -21,6 +21,7 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
   - `P2` **Realism within the current scope**: something the plant already has behaves or calculates wrongly, including physics bugs that break nothing.
   - `P3` **Experience and project health**: improves what exists. UI/UX, scenarios on the existing plant, tests, CI, tooling.
   - `P4` **Scope expansion**: a new component, system, protection, alarm or feature, even if it is UI only. Parked until the owner promotes it.
+- **`UI design`**: a ticket that belongs to the UI redo (ADR 0015). It is blocked by #75, the choice of style, until that is made. This label says what the ticket belongs to; the `P` label still says what kind of work it is.
 - **Bugs** are sorted by effect: broken is `P1`, wrong physics `P2`, cosmetic `P3`.
 - **Parked ideas**: a `P4` ticket stays `needs-triage` until it is promoted to `P1`–`P3`; triage it then. Promoting is the owner's decision to widen the scope; the ticket then gets the label of what it is.
 - **Order**: express "do X before Y" as a native blocked-by link (see **Blocking** under **Wayfinding operations**), never only in prose.

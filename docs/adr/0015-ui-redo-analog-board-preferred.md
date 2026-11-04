@@ -21,5 +21,5 @@ A redo replaces only the presentation (`src/components/`, `src/navigation/`). Th
 ## Consequences
 
 - Nothing is built until a style is chosen. Future UI work should lean towards option A unless the final decision goes the other way.
-- Whichever style is chosen, the open UI tickets fold into it: #15 (faster gas control), #24 (start presets), #36 (history visualisation), #41 (continuous-fire valve buttons), #54 (hotwell level zones) and #59 (hotwell level alarms).
+- Whichever style is chosen, the open UI tickets fold into it: #15 (faster gas control), #24 (start presets), #36 (history visualisation), #41 (continuous-fire valve buttons), #54 (hotwell level zones), #57 (rpm wording on the set point control) and #59 (hotwell level alarms). They are blocked by #75, the choice of style.
 - If the MC-v2 language is used, its components are copied and adapted into this repo, not shared as a package. The LiquidCrystal font licence must be checked first; Stardos Stencil is OFL.
