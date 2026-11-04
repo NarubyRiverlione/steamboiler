@@ -1,7 +1,7 @@
 export const CstSimulation = {
   DeltaTime: 0.1, // Simulation tick duration in sec
   CstBoiler: {
-    StartWaterVolume: 50e3, // liters (60-70% water volume to keep space for steam)
+    StartWaterVolume: 35e3, // liters at ambient: thermal expansion brings it to the 50% working level at 165 bar (ADR 0018)
     TotalVolume: 100e3, // liters (typical  20-100m3)
     MaxGasFlow: 12000, // liters/second, about 420 MW of fuel for a 200 MWe unit (docs/research/2026-10-sizing-check.md)
     DrainingRate: 0.005, // 0.5% per second

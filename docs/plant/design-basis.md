@@ -19,8 +19,9 @@ Add a row when you over-dimension a utility or reduce something for playability.
 | Item | Simulator | Realistic | Why | Constant |
 |---|---|---|---|---|
 | Boiler model (simplified) | one lumped vessel: one volume shared by water and steam, one temperature for water and steel | a steam drum and a lower drum joined by risers and downcomers, with natural circulation, swell and shrink, and a drum level in mm | model choice, not playability: the lumped vessel carries the energy, mass and pressure behaviour the operator works with; see [boiler.md](boiler.md#what-the-model-is-not) ([ADR 0019](../adr/0019-boiler-is-one-lumped-vessel.md)) | `BoilerTick` |
-| Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 4.7 min (measured, `boiler-low`) instead of 8–9 min | `CstBoiler.TotalVolume`, `StartWaterVolume` |
-| Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.6 min (measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
+| Boiler volume (reduced) | 100 m³ total, 50 m³ water | about 200 m³ total, 100 m³ water (evaporator side 100–150 m³; with economizer and superheater 200–300 m³) | on purpose reduced: full gas heats from cold to 165 bar in about 3.8 min (230 s, measured, `boiler-low`) instead of 8–9 min; the 35 t cold fill (next row) shortens it further | `CstBoiler.TotalVolume`, `StartWaterVolume` |
+| Cold fill (35% of the drum) | 35 m³ of water at ambient (35% of `TotalVolume`), thermal expansion brings it to the 50 m³ working level at 165 bar | a real unit fills the drum cold to a start-up level well below the working one, for the same reason: the water expands when heated | the water has to fit hot: cold at 50% the boiler held 49.9 t against 34.4 t at the working state, so about 15 t had to leave on the way up, and the hotwell had 2.5 t of room below the reject band ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)). Also a deliberate reduction: less water to heat takes the cold start to 165 bar from about 4.7 to 3.8 min at full gas | `CstBoiler.StartWaterVolume` |
+| Heating-rate limit (relaxed) | 0.4 K/s (24 K/min), alarm only | about 100 K/h | time-compressed: cold start to working pressure takes about 16.3 min (980 s, measured, `heat-up`) instead of 4 to 8 h | `CstBoiler.HeatingRateLimit` |
 | Water temperature (capped) | stops heating at the critical point, 373.946 °C | a boiler run dry overheats its metal and fails | model limit: the saturated model ends at the critical point, and a dry boiler with gas on would otherwise run away to NaN; with the metal mass a dry boiler heats to it at about 7 K/s; the burner trip ([boiler.md](boiler.md#burner-trip)) stops the gas before a boiler runs dry | `CriticalTemperature` (`src/utils/steamTable.ts`), used in `BoilerTick` |
 | Specific heat at the critical point (held) | 47.1 kJ/kg·K from 370 °C up | diverges to infinity at 373.946 °C | the simulation core must stay finite every tick; the table clamps at the critical point instead of throwing | last row of `steamTable` in `steamData.ts` |
 | Burner minimum firing (operator setting) | the scenario pressure hold never takes gas below 100 L/s (`PressureHoldSettings.GasFloor`); the plant itself can go to 0 | a burner cannot modulate to zero and stay lit; turn-down is about 1:10 to 1:20 | with gas at 0 for 2 minutes the hold's overshoot trips the cooldown invariant, which assumes a plant with gas off is cooling; not plant physics | `sim/scenarios/pressure-hold.ts` |
@@ -34,7 +35,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | | Value | Note |
 |---|---|---|
 | Total volume | 100 m³ | on purpose reduced, see the register |
-| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space; the initial fills (`StartWaterVolume`, `HotwellStartVolume`) are specified in litres at ambient and converted to kg when the state is created ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)) |
+| Working water volume | 50 m³ (50% of max) | the other 50 m³ is steam space; the boiler starts cold at 35 m³ and expands to it (see the register); the initial fills (`StartWaterVolume`, `HotwellStartVolume`) are specified in litres at ambient and converted to kg when the state is created ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)) |
 | Water capacity | 100 m³ of liquid | `CstBoiler.TotalVolume`, see [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
 | Working pressure | 165 bar | typical utility drum boiler (2400 psi); not a code constant yet |
 | Design pressure | 180 bar | must never be exceeded; the relief valve holds it while water remains (see [boiler.md](boiler.md#relief-valve)) |
@@ -53,7 +54,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Metal mass (drum and tubes) | 100 t steel | 0.5 kJ/kg·K, added to the water's heat capacity at one lumped temperature (`CstBoiler.MetalMass`) |
 | Heat loss | 0.5 MW at design temperature | proportional to the difference with ambient (`CstBoiler.HeatLossAtDesign`); about 3.6 K per hour at 190 °C, so a cooldown takes days |
 | Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s | alarm only (`CstBoiler.HeatingRateLimit`, `HeatingRateWindow`); see the register and [ADR 0006](../adr/0006-heating-rate-alarm-only.md) |
-| Cold start to working pressure | about 16.6 min with the gas ramped at the limit (measured, `heat-up`); about 4.3 min at full gas, over the limit | time-compressed: real cold startups take 4 to 8 h |
+| Cold start to working pressure | about 16.3 min with the gas ramped at the limit (measured, `heat-up`); about 3.8 min at full gas, over the limit | time-compressed: real cold startups take 4 to 8 h |
 
 ## Steam path and turbine
 

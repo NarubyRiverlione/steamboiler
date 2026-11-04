@@ -17,9 +17,9 @@ A real drum boiler is a steam drum at the top and a lower (mud) drum at the bott
 - **Water and steam**: the boiler holds liquid water that turns to steam when enough energy is added. The water is held as mass in kg (`waterMass`) and its volume follows temperature (`getWaterSpecificVolume`, saturated-liquid specific volume from 20 °C up), so the level rises as the water heats (about +40% from 20 to 300 °C) and falls as water boils ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)). Steam takes far more volume than the water it came from (about 1600× at atmospheric pressure).
 - **Temperature**: one lumped temperature for the water and the drum and tube metal. It rises with gas energy, falls through heat loss to the surroundings and through the latent heat of water flashing to steam, and is diluted by returned water. A closed drum keeps heating past 100 °C; pressure follows it.
 - **Pressure**: see **Pressure model** below.
-- **Thermal mass**: the water plus about 100 t of drum and tube steel at 0.5 kJ/kg·K (50 MJ/K), at the water temperature. No separate metal temperature. At the cold start the metal adds about a quarter to the water's 210 MJ/K.
+- **Thermal mass**: the water plus about 100 t of drum and tube steel at 0.5 kJ/kg·K (50 MJ/K), at the water temperature. No separate metal temperature. At the cold start (35 t of water, 147 MJ/K) the metal adds about a third.
 - **Energy**: the heat content above 0 °C of the water and the metal. The source is the gas burner. The sinks are heat loss, the latent heat of the flash (which includes steam vented by the relief valve), and drained water (the water's share only; the metal stays).
-- **Volume**: a fixed 100 m³ shared between water and steam; 50 m³ of water at the start (49 910 kg at ambient). `waterVolume` is derived from `waterMass` every tick, in `BoilerTick` only.
+- **Volume**: a fixed 100 m³ shared between water and steam; 35 m³ of water at the start (34 937 kg at ambient), which expands to the 50 m³ working level at 165 bar ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)). `waterVolume` is derived from `waterMass` every tick, in `BoilerTick` only.
 - **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second, converted to kg at the boiler temperature (`drainedTotal` counts kg). Steam leaves through the relief valve to the atmosphere (`BoilerVent`, see **Relief valve**), and through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the steam inventory. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
 
 ## Calculations
@@ -74,7 +74,7 @@ A boiler that runs dry with gas on keeps heating its metal: with no water left t
 
 The burner trips when the water volume falls below the burner low-low level, 20% of the boiler volume (`CstBoiler.BurnerLowLowLevel`, UNVERIFIED, see [design-basis.md](design-basis.md)) ([ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)). `BoilerBurnerTrip` runs first in `PowerPlantTick`, upstream of the relief valve, on the volume at the start of the tick: the gas is forced to 0 and `burnerTripped` is set, whatever the operator or a scenario does. `INCREASE_GAS_FLOW` is refused while the volume is below the level; the next successful raise clears the flag. There is no pressure or temperature trip: pressure follows saturation, and the relief valve holds it while water remains. A drained boiler trips the burner as well. The boiler panel shows the trip and the sim report notes its time; the CSV has `boiler_burnerTripped`.
 
-In `boiler-low` (full gas, everything closed) the burner trips at about 371 s with about 20 m³ left, and the peak is 178.1 bar and 356.0 °C, inside design.
+In `boiler-low` (full gas, everything closed) the burner trips at about 270 s with about 18 m³ left, and the peak is 177.5 bar and 355.7 °C, inside design.
 
 Constants: `CstBoiler.ReliefOpenPressure`, `ReliefClosePressure`, `ReliefCapacityMargin`; the capacity itself is derived (`ReliefCapacity` in `BoilerTick.ts`). It is realistic sizing, not a departure.
 
@@ -87,7 +87,7 @@ Heating rate = previous + (ΔT / tick − previous) × tick / 30 s
 Alarm        = heating rate > 0.4 K/s (24 K/min)
 ```
 
-The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 80 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.6 min (`heat-up`). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
+The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 98 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.3 min (`heat-up`). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
 
 ## Pressure model
 
@@ -104,7 +104,7 @@ Pressure is the saturation pressure of the water temperature, never below atmosp
 | Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s, alarm only |
 | Atmospheric pressure | 1.013 bar |
 | Ambient temperature | 20 °C (`CstPhysics.AmbientTemperature`): heat loss stops here, and the temperature never falls below it |
-| Start state | cold: ambient temperature, atmospheric pressure, 50 m³ water (49 910 kg at ambient), the vapour inventory at ambient, energy = heating that water and 100 t of steel from 0 °C to ambient |
+| Start state | cold: ambient temperature, atmospheric pressure, 35 m³ water (34 937 kg at ambient), the vapour inventory at ambient, energy = heating that water and 100 t of steel from 0 °C to ambient |
 
 ## Remaining empirical areas
 

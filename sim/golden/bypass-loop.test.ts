@@ -25,13 +25,13 @@ const openShare = (open: (s: PowerPlantState) => boolean) =>
   steady.filter((s) => open(s.state)).length / steady.length
 
 describe("bypass-loop setup", () => {
-  const atOpen = samples.find((s) => s.time > valveOpenAt)
+  const atOpen = samples.find((s) => s.time >= valveOpenAt)
 
   test("starts at full gas", () => {
     expect(samples[0].state.Boiler.gasFlow).toBe(CstBoiler.MaxGasFlow)
   })
 
-  test("opens the main steam valve once above main-steam-valve pressure", () => {
+  test("opens the main steam valve at working pressure, not during heat-up (ADR 0018)", () => {
     expect(valveOpenAt).toBeLessThan(SettleTime)
     expect(atOpen?.state.Boiler.gasFlow).toBe(StartGas)
     expect(atOpen?.state.Condenser.sjaeValvePosition).toBe(LoopSettings.SjaeOpening)

@@ -119,12 +119,12 @@ describe("cold initial state", () => {
     expect(initialPowerPlantState).toEqual(cold)
   })
 
-  // 50 t of water at 4.196 kJ/kg·K plus 100 t of steel at 0.5 kJ/kg·K, 20 K above 0 °C: 4196 + 1000 MJ
+  // 35 t of water at 4.196 kJ/kg·K plus 100 t of steel at 0.5 kJ/kg·K, 20 K above 0 °C: about 2932 + 1000 MJ
   test("is at ambient temperature and atmospheric pressure, with energy matching temperature, water and metal", () => {
     expect(cold.Boiler.temperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Condenser.hotwellTemperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Boiler.pressure).toBe(CstPhysics.AtmosphericPressure_mBar / 1e3)
-    expect(cold.Boiler.energy).toBeCloseTo(5_188_461, 0) // 49 910 kg of water at 4.196 kJ/kg·K and 100 t of steel at 0.5, from 0 °C to 20 °C
+    expect(cold.Boiler.energy).toBeCloseTo(3_931_923, 0) // 34 937 kg of water at 4.196 kJ/kg·K and 100 t of steel at 0.5, from 0 °C to 20 °C
   })
 
   test("makes no steam on the first tick", () => {
