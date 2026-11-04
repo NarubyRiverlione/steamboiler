@@ -1,6 +1,6 @@
 # Branches and releases
 
-Two long-lived branches plus one short-lived branch per ticket. Why: [ADR 0012](../adr/0012-dev-branch-main-for-releases.md) (`main` for releases), [ADR 0013](../adr/0013-release-by-pull-request.md) (releases by pull request), [ADR 0014](../adr/0014-ticket-branches-and-test-gates.md) (ticket branches and test gates).
+Two long-lived branches plus one short-lived branch per ticket. Why: [ADR 0012](../adr/0012-dev-branch-main-for-releases.md) (`main` for releases), [ADR 0013](../adr/0013-release-by-pull-request.md) (releases by pull request), [ADR 0014](../adr/0014-ticket-branches-and-test-gates.md) (ticket branches and test gates), [ADR 0023](../adr/0023-runner-speed-guard-is-opt-in.md) (speed guard outside the `dev` gate).
 
 | Branch | Holds | Who commits |
 |---|---|---|
@@ -17,13 +17,13 @@ Two long-lived branches plus one short-lived branch per ticket. Why: [ADR 0012](
 
 ## Gates
 
-Each gate includes everything of the one above it. Test layers ([testing.md](testing.md)): unit (`pnpm test:unit`), golden-path scenarios (`pnpm test:sim:golden`), edge scenarios (`pnpm test:sim:edge`).
+Each gate includes everything of the one above it. Test layers ([testing.md](testing.md)): unit (`pnpm test:unit`), golden-path scenarios (`pnpm test:sim:golden`), edge scenarios (`pnpm test:sim:edge`), runner speed guard (`pnpm test:perf`).
 
 | Moment | Must pass |
 |---|---|
 | Every commit | lint, unit tests; known failures are `test.fails` naming a ticket |
 | Ticket branch → `dev` | golden-path scenarios, crap report on the changed files (flags methods over the threshold, does not fail) |
-| `dev` → `main` | edge scenarios |
+| `dev` → `main` | edge scenarios, runner speed guard |
 
 The `dev` gate is run locally before the merge; GitHub cannot block a merge into `dev`. CI on every push to `dev` runs the layers again, edge included (reported, not required), so a regression shows near the commit that caused it. The `main` gate is the required check on the pull request.
 
@@ -35,7 +35,7 @@ Branch protection, not rulesets: a pull request is required (0 approvals, so the
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push to `dev` and every pull request into `main`. Job `check`: `pnpm install --frozen-lockfile`, `pnpm lint:ci` (eslint without `--fix`, then `tsc -b --noEmit`), `pnpm test` (Vitest runs once under `CI=true`). `check` is the required status check on `main`.
+`.github/workflows/ci.yml` runs on every push to `dev` and every pull request into `main`. Job `check`: `pnpm install --frozen-lockfile`, `pnpm lint:ci` (eslint without `--fix`, then `tsc -b --noEmit`), `pnpm test` (Vitest runs once under `CI=true`), `pnpm test:perf`. `check` is the required status check on `main`.
 
 ## Deployment
 

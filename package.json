@@ -18,6 +18,7 @@
     "test:unit": "vitest run --project unit",
     "test:sim:golden": "vitest run --project golden",
     "test:sim:edge": "vitest run --project edge",
+    "test:perf": "vitest run --config vitest.perf.config.ts",
     "depcheck": "knip",
     "sim": "tsx sim/run.ts",
     "sim:serve": "tsx sim/serve.ts",

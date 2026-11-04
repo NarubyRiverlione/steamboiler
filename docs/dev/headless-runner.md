@@ -90,7 +90,7 @@ turns red, so remove the entry to make the pair a guard. `sim/invariants.test.ts
 
 ### Time limits
 
-`sim/golden/runtime.test.ts` has a wall-clock guard: one simulated hour (`heatUp`, 3600 s, `sampleEvery: 10`) must
+`sim/perf/runtime.test.ts` has a wall-clock guard: one simulated hour (`heatUp`, 3600 s, `sampleEvery: 10`) must
 finish within 15 s. Measured on an i7-10710U (15 W laptop CPU): 2.6 s plain, 7.8–8.6 s under
 `vitest --coverage`, because v8 instrumentation of the simulation core slows it about 3×. The crap-score
 tool always runs with coverage, so the earlier 5 s limit failed there while passing in `pnpm test`.
