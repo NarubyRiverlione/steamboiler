@@ -10,27 +10,27 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P1 | needs-triage |  |  |
+| 1 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P2 | ready-for-agent |  | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
 | 2 | [#68](https://github.com/NarubyRiverlione/steamboiler/issues/68) Turbine research note: inertia constant, no-load flow, run-up rate, loss exponent | P2 | ready-for-agent |  | [#69](https://github.com/NarubyRiverlione/steamboiler/issues/69) |
 | 3 | [#69](https://github.com/NarubyRiverlione/steamboiler/issues/69) Turbine speed from steam power: physical torque, losses and derived inertia | P2 | ready-for-agent | [#68](https://github.com/NarubyRiverlione/steamboiler/issues/68) | [#70](https://github.com/NarubyRiverlione/steamboiler/issues/70) [#71](https://github.com/NarubyRiverlione/steamboiler/issues/71) |
 | 4 | [#70](https://github.com/NarubyRiverlione/steamboiler/issues/70) Hold-mode run-up rate: ramped speed setpoint, turbine-runup in hold mode | P2 | ready-for-agent | [#69](https://github.com/NarubyRiverlione/steamboiler/issues/69) | [#63](https://github.com/NarubyRiverlione/steamboiler/issues/63) |
-| 5 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down to cold | P3 | needs-triage |  |  |
-| 6 | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) Steam density has a kink where the dP/dT window reaches a steam-table node | P3 | ready-for-agent |  | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) |
-| 7 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
-| 8 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
-| 9 | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) Hold mode only engages within ±50 rpm of the set point | P3 | ready-for-agent |  |  |
-| 10 | [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) RPM set point control: 100 rpm per click | P3 | ready-for-agent |  |  |
-| 11 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) |  |
-| 12 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | needs-triage |  |  |
-| 13 | [#63](https://github.com/NarubyRiverlione/steamboiler/issues/63) Hold-mode PID overshoots and chatters the breaker on engage | P3 | needs-triage | [#70](https://github.com/NarubyRiverlione/steamboiler/issues/70) |  |
-| 14 | [#71](https://github.com/NarubyRiverlione/steamboiler/issues/71) Grid-locked speed and generator load torque with the breaker closed | P3 | needs-triage | [#69](https://github.com/NarubyRiverlione/steamboiler/issues/69) |  |
-| 15 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P4 | needs-triage |  |  |
-| 16 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage |  |  |
-| 17 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |  |
-| 18 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |  |
-| 19 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
-| 20 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P4 | needs-triage |  |  |
-| 21 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P4 | needs-triage |  |  |
+| 5 | [#63](https://github.com/NarubyRiverlione/steamboiler/issues/63) Hold-mode PID overshoots and chatters the breaker on engage | P2 | needs-triage | [#70](https://github.com/NarubyRiverlione/steamboiler/issues/70) |  |
+| 6 | [#71](https://github.com/NarubyRiverlione/steamboiler/issues/71) Grid-locked speed and generator load torque with the breaker closed | P2 | needs-triage | [#69](https://github.com/NarubyRiverlione/steamboiler/issues/69) |  |
+| 7 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P3 | needs-triage |  |  |
+| 8 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down to cold | P3 | needs-triage |  |  |
+| 9 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P3 | needs-triage |  |  |
+| 10 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
+| 11 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 12 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P3 | needs-triage |  |  |
+| 13 | [#56](https://github.com/NarubyRiverlione/steamboiler/issues/56) Hold mode only engages within ±50 rpm of the set point | P3 | ready-for-agent |  |  |
+| 14 | [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) RPM set point control: 100 rpm per click | P3 | ready-for-agent |  |  |
+| 15 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage | [#46](https://github.com/NarubyRiverlione/steamboiler/issues/46) |  |
+| 16 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P3 | needs-triage |  |  |
+| 17 | [#64](https://github.com/NarubyRiverlione/steamboiler/issues/64) Hot-start scenario: startup-hot from a hot-standby snapshot | P3 | needs-triage |  |  |
+| 18 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage |  |  |
+| 19 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage |  |  |
+| 20 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |  |
+| 21 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
 | 22 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P4 | needs-triage |  |  |
-| 23 | [#64](https://github.com/NarubyRiverlione/steamboiler/issues/64) Hot-start scenario: startup-hot from a hot-standby snapshot | P4 | needs-triage |  |  |
+| 23 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P4 | needs-triage |  |  |
 | 24 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P4 | needs-triage |  |  |
