@@ -31,4 +31,5 @@ A ticket that changes plant behaviour or control:
 1. names the scenario(s) and goal check(s) that prove it;
 2. turns the `test.fails` naming it into a `test`, or adds a goal check;
 3. keeps the golden path green;
-4. regenerates the snapshots (`pnpm sim:snapshots`) and updates the scenario table in [headless-runner.md](headless-runner.md), in the same commit.
+4. regenerates the snapshots (`pnpm sim:snapshots`) and updates the scenario table in [headless-runner.md](headless-runner.md), in the same commit;
+5. updates every ADR it touches, in the same commit.
