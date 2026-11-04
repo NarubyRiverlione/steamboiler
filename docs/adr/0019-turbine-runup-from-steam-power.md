@@ -1,6 +1,6 @@
 # The turbine runs up on steam power, at a rate set by hold mode
 
-**Status: proposed.** To be implemented in #66.
+**Status: accepted.** Implemented in #66 (split into sub-tickets).
 
 The turbine's speed follows from the **shaft power** the steam delivers (flow × enthalpy drop × efficiency), minus losses that rise steeply with speed, on a shaft line with a real inertia. The run-up to sync speed is paced by **hold mode**: its speed setpoint moves toward the operator's setpoint at a fixed run-up rate. The fixed turbine valve opening that has to land on an asymptote is no longer used.
 
