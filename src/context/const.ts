@@ -3,7 +3,7 @@ export const CstSimulation = {
   CstBoiler: {
     StartWaterVolume: 50e3, // liters (60-70% water volume to keep space for steam)
     TotalVolume: 100e3, // liters (typical  20-100m3)
-    MaxGasFlow: 12000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
+    MaxGasFlow: 12000, // liters/second, about 420 MW of fuel for a 200 MWe unit (docs/research/2026-10-sizing-check.md)
     DrainingRate: 0.005, // 0.5% per second
     GasEfficiency: 0.85,
     GasChangeRateFast: 500, // °C per second
