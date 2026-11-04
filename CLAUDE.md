@@ -13,7 +13,8 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
   Record every over-dimensioned utility or deliberate reduction in `docs/plant/design-basis.md`.
 - Judge physics/parameter changes with the headless runner (`docs/dev/headless-runner.md`), not the app.
 - A change to the plant or code updates its reference doc in `docs/plant/` or `docs/dev/` in the same commit.
-- A decision gets an ADR in `docs/adr/`.
+- A decision gets an ADR in `docs/adr/`. ADRs are rules tickets must honor; edit one in place when the thinking changes.
+- A change that touches a decision updates its ADR in the same commit.
 
 ## Commands
 
@@ -28,7 +29,7 @@ GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs 
 Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. New tickets get a `P1`–`P4` label
 (`P1` broken, `P2` realism in scope, `P3` experience and project health, `P4` parked scope expansion; see `docs/agents/issue-tracker.md`) and blocked-by links. A `P4` ticket stays
 `needs-triage` until it is promoted to `P1`–`P3`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
-Before closing, run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
+Before closing, run `git grep "#<ticket>" docs/adr` and update every ADR the ticket makes out of date, then run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
 ~150 s on slow hardware), report the scores (also in
 the closing comment) and flag any method above the risk threshold.
 The skill runs `npx --yes @barney-media/crap-typescript` (never installed as a dependency); the owner allows exactly
