@@ -9,13 +9,19 @@ export const CriticalTemperature: number = CriticalPoint.temperature
 
 type Bracket = { lower: SteamData; upper: SteamData; ratio: number }
 
-// Find the two table rows around a value of the (ascending) key column and the interpolation ratio between them
+// Find the two table rows around a value of the (ascending) key column and the interpolation ratio between them.
+// The flash solver reaches this inside its bisection, so it is a binary search and not a scan of the table.
 function bracket(key: "temperature" | "pressure", value: number): Bracket {
-  const index: number = steamTable.findIndex(
-    (row, i) => i < steamTable.length - 1 && steamTable[i + 1][key] >= value && row[key] <= value,
-  )
-  const lower: SteamData = steamTable[Math.max(index, 0)]
-  const upper: SteamData = steamTable[Math.max(index, 0) + 1]
+  const rows: SteamData[] = steamTable
+  let low = 0
+  let high: number = rows.length - 1
+  while (high - low > 1) {
+    const mid: number = (low + high) >> 1
+    if (rows[mid][key] <= value) low = mid
+    else high = mid
+  }
+  const lower: SteamData = rows[low]
+  const upper: SteamData = rows[high]
   return { lower, upper, ratio: (value - lower[key]) / (upper[key] - lower[key]) }
 }
 
