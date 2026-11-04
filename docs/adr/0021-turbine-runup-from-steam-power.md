@@ -1,6 +1,6 @@
 # The turbine runs up on steam power, at a rate set by hold mode
 
-**Status: proposed.** To be implemented in #66.
+**Status: accepted.** Implemented in #66 (split into sub-tickets).
 
 The turbine's speed follows from the **shaft power** the steam delivers (flow × enthalpy drop × efficiency), minus losses that rise steeply with speed, on a shaft line with a real inertia. The run-up to sync speed is paced by **hold mode**: its speed setpoint moves toward the operator's setpoint at a fixed run-up rate. The fixed turbine valve opening that has to land on an asymptote is no longer used.
 
@@ -55,4 +55,9 @@ This makes the run-up faster, so it has to clear the rule against magic numbers 
 - #14 blocks #66: its enthalpy drop is the input for the drive torque. #14's scope note ("the RPM/torque model is untouched") still holds there; this ADR is the follow-up.
 - `docs/plant/turbine.md` and the `const.ts` comments are brought in line with the code in the same change.
 - The [ADR 0010](0010-pid-derivative-on-measurement.md) derivative-on-measurement still applies. A setpoint that ramps gives no derivative kick.
-- Glossary gap: "run-up rate" is not in `GLOSSARY.md` yet.
+- **One run-up rate.** A real governor picks it from rotor metal temperature (hot and cold starts differ), which the sim does not model. The sim always starts the turbine from the cold state, so it uses the cold-start value; the hot-start rate is recorded in `design-basis.md` as a deliberate simplification.
+- **The ramp starts at the current speed** when hold mode is switched on, runs at the same rate up and down, and resets to the current speed when hold mode is switched off or the turbine trips, as the PID memory does. The operator's setpoint stays the target; the ramped value is internal state.
+- **S in J = 2·H·S/ω_s²** is the rated electric output of `design-basis.md` (from #14), not a second number. It ignores power factor (a real S is in MVA, about 15% more); that is within the uncertainty of H. `design-basis.md` says so.
+- **No generator load on the shaft yet.** The no-load calibration assumes no load torque: with the breaker closed, flow above the no-load flow still accelerates the shaft and opens the breaker at +2 rpm, as today. Grid-locked speed and load torque are #71.
+- **No overspeed protection yet.** The linear characteristic drops to zero torque at twice sync speed, so full flow with hold mode off settles near 6000 rpm and nothing trips it (`MaxRPM` only caps the setpoint). The trip is #72.
+- Free acceleration is fast on purpose: with hold mode off, a manual full opening reaches sync speed in about a minute, and the operator is responsible for throttling.
