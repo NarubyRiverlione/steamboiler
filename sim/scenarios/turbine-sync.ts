@@ -1,32 +1,26 @@
-import { makeInitialState } from "../../src/context/PowerPlantReducer"
+import PowerPlantAction from "../../src/context/PowerPlantActions"
+import PowerPlantState from "../../src/context/PowerPlantState"
+import { isAtSyncSpeed } from "../../src/utils/turbineCalculations"
 import { Scenario } from "../scenario"
-import { heatUp, openMainSteam, rollTurbine, StartGas, TurbineValveOpenAt } from "./steps"
+import { loadSnapshot } from "../snapshot"
+import { holdLoop } from "./loop-operator"
 
-// Operator tries to close the breaker at the end of the run
-export const BreakerAttemptAt = 3590
+// From the settled run-up (the `turbine-runup` snapshot, ~2975 rpm, breaker open) to a closed generator breaker:
+// hold mode on, so the PID takes the speed to the 3000 rpm setpoint, then the operator closes the breaker as soon as
+// the speed is within the breaker margin (±2 rpm). The loop operator's holds keep running.
+const closeBreakerWhenInSync = ({ Turbine }: PowerPlantState): PowerPlantAction[] =>
+  Turbine.holdMode && !Turbine.generatorBreaker && isAtSyncSpeed(Turbine.rpm) ? [{ type: "TOGGLE_GENERATOR_BREAKER" }] : []
 
-// From a rolling turbine to sync speed: more gas, turbine valve fully open (condensation pump with it,
-// so the hotwell does not overflow), then close the breaker.
-// Not reachable with the current physics (#18, #21).
+export function syncOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return [...holdLoop(state, time), ...closeBreakerWhenInSync(state)]
+}
+
 export const turbineSync: Scenario = {
   name: "turbine-sync",
-  description: "Turbine-start replay, then more gas and full turbine valve to reach sync speed",
-  duration: 3600,
+  description: "From the turbine-runup snapshot: hold mode on, speed to the 3000 rpm setpoint, then the generator breaker closes",
+  duration: 1200,
   sampleEvery: 10,
-  initial: makeInitialState(),
-  actions: [
-    ...heatUp,
-    ...openMainSteam,
-    ...rollTurbine,
-    { at: TurbineValveOpenAt + 10, action: { type: "INCREASE_GAS_FLOW", amount: 2 * StartGas } },
-    {
-      at: TurbineValveOpenAt + 10,
-      action: { type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 1 } },
-    },
-    {
-      at: TurbineValveOpenAt + 10,
-      action: { type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: 1 } },
-    },
-    { at: BreakerAttemptAt, action: { type: "TOGGLE_GENERATOR_BREAKER" } },
-  ],
+  initial: loadSnapshot("turbine-runup"),
+  actions: [{ at: 0, action: { type: "TOGGLE_HOLD_MODE" } }],
+  operator: syncOperator,
 }

@@ -3,7 +3,7 @@ import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { bandDirection } from "./band"
-import { holdPressureWithGas } from "./pressure-hold"
+import { atWorkingPressure, holdPressureWithGas } from "./pressure-hold"
 import { isAdjustTime, StartGas } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
@@ -17,7 +17,7 @@ export const LoopSettings = {
   CondensationPumpOpening: 0.1, // condensation pump position when the main steam valve opens
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // no pump change within target ± band
-  HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (centre 65%)
+  HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (normal level 70%)
   HotwellBandHigh: 0.75, // reject opens above the working band
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
   CondenserSteamHigh: 100, // kg in the condenser: more cooling water
@@ -71,9 +71,11 @@ function restartSjae({ Condenser }: PowerPlantState): PowerPlantAction[] {
   ]
 }
 
+// The SJAE restarts at main-steam-valve pressure (motive steam from the boiler); the main steam valve itself stays shut
+// until working pressure, so the expanding water is not fed back up during heat-up (ADR 0018)
 function startSteam(state: PowerPlantState): PowerPlantAction[] {
   if (state.Boiler.pressure <= CstTurbine.MainSteamValveMinimumPressure) return []
-  return [...openMainSteam(state), ...restartSjae(state)]
+  return [...(atWorkingPressure(state.Boiler.pressure) ? openMainSteam(state) : []), ...restartSjae(state)]
 }
 
 function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {
@@ -118,4 +120,11 @@ export function holdLoop(state: PowerPlantState, time: number): PowerPlantAction
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
   return [...startSteam(state), ...holdLoop(state, time)]
+}
+
+// The loop operator with its hotwell hold taken away, for edge scenarios that force makeup and reject themselves
+export function loopOperatorWithoutHotwellHold(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return loopOperator(state, time).filter(
+    (a) => a.type !== "SET_MAKEUP_VALVE_POSITION" && a.type !== "SET_REJECT_VALVE_POSITION",
+  )
 }

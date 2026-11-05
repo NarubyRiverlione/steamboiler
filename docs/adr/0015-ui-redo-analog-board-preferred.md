@@ -1,0 +1,25 @@
+# A UI redo in an industrial style, with a strong preference for the analog board (proposed, not decided)
+
+**Status: proposed.** This ADR records two ideas for the website's look. The owner strongly prefers **option A, the analog control-room board in the MC-v2 language**, over option B, the ISA-101 DCS screen. This is a preference, not the choice. When one is chosen, this ADR is updated to record it.
+
+The work so far went to the physics on purpose: it is the core of the simulator. The headless runner (`pnpm sim`, [dev/headless-runner.md](../dev/headless-runner.md)) made that work possible: every physics and parameter change is judged on its report, not in the app, and before it existed the project was stuck. The website's UI and UX are the next thing to think about, possibly as a complete redo of the site in an industrial style: panels, readouts, knobs.
+
+A redo replaces only the presentation (`src/components/`, `src/navigation/`). The simulation core (`src/context/`, `src/utils/`, the reducer and the tick) is decoupled from React, so the headless runner, the snapshots and the physics stay as they are.
+
+## Considered options
+
+- **A, analog control-room board (1960s to 80s), with MC-v2 as inspiration:** a grey enamel panel with round gauges and red arcs, level gauges with zones, rotary knobs, guarded toggle switches, annunciator tiles that flash until acknowledged, and a mimic diagram of the piping. The local reboot of the missile-boat project ([missile-boat-fire-control](https://github.com/NarubyRiverlione/missile-boat-fire-control), `~/Development-Eigen/MC-v2`) already has the visual language: `PanelFrame` (plate, inset panel, screws, stencil title, itself described as "Powerplant-style"), an LCD `Display`, a bezel `Led`, an illuminated `Button`, a rotary `Selector`, a hazard-striped housing, the `console.css` tokens and bundled fonts, all pure SVG and CSS. The steamboiler would add a round gauge, a level gauge, a continuous knob, a toggle or breaker switch, annunciator tiles, a mimic diagram and possibly a strip-chart recorder. Smaller and older plants were run from boards like this, so it fits the realism rule.
+- **B, modern DCS screen (ISA-101 high-performance HMI):** a deliberately grey, flat screen where colour marks only abnormal states and trends carry most of the information. This is how plants are run today, but it has no knobs and no skeuomorphic controls.
+
+## The mockup
+
+[0015-boiler-panel-mockup.html](0015-boiler-panel-mockup.html) is a static page (also published as [an artifact](https://claude.ai/artifact/LbPkj37si8dfBUyrGgbA5A)). It shows both ideas side by side for the Boiler panel, and both are driven by one shared plant state. Its plant numbers are illustrative: a rough stand-in moves them, not the simulator. The limits come from the design basis.
+
+- **A, analog board:** the plate, screws, stencil title, LCD readouts, lens buttons, bezel LEDs and hazard housing come from MC-v2. New are a round pressure gauge with zones, a drum level gauge with zones (the same kind of gauge as the hotwell bar of #54), a continuous gas knob (#15: drag, scroll or arrow keys), an annunciator that flashes until ACK, and a mimic strip.
+- **B, DCS screen:** grey and flat, with colour only for abnormal states. It has a pressure trend, process-value bars with normal bands, a gas faceplate and an alarm list with priority shapes.
+
+## Consequences
+
+- Nothing is built until a style is chosen. Future UI work should lean towards option A unless the final decision goes the other way.
+- Whichever style is chosen, the open UI tickets fold into it: #15 (faster gas control), #24 (start presets), #36 (history visualisation), #41 (continuous-fire valve buttons), #54 (hotwell level zones), #57 (rpm wording on the set point control) and #59 (hotwell level alarms). They are blocked by #75, the choice of style.
+- If the MC-v2 language is used, its components are copied and adapted into this repo, not shared as a package. The LiquidCrystal font licence must be checked first; Stardos Stencil is OFL.

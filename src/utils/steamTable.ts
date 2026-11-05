@@ -1,4 +1,5 @@
 import { type SteamData, steamTable } from "./steamData"
+import { type SaturationEntropyRow, saturationEntropyTable } from "./steamEntropyData"
 
 // Last table row: the critical point, where lookups clamp (never throw, the simulation runs this every tick)
 const CriticalPoint: SteamData = steamTable[steamTable.length - 1]
@@ -8,13 +9,19 @@ export const CriticalTemperature: number = CriticalPoint.temperature
 
 type Bracket = { lower: SteamData; upper: SteamData; ratio: number }
 
-// Find the two table rows around a value of the (ascending) key column and the interpolation ratio between them
+// Find the two table rows around a value of the (ascending) key column and the interpolation ratio between them.
+// The flash solver reaches this inside its bisection, so it is a binary search and not a scan of the table.
 function bracket(key: "temperature" | "pressure", value: number): Bracket {
-  const index: number = steamTable.findIndex(
-    (row, i) => i < steamTable.length - 1 && steamTable[i + 1][key] >= value && row[key] <= value,
-  )
-  const lower: SteamData = steamTable[Math.max(index, 0)]
-  const upper: SteamData = steamTable[Math.max(index, 0) + 1]
+  const rows: SteamData[] = steamTable
+  let low = 0
+  let high: number = rows.length - 1
+  while (high - low > 1) {
+    const mid: number = (low + high) >> 1
+    if (rows[mid][key] <= value) low = mid
+    else high = mid
+  }
+  const lower: SteamData = rows[low]
+  const upper: SteamData = rows[high]
   return { lower, upper, ratio: (value - lower[key]) / (upper[key] - lower[key]) }
 }
 
@@ -149,4 +156,35 @@ export function getBoilingPoint(pressure: number): number {
 
   const { lower, upper, ratio } = bracket("pressure", pressure)
   return lower.temperature + ratio * (upper.temperature - lower.temperature)
+}
+
+// Saturation row at a pressure (bar): linear in ln(pressure) between the rows, clamped to the table (never throws)
+function getSaturationEntropyRow(pressure: number): SaturationEntropyRow {
+  const last: number = saturationEntropyTable.length - 1
+  const clamped: number = Math.max(
+    saturationEntropyTable[0].pressure,
+    Math.min(saturationEntropyTable[last].pressure, pressure),
+  )
+  const index: number = Math.max(0, saturationEntropyTable.findIndex((row) => row.pressure > clamped) - 1)
+  const lower: SaturationEntropyRow = saturationEntropyTable[Math.min(index, last - 1)]
+  const upper: SaturationEntropyRow = saturationEntropyTable[Math.min(index, last - 1) + 1]
+  const ratio: number = Math.log(clamped / lower.pressure) / Math.log(upper.pressure / lower.pressure)
+  const mix = (a: number, b: number): number => a + ratio * (b - a)
+  return {
+    pressure: clamped,
+    liquidEnthalpy: mix(lower.liquidEnthalpy, upper.liquidEnthalpy),
+    vaporEnthalpy: mix(lower.vaporEnthalpy, upper.vaporEnthalpy),
+    liquidEntropy: mix(lower.liquidEntropy, upper.liquidEntropy),
+    vaporEntropy: mix(lower.vaporEntropy, upper.vaporEntropy),
+  }
+}
+
+// Isentropic enthalpy drop (kJ/kg) of saturated steam expanding from the boiler pressure to the exhaust pressure (bar).
+// The inlet is saturated vapour; the exhaust is wet steam with quality x = (s - sf) / (sg - sf) at the same entropy.
+export function getIsentropicEnthalpyDrop(boilerPressure: number, exhaustPressure: number): number {
+  const inlet: SaturationEntropyRow = getSaturationEntropyRow(boilerPressure)
+  const exhaust: SaturationEntropyRow = getSaturationEntropyRow(exhaustPressure)
+  const quality: number = (inlet.vaporEntropy - exhaust.liquidEntropy) / (exhaust.vaporEntropy - exhaust.liquidEntropy)
+  const exhaustEnthalpy: number = exhaust.liquidEnthalpy + quality * (exhaust.vaporEnthalpy - exhaust.liquidEnthalpy)
+  return inlet.vaporEnthalpy - exhaustEnthalpy
 }

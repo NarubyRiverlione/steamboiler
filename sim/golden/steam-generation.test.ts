@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { runScenario } from "./scenario"
-import { scenarios } from "./scenarios"
-import { getSteamData } from "../src/utils/steamTable"
+import { runScenario } from "../scenario"
+import { scenarios } from "../scenarios"
+import { getSteamData } from "../../src/utils/steamTable"
 
 // Pressure law (ADR 0001), judged on the cold start: saturation pressure of the water, never below atmospheric.
 const Atmospheric = 1.01325 // bar
 
-describe("startup-cold pressure follows saturation", () => {
-  const samples = runScenario({ ...scenarios["startup-cold"], duration: 3000 })
+describe("turbine-runup pressure follows saturation", () => {
+  const samples = runScenario({ ...scenarios["turbine-runup"], duration: 3000 })
 
   test("pressure is finite and equals max(atmospheric, Psat(T)) at every sample", () => {
     for (const { state } of samples) {

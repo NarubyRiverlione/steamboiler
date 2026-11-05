@@ -1,9 +1,9 @@
 export const CstSimulation = {
   DeltaTime: 0.1, // Simulation tick duration in sec
   CstBoiler: {
-    StartWaterVolume: 50e3, // liters (60-70% water volume to keep space for steam)
+    StartWaterVolume: 35e3, // liters at ambient: thermal expansion brings it to the 50% working level at 165 bar (ADR 0018)
     TotalVolume: 100e3, // liters (typical  20-100m3)
-    MaxGasFlow: 12000, // liters/second (typical 700 - 900 liters/sec @20-40 bar)
+    MaxGasFlow: 12000, // liters/second, about 420 MW of fuel for a 200 MWe unit (docs/research/2026-10-sizing-check.md)
     DrainingRate: 0.005, // 0.5% per second
     GasEfficiency: 0.85,
     GasChangeRateFast: 500, // °C per second
@@ -12,6 +12,7 @@ export const CstSimulation = {
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
     ReliefOpenPressure: 178, // bar, the relief valve lifts fully (2 bar margin for one tick's rise)
     ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
+    BurnerLowLowLevel: 0.2, // share of TotalVolume, below it the burner trips (UNVERIFIED estimate, see design-basis.md)
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
     MetalMass: 100e3, // kg of drum and tube steel, at the water temperature (one lump)
     HeatLossAtDesign: 500, // kW lost to the surroundings at design temperature, proportional to T - ambient
@@ -51,12 +52,13 @@ export const CstSimulation = {
   },
 
   CstTurbine: {
-    MaxSteamRemovalRate: 200, // kg/second when valve is fully open
+    MaxSteamRemovalRate: 200, // valve capacity: kg/second when the valve is fully open
     BypassValveStep: 5, // % per click open/close
     TurbineValveStep: 1, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa
 
-    steamToElectricityEfficiency: 0.35, // Typical conversion ratio from steam energy to electrical energy (black-box approach)
+    IsentropicEfficiency: 0.85, // turbine isentropic efficiency (actual vs ideal enthalpy drop)
+    GeneratorEfficiency: 0.98, // generator efficiency, shaft to electric
     steamOutflowPressure: 0.1, // bar (typical  5-10 kPa absolute (0.05-0.1 bar or approximately )
     steamOutflowTemperature: 40, // Celsius (typical 35-45C)
 

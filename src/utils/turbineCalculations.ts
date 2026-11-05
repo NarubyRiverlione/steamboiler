@@ -18,30 +18,26 @@ export const turbineTrippedAfter = (tripped: boolean, previousPosition: number, 
   tripped && newPosition <= previousPosition
 
 /**
- * Calculates the electricity output based on turbine valve position, RPM, and generator breaker status.
- * For Phase 4, electricity is only produced when the generator breaker is closed and RPM is within
- * the acceptable margin of sync speed.
- * 
- * @param turbineValvePosition - The position of the turbine valve (0-1)
+ * Electric output of the generator, from the steam flow and the isentropic enthalpy drop:
+ * MW = flow [kg/s] x drop [kJ/kg] x turbine isentropic efficiency x generator efficiency / 1000.
+ * Produced only with the breaker closed at sync speed; clamped at 0 MW for no flow or a non-positive drop.
+ *
+ * @param steamFlow - Steam flow through the turbine in kg/s
+ * @param enthalpyDrop - Isentropic enthalpy drop from boiler to condenser pressure in kJ/kg
  * @param rpm - The current RPM of the turbine
  * @param generatorBreaker - Whether the generator breaker is closed
- * @returns The electricity output in MW
+ * @returns The electric output in MW
  */
 export function calculateElectricityOutput(
-  turbineValvePosition: number, 
+  steamFlow: number,
+  enthalpyDrop: number,
   rpm: number,
-  generatorBreaker: boolean
+  generatorBreaker: boolean,
 ): number {
-  // Only generate electricity when:
-  // 1. The generator breaker is closed
-  // 2. The turbine RPM is within the acceptable margin of sync speed
-  if (generatorBreaker && isAtSyncSpeed(rpm)) {
-    const steamIntake = turbineValvePosition * CstTurbine.MaxSteamRemovalRate
-    const electricityOutput = steamIntake * CstTurbine.steamToElectricityEfficiency
-    return electricityOutput
-  }
-  
-  return 0; // No electricity output when breaker is open or RPM is outside acceptable range
+  if (!generatorBreaker || !isAtSyncSpeed(rpm)) return 0
+  const megawatt: number =
+    (steamFlow * enthalpyDrop * CstTurbine.IsentropicEfficiency * CstTurbine.GeneratorEfficiency) / 1000
+  return Math.max(0, megawatt)
 }
 
 /**

@@ -5,7 +5,7 @@ import { isAtSyncSpeed, maxTurbineValvePosition, turbineTrippedAfter } from "../
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
-import { metalEnergyOf } from "./Boiler/BoilerTick"
+import { isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
@@ -32,6 +32,7 @@ export const makeInitialState = (): PowerPlantState => ({
     reliefValveOpen: false,
     ventedTotal: 0, // kg
     reliefLifts: 0,
+    burnerTripped: false,
     energy:
       calculateHeatingEnergy(startBoilerMass, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s
@@ -106,8 +107,14 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   SIMULATE_TICK: (state) => PowerPlantTick(state),
 
   //#region Boiler
+  // Refused while the water is below the burner low-low level; the next successful raise clears the trip
   INCREASE_GAS_FLOW: (state, { amount }) =>
-    withBoiler(state, { gasFlow: Math.min(CstBoiler.MaxGasFlow, state.Boiler.gasFlow + amount) }),
+    isBelowBurnerLowLow(state.Boiler)
+      ? state
+      : withBoiler(state, {
+          gasFlow: Math.min(CstBoiler.MaxGasFlow, state.Boiler.gasFlow + amount),
+          burnerTripped: false,
+        }),
   DECREASE_GAS_FLOW: (state, { amount }) =>
     withBoiler(state, { gasFlow: Math.max(0, state.Boiler.gasFlow - amount) }),
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),

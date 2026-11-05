@@ -10,8 +10,8 @@ The condensation pump's **Return** is the smallest of the pump flow, the water i
 
 ## Consequences
 
-- Boiler water never exceeds `CstBoiler.TotalVolume`. The 30–70% level band and its trip are a separate feature (#33).
-- The capacity is the whole 100 m³ of liquid, so a full boiler has no steam space. Protecting against that is #33's job, not the Return's.
+- Boiler water never exceeds `CstBoiler.TotalVolume`. High-level protection is a separate feature (#62).
+- The capacity is the whole 100 m³ of liquid, so a full boiler has no steam space. Protecting against that is #62's job, not the Return's.
 - `CondenserTick` takes the boiler's room as an input and reports the Return actually delivered; `PowerPlantTick` adds exactly that, which removes the previous one-tick lag.
-- Water is held as kg and the room is converted at the boiler temperature, so a hot boiler takes fewer kg for the same free volume ([ADR 0007](0007-water-state-is-mass-in-kg.md)). A full drum that then heats up passes `TotalVolume`, because mass is not clamped (#33).
+- Water is held as kg and the room is converted at the boiler temperature, so a hot boiler takes fewer kg for the same free volume ([ADR 0007](0007-water-state-is-mass-in-kg.md)). A full drum that then heats up passes `TotalVolume`, because mass is not clamped (#62).
 - The sample invariant can only bound the Return by the pump capacity; that it never exceeds the hotwell is checked directly on `CondenserTick`.

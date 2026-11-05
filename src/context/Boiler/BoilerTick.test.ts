@@ -5,12 +5,21 @@ import { makeInitialState } from "../PowerPlantReducer"
 import {
   calculateBoilerPressure,
   calculateSteamInventory,
+  waterMassOf,
   waterVolumeOf,
 } from "../../utils/boilerCalculations"
 import { getWaterSpecificVolume } from "../../utils/steamTable"
 
 const { CstBoiler, CstTurbine, DeltaTime } = CstSimulation
-const cold = makeInitialState().Boiler
+// The thermal-model numbers below are derived for 50 t of water, so the fixture pins that fill rather than following
+// the plant's cold fill (CstBoiler.StartWaterVolume, 35% since ADR 0018)
+const ModelWaterVolume = 50e3 // liters at ambient
+const cold = {
+  ...makeInitialState().Boiler,
+  waterMass: waterMassOf(ModelWaterVolume, CstPhysics.AmbientTemperature),
+  waterVolume: ModelWaterVolume,
+  steamMass: calculateSteamInventory(CstPhysics.AmbientTemperature, ModelWaterVolume),
+}
 
 // Water at a temperature with its steam space in equilibrium, as a plant that has rested there
 const settled = (temperature: number) => ({
@@ -166,7 +175,7 @@ describe("steam draw cools the boiler", () => {
 describe("BoilerRemoveSteam", () => {
   const plant = makeInitialState()
   const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
-  // A half-open valve passes half the rated steam flow (kg/s), so this much per tick
+  // A half-open valve passes half the valve capacity (kg/s), so this much per tick
   const halfOpenFlow = 0.5 * CstTurbine.MaxSteamRemovalRate
   const halfOpenPerTick = halfOpenFlow * DeltaTime
 

@@ -32,7 +32,7 @@ _Avoid_: Safety valve, pressure cap, blow-off
 
 **Lift**:
 One opening of the relief valve, from opening to closing.
-_Avoid_: Trip (a turbine trip closes the turbine valve; a burner trip is #33), pop
+_Avoid_: Trip (a turbine trip closes the turbine valve; a burner trip shuts the gas), pop
 
 **Blowdown**:
 The pressure drop between the relief valve opening and closing: 7 bar, about 4% of the opening pressure.
@@ -49,8 +49,12 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow through the turbine with the turbine valve fully open: 200 kg/s.
-_Avoid_: Max steam removal, nominal flow
+The steam flow the plant is rated for, the full-gas steam flow: 171 kg/s. A design figure: the sim can pass more at 165 bar (see the departures in `design-basis.md`).
+_Avoid_: Nominal flow
+
+**Valve capacity**:
+The steam flow through the turbine valve or the bypass when fully open: 200 kg/s each. A valve limit, not a steady flow.
+_Avoid_: Max steam removal, rated steam flow
 
 **Electric output**:
 The power the generator delivers to the grid, in MW. Only produced with the breaker closed at sync speed; it follows from the steam flow and from the energy the turbine takes out of each kilogram, which depends on boiler pressure and condenser pressure.
@@ -63,6 +67,14 @@ _Avoid_: Bell curve, optimal pressure, vacuum permissive
 **Hold mode**:
 The turbine's speed governor: switched on, it moves the turbine valve to keep the turbine at the speed setpoint (sync speed by default).
 _Avoid_: Autopilot, speed hold, cruise
+
+**Run-up rate**:
+The rate, in rpm per minute, at which hold mode moves its working speed target toward the operator's setpoint. The turbine is brought up gradually to protect the rotor, not as fast as the steam would take it.
+_Avoid_: Acceleration, ramp rate, spin-up
+
+**No-load flow**:
+The steam flow that holds the turbine at sync speed with the breaker open: it only covers the turbine's own losses (windage and bearings).
+_Avoid_: Idle flow, minimum flow
 
 **Turbine trip**:
 The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also switches hold mode off; the turbine only takes steam again when the operator reopens the valve.
@@ -103,11 +115,11 @@ How full the hotwell is, as the water volume over the hotwell's total volume. Me
 _Avoid_: Hotwell fill, hotwell mass
 
 **Normal level**:
-The hotwell level the loop is run at: 70%. Makeup and reject bring the level back to it.
+The hotwell level the loop is run at: 70%, inside the working band.
 _Avoid_: Target level, setpoint (on its own)
 
 **Working band**:
-The hotwell levels the operator keeps without acting: 65% to 75%. Makeup opens below it and reject above it; both close again at the normal level.
+The hotwell levels the operator keeps without acting: 55% to 75%. Makeup opens below it and reject above it, in proportion to the distance; both are shut inside it.
 _Avoid_: Deadband, control band
 
 **Hotwell level alarm**:
@@ -129,6 +141,14 @@ _Avoid_: Full, overflow
 **Makeup block**:
 The protection at the high-high level: makeup closes and cannot be opened, and reject is forced fully open, until the hotwell level is back below the high alarm (85%).
 _Avoid_: Makeup trip, overfill clamp
+
+**Burner low-low level**:
+The boiler water level below which the burner trips: 20% of the boiler volume.
+_Avoid_: Empty, dry boiler
+
+**Burner trip**:
+The automatic shutting of the gas to 0 when the boiler water level falls below the burner low-low level. The gas only comes back when the operator raises it, and that is refused while the level is still below low-low.
+_Avoid_: Gas limit, burner stop, trip (on its own)
 
 **Heat loss**:
 Heat the boiler gives off to its surroundings, proportional to how far the water is above ambient temperature.

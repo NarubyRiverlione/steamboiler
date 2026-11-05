@@ -25,6 +25,7 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 
 | Boiler (capacity 100 000 L) | Level |
 |---|---|
+| Cold start | 35% (35 000 L), thermal expansion brings it to the target at 165 bar ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)) |
 | Target | 50% (50 000 L) |
 | Control band | ±5% |
 | Alarm | ±12% (not in code) |
@@ -39,7 +40,7 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 |---|---|---|
 | Overfill clamp (`HotwellHighHigh`) | from 95% | plant: `CondenserTick` forces the reject fully open |
 | Reject fully open | 90% (band edge + `HotwellRamp`) | operator |
-| Working band | 55% to 75%, centre 65%; start level 70% | operator: both valves shut |
+| Working band | 55% to 75%; normal and start level 70% | operator: both valves shut |
 | Makeup fully open | 40% (band edge − `HotwellRamp`) | operator |
 | Low-low (`HotwellLowLow`) | below 10% | plant: `CondenserTick` trips the condensation pump |
 
@@ -53,10 +54,11 @@ Levels are volume fractions (`hotwellWaterVolume` / `TotalVolume`), so they drif
 
 Real plants hold drum level and hotwell level with automatic control loops. In the sim the operator does this by hand. In scenarios a per-tick operator hook plays that role: `sim/scenarios/loop-operator.ts` (settings in `LoopSettings`). It:
 
-- above main-steam-valve pressure (10 bar): brings gas down once to the heat-up gas (`StartGas`, 2000 L/s), opens the main steam valve, sets the bypass to a fixed 10% (20 kg/s, close to the ~18 kg/s the turbine needs for 3000 rpm at 165 bar) and the condensation pump to 10%, and restarts the SJAE at 100%
-- holds the working pressure with gas (`holdPressureWithGas` in `sim/scenarios/pressure-hold.ts`, shared with `startup-cold`; settings in `PressureHoldSettings`): 165 ± 2 bar, above the band it lowers gas 10 L/s per second and below it raises gas, inside the band it moves only against the pressure trend (`Boiler.heatingRate`: pressure follows saturation). Gas never goes above `StartGas` and never below 100 L/s, the burner's minimum firing rate. The bypass stays at 10%
+- above main-steam-valve pressure (10 bar): restarts the SJAE at 100% (motive steam from boiler pressure, main steam valve still shut)
+- at working pressure (163 bar, `atWorkingPressure`): brings gas down once to the heat-up gas (`StartGas`, 2000 L/s), opens the main steam valve, sets the bypass to a fixed 10% (20 kg/s, close to the ~18 kg/s the turbine needs for 3000 rpm at 165 bar) and the condensation pump to 10%, and starts the boiler level hold. The valve stays shut during heat-up: the water expands from 35% to 50% on its own, and holding 50% from 10 bar on would feed the boiler back up and reject about 4 t anyway (ADR 0018)
+- holds the working pressure with gas (`holdPressureWithGas` in `sim/scenarios/pressure-hold.ts`, shared with `turbine-runup`; settings in `PressureHoldSettings`): 165 ± 2 bar, above the band it lowers gas 10 L/s per second and below it raises gas, inside the band it moves only against the pressure trend (`Boiler.heatingRate`: pressure follows saturation). Gas never goes above `StartGas` and never below 100 L/s, the burner's minimum firing rate. The bypass stays at 10%
 - nudges the condensation pump valve toward the boiler level target
 - nudges cooling water against the steam mass in the condenser
 - opens makeup or reject in proportion to the distance outside the 55–75% working band (`hotwellValvePositions`: zero inside, fully open `HotwellRamp` = 15 points beyond the edge), a pure function of the level
 
-The `bypass-loop` scenario builds pressure at `StartGas` with the bypass at 10% (less steam leaves than is generated) and reaches the operating pressure (#12), where gas takes over. The pressure overshoots to about 176 bar, below the 180 bar relief setpoint (#9), and settles at 165 ± 0.1 bar after about 6600 s, so the run lasts 7200 s and the last 600 s are judged: pressure and boiler level stay in their bands, the relief valve never lifts, and steam out matches steam generated within 5% (about 20 kg/s, which takes about 600 L/s of gas). With the water held in kg (#34) the loop conserves water, and the condensate leaves at the saturation temperature of the condenser pressure (#35), so the hotwell settles near 30 °C. In that window makeup and reject are open less than 10% of the time, so those assertions pass. With the 50 m³ hotwell (#53) and the working band (#52) the level stays between 69.9% and 79.4% over the whole run, makeup never opens and reject takes 12.0 t (open in 29% of the samples while the pressure builds, 7% in the last 600 s); at 15 m³ with on/off hysteresis the level swung 53% to 99.96% and makeup took 57 t and reject 69 t in an hour.
+The `bypass-loop` scenario heats at full gas with the main steam valve shut and reaches the operating pressure at 220 s (#65; 2040 s before, when the main steam valve opened at 10 bar and the 50% cold fill had to be rejected on the way up), where the operator opens the main steam valve and gas takes over. The boiler is at 51% level at that moment with nothing fed or rejected during heat-up. The pressure overshoots to about 173 bar, below the 180 bar relief setpoint (#9), and settles at 165 ± 0.1 bar after about 680 s; the run still lasts 7200 s and the last 600 s are judged: pressure and boiler level stay in their bands, the relief valve never lifts, and steam out matches steam generated within 5% (about 20 kg/s, which takes about 600 L/s of gas). With the water held in kg (#34) the loop conserves water, and the condensate leaves at the saturation temperature of the condenser pressure (#35), so the hotwell settles near 30 °C. Over the whole run the hotwell stays between 64.7% and 70% of the 50 m³ (#53, #52), makeup and reject never open (before the 35% cold fill reject took 12.0 t, 10.2 t of it during heat-up), and the boiler level climbs from 51% to 54.6% as the loop settles; at 15 m³ with on/off hysteresis the level swung 53% to 99.96% and makeup took 57 t and reject 69 t in an hour.

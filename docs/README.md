@@ -3,7 +3,8 @@
 Each fact has one home, and the kind of doc decides where that is:
 
 - **Reference** (`plant/`, `dev/`) describes the plant and the code as they are today. Edit it in the same commit as the change it describes.
-- **Decisions** (`adr/`) say why. Never edit one after the fact; supersede it with a new ADR.
+- **Decisions** (`adr/`) say why, and are the rules tickets must honor. Edit one when the thinking changes, so it always reflects the current decision; git keeps the history.
+- **Tickets** are the unit of work.
 - **Research** (`research/`) holds dated findings, sources and measurements. Frozen once written.
 - **Work** (what to do next, bugs, ideas) lives only in GitHub issues, ordered in [ROADMAP.md](../ROADMAP.md). Never in a doc.
 
@@ -25,6 +26,8 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 |---|---|
 | State management, simulation loop, source layout, conventions | [dev/architecture.md](dev/architecture.md) |
 | Headless scenario runner: scenarios, report, invariants, snapshots | [dev/headless-runner.md](dev/headless-runner.md) |
+| Test layers, scenario definition, definition of done | [dev/testing.md](dev/testing.md) |
+| Branches (`dev` for work, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
 
 ## Decisions
 
@@ -41,6 +44,20 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0009](adr/0009-hotwell-sized-from-condensate-flow.md) | The hotwell is sized from condensate flow: 50 m³ |
 | [0010](adr/0010-pid-derivative-on-measurement.md) | The hold-mode PID takes its derivative on the measurement |
 | [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
+| [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
+| [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
+| [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
+| [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style, with a strong preference for the analog board (proposed, with a [mockup](adr/0015-boiler-panel-mockup.html)) |
+| [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
+| [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |
+| [0018](adr/0018-cold-fill-at-35-percent.md) | The boiler is filled cold to 35% so it expands to the working level |
+| [0019](adr/0019-boiler-is-one-lumped-vessel.md) | The boiler is one lumped vessel, not a drum with risers and downcomers |
+| [0020](adr/0020-snapshots-compare-with-tolerance.md) | Committed snapshots compare with a relative tolerance (1e-9), not exact digits |
+| [0021](adr/0021-turbine-runup-from-steam-power.md) | The turbine runs up on steam power (physical torque, losses, inertia), paced by a hold-mode run-up rate |
+| [0022](adr/0022-electric-output-from-enthalpy-drop.md) | Electric output from the isentropic enthalpy drop, flow and live condenser pressure |
+| [0023](adr/0023-runner-speed-guard-is-opt-in.md) | The runner speed guard is its own opt-in layer, outside the `dev` gate |
+| [0024](adr/0024-ticket-priority-by-kind-of-work.md) | Ticket priority says what kind of work a ticket is |
+| [0025](adr/0025-finer-steam-table-for-density-slope.md) | A finer steam table above 300 °C smooths the steam density slope |
 
 ## Research (dated, frozen)
 
@@ -52,6 +69,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Oct 2026 | [Cold startup: how real plants do it (sourced)](research/2026-10-startup-procedure.md) |
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
 | Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
+| Nov 2026 | [SJAE motive steam: where it comes from on a cold start (sourced)](research/2026-11-sjae-motive-steam.md) |
 
 ## Agent configuration
 

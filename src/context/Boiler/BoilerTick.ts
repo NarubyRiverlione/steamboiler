@@ -137,6 +137,18 @@ export function BoilerVent(boilerState: BoilerState): BoilerState {
   }
 }
 
+// True while the water is below the burner low-low level (share of the boiler volume)
+export function isBelowBurnerLowLow(boilerState: BoilerState): boolean {
+  return boilerState.waterVolume < CstBoiler.TotalVolume * CstBoiler.BurnerLowLowLevel
+}
+
+// The burner trip: below the burner low-low level at the start of the tick the gas is forced to 0, whatever the
+// operator did. It stays 0 until the operator raises it (ADR 0017).
+export function BoilerBurnerTrip(boilerState: BoilerState): BoilerState {
+  if (!isBelowBurnerLowLow(boilerState)) return boilerState
+  return { ...boilerState, gasFlow: 0, burnerTripped: true }
+}
+
 type SteamOutlet = "BYPASS" | "TURBINE"
 
 // Position of the valve the steam leaves through

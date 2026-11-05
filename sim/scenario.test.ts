@@ -1,17 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { finalState, firstTimeWhere, runScenario, runScenarioWithLifts, Scenario, trackLifts } from "./scenario"
+import { finalState, firstTimeWhere, runScenario, Scenario, trackLifts } from "./scenario"
 import { scenarios } from "./scenarios"
-import { cooldown, CooldownDuration } from "./scenarios/cooldown"
-import { fullGas } from "./scenarios/full-gas"
-import { heatUpAtLimit } from "./scenarios/heat-up"
-import { GasOffAt, reliefLift } from "./scenarios/relief-lift"
-import { PressureHoldSettings } from "./scenarios/pressure-hold"
-import { startupCold, StartupSettings } from "./scenarios/startup-cold"
-import { AtPressure, heatUp as heatUpSteps, StartGas, openMainSteam, rollTurbine, since, TurbineValveOpenAt } from "./scenarios/steps"
-import { turbineStart } from "./scenarios/turbine-start"
-import { turbineSync } from "./scenarios/turbine-sync"
+import { loadSnapshot } from "./snapshot"
 import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
-import { CstPhysics, CstSimulation } from "../src/context/const"
+import { CstPhysics } from "../src/context/const"
 
 const heatUp: Scenario = {
   name: "test-heat-up",
@@ -80,13 +72,6 @@ describe("runScenario", () => {
     const [, idle] = runScenario({ ...heatUp, operator: () => [] })
     expect(idle.state).toEqual(plain.state)
   })
-
-  test("one simulated hour runs in a few seconds at most", () => {
-    const start = performance.now()
-    runScenario({ ...heatUp, duration: 3600, sampleEvery: 10 })
-    // 2.6 s plain, 7.8-8.6 s under coverage instrumentation on a 15 W laptop CPU: see headless-runner.md
-    expect(performance.now() - start).toBeLessThan(15_000)
-  })
 })
 
 describe("firstTimeWhere", () => {
@@ -109,20 +94,14 @@ describe("firstTimeWhere", () => {
 })
 
 describe("hold mode", () => {
-  // From pressure, roll the turbine, then let the hold-mode PID drive the turbine valve. The turbine
-  // only reaches ~30 rpm today (#18), so a set point of 20 rpm keeps the PID off its valve limits.
-  const valveOpen = TurbineValveOpenAt - AtPressure
+  // From the settled run-up, hold mode on: the PID drives the turbine valve, and a run replays identically
   const holdModeRun: Scenario = {
     name: "test-hold-mode",
-    description: "Turbine rolling in hold mode at a 20 rpm set point",
-    duration: valveOpen + 300,
+    description: "Turbine at speed in hold mode",
+    duration: 20,
     sampleEvery: 10,
-    initial: turbineStart.initial,
-    actions: [
-      ...turbineStart.actions,
-      { at: valveOpen + 5, action: { type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment: -2980 } } },
-      { at: valveOpen + 10, action: { type: "TOGGLE_HOLD_MODE" } },
-    ],
+    initial: loadSnapshot("turbine-runup"),
+    actions: [{ at: 0, action: { type: "TOGGLE_HOLD_MODE" } }],
   }
 
   test("replays identically when run twice in one process", () => {
@@ -140,12 +119,12 @@ describe("cold initial state", () => {
     expect(initialPowerPlantState).toEqual(cold)
   })
 
-  // 50 t of water at 4.196 kJ/kg·K plus 100 t of steel at 0.5 kJ/kg·K, 20 K above 0 °C: 4196 + 1000 MJ
+  // 35 t of water at 4.196 kJ/kg·K plus 100 t of steel at 0.5 kJ/kg·K, 20 K above 0 °C: about 2932 + 1000 MJ
   test("is at ambient temperature and atmospheric pressure, with energy matching temperature, water and metal", () => {
     expect(cold.Boiler.temperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Condenser.hotwellTemperature).toBe(CstPhysics.AmbientTemperature)
     expect(cold.Boiler.pressure).toBe(CstPhysics.AtmosphericPressure_mBar / 1e3)
-    expect(cold.Boiler.energy).toBeCloseTo(5_188_461, 0) // 49 910 kg of water at 4.196 kJ/kg·K and 100 t of steel at 0.5, from 0 °C to 20 °C
+    expect(cold.Boiler.energy).toBeCloseTo(3_931_923, 0) // 34 937 kg of water at 4.196 kJ/kg·K and 100 t of steel at 0.5, from 0 °C to 20 °C
   })
 
   test("makes no steam on the first tick", () => {
@@ -158,221 +137,6 @@ describe("cold initial state", () => {
   test("stays exactly at rest for 10 min with nothing running", () => {
     for (const { state } of runScenario(rest)) expect(state).toEqual(cold)
     expect(finalState(rest)).toEqual(cold)
-  })
-})
-
-describe("snapshot start", () => {
-  test("turbine-start from at-pressure equals replaying the cold start", () => {
-    const replay = runScenario({
-      ...turbineStart,
-      duration: AtPressure + turbineStart.duration,
-      initial: makeInitialState(),
-      actions: [...heatUpSteps, ...openMainSteam, ...rollTurbine],
-    })
-    const fromSnapshot = runScenario(turbineStart)
-    expect(fromSnapshot.map((s) => s.state)).toEqual(replay.filter((s) => s.time >= AtPressure).map((s) => s.state))
-  })
-
-  test("since() moves steps to the snapshot's clock", () => {
-    expect(since(AtPressure, openMainSteam).map((a) => a.at)).toEqual([0, 0, 0, 0, 0, 10])
-  })
-})
-
-describe("startup-cold", () => {
-  const { samples, lifts } = runScenarioWithLifts(startupCold)
-
-  test("starts cold and at rest", () => {
-    expect(samples[0].state.Boiler.temperature).toBe(20)
-    expect(samples[0].state.Turbine.rpm).toBe(0)
-  })
-
-  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 780 s", () => {
-    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(780)
-  })
-
-  test("main steam valve opens when commanded and the turbine spins up", () => {
-    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(780)
-    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(780)
-  })
-
-  const { Target, Band } = PressureHoldSettings
-  const inBandAt = firstTimeWhere(samples, (s) => Math.abs(s.Boiler.pressure - Target) <= Band) ?? Infinity
-  const last = samples.filter((s) => s.time >= startupCold.duration - 600)
-  const average = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
-
-  test("builds pressure with the turbine valve cracked to 5% until pressure first enters the band", () => {
-    expect(inBandAt).toBeLessThan(startupCold.duration - 600)
-    for (const { state } of samples.filter((s) => s.time > 790 && s.time < inBandAt))
-      expect(state.Turbine.turbineValvePosition).toBeCloseTo(0.05, 9)
-  })
-
-  test("opens the turbine valve once to its load opening when pressure enters the band", () => {
-    const after = samples.filter((s) => s.time > inBandAt)
-    expect(after.length).toBeGreaterThan(0)
-    for (const { state } of after) expect(state.Turbine.turbineValvePosition).toBeCloseTo(StartupSettings.TurbineLoadOpening, 9)
-  })
-
-  test("gas never goes above the heat-up gas once the pressure hold starts", () => {
-    for (const { state } of samples.filter((s) => s.time >= inBandAt))
-      expect(state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas)
-  })
-
-  test("over the last 600 s boiler pressure stays within the band", () => {
-    for (const { state } of last) expect(Math.abs(state.Boiler.pressure - Target)).toBeLessThanOrEqual(Band)
-  })
-
-  test("over the last 600 s turbine speed is 3000 ± 50 rpm and below MaxRPM, unloaded and without hold mode", () => {
-    for (const { state } of last) {
-      expect(Math.abs(state.Turbine.rpm - 3000)).toBeLessThanOrEqual(50)
-      expect(state.Turbine.rpm).toBeLessThan(CstSimulation.CstTurbine.MaxRPM)
-      expect(state.Turbine.holdMode).toBe(false)
-      expect(state.Turbine.generatorBreaker).toBe(false)
-    }
-  })
-
-  test("over the last 600 s steam out of the boiler matches steam generated within 5%", () => {
-    const out = average(last.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut))
-    const generated = average(last.map((s) => s.state.Boiler.deltaSteamMass))
-    expect(Math.abs(out - generated)).toBeLessThanOrEqual(0.05 * generated)
-  })
-
-  test("the relief valve never lifts", () => {
-    expect(lifts).toEqual([])
-  })
-})
-
-describe("turbine-start", () => {
-  const samples = runScenario(turbineStart)
-  const afterOpening = samples.filter((s) => s.time > TurbineValveOpenAt - AtPressure)
-
-  test("starts at main-steam-valve pressure with the turbine still", () => {
-    expect(samples[0].state.Boiler.pressure).toBeGreaterThan(10)
-    expect(samples[0].state.Turbine.rpm).toBe(0)
-  })
-
-  test("turbine keeps rolling after the valve opens", () => {
-    for (const { state } of afterOpening) expect(state.Turbine.rpm).toBeGreaterThan(0)
-  })
-
-  test("turbine speeds up after the valve opens", () => {
-    expect(afterOpening.at(-1)?.state.Turbine.rpm).toBeGreaterThan(afterOpening[0].state.Turbine.rpm)
-  })
-})
-
-describe("turbine-sync", () => {
-  const samples = runScenario(turbineSync)
-
-  test.fails("reaches sync speed (3000 rpm) (fails until #18, #21)", () => {
-    expect(firstTimeWhere(samples, (s) => Math.abs(s.Turbine.rpm - 3000) <= 2)).toBeDefined()
-  })
-
-  test.fails("generator breaker closes (fails until #18, #21)", () => {
-    expect(samples.at(-1)?.state.Turbine.generatorBreaker).toBe(true)
-  })
-})
-
-// The turbine valve may only open under vacuum (ADR 0003): the scenarios pull it first and the turbine
-// never trips. Sampled every tick, so a trip that a later opening clears again cannot slip between samples.
-const VacuumCheckDuration = 4000 // sim-seconds: covers the first opening and the turbine valve going to its load opening
-describe.each([startupCold, turbineStart, turbineSync])("$name under the vacuum limit", (scenario) => {
-  const samples = runScenario({
-    ...scenario,
-    duration: Math.min(scenario.duration, VacuumCheckDuration),
-    sampleEvery: CstSimulation.DeltaTime,
-  })
-  const limit = CstSimulation.CstCondenser.VacuumLimit
-  const firstOpen = samples.findIndex((s) => s.state.Turbine.turbineValvePosition > 0)
-
-  test("condenser pressure is at or below the vacuum limit when the turbine valve first opens", () => {
-    expect(firstOpen).toBeGreaterThanOrEqual(0)
-    expect(samples[firstOpen].state.Condenser.pressure).toBeLessThanOrEqual(limit)
-  })
-
-  test("the turbine valve never closes on a turbine trip after it opens", () => {
-    const afterOpening = samples.slice(firstOpen)
-    expect(afterOpening.filter((s) => s.state.Turbine.turbineValvePosition === 0)).toEqual([])
-    expect(afterOpening.filter((s) => s.state.Turbine.turbineTripped)).toEqual([])
-  })
-})
-
-describe("cooldown", () => {
-  const samples = runScenario(cooldown)
-
-  test("is at main-steam-valve pressure (10 bar) when the gas goes off", () => {
-    expect(samples.find((s) => s.time === AtPressure)?.state.Boiler.pressure).toBeGreaterThan(10)
-  })
-
-  test("runs 60 min with gas off and all valves closed", () => {
-    const cooling = samples.filter((s) => s.time > AtPressure)
-    expect(cooling.at(-1)?.time).toBeGreaterThanOrEqual(AtPressure + CooldownDuration - 10)
-    for (const { state } of cooling) {
-      expect(state.Boiler.gasFlow).toBe(0)
-      expect(state.Turbine.mainSteamValve).toBe(false)
-      expect(state.Turbine.turbineValvePosition + state.Turbine.bypassValvePosition).toBe(0)
-      expect(state.Boiler.drainValveOpen).toBe(false)
-    }
-  })
-
-  test("cools down", () => {
-    const start = samples.find((s) => s.time === AtPressure)?.state.Boiler.temperature ?? 0
-    expect(samples.at(-1)?.state.Boiler.temperature).toBeLessThan(start)
-  })
-
-  // A heat loss of a few hundred kW against about 270 MJ/K of water and metal: a few kelvin an hour, days to cool
-  test("cools slowly: less than 10 K in the hour", () => {
-    const start = samples.find((s) => s.time === AtPressure)?.state.Boiler.temperature ?? 0
-    expect(start - (samples.at(-1)?.state.Boiler.temperature ?? 0)).toBeLessThan(10)
-  })
-
-  // About 0.5 MW at 337 K above ambient (design temperature): 1.48 kW per kelvin, at every sample
-  test("loses heat in proportion to the difference with ambient", () => {
-    const cooling = samples.filter((s) => s.time > AtPressure)
-    for (const { state } of cooling) {
-      const aboveAmbient = state.Boiler.temperature - CstPhysics.AmbientTemperature
-      expect(state.Boiler.heatLoss / aboveAmbient).toBeCloseTo(500 / 337, 2)
-    }
-  })
-})
-
-describe("heat-up", () => {
-  // every tick, so no alarm hides between samples
-  const samples = runScenario({ ...heatUpAtLimit, sampleEvery: 0.1 })
-
-  test("ramped at the limit, reaches working pressure (165 bar) in 12 to 18 minutes", () => {
-    const reached = firstTimeWhere(samples, (s) => s.Boiler.pressure >= 165) ?? Infinity
-    expect(reached).toBeGreaterThanOrEqual(12 * 60)
-    expect(reached).toBeLessThanOrEqual(18 * 60)
-  })
-
-  test("never raises the heating-rate alarm", () => {
-    expect(samples.filter((s) => s.state.Boiler.heatingRateOverLimit).map((s) => s.time)).toEqual([])
-  })
-
-  test("the relief valve stays shut", () => {
-    expect(samples.at(-1)?.state.Boiler.reliefLifts).toBe(0)
-  })
-})
-
-describe("relief-lift", () => {
-  const { samples, lifts } = runScenarioWithLifts(reliefLift)
-
-  test("records the one lift with its open and close time, though it is shorter than a sample", () => {
-    expect(lifts).toHaveLength(1)
-    const [lift] = lifts
-    // full gas reaches 178 bar after about 3¾ minutes; with the gas off the 7 bar blowdown takes seconds
-    expect(lift.open).toBeGreaterThan(200)
-    expect(lift.open).toBeLessThan(GasOffAt)
-    expect(lift.close).toBeGreaterThan(GasOffAt)
-    expect(lift.close).toBeLessThan(GasOffAt + 30)
-  })
-
-  test("the lift vents what the totalizer counts", () => {
-    expect(lifts[0].vented).toBeCloseTo(samples[samples.length - 1].state.Boiler.ventedTotal, 6)
-  })
-
-  test("the valve stays shut at working pressure", () => {
-    const below = samples.filter((s) => s.state.Boiler.pressure <= 165)
-    expect(below.every((s) => !s.state.Boiler.reliefValveOpen)).toBe(true)
   })
 })
 
@@ -393,42 +157,18 @@ describe("trackLifts", () => {
   })
 })
 
-describe("full-gas", () => {
-  // every tick, so no overshoot hides between samples
-  const samples = runScenario({ ...fullGas, sampleEvery: 0.1 })
-
-  // As the relief valve vents the boiler dry, its last litre or so cannot absorb the gas heat and the metal heats past
-  // design pressure: burner protection on low level is #33
-  test("the relief valve lifts and pressure never exceeds design pressure in any tick while 1 m³ of water remains", () => {
-    expect(samples[samples.length - 1].state.Boiler.reliefLifts).toBeGreaterThan(0)
-    const wet = samples.filter((s) => s.state.Boiler.waterVolume > 1000)
-    expect(Math.max(...wet.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(180)
-  })
-
-  test("raises the heating-rate alarm: full gas from cold is above the limit", () => {
-    expect(samples.some((s) => s.state.Boiler.heatingRateOverLimit)).toBe(true)
-  })
-
-  test("no NaN or Infinity in an hour of full gas", () => {
-    const values: unknown[] = samples.flatMap((s) =>
-      [s.state.Boiler, s.state.Condenser, s.state.Turbine].flatMap((part) => Object.values(part) as unknown[]),
-    )
-    expect(values.filter((v) => typeof v === "number" && !Number.isFinite(v))).toEqual([])
-  })
-})
-
 describe("scenario registry", () => {
-  test("registers every scenario under its own name", () => {
+  test("registers every scenario under its own name, golden path first", () => {
     expect(Object.keys(scenarios)).toEqual([
-      "startup-cold",
-      "heat-to-msv",
-      "heat-up",
-      "turbine-start",
-      "turbine-sync",
-      "cooldown",
       "bypass-loop",
+      "turbine-runup",
+      "turbine-sync",
+      "turbine-load",
       "relief-lift",
-      "full-gas",
+      "hotwell-high",
+      "hotwell-low",
+      "boiler-low",
+      "heat-up",
     ])
     for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })

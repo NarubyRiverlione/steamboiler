@@ -6,15 +6,19 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 
 ## Rules
 
+- **Branches**: every ticket on its own branch or worktree from `dev`, merged back locally (no pull request) once its
+  gate passes; never commit on `dev` directly. Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
+  (`main` = milestone releases, auto-deployed to GitHub Pages). Gates per merge: `docs/dev/branching.md`.
 - **Realism**: never add a magic number to speed up a process; playability comes from sizing utilities.
   Record every over-dimensioned utility or deliberate reduction in `docs/plant/design-basis.md`.
 - Judge physics/parameter changes with the headless runner (`docs/dev/headless-runner.md`), not the app.
 - A change to the plant or code updates its reference doc in `docs/plant/` or `docs/dev/` in the same commit.
-- A decision gets an ADR in `docs/adr/`.
+- A decision gets an ADR in `docs/adr/`. ADRs are rules tickets must honor; edit one in place when the thinking changes.
+- A change that touches a decision updates its ADR in the same commit.
 
 ## Commands
 
-- `pnpm test` · `pnpm lint` (eslint + tsc)
+- `pnpm test` (unit, golden, edge) · `pnpm test:unit` · `pnpm test:sim:golden` · `pnpm test:sim:edge` · `pnpm test:perf` (speed guard, not in `pnpm test`) · `pnpm lint` (eslint + tsc)
 - `pnpm sim [scenario]` — headless run, writes CSV + HTML to `sim/reports/`
 - `pnpm sim:snapshots` — regenerate `sim/snapshots/` (a test fails when stale)
 - `pnpm roadmap` — regenerate `ROADMAP.md` from GitHub issues
@@ -23,8 +27,10 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 
 GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs in `docs/agents/`.
 Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. New tickets get a `P1`–`P4` label
-(`P4`: a parked idea for a possible future feature) and blocked-by links. A `P4` ticket stays
+(`P1` broken, `P2` realism in scope, `P3` experience and project health, `P4` parked scope expansion; see `docs/agents/issue-tracker.md`) and blocked-by links. A `P4` ticket stays
 `needs-triage` until it is promoted to `P1`–`P3`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
-Before closing, run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
+Before closing, run `git grep "#<ticket>" docs/adr` and update every ADR the ticket makes out of date, then run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
 ~150 s on slow hardware), report the scores (also in
 the closing comment) and flag any method above the risk threshold.
+The skill runs `npx --yes @barney-media/crap-typescript` (never installed as a dependency); the owner allows exactly
+that command, with its flags (`--changed`, a file path, `--threshold`, `--format json`), and no other `npx` package.
