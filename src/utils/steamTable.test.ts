@@ -1,7 +1,15 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
 import { steamTable } from "./steamData"
-import { getBoilingPoint, getIsentropicEnthalpyDrop, getLatentHeat, getSteamData, getWaterSpecificHeat, getWaterSpecificVolume } from "./steamTable"
+import {
+  getBoilingPoint,
+  getIsentropicEnthalpyDrop,
+  getLatentHeat,
+  getSaturatedSteamDensity,
+  getSteamData,
+  getWaterSpecificHeat,
+  getWaterSpecificVolume,
+} from "./steamTable"
 
 const CriticalTemperature = 373.946 // °C, IAPWS-IF97
 const CriticalPressure = 220.64 // bar, IAPWS-IF97
@@ -9,7 +17,7 @@ const CriticalPressure = 220.64 // bar, IAPWS-IF97
 // IAPWS-IF97 saturation values: [°C, bar, latent heat kJ/kg, liquid enthalpy kJ/kg]
 const If97: number[][] = [
   [100, 1.01418, 2256.5, 419.1],
-  [150, 4.7610, 2113.7, 632.3],
+  [150, 4.761, 2113.7, 632.3],
   [200, 15.5467, 1939.7, 852.4],
   [250, 39.7594, 1715.3, 1085.7],
   [300, 85.8771, 1404.8, 1344.8],
@@ -17,16 +25,23 @@ const If97: number[][] = [
 ]
 
 describe("steam table against IAPWS-IF97", () => {
-  test.each(If97)("%i °C: pressure, latent heat and enthalpy are within 1%", (temperature, pressure, latent, enthalpy) => {
-    const data = getSteamData(temperature)
-    expect(data.pressure).toBeCloseTo(pressure, 0)
-    expect(Math.abs(data.pressure / pressure - 1)).toBeLessThan(0.01)
-    expect(Math.abs(data.latentHeat / latent - 1)).toBeLessThan(0.01)
-    expect(Math.abs(data.enthalpy / enthalpy - 1)).toBeLessThan(0.01)
-  })
+  test.each(If97)(
+    "%i °C: pressure, latent heat and enthalpy are within 1%",
+    (temperature, pressure, latent, enthalpy) => {
+      const data = getSteamData(temperature)
+      expect(data.pressure).toBeCloseTo(pressure, 0)
+      expect(Math.abs(data.pressure / pressure - 1)).toBeLessThan(0.01)
+      expect(Math.abs(data.latentHeat / latent - 1)).toBeLessThan(0.01)
+      expect(Math.abs(data.enthalpy / enthalpy - 1)).toBeLessThan(0.01)
+    },
+  )
 
   test("boiling point at design pressure is within 1 °C of the design temperature", () => {
-    expect(Math.abs(getBoilingPoint(CstSimulation.CstBoiler.DesignPressure) - CstSimulation.CstBoiler.DesignTemperature)).toBeLessThan(1)
+    expect(
+      Math.abs(
+        getBoilingPoint(CstSimulation.CstBoiler.DesignPressure) - CstSimulation.CstBoiler.DesignTemperature,
+      ),
+    ).toBeLessThan(1)
   })
 })
 
@@ -45,7 +60,9 @@ describe("steam table shape", () => {
     expect(last.temperature).toBeCloseTo(CriticalTemperature, 3)
     expect(last.pressure).toBeCloseTo(CriticalPressure, 2)
     expect(last.latentHeat).toBe(0)
-    expect(steamTable.every((row) => row.temperature <= CriticalTemperature && row.pressure <= CriticalPressure)).toBe(true)
+    expect(
+      steamTable.every((row) => row.temperature <= CriticalTemperature && row.pressure <= CriticalPressure),
+    ).toBe(true)
   })
 })
 
@@ -153,9 +170,12 @@ const IsentropicDrops: number[][] = [
 ]
 
 describe("getIsentropicEnthalpyDrop", () => {
-  test.each(IsentropicDrops)("%f bar to %f bar matches IF97 (%f kJ/kg) within 0.5%%", (boiler, exhaust, expected) => {
-    expect(Math.abs(getIsentropicEnthalpyDrop(boiler, exhaust) - expected)).toBeLessThan(expected * 0.005)
-  })
+  test.each(IsentropicDrops)(
+    "%f bar to %f bar matches IF97 (%f kJ/kg) within 0.5%%",
+    (boiler, exhaust, expected) => {
+      expect(Math.abs(getIsentropicEnthalpyDrop(boiler, exhaust) - expected)).toBeLessThan(expected * 0.005)
+    },
+  )
 
   test("a worse vacuum or a lower boiler pressure gives a smaller drop", () => {
     expect(getIsentropicEnthalpyDrop(40, 0.3)).toBeLessThan(getIsentropicEnthalpyDrop(40, 0.1))
@@ -169,5 +189,43 @@ describe("getIsentropicEnthalpyDrop", () => {
 
   test("clamps outside the table instead of throwing", () => {
     expect(Number.isFinite(getIsentropicEnthalpyDrop(500, 0.001))).toBe(true)
+  })
+})
+
+describe("getSaturatedSteamDensity", () => {
+  // IAPWS-IF97 saturated vapour density: [°C, kg/m³]
+  const VapourDensity: number[][] = [
+    [100, 0.5977],
+    [200, 7.861],
+    [300, 46.17],
+    [350, 113.6],
+  ]
+
+  test.each(VapourDensity)("is within 3%% of IF97 at %i °C", (temperature: number, expected: number) => {
+    expect(Math.abs(getSaturatedSteamDensity(temperature) / expected - 1)).toBeLessThan(0.03)
+  })
+
+  test("its slope has no step across 300-360 °C (the plant works at 165-180 bar, 350-357 °C)", () => {
+    // slope in kg/m³ per K on a 0.25 K grid; the old 20 K table nodes made it step by 0.65 where the ±5 K window reached a node
+    const MaxSlopeStep = 0.2
+    let previous = Number.NaN
+    let worst = 0
+    for (let t = 300; t <= 360; t += 0.25) {
+      const slope: number = (getSaturatedSteamDensity(t + 0.125) - getSaturatedSteamDensity(t - 0.125)) / 0.25
+      if (!Number.isNaN(previous)) worst = Math.max(worst, Math.abs(slope - previous))
+      previous = slope
+    }
+    expect(worst).toBeLessThan(MaxSlopeStep)
+  })
+
+  test("rises steadily from 80 to 365 °C and is finite up to past the critical point", () => {
+    // above 369 °C the ±5 K window reaches the sparse critical-point row and the density dips about 1% (ADR 0025); out of reach of the plant
+    let previous = 0
+    for (let t = 80; t <= 380; t += 0.5) {
+      const density: number = getSaturatedSteamDensity(t)
+      expect(Number.isFinite(density)).toBe(true)
+      if (t <= 365) expect(density).toBeGreaterThanOrEqual(previous)
+      previous = density
+    }
   })
 })
