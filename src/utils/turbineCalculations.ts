@@ -7,7 +7,6 @@ const { CstCondenser, CstTurbine } = CstSimulation
 export const isAtSyncSpeed = (rpm: number): boolean =>
   Math.abs(rpm - CstTurbine.SyncRPM) <= CstTurbine.BreakerRPMMargin
 
-// True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 // Hold engages, and Ramp up hands over to it, only within the engage window of the selected run-up point
 export const isWithinHoldWindow = (rpm: number, runUpPoint: number): boolean =>
   Math.abs(rpm - runUpPoint) <= CstTurbine.HoldEngageWindow
@@ -41,6 +40,7 @@ export function runUpPointRefusal(turbine: TurbineState, point: number): string 
   return undefined
 }
 
+// True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit
 
 // Highest turbine valve position allowed: above the vacuum limit the valve may close but not open further
