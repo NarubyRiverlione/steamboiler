@@ -13,7 +13,7 @@ Both scenarios now run two phases (GLOSSARY.md, "Pressure hold"). **Build pressu
 
 ## Consequences
 
-- *Superseded by ADR 0021 (#69): the speed no longer has a 2600 s lag; the unloaded turbine settles within minutes at the flow where steam power equals the losses.* `turbine-runup` still runs 14000 s (the scenario is shortened in #70); `bypass-loop` runs 7200 s because its level cycle settles after about 6600 s.
+- *Superseded by ADR 0021 (#69): the speed no longer has a 2600 s lag; the unloaded turbine settles within minutes at the flow where steam power equals the losses.* `turbine-runup` runs 5800 s since #70 (pressure build, the 60 min Ramp up and a 600 s settling time); `bypass-loop` runs 7200 s because its level cycle settles after about 6600 s.
 - `startup-cold` needs the loop operator's level, cooling and hotwell holds in the hold phase: 18 kg/s leaving dried the boiler at about 7500 s otherwise (the turbine now passes about 4 kg/s; the holds stay).
 - The minimum firing rate (100 L/s) is in the register of `docs/plant/design-basis.md`.
 - Rounding adds up per tick, so the water-created invariant limit grows with run time (`docs/dev/headless-runner.md`, Water drift).
