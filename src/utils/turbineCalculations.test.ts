@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
+import { getIsentropicEnthalpyDrop } from "./steamTable"
 import {
   calculateElectricityOutput,
   calculateRPM,
@@ -111,5 +112,32 @@ describe("calculateRPM", () => {
     // KE at sync = 0.5 J ω_s² = H x S = 523 MJ; at 10 kg/s the shaft power is 7.8 MW, ~1.5x on average
     expect(seconds).toBeGreaterThan(20)
     expect(seconds).toBeLessThan(300)
+  })
+
+  // Without losses J·dω/dt = (P/ω_s)(2 − ω/ω_s) gives ω = 2ω_s(1 − e^(−t/τ)), τ = J·ω_s²/P, so sync speed
+  // is reached at t = τ·ln 2. At the rated flow the loss (4 MW of 133 MW) is small enough to compare within 10%.
+  test("free acceleration at the rated flow takes the time that follows from J and P", () => {
+    const omegaSync: number = (2 * Math.PI * SyncRPM) / 60
+    const shaftPower: number = RatedSteamFlow * RatedEnthalpyDrop * 1000 * CstTurbine.IsentropicEfficiency
+    const ratedOutput: number = shaftPower * CstTurbine.GeneratorEfficiency
+    const inertia: number = (2 * CstTurbine.InertiaConstant * ratedOutput) / omegaSync ** 2
+    const expected: number = ((inertia * omegaSync ** 2) / shaftPower) * Math.LN2
+    let rpm = 0
+    let seconds = 0
+    while (rpm < SyncRPM) {
+      rpm = calculateRPM(rpm, RatedSteamFlow, RatedEnthalpyDrop)
+      seconds += dt
+    }
+    expect(Math.abs(seconds - expected)).toBeLessThan(expected * 0.1)
+  })
+
+  test("the no-load flow holds sync speed at the plant's own drop (165 bar, 13 mbar) when scaled by 1/drop", () => {
+    const drop: number = getIsentropicEnthalpyDrop(165, 0.0133)
+    const flow: number = (NoLoadFlowFraction * RatedSteamFlow * RatedEnthalpyDrop) / drop
+    expect(calculateRPM(SyncRPM, flow, drop)).toBeCloseTo(SyncRPM, 6)
+  })
+
+  test("RatedEnthalpyDrop matches the steam table at 165 bar and 100 mbar", () => {
+    expect(Math.abs(getIsentropicEnthalpyDrop(165, 0.1) - RatedEnthalpyDrop)).toBeLessThan(RatedEnthalpyDrop * 0.005)
   })
 })

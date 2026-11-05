@@ -30,7 +30,7 @@ function TurbineTick(
 ): TurbineState {
   // One enthalpy drop feeds both the shaft power (speed) and the electric output
   const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, condenserPressure / MbarPerBar)
-  const newRPM = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop)
+  const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop)
   
   // Auto-open breaker if RPM goes outside acceptable margin with breaker closed
   const generatorBreaker = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)

@@ -41,7 +41,7 @@ export function calculateElectricityOutput(
 }
 
 const RadPerSecPerRpm = (2 * Math.PI) / 60
-const KJPerMJ = 1000
+const JPerKJ = 1000 // kJ to J, so kg/s x kJ/kg gives W
 
 const syncSpeed: number = CstTurbine.SyncRPM * RadPerSecPerRpm // ω_s, rad/s
 
@@ -49,7 +49,7 @@ const syncSpeed: number = CstTurbine.SyncRPM * RadPerSecPerRpm // ω_s, rad/s
 const ratedOutput: number =
   CstTurbine.RatedSteamFlow *
   CstTurbine.RatedEnthalpyDrop *
-  KJPerMJ *
+  JPerKJ *
   CstTurbine.IsentropicEfficiency *
   CstTurbine.GeneratorEfficiency
 
@@ -61,7 +61,7 @@ const noLoadPower: number =
   CstTurbine.NoLoadFlowFraction *
   CstTurbine.RatedSteamFlow *
   CstTurbine.RatedEnthalpyDrop *
-  KJPerMJ *
+  JPerKJ *
   CstTurbine.IsentropicEfficiency
 const lossCoefficient: number = noLoadPower / syncSpeed ** 3
 
@@ -78,7 +78,7 @@ const lossCoefficient: number = noLoadPower / syncSpeed ** 3
  */
 export function calculateRPM(currentRPM: number, steamFlow: number, enthalpyDrop: number): number {
   const omega: number = currentRPM * RadPerSecPerRpm
-  const shaftPower: number = Math.max(0, steamFlow * enthalpyDrop * KJPerMJ * CstTurbine.IsentropicEfficiency)
+  const shaftPower: number = Math.max(0, steamFlow * enthalpyDrop * JPerKJ * CstTurbine.IsentropicEfficiency)
   const steamTorque: number = (shaftPower / syncSpeed) * (2 - omega / syncSpeed)
   const lossTorque: number = lossCoefficient * omega ** 2
   const angularAcceleration: number = (steamTorque - lossTorque) / inertia
