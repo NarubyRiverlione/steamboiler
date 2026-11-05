@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { firstTimeWhere, runScenario, runScenarioWithLifts } from "../scenario"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
-import { StartupSettings, turbineRunup } from "../scenarios/turbine-runup"
+import { StartupSettings, startupOperator, turbineRunup } from "../scenarios/turbine-runup"
 import { turbineSync } from "../scenarios/turbine-sync"
 import { StartGas } from "../scenarios/steps"
 import { CstSimulation } from "../../src/context/const"
+import PowerPlantState from "../../src/context/PowerPlantState"
 
 describe("turbine-runup", () => {
   const { samples, lifts } = runScenarioWithLifts(turbineRunup)
@@ -24,20 +25,54 @@ describe("turbine-runup", () => {
   })
 
   const { Target, Band } = PressureHoldSettings
+  const { SettlingTime } = StartupSettings
   const inBandAt = firstTimeWhere(samples, (s) => Math.abs(s.Boiler.pressure - Target) <= Band) ?? Infinity
-  const last = samples.filter((s) => s.time >= turbineRunup.duration - 600)
+  const last = samples.filter((s) => s.time >= turbineRunup.duration - SettlingTime)
   const average = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
-  test("builds pressure with the turbine valve cracked to 5% until pressure first enters the band", () => {
-    expect(inBandAt).toBeLessThan(turbineRunup.duration - 600)
-    for (const { state } of samples.filter((s) => s.time > 790 && s.time < inBandAt))
-      expect(state.Turbine.turbineValvePosition).toBeCloseTo(0.05, 9)
+  test("builds pressure on the bypass at 5% with the turbine valve shut until pressure first enters the band", () => {
+    expect(inBandAt).toBeLessThan(turbineRunup.duration - SettlingTime)
+    for (const { state } of samples.filter((s) => s.time > 790 && s.time < inBandAt)) {
+      expect(state.Turbine.bypassValvePosition).toBeCloseTo(0.05, 9)
+      expect(state.Turbine.turbineValvePosition).toBe(0)
+      expect(state.Turbine.speedMode).toBe("free")
+    }
   })
 
-  test("opens the turbine valve once to its load opening when pressure enters the band", () => {
-    const after = samples.filter((s) => s.time > inBandAt)
-    expect(after.length).toBeGreaterThan(0)
-    for (const { state } of after) expect(state.Turbine.turbineValvePosition).toBeCloseTo(StartupSettings.TurbineLoadOpening, 9)
+  // Hold lasts a single tick at 500, 1500 and 2500 rpm (the operator moves on as soon as it engages) and never
+  // reaches a sample, so the states the operator sees in Hold are collected from a wrapped operator at tick resolution
+  describe("run-up through the run-up points", () => {
+    const seenInHold: PowerPlantState["Turbine"][] = []
+    const ticks = runScenario({
+      ...turbineRunup,
+      sampleEvery: CstSimulation.DeltaTime,
+      operator: (state, time) => {
+        if (state.Turbine.speedMode === "hold") seenInHold.push(state.Turbine)
+        return startupOperator(state, time)
+      },
+    })
+
+    test.each([500, 1500, 2500, 3000])("passes through Hold at %i rpm within the engage window", (point) => {
+      const held = seenInHold.find((turbine) => turbine.runUpPoint === point)
+      expect(held).toBeDefined()
+      expect(Math.abs((held?.rpm ?? 0) - point)).toBeLessThanOrEqual(CstSimulation.CstTurbine.HoldEngageWindow)
+    })
+
+    test("Ramp up never exceeds the run-up rate and the turbine stays below MaxRPM throughout", () => {
+      const rampPerTick = (CstSimulation.CstTurbine.RunUpRate * CstSimulation.DeltaTime) / 60
+      for (const { state } of ticks.filter((s) => s.state.Turbine.speedMode === "rampUp")) {
+        expect(state.Turbine.speedReference).toBeLessThanOrEqual(state.Turbine.runUpPoint)
+        expect(Math.abs(state.Turbine.rpm - state.Turbine.speedReference)).toBeLessThan(5 * rampPerTick + 5)
+      }
+      for (const { state } of ticks) expect(state.Turbine.rpm).toBeLessThan(CstSimulation.CstTurbine.MaxRPM)
+    })
+
+    test("the run-up from working pressure to Hold at 3000 rpm takes about 60 min", () => {
+      const start = firstTimeWhere(ticks, (s) => s.Turbine.speedMode === "rampUp") ?? Infinity
+      const end = firstTimeWhere(ticks, (s) => s.Turbine.speedMode === "hold" && s.Turbine.runUpPoint === 3000) ?? Infinity
+      expect((end - start) / 60).toBeGreaterThan(55)
+      expect((end - start) / 60).toBeLessThan(65)
+    })
   })
 
   test("gas never goes above the heat-up gas once the pressure hold starts", () => {
@@ -45,15 +80,15 @@ describe("turbine-runup", () => {
       expect(state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas)
   })
 
-  test("over the last 600 s boiler pressure stays within the band", () => {
+  test("over the settling time boiler pressure stays within the band", () => {
     for (const { state } of last) expect(Math.abs(state.Boiler.pressure - Target)).toBeLessThanOrEqual(Band)
   })
 
-  test("over the last 600 s turbine speed is 3000 ± 50 rpm and below MaxRPM, unloaded and without hold mode", () => {
+  test("over the settling time the turbine is in Hold at 3000 ± 2 rpm, unloaded", () => {
     for (const { state } of last) {
-      expect(Math.abs(state.Turbine.rpm - 3000)).toBeLessThanOrEqual(50)
-      expect(state.Turbine.rpm).toBeLessThan(CstSimulation.CstTurbine.MaxRPM)
-      expect(state.Turbine.holdMode).toBe(false)
+      expect(Math.abs(state.Turbine.rpm - 3000)).toBeLessThanOrEqual(2)
+      expect(state.Turbine.speedMode).toBe("hold")
+      expect(state.Turbine.runUpPoint).toBe(3000)
       expect(state.Turbine.generatorBreaker).toBe(false)
     }
   })
@@ -75,7 +110,7 @@ describe("turbine-runup", () => {
 
 // The turbine valve may only open under vacuum (ADR 0003): the scenarios pull it first and the turbine
 // never trips. Sampled every tick, so a trip that a later opening clears again cannot slip between samples.
-const VacuumCheckDuration = 4000 // sim-seconds: covers the first opening and the turbine valve going to its load opening
+const VacuumCheckDuration = 4000 // sim-seconds: covers the first opening of the turbine valve by Ramp up
 describe.each([turbineRunup, turbineSync])("$name under the vacuum limit", (scenario) => {
   const samples = runScenario({
     ...scenario,

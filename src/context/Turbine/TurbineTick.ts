@@ -5,13 +5,17 @@ import {
   calculateValveAdjustment,
   isAboveVacuumLimit,
   isAtSyncSpeed,
+  isWithinHoldWindow,
   maxTurbineValvePosition,
   turbineTrippedAfter,
 } from "../../utils/turbineCalculations"
 import { getIsentropicEnthalpyDrop } from "../../utils/steamTable"
-import { TurbineState } from "../PowerPlantState"
+import { SpeedMode, TurbineState } from "../PowerPlantState"
+
+const { CstTurbine } = CstSimulation
 
 const MbarPerBar = 1000
+const SecondsPerMinute = 60
 
 /**
  * turbineTick - Updates the turbine state for each simulation tick.
@@ -54,7 +58,7 @@ function TurbineTick(
   const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
   if (isAboveVacuumLimit(condenserPressure) && currentPosition > 0) return { ...ticked, ...turbineTrip }
 
-  // Otherwise the hold-mode PID may move the valve, never past the cap; an opening clears the trip flag
+  // Otherwise the Ramp up / Hold PID may move the valve, never past the cap; an opening clears the trip flag
   const pid = updateTurbineValve(turbineState, newRPM, maxTurbineValvePosition(currentPosition, condenserPressure))
   return {
     ...ticked,
@@ -63,34 +67,51 @@ function TurbineTick(
   }
 }
 
-type PidControl = Pick<TurbineState, "turbineValvePosition" | "pidIntegralError">
+type SpeedControl = Pick<TurbineState, "turbineValvePosition" | "pidIntegralError" | "speedMode" | "speedReference">
 
-// Turbine trip: valve fully closed, hold mode off and the integral cleared, so nothing reopens it on its own
-const turbineTrip: Pick<TurbineState, keyof PidControl | "holdMode" | "turbineTripped"> = {
+// Turbine trip: valve fully closed, back to Free and the integral cleared, so nothing reopens it on its own
+const turbineTrip: Pick<TurbineState, keyof SpeedControl | "turbineTripped"> = {
   turbineValvePosition: 0,
-  holdMode: false,
+  speedMode: "free",
   pidIntegralError: 0,
+  speedReference: 0,
   turbineTripped: true,
 }
 
-// Hold-mode PID: the integral lives in the turbine state, the derivative uses the rpm before this tick.
+// Ramp up: the reference climbs at the run-up rate and stops at the point; Hold aims at the point itself
+const speedReferenceAfter = (speedMode: SpeedMode, runUpPoint: number, speedReference: number): number =>
+  speedMode === "hold"
+    ? runUpPoint
+    : Math.min(runUpPoint, speedReference + (CstTurbine.RunUpRate * CstSimulation.DeltaTime) / SecondsPerMinute)
+
+// Ramp up and Hold PID: the integral lives in the turbine state, the derivative uses the rpm before this tick.
 // It never moves the valve above maxPosition (the current position above the vacuum limit).
-function updateTurbineValve(turbineState: TurbineState, newRPM: number, maxPosition: number): PidControl {
-  const { holdMode, mainSteamValve, turbineValvePosition, pidIntegralError, rpm } = turbineState
-  // inactive (hold mode off or Main Steam Valve closed): the integral resets, so every (re)engage starts fresh
-  if (!holdMode || !mainSteamValve) return { turbineValvePosition, pidIntegralError: 0 }
+function updateTurbineValve(turbineState: TurbineState, newRPM: number, maxPosition: number): SpeedControl {
+  const { speedMode, mainSteamValve, turbineValvePosition, pidIntegralError, rpm, runUpPoint, speedReference } = turbineState
+  // inactive (Free or Main Steam Valve closed): the integral resets and the reference follows the speed, so every
+  // (re)engage starts fresh from the current speed; the mode itself stays
+  if (speedMode === "free" || !mainSteamValve) {
+    return { turbineValvePosition, pidIntegralError: 0, speedMode, speedReference: newRPM }
+  }
+
+  const reference: number = speedReferenceAfter(speedMode, runUpPoint, speedReference)
 
   const { valveAdjustment, newIntegralError } = calculateValveAdjustment(
     newRPM,
     rpm,
-    turbineState.rpmSetPoint,
+    reference,
     pidIntegralError,
     CstSimulation.DeltaTime,
   )
 
+  // Arrival: the reference is at the point and the turbine is within the window of it
+  const arrived: boolean = speedMode === "rampUp" && reference >= runUpPoint && isWithinHoldWindow(newRPM, runUpPoint)
+
   return {
     turbineValvePosition: Math.max(0, Math.min(maxPosition, turbineValvePosition + valveAdjustment)),
     pidIntegralError: newIntegralError,
+    speedMode: arrived ? "hold" : speedMode,
+    speedReference: reference,
   }
 }
 

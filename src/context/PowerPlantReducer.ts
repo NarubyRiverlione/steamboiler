@@ -1,7 +1,7 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
-import { isAtSyncSpeed, maxTurbineValvePosition, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAtSyncSpeed, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -72,8 +72,9 @@ export const makeInitialState = (): PowerPlantState => ({
     turbineSteamFlowOut: 0,
     mainSteamValve: false, // closed
     rpm: 0,
-    rpmSetPoint: CstTurbine.DefaultRPMSetPoint,
-    holdMode: false,
+    runUpPoint: CstTurbine.DefaultRunUpPoint,
+    speedMode: "free",
+    speedReference: 0,
     generatorBreaker: false, // Phase 4: Initially open
     pidIntegralError: 0,
     turbineTripped: false,
@@ -177,15 +178,31 @@ const handlers: { [T in ActionType]: Handler<T> } = {
       turbineTripped: turbineTrippedAfter(turbineTripped, current, requested),
     })
   },
-  ADJUST_RPM_SETPOINT: (state, { payload }) =>
-    withTurbine(state, {
-      rpmSetPoint: clamp(
-        state.Turbine.rpmSetPoint + payload.rpmAdjustment,
-        CstTurbine.MinRPM,
-        CstTurbine.MaxRPM,
-      ),
-    }),
-  TOGGLE_HOLD_MODE: (state) => withTurbine(state, { holdMode: !state.Turbine.holdMode }),
+  // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
+  SET_SPEED_MODE: (state, { payload: { speedMode } }) => {
+    if (speedModeRefusal(state.Turbine, speedMode)) return state
+    const { rpm, runUpPoint } = state.Turbine
+    if (speedMode === "free") return withTurbine(state, { speedMode })
+    return withTurbine(state, {
+      speedMode,
+      speedReference: speedMode === "hold" ? runUpPoint : rpm,
+      pidIntegralError: 0,
+    })
+  },
+  // In Free a point only selects the target; in Ramp up or Hold a point above the speed (re)starts Ramp up toward it,
+  // and a running ramp keeps its reference
+  SELECT_RUN_UP_POINT: (state, { payload: { runUpPoint } }) => {
+    if (runUpPointRefusal(state.Turbine, runUpPoint)) return state
+    const { speedMode, rpm, speedReference, pidIntegralError } = state.Turbine
+    if (speedMode === "free") return withTurbine(state, { runUpPoint })
+    const ramping: boolean = speedMode === "rampUp"
+    return withTurbine(state, {
+      runUpPoint,
+      speedMode: "rampUp",
+      speedReference: ramping ? speedReference : rpm,
+      pidIntegralError: ramping ? pidIntegralError : 0,
+    })
+  },
   // Allow closing the breaker if RPM is within the margin of sync speed; toggling a closed breaker opens it
   TOGGLE_GENERATOR_BREAKER: (state) =>
     withTurbine(state, {

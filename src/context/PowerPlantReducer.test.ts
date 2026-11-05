@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "./const"
 import PowerPlantAction from "./PowerPlantActions"
-import PowerPlantState from "./PowerPlantState"
+import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 
@@ -221,20 +221,94 @@ describe("powerPlantReducer", () => {
       })
     })
 
-    test("RPM setpoint adjusts within MinRPM..MaxRPM", () => {
-      const adjust = (rpmAdjustment: number, state?: PowerPlantState) =>
-        reduce({ type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment } }, state)
-      expect(base.Turbine.rpmSetPoint).toBe(CstTurbine.SyncRPM)
-      expect(CstTurbine.MaxRPM).toBeGreaterThan(CstTurbine.SyncRPM)
-      expect(adjust(100).Turbine.rpmSetPoint).toBe(CstTurbine.DefaultRPMSetPoint + 100)
-      expect(adjust(1e6).Turbine.rpmSetPoint).toBe(CstTurbine.MaxRPM)
-      expect(adjust(-1e6).Turbine.rpmSetPoint).toBe(CstTurbine.MinRPM)
-    })
+    describe("speed modes", () => {
+      const turbine = (patch: Partial<PowerPlantState["Turbine"]>): PowerPlantState => ({
+        ...base,
+        Turbine: { ...base.Turbine, ...patch },
+      })
+      const setMode = (speedMode: SpeedMode, state: PowerPlantState) =>
+        reduce({ type: "SET_SPEED_MODE", payload: { speedMode } }, state)
+      const select = (runUpPoint: number, state: PowerPlantState) =>
+        reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint } }, state)
+      const open = { mainSteamValve: true }
 
-    test("hold mode toggles", () => {
-      const on = reduce({ type: "TOGGLE_HOLD_MODE" })
-      expect(on.Turbine.holdMode).toBe(true)
-      expect(reduce({ type: "TOGGLE_HOLD_MODE" }, on).Turbine.holdMode).toBe(false)
+      test("starts in Free at the default run-up point", () => {
+        expect(base.Turbine.speedMode).toBe("free")
+        expect(base.Turbine.runUpPoint).toBe(CstTurbine.SyncRPM)
+        expect(CstTurbine.RunUpPoints).toEqual([500, 1500, 2500, 3000])
+      })
+
+      test("Free is always allowed", () => {
+        for (const mode of ["rampUp", "hold"] as const) {
+          expect(setMode("free", turbine({ ...open, speedMode: mode })).Turbine.speedMode).toBe("free")
+        }
+        expect(setMode("free", base)).toEqual(base)
+      })
+
+      test("Ramp up starts the reference at the current speed", () => {
+        const next = setMode("rampUp", turbine({ ...open, rpm: 700, runUpPoint: 1500, pidIntegralError: 0.5 })).Turbine
+        expect(next).toMatchObject({ speedMode: "rampUp", speedReference: 700, pidIntegralError: 0 })
+      })
+
+      test("Ramp up is refused with the main steam valve closed or a point not above the speed", () => {
+        const closed = turbine({ rpm: 700, runUpPoint: 1500 })
+        expect(setMode("rampUp", closed)).toBe(closed)
+        for (const rpm of [1500, 1800]) {
+          const notAbove = turbine({ ...open, rpm, runUpPoint: 1500 })
+          expect(setMode("rampUp", notAbove)).toBe(notAbove)
+        }
+      })
+
+      test("Hold engages within ±5 rpm of the point and is refused outside it", () => {
+        const window = CstTurbine.HoldEngageWindow
+        expect(window).toBe(5)
+        for (const rpm of [1500 - window, 1500, 1500 + window]) {
+          const next = setMode("hold", turbine({ ...open, rpm, runUpPoint: 1500 })).Turbine
+          expect(next).toMatchObject({ speedMode: "hold", speedReference: 1500 })
+        }
+        for (const rpm of [1500 - window - 1, 1500 + window + 1]) {
+          const outside = turbine({ ...open, rpm, runUpPoint: 1500 })
+          expect(setMode("hold", outside)).toBe(outside)
+        }
+      })
+
+      test("selecting a point in Free only selects the target", () => {
+        const next = select(2500, turbine({ rpm: 3000 })).Turbine
+        expect(next).toMatchObject({ runUpPoint: 2500, speedMode: "free" })
+      })
+
+      test("a value that is not a run-up point is refused", () => {
+        expect(select(1234, base)).toBe(base)
+      })
+
+      test("a point above the speed starts Ramp up from Hold, from the current speed", () => {
+        const hold = turbine({ ...open, speedMode: "hold", rpm: 500, runUpPoint: 500, speedReference: 500 })
+        expect(select(1500, hold).Turbine).toMatchObject({ runUpPoint: 1500, speedMode: "rampUp", speedReference: 500 })
+      })
+
+      test("a point above the speed retargets a running Ramp up and keeps its reference and integral", () => {
+        const ramp = turbine({ ...open, speedMode: "rampUp", rpm: 900, runUpPoint: 1500, speedReference: 920, pidIntegralError: 0.2 })
+        expect(select(2500, ramp).Turbine).toMatchObject({
+          runUpPoint: 2500,
+          speedMode: "rampUp",
+          speedReference: 920,
+          pidIntegralError: 0.2,
+        })
+      })
+
+      test("a point at or below the speed is refused in Ramp up and Hold", () => {
+        for (const speedMode of ["rampUp", "hold"] as const) {
+          for (const point of [500, 1500]) {
+            const state = turbine({ ...open, speedMode, rpm: 1500, runUpPoint: 2500, speedReference: 1500 })
+            expect(select(point, state)).toBe(state)
+          }
+        }
+      })
+
+      test("a point is refused in Ramp up or Hold with the main steam valve closed", () => {
+        const state = turbine({ speedMode: "hold", rpm: 500, runUpPoint: 500 })
+        expect(select(1500, state)).toBe(state)
+      })
     })
 
     describe("generator breaker", () => {
@@ -261,7 +335,7 @@ describe("powerPlantReducer", () => {
   })
 
   test("leaves the other subsystems untouched", () => {
-    const next = reduce({ type: "TOGGLE_HOLD_MODE" })
+    const next = reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint: 500 } })
     expect(next.Boiler).toBe(base.Boiler)
     expect(next.Condenser).toBe(base.Condenser)
   })

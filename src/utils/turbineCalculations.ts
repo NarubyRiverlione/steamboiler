@@ -1,10 +1,44 @@
 import { CstSimulation } from "../context/const"
+import { SpeedMode, TurbineState } from "../context/PowerPlantState"
 
 const { CstCondenser, CstTurbine } = CstSimulation
 
 // True when the turbine runs within the breaker margin of sync speed
 export const isAtSyncSpeed = (rpm: number): boolean =>
   Math.abs(rpm - CstTurbine.SyncRPM) <= CstTurbine.BreakerRPMMargin
+
+// Hold engages, and Ramp up hands over to it, only within the engage window of the selected run-up point
+export const isWithinHoldWindow = (rpm: number, runUpPoint: number): boolean =>
+  Math.abs(rpm - runUpPoint) <= CstTurbine.HoldEngageWindow
+
+// Why a speed mode change is refused, or undefined when it is allowed (Free always is). The reducer refuses on it
+// and the UI shows it on the disabled control.
+export function speedModeRefusal(turbine: TurbineState, mode: SpeedMode): string | undefined {
+  if (mode === "rampUp") return rampUpRefusal(turbine)
+  if (mode === "hold") return holdRefusal(turbine)
+  return undefined
+}
+
+function rampUpRefusal({ mainSteamValve, rpm, runUpPoint }: TurbineState): string | undefined {
+  if (!mainSteamValve) return "Open the main steam valve first"
+  return runUpPoint <= rpm ? "Select a run-up point above the current speed" : undefined
+}
+
+function holdRefusal({ rpm, runUpPoint }: TurbineState): string | undefined {
+  return isWithinHoldWindow(rpm, runUpPoint)
+    ? undefined
+    : `Hold engages only within ±${String(CstTurbine.HoldEngageWindow)} rpm of the run-up point`
+}
+
+// Why selecting a run-up point is refused, or undefined when it is allowed: in Free any point selects the target,
+// in Ramp up or Hold only a point above the current speed, with the main steam valve open, restarts Ramp up
+export function runUpPointRefusal(turbine: TurbineState, point: number): string | undefined {
+  if (!CstTurbine.RunUpPoints.includes(point)) return "Not a run-up point"
+  if (turbine.speedMode === "free") return undefined
+  if (!turbine.mainSteamValve) return "Open the main steam valve first"
+  if (point <= turbine.rpm) return "Ramp up only goes up: switch to Free to slow down"
+  return undefined
+}
 
 // True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit

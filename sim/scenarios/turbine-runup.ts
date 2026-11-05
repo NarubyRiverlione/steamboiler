@@ -1,10 +1,12 @@
 /**
- * Cold start in two phases (GLOSSARY.md, "Pressure hold", ADR 0008).
+ * Cold start in two phases (GLOSSARY.md, "Pressure hold", "Ramp up", ADR 0008, ADR 0021).
  * 1. Build pressure: the shared timed steps heat from 20°C, pull the vacuum, open the main steam valve and crack the
- *    turbine valve to 5%, so less steam leaves than is generated and pressure rises.
- * 2. Pressure hold: when boiler pressure first enters the 165 ± 2 bar band, `startupOperator` sets the turbine valve
- *    once to the no-load opening (ADR 0021), and gas becomes the throttle. Hold mode stays off and the breaker open (see #18).
+ *    bypass valve to 5%, so less steam leaves than is generated and pressure rises. The turbine valve stays shut.
+ * 2. Pressure hold and run-up: once boiler pressure first enters the 165 ± 2 bar band, gas becomes the throttle and
+ *    `startupOperator` takes Ramp up through the run-up points 500, 1500, 2500 and 3000 rpm, moving on as soon as Hold
+ *    engages at a point. The run ends in Hold at 3000 rpm after a settling time, the breaker still open (see #18).
  */
+import { CstSimulation } from "../../src/context/const"
 import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
@@ -13,35 +15,35 @@ import { holdLoop } from "./loop-operator"
 import { atWorkingPressure } from "./pressure-hold"
 import { heatUp, openMainSteam } from "./steps"
 
+const { RunUpPoints } = CstSimulation.CstTurbine
+
 export const StartupSettings = {
-  TurbineLoadOpening: 0.021, // turbine valve position at the pressure hold: 4.2 kg/s, just under the 4.35 kg/s no-load flow at the 1082 kJ/kg drop (165 bar, 13 mbar), so the unloaded speed settles ~2975 rpm, below the breaker margin
+  SettlingTime: 600, // sim-seconds in Hold at sync speed before the run ends: the same window turbine-sync judges
+  Duration: 5800, // sim-seconds: pressure build to ~1580 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5200 s) and the settling time
 }
 
-const S = StartupSettings
-const Tolerance = 1e-9 // float noise on valve positions
-
-// Once pressure is in the band the turbine valve goes from its crack to the load opening (a delta, once; it closes
-// down, since the 5% crack passes more than the no-load flow)
-function openToLoad({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
-  const delta = S.TurbineLoadOpening - Turbine.turbineValvePosition
-  const cracked = Turbine.turbineValvePosition > 0
-  if (!atWorkingPressure(Boiler.pressure) || !cracked || Math.abs(delta) < Tolerance) return []
-  return [{ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: delta } }]
+// At working pressure: from Free, select the first point above the speed and start Ramp up; in Hold at a point
+// below sync speed, select the next point, which starts Ramp up again from the current speed
+function runUp({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
+  if (!Turbine.mainSteamValve || !atWorkingPressure(Boiler.pressure)) return []
+  const { speedMode, runUpPoint, rpm } = Turbine
+  if (speedMode === "rampUp") return []
+  const next: number | undefined = RunUpPoints.find((point) => point > (speedMode === "hold" ? runUpPoint : rpm))
+  if (next === undefined) return []
+  const select: PowerPlantAction = { type: "SELECT_RUN_UP_POINT", payload: { runUpPoint: next } }
+  return speedMode === "hold" ? [select] : [select, { type: "SET_SPEED_MODE", payload: { speedMode: "rampUp" } }]
 }
 
-// The hold phase has begun once the turbine valve has been opened to its load opening
-const holding = ({ Turbine }: PowerPlantState): boolean => Turbine.turbineValvePosition >= S.TurbineLoadOpening - Tolerance
-
-// With 18 kg/s leaving, the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md)
+// With steam flowing, the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md)
 export function startupOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
   if (!state.Turbine.mainSteamValve) return []
-  return [...openToLoad(state), ...(holding(state) ? holdLoop(state, time) : [])]
+  return [...runUp(state), ...holdLoop(state, time)]
 }
 
 export const turbineRunup: Scenario = {
   name: "turbine-runup",
-  description: "Heat from 20°C, open main steam valve, crack turbine valve to build pressure, then gas holds 165 bar with the turbine valve at its load opening",
-  duration: 14000,
+  description: "Heat from 20°C, open main steam valve, build pressure on the bypass, then Ramp up through 500, 1500, 2500 and 3000 rpm to Hold at sync speed",
+  duration: StartupSettings.Duration,
   sampleEvery: 10,
   initial: makeInitialState(),
   actions: [...heatUp, ...openMainSteam],

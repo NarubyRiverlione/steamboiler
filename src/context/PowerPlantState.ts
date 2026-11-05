@@ -41,6 +41,7 @@ export type CondenserState = {
   rejectTotal: number // kg rejected since start (totalizer)
   deltaWaterMass: number // kg change of the hotwell over the last tick
 }
+export type SpeedMode = "free" | "rampUp" | "hold" // Free: operator moves the valve; Ramp up and Hold: the PID does (ADR 0021)
 export type TurbineState = {
   electricOutput: number // MW
   bypassValvePosition: number // 0-1 (0-100%) open
@@ -49,10 +50,11 @@ export type TurbineState = {
   turbineSteamFlowOut: number // kg/s
   mainSteamValve: boolean // open/close MSV
   rpm: number // Current RPM of the turbine
-  rpmSetPoint: number // Target RPM when in hold mode
-  holdMode: boolean // Whether the turbine is in hold mode
+  runUpPoint: number // Selected run-up point (rpm): the target of Ramp up and Hold
+  speedMode: SpeedMode // Free, Ramp up or Hold
+  speedReference: number // rpm the PID aims at in Ramp up; follows the speed while the PID is inactive
   generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
-  pidIntegralError: number // hold-mode PID accumulated rpm error (rpm·s, clamped to ±1)
+  pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
   turbineTripped: boolean // set by a turbine trip, cleared by the next opening of the turbine valve
 }
 

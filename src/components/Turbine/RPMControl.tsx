@@ -1,49 +1,59 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
-import ValveSlider from "../ValveSlider"
+import { SpeedMode } from "../../context/PowerPlantState"
+import { runUpPointRefusal, speedModeRefusal } from "../../utils/turbineCalculations"
 
 const { CstTurbine } = CstSimulation
 
+const modes: { mode: SpeedMode; label: string }[] = [
+  { mode: "free", label: "Free" },
+  { mode: "rampUp", label: "Ramp up" },
+  { mode: "hold", label: "Hold" },
+]
+
 const RPMControl = () => {
-  const {
-    state: {
-      Turbine: { rpmSetPoint, holdMode },
-    },
-    adjustRPMSetPoint,
-    toggleHoldMode,
-  } = usePowerPlant()
+  const { state, setSpeedMode, selectRunUpPoint } = usePowerPlant()
+  const { Turbine } = state
 
   return (
     <div className="component-controls">
       <h3>Turbine Speed Control</h3>
-      
+
       <div className="mode-control">
-        <h4>Control Mode</h4>
-        <button 
-          className={`mode-button ${holdMode ? "hold" : "free"}`}
-          onClick={toggleHoldMode}
-        >
-          {holdMode ? "Hold Mode" : "Free Mode"}
-        </button>
+        <h4>Speed mode</h4>
+        {modes.map(({ mode, label }) => {
+          const refusal: string | undefined = speedModeRefusal(Turbine, mode)
+          return (
+            <button
+              key={mode}
+              className={`mode-button ${Turbine.speedMode === mode ? "hold" : "free"}`}
+              disabled={refusal !== undefined}
+              title={refusal}
+              onClick={() => { setSpeedMode(mode); }}
+            >
+              {label}
+            </button>
+          )
+        })}
       </div>
-      
-      {/* Only show the slider when in hold mode */}
-      {holdMode && (
-        <ValveSlider
-          Label="RPM Setpoint"
-          Value={`${rpmSetPoint.toFixed(0)} RPM`}
-          Position={rpmSetPoint / CstTurbine.MaxRPM} // Convert to 0-1 range
-          Step={CstTurbine.RPMStep / CstTurbine.MaxRPM} // Convert to 0-1 range
-          cbAdjust={(adjustment) => {
-            adjustRPMSetPoint(adjustment * CstTurbine.MaxRPM);
-          }}
-        />
-      )}
-      {!holdMode && (
-        <div className="disabled-control-message">
-          <p>RPM setpoint control is only available in Hold Mode</p>
-        </div>
-      )}
+
+      <div className="mode-control">
+        <h4>Run-up point</h4>
+        {CstTurbine.RunUpPoints.map((point) => {
+          const refusal: string | undefined = runUpPointRefusal(Turbine, point)
+          return (
+            <button
+              key={point}
+              className={`mode-button ${Turbine.runUpPoint === point ? "hold" : "free"}`}
+              disabled={refusal !== undefined}
+              title={refusal}
+              onClick={() => { selectRunUpPoint(point); }}
+            >
+              {point} rpm
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }

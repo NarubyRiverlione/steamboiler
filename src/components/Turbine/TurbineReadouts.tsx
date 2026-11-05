@@ -1,12 +1,15 @@
 import usePowerPlant from "../../context/PowerPlantContext"
+import { SpeedMode } from "../../context/PowerPlantState"
 import useEMA from "../../utils/useEMA"
 import Indicator from "../Indicator"
 import Readout from "../Readout"
 
+const speedModeLabels: Record<SpeedMode, string> = { free: "FREE", rampUp: "RAMP UP", hold: "HOLD" }
+
 const TurbineReadouts = () => {
   const {
     state: {
-      Turbine: { electricOutput, rpm, rpmSetPoint, holdMode, turbineSteamFlowOut, generatorBreaker, turbineTripped },
+      Turbine: { electricOutput, rpm, runUpPoint, speedMode, turbineSteamFlowOut, generatorBreaker, turbineTripped },
     },
   } = usePowerPlant()
 
@@ -17,15 +20,15 @@ const TurbineReadouts = () => {
       <Readout title="Generator output" value={electricOutput} unit="MW" />
       <Readout title="Turbine speed" value={rpm} unit="RPM" fixed={0} />
       <Readout
-        title="RPM setpoint"
-        value={rpmSetPoint}
+        title="Run-up point"
+        value={runUpPoint}
         unit="RPM"
         fixed={0}
-        colored={holdMode} // Highlight when in hold mode
+        colored={speedMode !== "free"} // Highlight while the PID moves the valve
       />
       <div className="mode-indicator">
         <span>Mode: </span>
-        <span className={holdMode ? "hold-mode" : "free-mode"}>{holdMode ? "HOLD" : "FREE"}</span>
+        <span className={speedMode === "free" ? "free-mode" : "hold-mode"}>{speedModeLabels[speedMode]}</span>
       </div>
       <div className="breaker-status">
         <span>Breaker: </span>
