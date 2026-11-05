@@ -1,6 +1,6 @@
 # The turbine valve trips above the vacuum limit
 
-The turbine valve may only be open, or be opened, while condenser pressure is at or below the **vacuum limit**: one named condenser constant, with its value and source recorded in [design-basis.md](../plant/design-basis.md). If pressure rises above it while the valve is open, a **turbine trip** closes the valve fully, switches hold mode off and clears the PID memory. The operator can always close the valve by hand; reopening is refused until the vacuum is back. Decided in #37.
+The turbine valve may only be open, or be opened, while condenser pressure is at or below the **vacuum limit**: one named condenser constant, with its value and source recorded in [design-basis.md](../plant/design-basis.md). If pressure rises above it while the valve is open, a **turbine trip** closes the valve fully, returns the speed mode to Free and clears the PID memory. The operator can always close the valve by hand; reopening is refused until the vacuum is back. Decided in #37.
 
 ## Considered options
 
@@ -11,8 +11,8 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 
 ## Consequences
 
-- The limit applies wherever the valve position changes: the operator action and the hold-mode PID in the tick. Hold mode cannot get around it.
-- Hold mode turns off on a trip, so the PID cannot restart the turbine on its own once vacuum recovers. Its memory is cleared, so turning it back on starts without a wound-up error.
+- The limit applies wherever the valve position changes: the operator action and the speed PID in the tick. Ramp up and Hold cannot get around it.
+- A trip returns to Free, so the PID cannot restart the turbine on its own once vacuum recovers. Its memory is cleared, so the next Ramp up or Hold starts without a wound-up error.
 - `TurbineState` carries a trip flag that the turbine panel shows. The flag is set by a trip and cleared by the next successful opening.
 - Scenarios have to pull vacuum before they open the turbine valve: SJAE enabled and its valve opened once the boiler is above the main steam valve minimum pressure.
 - The bypass valve and the generator breaker are not affected.

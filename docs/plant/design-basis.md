@@ -70,7 +70,7 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 
 ### Turbine speed model figures
 
-Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbine-runup-figures.md) for [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md). In the code since #69 (`CstTurbine`), except the run-up rate (#70).
+Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbine-runup-figures.md) for [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md). In the code since #69 (`CstTurbine`), except the run-up rate, the run-up points and the hold engage window (#70, modes in ADR 0021).
 
 | | Value in the code | Label | Note |
 |---|---|---|---|
@@ -78,7 +78,9 @@ Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbi
 | Loss power versus speed | ∝ ω³ | estimate for a steam turbine (windage form sourced, 2.7–3; bearings not found) | |
 | No-load steam flow | 3% of rated flow (`NoLoadFlowFraction`): 5.1 kg/s at the rated drop, about 4.0 MW of shaft power lost at sync speed | sourced: 3% roll-up flow (US4656335) at the top of the sourced 1.5–3% (1.5% mechanical loss, Kraut); the ADR's 5–10% had no primary source and would mean 6.5–13 MW | decided in #69. The unloaded speed holds at the flow where drive equals loss: the flow scales with 1/(enthalpy drop), so at the 1082 kJ/kg the plant reaches at 13 mbar the same speed needs 4.3 kg/s |
 | Run-up rate, cold | 50 rpm/min (sourced range 25–50) | sourced, one 518 MW unit | not in the code yet (#70). The sim always starts cold, so this is the rate #70 uses. A cold run-up to 3000 rpm takes 60 min of sim time |
-| Run-up rate, hot | 100–300 rpm/min | **estimate**, no source | deliberate simplification: the sim has one rate and no soak holds |
+| Run-up rate, hot | 100–300 rpm/min | **estimate**, no source | deliberate simplification: the sim has one rate |
+| Run-up points | 500, 1500, 2500 and 3000 rpm | owner's choice, no source | not in the code yet (#70). The research only has example hold speeds (300–500 rpm; 600, 1200 and 2400 rpm UNVERIFIED). No minimum time at a point: the sim has no rotor temperature, so a soak would have no effect, and the sim has no critical speeds to keep the points away from |
+| Hold engage window | ±5 rpm of the selected run-up point | **estimate**, no source | not in the code yet (#70). The owner's choice: hold mode engages at its target, and Ramp up arrives inside it |
 | Speed tolerance at no load | governor droop 5% sourced; hold band stays ±2 rpm | band is an estimate | |
 
 Simplifications of the speed model: no generator load torque on the shaft (#71), no overspeed trip (#72; the linear torque curve gives zero torque at twice sync speed, and the 5% build-up crack of the scenarios spins the unloaded rotor past `MaxRPM` until the load opening is set), one lumped shaft line for turbine and generator, and the loss exponent fixed at 3.

@@ -64,12 +64,24 @@ _Avoid_: Power, electricity, MW readout
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
 _Avoid_: Bell curve, optimal pressure, vacuum permissive
 
+**Free mode**:
+The speed mode in which the operator moves the turbine valve by hand and no controller acts on it.
+_Avoid_: Manual mode
+
+**Ramp up**:
+The speed mode for every start: the turbine valve moves automatically so the turbine climbs to the selected run-up point at the run-up rate. On arrival it engages hold mode at that point. It only goes up.
+_Avoid_: Run-up mode, auto start
+
 **Hold mode**:
-The turbine's speed governor: switched on, it moves the turbine valve to keep the turbine at the speed setpoint (sync speed by default).
+The speed mode that keeps the turbine at the selected run-up point by moving the turbine valve. It engages only within ±5 rpm of that point, and never takes the turbine to a new speed. It is also the mode that adds steam when electrical load is added to the shaft.
 _Avoid_: Autopilot, speed hold, cruise
 
+**Run-up point**:
+One of the fixed speeds the operator can select: 500, 1500, 2500 or 3000 rpm (sync speed). Ramp up climbs to it and hold mode keeps it.
+_Avoid_: Setpoint (on its own), soak point
+
 **Run-up rate**:
-The rate, in rpm per minute, at which hold mode moves its working speed target toward the operator's setpoint. The turbine is brought up gradually to protect the rotor, not as fast as the steam would take it.
+The rate, in rpm per minute, at which Ramp up moves its speed reference toward the selected run-up point. The turbine is brought up gradually to protect the rotor, not as fast as the steam would take it.
 _Avoid_: Acceleration, ramp rate, spin-up
 
 **No-load flow**:
@@ -77,7 +89,7 @@ The steam flow that holds the turbine at sync speed with the breaker open: it on
 _Avoid_: Idle flow, minimum flow
 
 **Turbine trip**:
-The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also switches hold mode off; the turbine only takes steam again when the operator reopens the valve.
+The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
 _Avoid_: Trip (on its own), shutdown
 
 ### Operation
