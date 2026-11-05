@@ -68,18 +68,20 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 | Overspeed limit | 3300 RPM (110%) |
 | Electric output at rated steam flow | ≈ 131 MWe (171 kg/s, 165 bar, 100 mbar); ≈ 153 MWe at the 200 kg/s valve capacity | derived from the isentropic enthalpy drop of saturated steam (917 kJ/kg from 165 bar to 100 mbar, IF97) × `IsentropicEfficiency` 0.85 × `GeneratorEfficiency` 0.98 (#14, [ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)). The 100 mbar back-pressure is the one the estimate assumed; at the 15 mbar the plant reaches at low load the valve capacity gives ≈ 179 MWe, at 327 mbar (vacuum limit) ≈ 134 MWe. The 200 kg/s and 171 kg/s values at 100 mbar are pinned by `TurbineTick.test.ts`; the 15 and 327 mbar values come from the same function and are not. |
 
-### Turbine speed model figures (for #69 and #70, not in the code yet)
+### Turbine speed model figures
 
-Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbine-runup-figures.md) for [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md). Nothing here is in `const.ts` until #69/#70 land.
+Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbine-runup-figures.md) for [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md). In the code since #69 (`CstTurbine`), except the run-up rate (#70).
 
-| | Value the code will use | Label | Note |
+| | Value in the code | Label | Note |
 |---|---|---|---|
-| Inertia constant H | 4 s, so J = 2·H·S/ω_s² ≈ 10,600 kg·m² at S = 131 MWe | range 2.5–6 s sourced; the single value is an estimate | S is the electric output above, not an MVA rating (about 15% more), which is within the uncertainty of H |
+| Inertia constant H | 4 s (`InertiaConstant`), so J = 2·H·S/ω_s² ≈ 10,590 kg·m² at S = 130.6 MWe | range 2.5–6 s sourced; the single value is an estimate | S is the electric output above, derived from `RatedSteamFlow` and `RatedEnthalpyDrop`, not an MVA rating (about 15% more): power factor is ignored, within the uncertainty of H |
 | Loss power versus speed | ∝ ω³ | estimate for a steam turbine (windage form sourced, 2.7–3; bearings not found) | |
-| No-load steam flow | open, decided in #69: sourced 1.5–3% of rated flow (about 2.6–5 kg/s) against the ADR's 5–10% estimate (8.5–17 kg/s) | the 5–10% is an **estimate**, no primary source | calibrating to 5–10% gives 6.5–13 MW of loss at sync speed, several times the sourced ~2 MW. Today's hold-mode run uses 18 kg/s (10.5%) |
-| Run-up rate, cold | 50 rpm/min (sourced range 25–50) | sourced, one 518 MW unit | the sim always starts cold, so this is the rate #70 uses. A cold run-up to 3000 rpm takes 60 min of sim time |
+| No-load steam flow | 3% of rated flow (`NoLoadFlowFraction`): 5.1 kg/s at the rated drop, about 4.0 MW of shaft power lost at sync speed | sourced: 3% roll-up flow (US4656335) at the top of the sourced 1.5–3% (1.5% mechanical loss, Kraut); the ADR's 5–10% had no primary source and would mean 6.5–13 MW | decided in #69. The unloaded speed holds at the flow where drive equals loss: the flow scales with 1/(enthalpy drop), so at the 1082 kJ/kg the plant reaches at 13 mbar the same speed needs 4.3 kg/s |
+| Run-up rate, cold | 50 rpm/min (sourced range 25–50) | sourced, one 518 MW unit | not in the code yet (#70). The sim always starts cold, so this is the rate #70 uses. A cold run-up to 3000 rpm takes 60 min of sim time |
 | Run-up rate, hot | 100–300 rpm/min | **estimate**, no source | deliberate simplification: the sim has one rate and no soak holds |
 | Speed tolerance at no load | governor droop 5% sourced; hold band stays ±2 rpm | band is an estimate | |
+
+Simplifications of the speed model: no generator load torque on the shaft (#71), no overspeed trip (#72; the linear torque curve gives zero torque at twice sync speed, and the 5% build-up crack of the scenarios spins the unloaded rotor past `MaxRPM` until the load opening is set), one lumped shaft line for turbine and generator, and the loss exponent fixed at 3.
 
 Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemens design) fossil turbine acts when "the Condenser pressure falls to -0.7Kg/cm2", from three vacuum switches in 2-out-of-3 logic ([KWU turbine interlocks, slide 7](https://www.slideshare.net/slideshow/steam-turbine-turbine-interlocks-for-kwu-turbine/71755509)). −0.7 kg/cm² gauge is 1013.25 − 0.7 × 980.665 ≈ 327 mbar absolute. The source is a training deck, not an OEM setting sheet, and does not state the unit size; this turbine type is built as 210 and 500 MW sets. Cross-check: the ABWR Design Control Document (Tier 2, §10.4.1.5.2) trips the turbine at 0.074 MPa vacuum, about 273 mbar absolute ([NRC ML103080368](https://www.nrc.gov/docs/ML1030/ML103080368.pdf)), on a ~1350 MWe nuclear unit. The limit is a real-plant value, not a departure. It sits above the 213 mbar the air extraction pump reaches on its own, so the SJAE is not needed to reach it, only to go deeper. Decision: [ADR 0003](../adr/0003-turbine-trip-on-vacuum-limit.md).
 

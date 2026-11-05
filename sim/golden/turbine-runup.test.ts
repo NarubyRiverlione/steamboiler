@@ -58,9 +58,13 @@ describe("turbine-runup", () => {
     }
   })
 
-  test("over the last 600 s steam out of the boiler matches steam generated within 5%", () => {
-    const out = average(last.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut))
-    const generated = average(last.map((s) => s.state.Boiler.deltaSteamMass))
+  // At the ~4 kg/s no-load flow the gas hold is a slow limit cycle (gas floor, band edges, about 1000-2000 s), so the
+  // balance is judged over a longer window than the 600 s of the others
+  const BalanceWindow = 3000
+  test("over the last 3000 s steam out of the boiler matches steam generated within 5%", () => {
+    const balance = samples.filter((s) => s.time >= turbineRunup.duration - BalanceWindow)
+    const out = average(balance.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut))
+    const generated = average(balance.map((s) => s.state.Boiler.deltaSteamMass))
     expect(Math.abs(out - generated)).toBeLessThanOrEqual(0.05 * generated)
   })
 

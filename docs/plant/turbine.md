@@ -29,13 +29,22 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 - RPM readout, RPM set point slider, and a free/hold toggle in the turbine control panel
 - Hold mode adjusts the turbine valve automatically to keep the set point
 
-**RPM physics** follow Newton's laws for rotation, so RPM changes gradually. Constants in `CstTurbine`:
+**RPM physics** (#69, [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md)): the speed follows from the shaft power the steam delivers, in physical units (`calculateRPM`, `turbineCalculations.ts`). `TurbineTick` computes the enthalpy drop once (`getIsentropicEnthalpyDrop`) and passes it to both `calculateRPM` and `calculateElectricityOutput`.
 
-| Constant | Value | Role |
+- **Shaft power** P = flow [kg/s] × enthalpy drop [kJ/kg] × `IsentropicEfficiency`, in W.
+- **Drive torque** T = (P / ω_s) · (2 − ω / ω_s) in N·m, ω_s = 2π · `SyncRPM` / 60: twice the sync-speed torque at standstill, no division by zero. It falls to zero at 2·ω_s (about 6000 rpm); there is no overspeed trip yet (#72).
+- **Losses** torque k·ω² (power k·ω³). k is calibrated so the no-load flow (`NoLoadFlowFraction` × `RatedSteamFlow`, at the rated drop) delivers exactly the loss power at sync speed: k = P_noload / ω_s³, about 4.0 MW at sync speed, so 3% of rated flow (5.1 kg/s at 917 kJ/kg) holds 3000 rpm with hold mode off. It assumes no generator load torque (#71).
+- **Inertia** J = 2·H·S / ω_s² in kg·m², with H = `InertiaConstant` (4 s) and S the rated electric output (`RatedSteamFlow` × `RatedEnthalpyDrop` × the two efficiencies, 130.6 MW), about 10 590 kg·m². Power factor is ignored (a real S is in MVA, about 15% more).
+- **Motion** J · dω/dt = T − k·ω², stepped once per tick (Euler), floored at 0 rpm.
+
+| Constant (`CstTurbine`) | Value | Role |
 |---|---|---|
-| MomentOfInertia | 25000 kg·m² | resistance to speed change (large industrial turbine) |
-| FrictionFactor | 0.02 | friction rises with RPM and gives a natural equilibrium |
-| TorqueFactor | 0.05 | converts steam flow and pressure to torque |
+| RatedSteamFlow | 171 kg/s | the design steam flow; sizes S and the loss |
+| RatedEnthalpyDrop | 917 kJ/kg | isentropic drop at 165 bar to 100 mbar; sizes S and the loss |
+| InertiaConstant | 4 s | H of the shaft line; J is derived from it |
+| NoLoadFlowFraction | 0.03 | of rated flow; calibrates the losses |
+
+Sources and the departures: [design-basis.md](design-basis.md#turbine-speed-model-figures). Free acceleration to sync speed takes minutes (10 kg/s at 917 kJ/kg: about 116 s), set by J and the shaft power, not by a lag.
 
 **PID controller** (hold mode): Kp = 0.001 (current error), Ki = 0.0001 (accumulated error, removes steady-state error), Kd = 0.0005 (damping). D acts on the measured rpm, `−Kd · (rpm_now − rpm_before_tick) / dt`, not on the error, so engaging the controller or changing the setpoint gives no derivative kick and D needs no memory. The only memory is `pidIntegralError` in `TurbineState` (a tick depends on its input state alone); it is reset to 0 whenever the PID is inactive (hold mode off or main steam valve closed), so every (re)engage starts with a zero integral ([ADR 0010](../adr/0010-pid-derivative-on-measurement.md)).
 
@@ -84,5 +93,5 @@ Sync is not reachable from a cold start today (#18).
 - **Drop:** `getIsentropicEnthalpyDrop(boilerPressure, condenserPressure)` (`steamTable.ts`): saturated steam from the boiler pressure (no superheater) expanded at constant entropy to the live condenser pressure, so poor vacuum and low boiler pressure cost output. Data: `steamEntropyData.ts`, IAPWS-IF97, 0.01 bar to 220 bar, interpolated in ln(pressure); pressures outside it clamp.
 - **Constants:** `IsentropicEfficiency` 0.85, `GeneratorEfficiency` 0.98 (`CstTurbine`). `steamToElectricityEfficiency` is gone.
 - **Gating:** breaker closed and at sync speed, otherwise 0 MW. Clamped at 0 MW for no flow or a non-positive drop, never negative.
-- **Scope:** MW readout only; the RPM and torque model is untouched (no shaft load torque, no net demand in MW).
+- **Scope:** MW readout, from the same enthalpy drop that drives the speed model (#69); no shaft load torque (#71) and no net demand in MW.
 - Rated values: see [design-basis.md](design-basis.md). Scenario: `turbine-load` (golden path).
