@@ -66,8 +66,10 @@ export const CstSimulation = {
     SyncRPM: 3000, // Sync speed: generator matches the 50 Hz grid
     MaxRPM: 3300, // Overspeed limit (110% of sync speed)
     MinRPM: 0, // Minimum RPM
-    DefaultRPMSetPoint: 3000, // Default setpoint = sync speed
-    RPMStep: 50, // Increment/decrement step for RPM setpoint
+    RunUpPoints: [500, 1500, 2500, 3000], // rpm: the fixed run-up points the operator selects (ADR 0021; owner's choice, design-basis.md)
+    DefaultRunUpPoint: 3000, // rpm: the point selected at start = sync speed
+    RunUpRate: 50, // rpm per minute: Ramp up moves its speed reference at this rate (cold-start value, #68, design-basis.md)
+    HoldEngageWindow: 5, // rpm: Hold engages within ± this of the selected run-up point (estimate, design-basis.md)
 
     // Speed model (ADR 0021, figures in docs/plant/design-basis.md): shaft power from steam, losses and inertia derived
     RatedSteamFlow: 171, // kg/s, the design steam flow (design-basis.md); S and the no-load loss are sized on it
@@ -75,7 +77,7 @@ export const CstSimulation = {
     InertiaConstant: 4, // s, H of the whole shaft line (sourced range 2.5-6 s); J = 2·H·S / ω_s²
     NoLoadFlowFraction: 0.03, // of rated flow: holds sync speed unloaded; loss power ∝ ω³ is calibrated on it (sourced 1.5-3%)
 
-    // PID controller constants for hold mode
+    // PID controller constants for Ramp up and Hold
     PID_Kp: 0.001, // Proportional gain
     PID_Ki: 0.0001, // Integral gain
     PID_Kd: 0.0005, // Derivative gain

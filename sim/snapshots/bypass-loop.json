@@ -50,8 +50,9 @@
     "turbineSteamFlowOut": 0,
     "mainSteamValve": true,
     "rpm": 0,
-    "rpmSetPoint": 3000,
-    "holdMode": false,
+    "runUpPoint": 3000,
+    "speedMode": "free",
+    "speedReference": 0,
     "generatorBreaker": false,
     "pidIntegralError": 0,
     "turbineTripped": false

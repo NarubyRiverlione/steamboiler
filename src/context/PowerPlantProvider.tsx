@@ -2,6 +2,7 @@ import { ReactNode, useReducer, useEffect } from "react"
 import { CstSimulation } from "./const.ts"
 import { PowerPlantContext } from "./PowerPlantContext.tsx"
 import { initialPowerPlantState, powerPlantReducer } from "./PowerPlantReducer.ts"
+import { SpeedMode } from "./PowerPlantState.ts"
 
 // Provider
 function PowerPlantProvider({ children }: { children: ReactNode }) {
@@ -40,14 +41,13 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const adjustTurbineValve = (position: number) => {
     dispatch({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: position } })
   }
-  const adjustRPMSetPoint = (amount: number) => {
-    dispatch({ type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment: amount } })
+  const setSpeedMode = (speedMode: SpeedMode) => {
+    dispatch({ type: "SET_SPEED_MODE", payload: { speedMode } })
+  }
+  const selectRunUpPoint = (runUpPoint: number) => {
+    dispatch({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint } })
   }
 
-  const toggleHoldMode = () => {
-    dispatch({ type: "TOGGLE_HOLD_MODE" })
-  }
-  
   const toggleGeneratorBreaker = () => {
     dispatch({ type: "TOGGLE_GENERATOR_BREAKER" })
   }
@@ -105,8 +105,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         adjustBypassValve,
         toggleMainSteamValve,
         adjustTurbineValve,
-        adjustRPMSetPoint,
-        toggleHoldMode,
+        setSpeedMode,
+        selectRunUpPoint,
         toggleGeneratorBreaker,
         // condenser actions
         toggleAirExtractionPump,
