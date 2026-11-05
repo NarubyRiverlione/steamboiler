@@ -1,6 +1,6 @@
 # The turbine runs up on steam power, at a rate set by hold mode
 
-**Status: accepted, not yet implemented.** To be built in #68, #69 and #70 (split from #66).
+**Status: accepted; the speed model is implemented (#69), the run-up rate is not yet (#70).** Split from #66.
 
 The turbine's speed follows from the **shaft power** the steam delivers (flow × enthalpy drop × efficiency), minus losses that rise steeply with speed, on a shaft line with a real inertia. The run-up to sync speed is paced by **hold mode**: its speed setpoint moves toward the operator's setpoint at a fixed run-up rate. The fixed turbine valve opening that has to land on an asymptote is no longer used.
 
@@ -22,7 +22,7 @@ Rough estimates for a shaft line of this class (~130 MWe, see #14) say otherwise
 - windage and bearing losses rise with roughly ω³ in power. A no-load flow of 5–10% of rated flow is typical, and 18 kg/s against ~171 kg/s at full gas fits that;
 - real run-up time is set by the operator or governor (run-up rates of the order of 100–300 rpm/min, with soak holds), giving minutes on a hot start and tens of minutes on a cold start.
 
-[#68](../research/2026-11-turbine-runup-figures.md) sourced these: H of 4 s is inside the sourced 2.5–6 s range; the loss exponent of 3 holds for windage; the **cold run-up rate is 25–50 rpm/min** (so the sim uses 50, not 100–300; the hot-start range stays an estimate); and **no source supports a 5–10% no-load flow**, only 1.5–3%. The loss calibration is therefore decided in #69. The values are in `design-basis.md`.
+[#68](../research/2026-11-turbine-runup-figures.md) sourced these: H of 4 s is inside the sourced 2.5–6 s range; the loss exponent of 3 holds for windage; the **cold run-up rate is 25–50 rpm/min** (so the sim uses 50, not 100–300; the hot-start range stays an estimate); and **no source supports a 5–10% no-load flow**, only 1.5–3%. The loss calibration was decided in #69: **3% of rated flow** (the sourced roll-up flow, top of the sourced 1.5–3%), not the 5–10% estimate. The values are in `design-basis.md`.
 
 So the steam flow is about right, but the model turns it into speed far too slowly and can never quite reach its target. The constants have no physical units, so they can't be checked against plant data, and `docs/plant/turbine.md` lists values (25000 / 0.02 / 0.05) that no longer match `const.ts` (5000 / 0.2 / 0.2).
 

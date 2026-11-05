@@ -3,6 +3,8 @@ import TurbineTick from "./TurbineTick"
 import { TurbineState } from "../PowerPlantState"
 
 import { CstSimulation } from "../const"
+import { calculateRPM } from "../../utils/turbineCalculations"
+import { getIsentropicEnthalpyDrop } from "../../utils/steamTable"
 
 describe("TurbineTick", () => {
   const initialState: TurbineState = { 
@@ -42,8 +44,26 @@ describe("TurbineTick", () => {
     mainSteamValve: true,
     turbineSteamFlowOut: 100, // kg/s
   }
+  // The shaft carries no generator load yet (#71), so this much steam accelerates it out of the breaker margin in a
+  // tick. Start from the speed that one tick of calculateRPM takes to sync speed, so the breaker stays closed and
+  // these tests keep checking the output chain.
+  const speedThatTicksToSync = (flow: number, boiler: number, condenserMbar: number): number => {
+    const drop: number = getIsentropicEnthalpyDrop(boiler, condenserMbar / 1000)
+    let low = 0
+    let high: number = CstSimulation.CstTurbine.SyncRPM
+    for (let i = 0; i < 60; i++) {
+      const mid: number = (low + high) / 2
+      if (calculateRPM(mid, flow, drop) < CstSimulation.CstTurbine.SyncRPM) low = mid
+      else high = mid
+    }
+    return low
+  }
   const toMW = (state: TurbineState, boiler: number, condenserMbar: number): number =>
-    TurbineTick(state, boiler, condenserMbar).electricOutput
+    TurbineTick(
+      { ...state, rpm: state.rpm !== CstSimulation.CstTurbine.SyncRPM ? state.rpm : speedThatTicksToSync(state.turbineSteamFlowOut, boiler, condenserMbar) },
+      boiler,
+      condenserMbar,
+    ).electricOutput
 
   it("should generate the IF97 output at sync speed: 100 kg/s, 20 bar to 100 mbar = 65.95 MW", () => {
     expect(Math.abs(toMW(loadedState, 20, 100) - 65.95)).toBeLessThan(65.95 * 0.005)
@@ -63,7 +83,7 @@ describe("TurbineTick", () => {
   })
 
   it("should follow the steam flow in the state, whatever the valve position is", () => {
-    const closedValve: number = TurbineTick(loadedState, 20, 100).electricOutput
+    const closedValve: number = toMW({ ...loadedState, turbineValvePosition: 0 }, 20, 100)
     expect(Math.abs(closedValve - 65.95)).toBeLessThan(65.95 * 0.005)
     expect(toMW({ ...loadedState, turbineSteamFlowOut: 50 }, 20, 100)).toBeCloseTo(toMW(loadedState, 20, 100) / 2, 1)
   })

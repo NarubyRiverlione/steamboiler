@@ -69,10 +69,11 @@ export const CstSimulation = {
     DefaultRPMSetPoint: 3000, // Default setpoint = sync speed
     RPMStep: 50, // Increment/decrement step for RPM setpoint
 
-    // Inertia modeling constants
-    MomentOfInertia: 5000, // 25000 kg·m² (represents the turbine's resistance to changes in rotational speed)
-    FrictionFactor: 0.2, // 0.02 Represents mechanical friction losses
-    TorqueFactor: 0.2, // 0.05 Factor to convert steam flow and pressure to torque
+    // Speed model (ADR 0021, figures in docs/plant/design-basis.md): shaft power from steam, losses and inertia derived
+    RatedSteamFlow: 171, // kg/s, the design steam flow (design-basis.md); S and the no-load loss are sized on it
+    RatedEnthalpyDrop: 917, // kJ/kg, isentropic drop at the rated state: 165 bar to 100 mbar (IF97, #14)
+    InertiaConstant: 4, // s, H of the whole shaft line (sourced range 2.5-6 s); J = 2·H·S / ω_s²
+    NoLoadFlowFraction: 0.03, // of rated flow: holds sync speed unloaded; loss power ∝ ω³ is calibrated on it (sourced 1.5-3%)
 
     // PID controller constants for hold mode
     PID_Kp: 0.001, // Proportional gain

@@ -2,8 +2,8 @@
  * Cold start in two phases (GLOSSARY.md, "Pressure hold", ADR 0008).
  * 1. Build pressure: the shared timed steps heat from 20°C, pull the vacuum, open the main steam valve and crack the
  *    turbine valve to 5%, so less steam leaves than is generated and pressure rises.
- * 2. Pressure hold: when boiler pressure first enters the 165 ± 2 bar band, `startupOperator` opens the turbine valve
- *    once to a fixed load opening, and gas becomes the throttle. Hold mode stays off and the breaker open (see #18).
+ * 2. Pressure hold: when boiler pressure first enters the 165 ± 2 bar band, `startupOperator` sets the turbine valve
+ *    once to the no-load opening (ADR 0021), and gas becomes the throttle. Hold mode stays off and the breaker open (see #18).
  */
 import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
@@ -14,17 +14,18 @@ import { atWorkingPressure } from "./pressure-hold"
 import { heatUp, openMainSteam } from "./steps"
 
 export const StartupSettings = {
-  TurbineLoadOpening: 0.091, // turbine valve position at the pressure hold: 18.2 kg/s, steam × pressure = 3003, so ~3000 rpm at 165 bar
+  TurbineLoadOpening: 0.021, // turbine valve position at the pressure hold: 4.2 kg/s, just under the 4.35 kg/s no-load flow at the 1082 kJ/kg drop (165 bar, 13 mbar), so the unloaded speed settles ~2975 rpm, below the breaker margin
 }
 
 const S = StartupSettings
 const Tolerance = 1e-9 // float noise on valve positions
 
-// Once pressure is in the band the turbine valve goes from its crack to the load opening, a delta, once
+// Once pressure is in the band the turbine valve goes from its crack to the load opening (a delta, once; it closes
+// down, since the 5% crack passes more than the no-load flow)
 function openToLoad({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
   const delta = S.TurbineLoadOpening - Turbine.turbineValvePosition
   const cracked = Turbine.turbineValvePosition > 0
-  if (!atWorkingPressure(Boiler.pressure) || !cracked || delta < Tolerance) return []
+  if (!atWorkingPressure(Boiler.pressure) || !cracked || Math.abs(delta) < Tolerance) return []
   return [{ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: delta } }]
 }
 

@@ -40,40 +40,50 @@ export function calculateElectricityOutput(
   return Math.max(0, megawatt)
 }
 
+const RadPerSecPerRpm = (2 * Math.PI) / 60
+const JPerKJ = 1000 // kJ to J, so kg/s x kJ/kg gives W
+
+const syncSpeed: number = CstTurbine.SyncRPM * RadPerSecPerRpm // ω_s, rad/s
+
+// Rated electric output S in W: the same chain as calculateElectricityOutput at the rated flow and drop
+const ratedOutput: number =
+  CstTurbine.RatedSteamFlow *
+  CstTurbine.RatedEnthalpyDrop *
+  JPerKJ *
+  CstTurbine.IsentropicEfficiency *
+  CstTurbine.GeneratorEfficiency
+
+// Shaft inertia in kg·m²: J = 2·H·S / ω_s²
+const inertia: number = (2 * CstTurbine.InertiaConstant * ratedOutput) / syncSpeed ** 2
+
+// Loss torque coefficient in N·m·s²: loss power k·ω³ equals the no-load shaft power at sync speed
+const noLoadPower: number =
+  CstTurbine.NoLoadFlowFraction *
+  CstTurbine.RatedSteamFlow *
+  CstTurbine.RatedEnthalpyDrop *
+  JPerKJ *
+  CstTurbine.IsentropicEfficiency
+const lossCoefficient: number = noLoadPower / syncSpeed ** 3
+
 /**
- * Calculates the RPM of the turbine based on steam flow, boiler pressure, and current RPM.
- * Implements gradual changes according to Newton's laws of motion.
- * 
+ * Calculates the RPM of the turbine after one tick from the shaft power the steam delivers.
+ * Shaft power P = flow x enthalpy drop x isentropic efficiency (W). Torque follows T = (P / ω_s)(2 − ω / ω_s):
+ * twice the sync-speed torque at standstill and no division by zero. Losses take torque k·ω² (power ∝ ω³),
+ * calibrated so the no-load flow holds sync speed. J·dω/dt = T − k·ω², with J derived from H (ADR 0021).
+ *
  * @param currentRPM - The current RPM of the turbine
  * @param steamFlow - The steam flow through the turbine in kg/s
- * @param boilerPressure - The pressure of the boiler in bar
+ * @param enthalpyDrop - Isentropic enthalpy drop from boiler to condenser pressure in kJ/kg
  * @returns The new RPM value
  */
-export function calculateRPM(
-  currentRPM: number,
-  steamFlow: number,
-  boilerPressure: number,
-): number {
-  // Calculate torque from steam flow and pressure
-  // Higher pressure and flow = more torque
-  const steamTorque = steamFlow * boilerPressure * CstTurbine.TorqueFactor
-  
-  // Calculate friction torque (increases with RPM)
-  const frictionTorque = currentRPM * CstTurbine.FrictionFactor
-  
-  // Net torque
-  const netTorque = steamTorque - frictionTorque
-  
-  // Calculate angular acceleration (α = τ/I)
-  const angularAcceleration = netTorque / CstTurbine.MomentOfInertia
-  
-  // Calculate RPM change (ω = ω₀ + α·t)
-  const rpmChange = angularAcceleration * CstSimulation.DeltaTime * 60 / (2 * Math.PI) // Convert rad/s² to RPM/s
-  
-  // Calculate new RPM with gradual change
-  const newRPM = Math.max(0, currentRPM + rpmChange)
-  
-  return newRPM
+export function calculateRPM(currentRPM: number, steamFlow: number, enthalpyDrop: number): number {
+  const omega: number = currentRPM * RadPerSecPerRpm
+  const shaftPower: number = Math.max(0, steamFlow * enthalpyDrop * JPerKJ * CstTurbine.IsentropicEfficiency)
+  const steamTorque: number = (shaftPower / syncSpeed) * (2 - omega / syncSpeed)
+  const lossTorque: number = lossCoefficient * omega ** 2
+  const angularAcceleration: number = (steamTorque - lossTorque) / inertia
+  const newOmega: number = Math.max(0, omega + angularAcceleration * CstSimulation.DeltaTime)
+  return newOmega / RadPerSecPerRpm
 }
 
 /**
