@@ -64,6 +64,7 @@ export const CstSimulation = {
 
     // New constants for Phase 3
     SyncRPM: 3000, // Sync speed: generator matches the 50 Hz grid
+    GeneratorPoles: 2, // two-pole turbogenerator, direct-coupled: 3000 rpm gives 50 Hz
     MaxRPM: 3300, // Overspeed limit (110% of sync speed)
     MinRPM: 0, // Minimum RPM
     RunUpPoints: [500, 1500, 2500, 3000], // rpm: the fixed run-up points the operator selects (ADR 0021; owner's choice, design-basis.md)

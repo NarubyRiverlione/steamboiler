@@ -1,5 +1,6 @@
 import { CstSimulation } from "../src/context/const"
 import PowerPlantState from "../src/context/PowerPlantState"
+import { generatorFrequency } from "../src/utils/turbineCalculations"
 import { loopWater } from "./invariants"
 import { Lift, Sample, Scenario } from "./scenario"
 
@@ -123,6 +124,14 @@ export const panels: Panel[] = [
     kind: "other",
     unit: "rpm",
     series: one("RPM", (s) => s.Turbine.rpm),
+  },
+  {
+    group: "Turbine",
+    row: 2,
+    title: "Frequency",
+    kind: "other",
+    unit: "Hz",
+    series: one("Frequency", (s) => generatorFrequency(s.Turbine.rpm)),
   },
   {
     group: "Turbine",

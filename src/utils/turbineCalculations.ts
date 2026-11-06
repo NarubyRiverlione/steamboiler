@@ -7,6 +7,9 @@ const { CstCondenser, CstTurbine } = CstSimulation
 export const isAtSyncSpeed = (rpm: number): boolean =>
   Math.abs(rpm - CstTurbine.SyncRPM) <= CstTurbine.BreakerRPMMargin
 
+// Generator frequency in Hz, set by shaft speed alone: f = rpm x poles / 120
+export const generatorFrequency = (rpm: number): number => (rpm * CstTurbine.GeneratorPoles) / 120
+
 // Hold engages, and Ramp up hands over to it, only within the engage window of the selected run-up point
 export const isWithinHoldWindow = (rpm: number, runUpPoint: number): boolean =>
   Math.abs(rpm - runUpPoint) <= CstTurbine.HoldEngageWindow

@@ -55,7 +55,7 @@ describe("toReportHtml", () => {
   test("renders each declared row on its own line, in the layout of the tickets", () => {
     expect(html.match(/<div class="grid-row"/g)).toHaveLength(6)
     expect(rowTitles("Turbine", 1)).toEqual(["Bypass valve", "Turbine valve", "Steam flow"])
-    expect(rowTitles("Turbine", 2)).toEqual(["RPM", "Electric output"])
+    expect(rowTitles("Turbine", 2)).toEqual(["RPM", "Frequency", "Electric output"])
     expect(rowTitles("Condenser", 1).slice(0, 2)).toEqual(["SJAE valve", "Pressure"])
     expect(rowTitles("Condenser", 2)).toEqual(["Condensation pump valve", "Intake flow", "Return to boiler"])
     expect(rowTitles("Hotwell", 1)).toEqual([

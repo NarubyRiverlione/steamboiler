@@ -4,6 +4,7 @@ import { getIsentropicEnthalpyDrop } from "./steamTable"
 import {
   calculateElectricityOutput,
   calculateRPM,
+  generatorFrequency,
   isAboveVacuumLimit,
   isAtSyncSpeed,
   maxTurbineValvePosition,
@@ -11,6 +12,17 @@ import {
 } from "./turbineCalculations"
 
 const { CstCondenser, CstTurbine } = CstSimulation
+
+describe("generatorFrequency", () => {
+  test("is 50 Hz at sync speed and 0 Hz at standstill", () => {
+    expect(generatorFrequency(CstTurbine.SyncRPM)).toBe(50)
+    expect(generatorFrequency(0)).toBe(0)
+  })
+
+  test("follows the shaft speed linearly", () => {
+    expect(generatorFrequency(1500)).toBe(25)
+  })
+})
 
 describe("isAtSyncSpeed", () => {
   test("true within the breaker margin of sync speed", () => {

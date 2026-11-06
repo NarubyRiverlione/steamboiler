@@ -32,7 +32,7 @@ heating-rate limit. Lifts are recorded per tick
 file is re-read per request, so re-run `pnpm sim` and refresh. `pnpm sim:view` does both.
 
 Panels are grouped Boiler, Turbine, Condenser, Hotwell and Loop (the list is the `panels` array in
-`sim/report.ts`). The **Turbine** steam flow panel uses semantic colours (bypass red, turbine
+`sim/report.ts`). The **Turbine** speed row reads RPM, Frequency (derived from rpm), Electric output. The **Turbine** steam flow panel uses semantic colours (bypass red, turbine
 green, total blue); every other flow chart is one hue per chart. The **Loop** group's water
 inventory shows a total that should stay flat
 (boundary flows undone). The water

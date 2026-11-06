@@ -65,6 +65,8 @@ Sources and the departures: [design-basis.md](design-basis.md#turbine-speed-mode
 
 **Electricity** is only generated with the breaker closed at sync speed (3000 RPM ±2), as the generator must match the 50 Hz grid. `MaxRPM` (3300) is the overspeed figure (no trip yet, #72).
 
+**Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. With the breaker closed it still follows the free rpm until the speed locks to the grid (#71).
+
 Calculations: `src/utils/turbineCalculations.ts`; tick: `src/context/Turbine/TurbineTick.ts`.
 
 ## Vacuum interlock and turbine trip
