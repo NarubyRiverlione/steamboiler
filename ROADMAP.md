@@ -10,7 +10,7 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#71](https://github.com/NarubyRiverlione/steamboiler/issues/71) Grid-locked speed and generator load torque with the breaker closed | P2 | needs-triage |  |  |
+| 1 | [#71](https://github.com/NarubyRiverlione/steamboiler/issues/71) Generator load torque with the breaker closed | P2 | ready-for-agent |  |  |
 | 2 | [#80](https://github.com/NarubyRiverlione/steamboiler/issues/80) Steam flow through the bypass and turbine valve ignores boiler pressure | P2 | needs-triage |  |  |
 | 3 | [#81](https://github.com/NarubyRiverlione/steamboiler/issues/81) Condenser charges turbine exhaust the full latent heat | P2 | needs-triage |  |  |
 | 4 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down to cold | P3 | needs-triage |  |  |
