@@ -355,10 +355,11 @@ describe("powerPlantReducer", () => {
       }
     })
 
-    test("is limited to 0 up to the rated output", () => {
+    test("is limited to 0 up to the load setpoint limit, above the rated output", () => {
       const state = withTurbine({ generatorBreaker: true })
       expect(setLoad(-5, state).Turbine.loadSetpoint).toBe(0)
-      expect(setLoad(1000, state).Turbine.loadSetpoint).toBe(ratedOutputMW)
+      expect(setLoad(1000, state).Turbine.loadSetpoint).toBe(CstTurbine.LoadSetpointLimit)
+      expect(CstTurbine.LoadSetpointLimit).toBeGreaterThan(ratedOutputMW)
     })
 
     test("opening the breaker by hand drops the load and the setpoint to 0", () => {
