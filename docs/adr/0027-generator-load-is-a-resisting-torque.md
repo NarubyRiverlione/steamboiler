@@ -11,7 +11,7 @@ Before this, the electric output came from steam flow, so the no-load flow repor
 ## Decisions
 
 - **Speed stays free (island model).** The speed sags under load, the Hold PID opens the valve, and more load takes more steam. This is how an island behaves, not a unit on a stiff grid. Recorded in [design-basis.md](../plant/design-basis.md) as a deliberate simplification.
-- **Load setpoint:** an operator value in MW, default 0, limited to 0 up to the rated output (130.6 MW). Only settable with the breaker closed, in any speed mode; with the breaker open it is refused with a reason (`loadSetpointRefusal`, in the style of `speedModeRefusal`). Hold gets no new interlock. Free with the breaker closed is allowed: the operator follows the load by hand.
+- **Load setpoint:** an operator value in MW, default 0, limited to 0 up to `LoadSetpointLimit` (200 MW), above the rated output (130.6 MW), so the steam limits the load and not the setpoint (#84). Only settable with the breaker closed, in any speed mode; with the breaker open it is refused with a reason (`loadSetpointRefusal`, in the style of `speedModeRefusal`). Hold gets no new interlock. Free with the breaker closed is allowed: the operator follows the load by hand.
 - **Load rate:** the load moves towards the setpoint at one fixed rate, `LoadRate` = 3% of rated output per minute (about 3.9 MW/min), up and down. The source is coal units, see [the research note](../research/2026-11-generator-load-rate.md).
 - **Breaker:** the ±2 rpm rule stays for closing and auto-open. When the breaker opens for any reason (by hand or by the speed leaving the window) the load and the load setpoint drop to 0 on that tick; a reclose does not bring the load back without an operator action.
 - **Failures need no special logic.** Steam that cannot carry the load, or a vacuum trip with load on, makes the speed fall and ends at the ±2 rpm breaker rule. There is no breaker-on-trip rule, reverse power protection or runback.
@@ -26,4 +26,4 @@ Before this, the electric output came from steam flow, so the no-load flow repor
 ## Consequences
 
 - `TurbineState` gains `loadSetpoint`; `electricOutput` is the load carried, kept from tick to tick. `calculateRPM` takes the load; `calculateElectricityOutput` is gone.
-- The load rate makes a 130.6 MW load take about 2000 s. The headless run (`turbine-load`) holds rated output within 0.02 rpm of sync speed with the PID gains unchanged, which needs the operator's gas ceiling raised to full gas (the 2000 L/s heat-up gas cannot carry it).
+- The load rate makes a 130.6 MW load take about 2000 s. The headless run (`turbine-load`) holds rated output within 0.02 rpm of sync speed with the PID gains unchanged, which needs the operator's gas ceiling raised above the 2000 L/s heat-up gas: gas peaks at about 5260 L/s, 44% of full gas. The `max-output` run (#84) takes the load past rated: the valve is fully open at about 159 MW and the breaker opens on the speed sag.

@@ -87,6 +87,7 @@ export const CstSimulation = {
 
     // Generator load (#71, ADR 0027): a constant-power resisting torque on the shaft
     LoadRate: 0.03, // share of rated output per minute, up and down (sourced from coal units, docs/research/2026-11-generator-load-rate.md)
+    LoadSetpointLimit: 200, // MW: top of the 180-200 MWe class the utilities are sized for, so the steam limits the load, not the setpoint (design-basis.md)
   },
 }
 

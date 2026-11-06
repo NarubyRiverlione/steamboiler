@@ -71,7 +71,7 @@ const ratedOutput: number =
   CstTurbine.IsentropicEfficiency *
   CstTurbine.GeneratorEfficiency
 
-/** Rated electric output in MW (130.6): the load setpoint's upper limit and the base of the load rate. */
+/** Rated electric output in MW (130.6): it sizes the shaft and is the base of the load rate. */
 export const ratedOutputMW: number = ratedOutput / 1e6
 
 // Load setpoint step per tick in MW: the load moves at one fixed rate, up and down (ADR 0027)

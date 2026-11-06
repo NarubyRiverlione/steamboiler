@@ -1,6 +1,7 @@
 import { useState } from "react"
+import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
-import { loadSetpointRefusal, ratedOutputMW } from "../../utils/turbineCalculations"
+import { loadSetpointRefusal } from "../../utils/turbineCalculations"
 
 const LoadControl = () => {
   const {
@@ -25,7 +26,7 @@ const LoadControl = () => {
         <input
           type="number"
           min={0}
-          max={ratedOutputMW}
+          max={CstSimulation.CstTurbine.LoadSetpointLimit}
           step={1}
           value={draft === "" ? Turbine.loadSetpoint.toFixed(1) : draft}
           disabled={refusal !== undefined}

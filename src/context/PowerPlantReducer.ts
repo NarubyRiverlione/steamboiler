@@ -1,7 +1,7 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, ratedOutputMW, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -209,9 +209,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     const generatorBreaker: boolean = !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm)
     return withTurbine(state, generatorBreaker ? { generatorBreaker } : { generatorBreaker, electricOutput: 0, loadSetpoint: 0 })
   },
-  // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to the rated output. The load follows at the load rate.
+  // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
-    loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, ratedOutputMW) }),
+    loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 
