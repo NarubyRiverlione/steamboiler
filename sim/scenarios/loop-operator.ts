@@ -111,11 +111,13 @@ function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
   ]
 }
 
-// The holds once steam flows: hotwell every tick, gas, boiler level and cooling water every AdjustEvery seconds
-export function holdLoop(state: PowerPlantState, time: number): PowerPlantAction[] {
+// The holds once steam flows: hotwell every tick, gas, boiler level and cooling water every AdjustEvery seconds.
+// `holdLevel` false leaves the boiler level hold out (turbine-runup before working pressure, ADR 0018).
+export function holdLoop(state: PowerPlantState, time: number, holdLevel = true): PowerPlantAction[] {
   const adjustNow = isAdjustTime(time, S.AdjustEvery)
   const gas = state.Turbine.mainSteamValve ? holdPressureWithGas(state) : []
-  return [...holdHotwell(state), ...(adjustNow ? [...gas, ...holdBoilerLevel(state), ...holdCondensing(state)] : [])]
+  const level = holdLevel ? holdBoilerLevel(state) : []
+  return [...holdHotwell(state), ...(adjustNow ? [...gas, ...level, ...holdCondensing(state)] : [])]
 }
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {

@@ -19,7 +19,7 @@ const { RunUpPoints } = CstSimulation.CstTurbine
 
 export const StartupSettings = {
   SettlingTime: 600, // sim-seconds in Hold at sync speed before the run ends: the same window turbine-sync judges
-  Duration: 5800, // sim-seconds: pressure build to ~1580 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5200 s) and the settling time
+  Duration: 5800, // sim-seconds: pressure build to ~1500 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5100 s) and the settling time
 }
 
 // At working pressure: from Free, select the first point above the speed and start Ramp up; in Hold at a point
@@ -34,10 +34,11 @@ function runUp({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
   return speedMode === "hold" ? [select] : [select, { type: "SET_SPEED_MODE", payload: { speedMode: "rampUp" } }]
 }
 
-// With steam flowing, the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md)
+// With steam flowing, the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md).
+// The boiler level hold waits for working pressure: the cold fill already holds the right mass (ADR 0018)
 export function startupOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
   if (!state.Turbine.mainSteamValve) return []
-  return [...runUp(state), ...holdLoop(state, time)]
+  return [...runUp(state), ...holdLoop(state, time, atWorkingPressure(state.Boiler.pressure))]
 }
 
 export const turbineRunup: Scenario = {

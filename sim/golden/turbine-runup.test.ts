@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
 import { firstTimeWhere, runScenario, runScenarioWithLifts } from "../scenario"
+import { LoopSettings } from "../scenarios/loop-operator"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
+import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { StartupSettings, startupOperator, turbineRunup } from "../scenarios/turbine-runup"
 import { turbineSync } from "../scenarios/turbine-sync"
 import { StartGas } from "../scenarios/steps"
@@ -36,6 +38,19 @@ describe("turbine-runup", () => {
       expect(state.Turbine.bypassValvePosition).toBeCloseTo(0.05, 9)
       expect(state.Turbine.turbineValvePosition).toBe(0)
       expect(state.Turbine.speedMode).toBe("free")
+    }
+  })
+
+  // ADR 0018: the boiler already holds the right mass at 35% cold, so nothing is fed or rejected during heat-up
+  test("no makeup and no reject, and the hotwell stays in its working band, until working pressure", () => {
+    const heatUpSamples = samples.filter((s) => s.time <= inBandAt)
+    expect(heatUpSamples.length).toBeGreaterThan(0)
+    for (const { state } of heatUpSamples) {
+      expect(state.Condenser.makeupTotal).toBe(0)
+      expect(state.Condenser.rejectTotal).toBe(0)
+      const level = hotwellLevel(state.Condenser.hotwellWaterVolume)
+      expect(level).toBeGreaterThanOrEqual(LoopSettings.HotwellBandLow)
+      expect(level).toBeLessThanOrEqual(LoopSettings.HotwellBandHigh)
     }
   })
 
