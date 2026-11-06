@@ -110,6 +110,48 @@ describe("renderRoadmap", () => {
     expect(rows).toEqual(["3", "2", "1"])
   })
 
+  test("gives each priority its own table and skips empty ones", () => {
+    const headings = renderRoadmap([ticket(1, ["P5"]), ticket(2, ["P2"]), ticket(3)], "u", "d")
+      .split("\n")
+      .filter((l) => l.startsWith("## "))
+    expect(headings).toEqual(["## P2: realism in scope", "## P5: UI and UX", "## No priority"])
+  })
+
+  test("puts a blocker in the section of the priority it inherits", () => {
+    const section = md.slice(md.indexOf("## P1: broken"), md.indexOf("## No priority"))
+    expect(section).toContain("[#6]")
+    expect(section).toContain("P2 (↑P1)")
+    expect(md).not.toContain("## P2")
+  })
+
+  test("keeps counting across sections", () => {
+    const numbers = renderRoadmap([ticket(1, ["P1"]), ticket(2, ["P3"]), ticket(3, ["P5"])], "u", "d")
+      .split("\n")
+      .filter((l) => /^\| \d/.test(l))
+      .map((l) => l.split(" ")[1])
+    expect(numbers).toEqual(["1", "2", "3"])
+  })
+
+  test("titles a P label without a meaning by the label alone", () => {
+    expect(renderRoadmap([ticket(1, ["P7"])], "u", "d")).toContain("## P7\n")
+  })
+
+  test("keeps the numbers ascending when a cycle breaks the priority order", () => {
+    const cycle = [
+      ticket(1, ["P1"]),
+      ticket(2, [], [1, 3]),
+      ticket(3, ["P3"], [2, 4]),
+      ticket(4, ["P2"], [6]),
+      ticket(5, ["P4"]),
+      ticket(6, ["P1"], [2]),
+    ]
+    const numbers = renderRoadmap(cycle, "u", "d")
+      .split("\n")
+      .filter((l) => /^\| \d/.test(l))
+      .map((l) => Number(l.split(" ")[1]))
+    expect(numbers).toEqual([1, 2, 3, 4, 5, 6])
+  })
+
   test("stamps the date and count", () => {
     expect(md).toContain("_Updated 2026-10-28 · 3 open tickets_")
   })
