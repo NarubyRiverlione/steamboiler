@@ -47,7 +47,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
 | [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
 | [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
-| [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style, with a strong preference for the analog board (proposed, with a [mockup](adr/0015-boiler-panel-mockup.html)) |
+| [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style, with a strong preference for the analog board (proposed, with a [boiler mockup](adr/0015-boiler-panel-mockup.html) and a [full board mockup](adr/0015-full-board-mockup.html)) |
 | [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
 | [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |
 | [0018](adr/0018-cold-fill-at-35-percent.md) | The boiler is filled cold to 35% so it expands to the working level |
