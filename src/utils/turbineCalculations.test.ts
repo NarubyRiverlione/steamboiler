@@ -1,13 +1,16 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
+import { makeInitialState } from "../context/PowerPlantReducer"
 import { getIsentropicEnthalpyDrop } from "./steamTable"
 import {
-  calculateElectricityOutput,
   calculateRPM,
   generatorFrequency,
   isAboveVacuumLimit,
   isAtSyncSpeed,
+  loadAfter,
+  loadSetpointRefusal,
   maxTurbineValvePosition,
+  ratedOutputMW,
   turbineTrippedAfter,
 } from "./turbineCalculations"
 
@@ -40,22 +43,43 @@ describe("isAtSyncSpeed", () => {
   })
 })
 
-describe("calculateElectricityOutput", () => {
-  const atSync = CstTurbine.SyncRPM
+describe("ratedOutputMW", () => {
+  test("is the 130.6 MW of the rated flow and drop", () => {
+    expect(ratedOutputMW).toBeCloseTo(130.6, 1)
+  })
+})
 
-  test("hand-calculated case: 100 kg/s x 1000 kJ/kg x 0.85 x 0.98 / 1000 = 83.3 MW", () => {
-    expect(calculateElectricityOutput(100, 1000, atSync, true)).toBeCloseTo(83.3, 6)
+describe("loadAfter", () => {
+  const step: number = (CstTurbine.LoadRate * ratedOutputMW * CstSimulation.DeltaTime) / 60
+
+  test("moves toward the setpoint at the load rate, up and down", () => {
+    expect(loadAfter(10, 100)).toBeCloseTo(10 + step, 9)
+    expect(loadAfter(10, 0)).toBeCloseTo(10 - step, 9)
   })
 
-  test("is zero with the breaker open or off sync speed", () => {
-    expect(calculateElectricityOutput(100, 1000, atSync, false)).toBe(0)
-    expect(calculateElectricityOutput(100, 1000, CstTurbine.MaxRPM, true)).toBe(0)
+  test("the rate is 3% of rated output per minute", () => {
+    let load = 0
+    for (let i = 0; i < 600; i++) load = loadAfter(load, ratedOutputMW)
+    expect(load).toBeCloseTo(0.03 * ratedOutputMW, 6)
   })
 
-  test("is zero with no flow and clamped at zero for a non-positive enthalpy drop", () => {
-    expect(calculateElectricityOutput(0, 1000, atSync, true)).toBe(0)
-    expect(calculateElectricityOutput(100, 0, atSync, true)).toBe(0)
-    expect(calculateElectricityOutput(100, -50, atSync, true)).toBe(0)
+  test("stops at the setpoint without overshoot", () => {
+    expect(loadAfter(5, 5 + step / 2)).toBe(5 + step / 2)
+    expect(loadAfter(5 + step / 2, 5)).toBe(5)
+    expect(loadAfter(7, 7)).toBe(7)
+  })
+})
+
+describe("loadSetpointRefusal", () => {
+  const turbine = makeInitialState().Turbine
+
+  test("refused with the breaker open, with a reason", () => {
+    expect(loadSetpointRefusal({ ...turbine, generatorBreaker: false })).toBeTypeOf("string")
+  })
+
+  test("allowed with the breaker closed, in any speed mode", () => {
+    for (const speedMode of ["free", "rampUp", "hold"] as const)
+      expect(loadSetpointRefusal({ ...turbine, generatorBreaker: true, speedMode })).toBeUndefined()
   })
 })
 
@@ -91,6 +115,25 @@ describe("calculateRPM", () => {
   //   Δω = T / J x 0.1 s = 0.4600 rad/s = 4.393 rpm
   test("hand-calculated first tick from standstill", () => {
     expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.393, 2)
+  })
+
+  // Load power at sync speed: the generator draws load / efficiency from the shaft, so the steam must cover the
+  // losses plus that. 10 MW of load needs 10 / 0.98 MW on top of the no-load shaft power
+  test("a load takes shaft power: the no-load flow no longer holds sync speed", () => {
+    const noLoadFlow: number = NoLoadFlowFraction * RatedSteamFlow
+    expect(calculateRPM(SyncRPM, noLoadFlow, RatedEnthalpyDrop, 10)).toBeLessThan(SyncRPM)
+  })
+
+  test("the steam for losses plus load/efficiency holds sync speed", () => {
+    const loadMW = 50
+    const shaftPerKgPerS: number = (RatedEnthalpyDrop * 1000 * CstTurbine.IsentropicEfficiency)
+    const flow: number = NoLoadFlowFraction * RatedSteamFlow + (loadMW * 1e6) / CstTurbine.GeneratorEfficiency / shaftPerKgPerS
+    expect(calculateRPM(SyncRPM, flow, RatedEnthalpyDrop, loadMW)).toBeCloseTo(SyncRPM, 6)
+  })
+
+  test("a load never gives NaN or a negative speed, even at standstill", () => {
+    expect(calculateRPM(0, 0, RatedEnthalpyDrop, 50)).toBe(0)
+    expect(calculateRPM(0.001, 0, RatedEnthalpyDrop, 130)).toBeGreaterThanOrEqual(0)
   })
 
   test("the no-load flow holds sync speed: no acceleration at 3000 rpm", () => {

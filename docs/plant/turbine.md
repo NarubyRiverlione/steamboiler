@@ -19,7 +19,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 
 ## Phase 2: condenser coupling
 
-- Steam leaving the turbine has reduced energy: its exhaust quality, the vapour share by mass, follows from the enthalpy drop at the live condenser pressure (see [Electric output](#electric-output-14), #81)
+- Steam leaving the turbine has reduced energy: its exhaust quality, the vapour share by mass, follows from the enthalpy drop at the live condenser pressure (see [Electric output](#electric-output-14-since-71-the-load-carried), #81)
 - The condenser takes its steam from the turbine instead of the bypass valve; all exhaust arrives, whatever the vacuum (#20)
 - The bypass valve gets its own condenser intake
 - Both intakes are used in the condenser calculations (see [condenser.md](condenser.md))
@@ -29,11 +29,11 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 - RPM readout, run-up point buttons and a Free / Ramp up / Hold mode selector in the turbine control panel
 - Ramp up and Hold move the turbine valve automatically (the PID); Free leaves it to the operator
 
-**RPM physics** (#69, [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md)): the speed follows from the shaft power the steam delivers, in physical units (`calculateRPM`, `turbineCalculations.ts`). `TurbineTick` computes the enthalpy drop once (`getIsentropicEnthalpyDrop`) and passes it to both `calculateRPM` and `calculateElectricityOutput`.
+**RPM physics** (#69, [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md)): the speed follows from the shaft power the steam delivers, in physical units (`calculateRPM`, `turbineCalculations.ts`). `TurbineTick` computes the enthalpy drop once (`getIsentropicEnthalpyDrop`) and passes it to `calculateRPM` together with the load the generator carries (see Generator load).
 
 - **Shaft power** P = flow [kg/s] × enthalpy drop [kJ/kg] × `IsentropicEfficiency`, in W.
 - **Drive torque** T = (P / ω_s) · (2 − ω / ω_s) in N·m, ω_s = 2π · `SyncRPM` / 60: twice the sync-speed torque at standstill, no division by zero. It falls to zero at 2·ω_s (about 6000 rpm); there is no overspeed trip yet (#72).
-- **Losses** torque k·ω² (power k·ω³). k is calibrated so the no-load flow (`NoLoadFlowFraction` × `RatedSteamFlow`, at the rated drop) delivers exactly the loss power at sync speed: k = P_noload / ω_s³, about 4.0 MW at sync speed, so 3% of rated flow (5.1 kg/s at 917 kJ/kg) holds 3000 rpm in Free. It assumes no generator load torque (#71).
+- **Losses** torque k·ω² (power k·ω³). k is calibrated so the no-load flow (`NoLoadFlowFraction` × `RatedSteamFlow`, at the rated drop) delivers exactly the loss power at sync speed: k = P_noload / ω_s³, about 4.0 MW at sync speed, so 3% of rated flow (5.1 kg/s at 917 kJ/kg) holds 3000 rpm in Free. The generator load is a separate torque (see Generator load).
 - **Inertia** J = 2·H·S / ω_s² in kg·m², with H = `InertiaConstant` (4 s) and S the rated electric output (`RatedSteamFlow` × `RatedEnthalpyDrop` × the two efficiencies, 130.6 MW), about 10 590 kg·m². Power factor is ignored (a real S is in MVA, about 15% more).
 - **Motion** J · dω/dt = T − k·ω², stepped once per tick (Euler), floored at 0 rpm.
 
@@ -63,11 +63,11 @@ Sources and the departures: [design-basis.md](design-basis.md#turbine-speed-mode
 
 **PID controller** (Ramp up and Hold): Kp = 0.001 (current error), Ki = 0.0001 (accumulated error, removes steady-state error), Kd = 0.0005 (damping). D acts on the measured rpm, `−Kd · (rpm_now − rpm_before_tick) / dt`, not on the error, so engaging the controller or changing the setpoint gives no derivative kick and D needs no memory. The only memory is `pidIntegralError` in `TurbineState` (a tick depends on its input state alone); it is reset to 0 whenever the PID is inactive (Free or main steam valve closed), so every (re)engage starts with a zero integral ([ADR 0010](../adr/0010-pid-derivative-on-measurement.md)).
 
-These gains need no retune for the engage (#63). Hold engaged from Free at the edge of its window, with the valve at 0.5 to 1.5 times its no-load position, stays between 2994 and 3006 rpm, is back within ±2 rpm in under a second, and the valve never shuts (0.4–4.0%). Behaviour under generator load is not judged yet (#71).
+These gains need no retune for the engage (#63). Hold engaged from Free at the edge of its window, with the valve at 0.5 to 1.5 times its no-load position, stays between 2994 and 3006 rpm, is back within ±2 rpm in under a second, and the valve never shuts (0.4–4.0%). Under generator load (`turbine-load`, rated output at the load rate) the speed stays within 0.02 rpm of sync with these gains, so no retune for #71.
 
 **Electricity** is only generated with the breaker closed at sync speed (3000 RPM ±2), as the generator must match the 50 Hz grid. `MaxRPM` (3300) is the overspeed figure (no trip yet, #72).
 
-**Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. With the breaker closed it still follows the free rpm until the speed locks to the grid (#71).
+**Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. The speed is never locked to the grid ([ADR 0027](../adr/0027-generator-load-is-a-resisting-torque.md)): with the breaker closed it still follows the free rpm, which sags under load.
 
 Calculations: `src/utils/turbineCalculations.ts`; tick: `src/context/Turbine/TurbineTick.ts`.
 
@@ -82,36 +82,47 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 
 The checks (`isAboveVacuumLimit`, `maxTurbineValvePosition`, `turbineTrippedAfter`) live in `src/utils/turbineCalculations.ts`, shared by the reducer and the tick. The bypass valve and the generator breaker are not interlocked with the vacuum.
 
+## Low-pressure closure
+
+When boiler pressure at the start of a tick is at or below `MainSteamValveMinimumPressure` (10 bar), `MainSteamValveLowPressureClosure` closes the main steam valve. `PowerPlantTick` runs it before any steam is removed, so no steam leaves on that tick. The valve stays closed until the operator reopens it, and `TOGGLE_MAIN_STEAM_VALVE` refuses that at or below 10 bar; the "Opening not possible" indicator matches that refusal exactly. There is no hysteresis and no automatic reopening. Decision: [ADR 0026](../adr/0026-valve-flow-follows-pressure.md).
+
+- **Turbine valve open:** the closure is a turbine trip, with the same values as the vacuum trip: valve to 0, speed mode to Free, `pidIntegralError` to 0, `turbineTripped` set.
+- **Turbine valve shut:** only the main steam valve closes. No trip flag, and the speed mode stays. The bypass valve keeps its position in both cases, passing nothing while the main steam valve is shut.
+
 ## Phase 4: generator breaker
 
 Done:
 
 - The breaker can only be closed at sync speed: 3000 RPM ±2 (`SyncRPM` ± `BreakerRPMMargin`, 50 Hz grid); toggling a closed breaker opens it (`TOGGLE_GENERATOR_BREAKER`)
-- Electricity is only produced while the breaker is closed
+- The generator carries load only while the breaker is closed; opening it, by hand or automatically, drops the load and the load setpoint to 0 on that tick
+- If the steam cannot hold sync speed with the breaker closed (the speed leaves ±2 rpm), the breaker opens automatically
 - UI: `GeneratorBreakerControl.tsx`
-
-Not built yet:
-
-- If the steam flow cannot hold sync speed with the breaker closed, the breaker opens automatically
 
 Sync is not reachable from a cold start today (#18).
 
 ## Phase 5: synchronisation
 
-- Add a net demand in MW to the readout (constant in `CstTurbine`)
+- Net demand in MW: the operator's load setpoint of #71 replaces the planned constant (see Generator load)
 - Calculate the generator phase from turbine speed
 - Add a synchroscope to the turbine controls showing the phase difference between generator and grid
 
-## Electric output (#14)
+## Generator load (#71)
 
-`calculateElectricityOutput` (`turbineCalculations.ts`), called every tick by `TurbineTick`:
+[ADR 0027](../adr/0027-generator-load-is-a-resisting-torque.md). The electric output is the load the generator carries, an input to the shaft balance, not a result of the steam flow.
 
-`MW = turbineSteamFlowOut [kg/s] × isentropic enthalpy drop [kJ/kg] × IsentropicEfficiency × GeneratorEfficiency / 1000`
+- **Shaft balance:** `J·dω/dt = drive torque − loss torque − load torque`, `load torque = (load / GeneratorEfficiency) / ω` (constant power). `calculateRPM(rpm, flow, drop, loadMW)`; the load is 0 with the breaker open.
+- **Speed is free** (island model): it sags under load, the Hold PID opens the valve, and more load takes more steam. At the no-load flow the output is 0 MW.
+- **Load setpoint** (`TurbineState.loadSetpoint`, action `SET_LOAD_SETPOINT`): MW, default 0, clamped to 0 up to the rated output (`ratedOutputMW`, 130.6). Only with the breaker closed, in any speed mode; otherwise refused by `loadSetpointRefusal` ("Close the generator breaker first") and the state is unchanged. Hold has no new interlock; in Free the operator follows the load by hand.
+- **Load rate:** `electricOutput` moves toward the setpoint at `LoadRate` (3% of rated output per minute, about 3.9 MW/min), up and down (`loadAfter`), kept from tick to tick.
+- **Breaker:** the ±2 rpm rule stays. Whenever it opens, the load and setpoint are 0 on that tick and a reclose brings no load back. Steam that cannot carry the load, or a vacuum trip with load on, makes the speed fall and ends there. No reverse power protection or runback. A load lost in Free has no overspeed protection until #72.
+- **UI:** `LoadControl.tsx` (setpoint field, disabled with the refusal as its reason) and the load and load setpoint readouts in `TurbineReadouts.tsx`.
+- **Scenario:** `turbine-load` sets the setpoint to rated output at t = 0 and runs 3000 s with the gas ceiling at full gas: speed within 0.02 rpm of sync, 165 bar, breaker never opens, output 130.6 MW from about 2000 s (steam 162 kg/s, valve 81%, condenser 39–40 mbar).
 
-- **Flow:** the actual `turbineSteamFlowOut`, the same flow RPM and the condenser see, not the valve position.
-- **Drop:** `getIsentropicEnthalpyDrop(boilerPressure, condenserPressure)` (`steamTable.ts`): saturated steam from the boiler pressure (no superheater) expanded at constant entropy to the live condenser pressure, so poor vacuum and low boiler pressure cost output. Data: `steamEntropyData.ts`, IAPWS-IF97, 0.01 bar to 220 bar, interpolated in ln(pressure); pressures outside it clamp.
-- **Constants:** `IsentropicEfficiency` 0.85, `GeneratorEfficiency` 0.98 (`CstTurbine`). `steamToElectricityEfficiency` is gone.
-- **Gating:** breaker closed and at sync speed, otherwise 0 MW. Clamped at 0 MW for no flow or a non-positive drop, never negative.
-- **Scope:** MW readout, from the same enthalpy drop that drives the speed model (#69); no shaft load torque (#71) and no net demand in MW.
-- **Exhaust quality:** `getExhaustQuality(boilerPressure, condenserPressure, IsentropicEfficiency)` (`steamTable.ts`): the exhaust enthalpy is the inlet enthalpy minus `IsentropicEfficiency` × the drop, about 0.67 vapour at 165 bar to 100 mbar. Limited to 0–1, and 1 with a zero or negative drop. It ignores shaft speed. The condenser splits the exhaust by it ([ADR 0026](../adr/0026-exhaust-splits-by-quality-at-condenser-intake.md), [condenser.md](condenser.md#intakes)).
+## Electric output (#14, since #71 the load carried)
+
+The enthalpy drop (`getIsentropicEnthalpyDrop`, `steamTable.ts`) no longer sets the electric output; it sets the shaft power and, at the rated flow, the rated output that sizes the inertia and the load limit.
+
+- **Drop:** `getIsentropicEnthalpyDrop(boilerPressure, condenserPressure)`: saturated steam from the boiler pressure (no superheater) expanded at constant entropy to the live condenser pressure, so poor vacuum and low boiler pressure cost shaft power, and so steam, for the same load. Data: `steamEntropyData.ts`, IAPWS-IF97, 0.01 bar to 220 bar, interpolated in ln(pressure); pressures outside it clamp.
+- **Constants:** `IsentropicEfficiency` 0.85, `GeneratorEfficiency` 0.98 (`CstTurbine`). `calculateElectricityOutput` and `steamToElectricityEfficiency` are gone.
+- **Exhaust quality:** `getExhaustQuality(boilerPressure, condenserPressure, IsentropicEfficiency)` (`steamTable.ts`): the exhaust enthalpy is the inlet enthalpy minus `IsentropicEfficiency` × the drop, about 0.67 vapour at 165 bar to 100 mbar. Limited to 0–1, and 1 with a zero or negative drop. It ignores shaft speed. The condenser splits the exhaust by it ([ADR 0028](../adr/0028-exhaust-splits-by-quality-at-condenser-intake.md), [condenser.md](condenser.md#intakes)).
 - Rated values: see [design-basis.md](design-basis.md). Scenario: `turbine-load` (golden path).

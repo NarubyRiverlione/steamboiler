@@ -20,7 +20,7 @@ A real drum boiler is a steam drum at the top and a lower (mud) drum at the bott
 - **Thermal mass**: the water plus about 100 t of drum and tube steel at 0.5 kJ/kg·K (50 MJ/K), at the water temperature. No separate metal temperature. At the cold start (35 t of water, 147 MJ/K) the metal adds about a third.
 - **Energy**: the heat content above 0 °C of the water and the metal. The source is the gas burner. The sinks are heat loss, the latent heat of the flash (which includes steam vented by the relief valve), and drained water (the water's share only; the metal stays).
 - **Volume**: a fixed 100 m³ shared between water and steam; 35 m³ of water at the start (34 937 kg at ambient), which expands to the 50 m³ working level at 165 bar ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)). `waterVolume` is derived from `waterMass` every tick, in `BoilerTick` only.
-- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second, converted to kg at the boiler temperature (`drainedTotal` counts kg). Steam leaves through the relief valve to the atmosphere (`BoilerVent`, see **Relief valve**), and through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes `position ×` its max steam removal ([design-basis.md](design-basis.md)) in kg/s, so `× DeltaTime` kg per tick, taken from the steam inventory. The draw does not yet depend on boiler pressure. While #32 is open the reported flow can exceed the steam actually removed (this tick's generation is counted twice).
+- **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second, converted to kg at the boiler temperature (`drainedTotal` counts kg). Steam leaves through the relief valve to the atmosphere (`BoilerVent`, see **Relief valve**), and through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes a flow that follows its position and the boiler pressure (see **Steam removal** below), taken from the steam inventory.
 
 ## Calculations
 
@@ -46,14 +46,17 @@ Saturated steam density: the table holds only the liquid side, so the steam side
 
 Steam table (`src/utils/steamData.ts`): saturated water from 80 °C up to the critical point (373.946 °C, 220.64 bar), generated from IAPWS-IF97 (liquid specific volume, enthalpy and specific heat, plus latent heat), rows 1 K apart from 300 to 370 °C. Boiling point at 180 bar is 357.0 °C. Lookups clamp at the critical point and never throw: a temperature or pressure above it returns the critical-point row (latent heat 0). Over-pressure is handled by the relief valve (see below) and the burner trip (see below). Specific heat is held at its 370 °C value in the last row, see [design-basis.md](design-basis.md).
 
-Steam removal (`BoilerRemoveSteam`, once for the bypass, then for the turbine valve):
+**Steam removal** (`BoilerRemoveSteam`, once for the bypass, then for the turbine valve):
 
 ```
-Removed this tick = min(valve position × valve capacity × tick, steam mass in the boiler)
-Reported flow     = removed / tick   (kg/s, never above valve position × valve capacity)
+Valve flow        = valve position × valve capacity × √(P·ρ) / √(P·ρ)rated
+Removed this tick = min(valve flow × tick, steam mass in the boiler)
+Reported flow     = removed / tick   (kg/s)
 ```
 
-Valve capacity is in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before `BoilerTick`, which flashes water to refill the inventory. That flash takes its latent heat from the water, so a draw cools the water and lowers the pressure; the gas holds pressure only while its heat matches the latent heat of the steam leaving.
+P is the boiler pressure at the start of the tick and ρ the saturated steam density at that pressure; the rated term is taken at the rating point, 165 bar (`valveFlowFactor`, [ADR 0026](../adr/0026-valve-flow-follows-pressure.md)). The capacity is a rating, not a cap; it and the flow at other pressures are in [design-basis.md](design-basis.md) (`CstTurbine.MaxSteamRemovalRate`). All removed steam is subtracted from the steam mass; the bypass and the turbine valve draw from the same steam, in that order. Removal runs before `BoilerTick`, which flashes water to refill the inventory. That flash takes its latent heat from the water, so a draw cools the water and lowers the pressure; the gas holds pressure only while its heat matches the latent heat of the steam leaving.
+
+At or below 10 bar the main steam valve closes before any steam is removed ([turbine.md](turbine.md#low-pressure-closure)), so neither valve draws on a boiler below that pressure. That leaves one limit of the model out of reach: at ambient the clamp on `temperature` keeps the latent heat of the flash out of the water, so a draw there would evaporate water for free. `BoilerTick` has no guard for it, and none is needed while the closure stands.
 
 Boiling point: steam-table interpolation in range, Antoine equation below it, clamped to the critical point (373.946 °C) from 220.64 bar up. `getBoilingPoint(180)` gives 357.0 °C.
 

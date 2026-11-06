@@ -1,11 +1,12 @@
 import { CstSimulation } from "../const"
 import {
-  calculateElectricityOutput,
   calculateRPM,
   calculateValveAdjustment,
+  isAboveMainSteamValveMinimum,
   isAboveVacuumLimit,
   isAtSyncSpeed,
   isWithinHoldWindow,
+  loadAfter,
   maxTurbineValvePosition,
   turbineTrippedAfter,
 } from "../../utils/turbineCalculations"
@@ -19,8 +20,7 @@ const SecondsPerMinute = 60
 
 /**
  * turbineTick - Updates the turbine state for each simulation tick.
- * Phase 4 implementation: Includes RPM calculation, automatic valve control,
- * and generator breaker functionality.
+ * Includes RPM calculation with the generator load, automatic valve control and the generator breaker.
  *
  * @param turbineState - The current turbine state.
  * @param boilerPressure - The current boiler pressure.
@@ -32,24 +32,19 @@ function TurbineTick(
   boilerPressure: number,
   condenserPressure: number,
 ): TurbineState {
-  // One enthalpy drop feeds both the shaft power (speed) and the electric output
+  // The enthalpy drop gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed
+  // only) and is a resisting torque on the shaft, never derived from the steam flow (ADR 0027)
   const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, condenserPressure / MbarPerBar)
-  const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop)
-  
-  // Auto-open breaker if RPM goes outside acceptable margin with breaker closed
-  const generatorBreaker = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
-  
-  // Calculate electricity output with updated breaker status
-  const newElectricityOutput: number = calculateElectricityOutput(
-    turbineState.turbineSteamFlowOut,
-    enthalpyDrop,
-    newRPM,
-    generatorBreaker,
-  )
+  const load: number = turbineState.generatorBreaker ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint) : 0
+  const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
+
+  // Auto-open breaker if RPM goes outside acceptable margin with breaker closed; the load drops with it
+  const generatorBreaker: boolean = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
 
   const ticked: TurbineState = {
     ...turbineState,
-    electricOutput: newElectricityOutput,
+    electricOutput: generatorBreaker ? load : 0,
+    loadSetpoint: generatorBreaker ? turbineState.loadSetpoint : 0,
     rpm: newRPM,
     generatorBreaker, // Update breaker status
   }
@@ -76,6 +71,14 @@ const turbineTrip: Pick<TurbineState, keyof SpeedControl | "turbineTripped"> = {
   pidIntegralError: 0,
   speedReference: 0,
   turbineTripped: true,
+}
+
+// Low-pressure closure: at or below the minimum pressure at the start of the tick the main steam valve closes, before
+// any steam leaves, until the operator reopens it above the limit. An open turbine valve makes it a turbine trip (ADR 0026)
+export function MainSteamValveLowPressureClosure(turbineState: TurbineState, boilerPressure: number): TurbineState {
+  if (!turbineState.mainSteamValve || isAboveMainSteamValveMinimum(boilerPressure)) return turbineState
+  const trip = turbineState.turbineValvePosition > 0 ? turbineTrip : {}
+  return { ...turbineState, mainSteamValve: false, ...trip }
 }
 
 // Ramp up: the reference climbs at the run-up rate and stops at the point; Hold aims at the point itself

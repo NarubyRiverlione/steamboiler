@@ -160,7 +160,7 @@ describe("steam draw cools the boiler", () => {
     const rest = BoilerTick(hot)
     expect(after.temperature).toBeLessThan(rest.temperature)
     expect(after.pressure).toBeLessThan(rest.pressure)
-    // 10 kg out in a tick, each kg needs about 1700 kJ from tens of tonnes of water: a fraction of a kelvin
+    // A few kg out in a tick, each kg needs about 1700 kJ from tens of tonnes of water: a fraction of a kelvin
     expect(rest.temperature - after.temperature).toBeGreaterThan(0.01)
     expect(rest.temperature - after.temperature).toBeLessThan(1)
   })
@@ -174,15 +174,16 @@ describe("steam draw cools the boiler", () => {
 
 describe("BoilerRemoveSteam", () => {
   const plant = makeInitialState()
+  const atRating = { ...plant.Boiler, pressure: 165 }
   const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
-  // A half-open valve passes half the valve capacity (kg/s), so this much per tick
+  // At the rating pressure a half-open valve passes half the valve capacity (kg/s), so this much per tick
   const halfOpenFlow = 0.5 * CstTurbine.MaxSteamRemovalRate
   const halfOpenPerTick = halfOpenFlow * DeltaTime
 
-  test("caps the flow at the valve rate when the boiler holds plenty of steam", () => {
+  test("passes the valve flow when the boiler holds plenty of steam", () => {
     const plenty = 100 * halfOpenPerTick
     const { boilerState, turbineState } = BoilerRemoveSteam(
-      { ...plant.Boiler, steamMass: plenty },
+      { ...atRating, steamMass: plenty },
       openTurbine,
       "TURBINE",
     )
@@ -193,7 +194,7 @@ describe("BoilerRemoveSteam", () => {
   test("removes only the steam the boiler holds when the valve asks for more", () => {
     const little = halfOpenPerTick / 5
     const { boilerState, turbineState } = BoilerRemoveSteam(
-      { ...plant.Boiler, steamMass: little },
+      { ...atRating, steamMass: little },
       openTurbine,
       "TURBINE",
     )
@@ -204,15 +205,56 @@ describe("BoilerRemoveSteam", () => {
   test("bypass and turbine draw from the same steam", () => {
     const both = { ...openTurbine, bypassValvePosition: 0.5 }
     // One tick's worth through the bypass leaves half a tick's worth for the turbine
-    const bypass = BoilerRemoveSteam({ ...plant.Boiler, steamMass: 1.5 * halfOpenPerTick }, both, "BYPASS")
+    const bypass = BoilerRemoveSteam({ ...atRating, steamMass: 1.5 * halfOpenPerTick }, both, "BYPASS")
     const turbine = BoilerRemoveSteam(bypass.boilerState, bypass.turbineState, "TURBINE")
     expect(turbine.turbineState.bypassSteamFlowOut).toBeCloseTo(halfOpenFlow)
     expect(turbine.turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow / 2)
     expect(turbine.boilerState.steamMass).toBe(0)
   })
 
+  describe("flow follows boiler pressure", () => {
+    const plenty = 1e6
+    const fullyOpen = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 1, bypassValvePosition: 1 }
+    const flowAt = (pressure: number, position: number, removeBy: "BYPASS" | "TURBINE"): number => {
+      const valves = { ...fullyOpen, turbineValvePosition: position, bypassValvePosition: position }
+      const { turbineState } = BoilerRemoveSteam({ ...plant.Boiler, pressure, steamMass: plenty }, valves, removeBy)
+      return removeBy === "BYPASS" ? turbineState.bypassSteamFlowOut : turbineState.turbineSteamFlowOut
+    }
+
+    test.each(["BYPASS", "TURBINE"] as const)("%s passes position × 200 kg/s at 165 bar", (outlet) => {
+      expect(flowAt(165, 1, outlet)).toBeCloseTo(200, 9)
+      expect(flowAt(165, 0.05, outlet)).toBeCloseTo(10, 9)
+    })
+
+    // The figures of the owner's brief on #80, from √(P·ρ) with saturated steam density
+    test.each([
+      [100, 109],
+      [34, 35],
+      [10, 10.5],
+    ])("a fully open valve at %d bar passes about %d kg/s", (pressure, expected) => {
+      expect(Math.abs(flowAt(pressure, 1, "BYPASS") - expected)).toBeLessThan(0.5)
+      expect(Math.abs(flowAt(pressure, 1, "TURBINE") - expected)).toBeLessThan(0.5)
+    })
+
+    test.each([
+      [171, 210],
+      [178, 223],
+    ])("above the rating point the flow is not capped: %d bar passes about %d kg/s", (pressure, expected) => {
+      expect(Math.abs(flowAt(pressure, 1, "BYPASS") - expected)).toBeLessThan(0.5)
+    })
+
+    test("the steam taken from the boiler is exactly the reported flow", () => {
+      const { boilerState, turbineState } = BoilerRemoveSteam(
+        { ...plant.Boiler, pressure: 100, steamMass: plenty },
+        fullyOpen,
+        "BYPASS",
+      )
+      expect(plenty - boilerState.steamMass).toBeCloseTo(turbineState.bypassSteamFlowOut * DeltaTime, 6)
+    })
+  })
+
   test("a closed main steam valve removes nothing", () => {
-    const boiler = { ...plant.Boiler, steamMass: 50 }
+    const boiler = { ...atRating, steamMass: 50 }
     const { boilerState, turbineState } = BoilerRemoveSteam(
       boiler,
       { ...openTurbine, mainSteamValve: false },

@@ -53,12 +53,24 @@ The steam flow the plant is rated for, the full-gas steam flow: 171 kg/s. A desi
 _Avoid_: Nominal flow
 
 **Valve capacity**:
-The steam flow through the turbine valve or the bypass when fully open: 200 kg/s each. A valve limit, not a steady flow.
+The steam flow through the turbine valve or the bypass when fully open at working pressure: 200 kg/s each. The flow falls with boiler pressure. A valve limit, not a steady flow.
 _Avoid_: Max steam removal, rated steam flow
 
 **Electric output**:
-The power the generator delivers to the grid, in MW. Only produced with the breaker closed at sync speed; it follows from the steam flow and from the energy the turbine takes out of each kilogram, which depends on boiler pressure and condenser pressure.
+The power the generator delivers to the grid, in MW: the load it carries. It is an input to the shaft, not a result of the steam flow, and is 0 MW with the breaker open or at the no-load flow.
 _Avoid_: Power, electricity, MW readout
+
+**Load**:
+The electric power the generator carries, a resisting torque on the shaft. More load slows the shaft, so the Hold mode opens the valve and takes more steam.
+_Avoid_: Demand, consumption
+
+**Load setpoint**:
+The load the operator asks for, in MW, from 0 up to the rated output. Only settable with the breaker closed. The load moves toward it at the load rate.
+_Avoid_: Demand, target load
+
+**Load rate**:
+The rate at which the load moves toward the load setpoint: 3% of the rated output per minute, up and down.
+_Avoid_: Ramp rate (that is the run-up rate), load ramp
 
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
@@ -89,7 +101,7 @@ The steam flow that holds the turbine at sync speed with the breaker open: it on
 _Avoid_: Idle flow, minimum flow
 
 **Turbine trip**:
-The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
+The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit, or when the main steam valve closes on low pressure with the turbine valve open. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
 _Avoid_: Trip (on its own), shutdown
 
 **Exhaust quality**:

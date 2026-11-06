@@ -9,7 +9,19 @@ import {
   getBoilingPoint,
 } from "./steamTable"
 
-const { CstBoiler } = CstSimulation
+const { CstBoiler, CstTurbine } = CstSimulation
+
+// √(P·ρ) of saturated steam at a pressure (bar): a choked valve passes mass in proportion to it
+const chokedFlowTerm = (pressure: number): number =>
+  Math.sqrt(pressure * getSaturatedSteamDensity(getBoilingPoint(pressure)))
+
+const RatedChokedFlowTerm: number = chokedFlowTerm(CstTurbine.ValveRatingPressure)
+
+// Share of the valve capacity a valve passes at this boiler pressure (bar): 1 at the rating pressure, above 1 past it,
+// since the capacity is a rating and not a cap (ADR 0026)
+export function valveFlowFactor(pressure: number): number {
+  return chokedFlowTerm(pressure) / RatedChokedFlowTerm
+}
 
 const EquilibriumTolerance = 1e-9 // kg
 const FlashIterations = 40 // bisection steps: the bracket is tonnes wide, 40 halvings is far below a gram

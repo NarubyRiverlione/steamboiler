@@ -23,6 +23,7 @@ const BoilerReadouts = () => {
         heatingRate,
         heatingRateOverLimit,
       },
+      Turbine: { bypassSteamFlowOut, turbineSteamFlowOut },
     },
   } = usePowerPlant()
 
@@ -108,6 +109,7 @@ const BoilerReadouts = () => {
               deltaFixed={2}
             />
             <Readout title="Energy" value={energy / 1e3} unit="MJ" fixed={1} />
+            <Readout title="Steam Removal" value={bypassSteamFlowOut + turbineSteamFlowOut} unit="kg/s" fixed={1} />
 
             {/* <div className="readout-item">
               <span className="label">Boiling Point</span>
@@ -117,12 +119,7 @@ const BoilerReadouts = () => {
               <span className="label">Above Boiling</span>
               <span className="value">{(temperature - calculateBoilingPoint(pressure)).toFixed(1)} °C</span>
             </div>
-            <div className="readout-item">
-              <span className="label">Steam Removal</span>
-              <span className="value">
-                {((BypassValvePosition / 100) * MaxSteamRemovalRate).toFixed(1)} kg/h
-              </span>
-            </div> */}
+            */}
           </div>
         )}
       </div>

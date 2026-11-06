@@ -43,6 +43,10 @@ export function runUpPointRefusal(turbine: TurbineState, point: number): string 
   return undefined
 }
 
+// True when boiler pressure (bar) is above the main steam valve minimum: only then may the valve open or stay open (ADR 0026)
+export const isAboveMainSteamValveMinimum = (boilerPressure: number): boolean =>
+  boilerPressure > CstTurbine.MainSteamValveMinimumPressure
+
 // True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit
 
@@ -54,41 +58,37 @@ export const maxTurbineValvePosition = (currentPosition: number, condenserPressu
 export const turbineTrippedAfter = (tripped: boolean, previousPosition: number, newPosition: number): boolean =>
   tripped && newPosition <= previousPosition
 
-/**
- * Electric output of the generator, from the steam flow and the isentropic enthalpy drop:
- * MW = flow [kg/s] x drop [kJ/kg] x turbine isentropic efficiency x generator efficiency / 1000.
- * Produced only with the breaker closed at sync speed; clamped at 0 MW for no flow or a non-positive drop.
- *
- * @param steamFlow - Steam flow through the turbine in kg/s
- * @param enthalpyDrop - Isentropic enthalpy drop from boiler to condenser pressure in kJ/kg
- * @param rpm - The current RPM of the turbine
- * @param generatorBreaker - Whether the generator breaker is closed
- * @returns The electric output in MW
- */
-export function calculateElectricityOutput(
-  steamFlow: number,
-  enthalpyDrop: number,
-  rpm: number,
-  generatorBreaker: boolean,
-): number {
-  if (!generatorBreaker || !isAtSyncSpeed(rpm)) return 0
-  const megawatt: number =
-    (steamFlow * enthalpyDrop * CstTurbine.IsentropicEfficiency * CstTurbine.GeneratorEfficiency) / 1000
-  return Math.max(0, megawatt)
-}
-
 const RadPerSecPerRpm = (2 * Math.PI) / 60
 const JPerKJ = 1000 // kJ to J, so kg/s x kJ/kg gives W
 
 const syncSpeed: number = CstTurbine.SyncRPM * RadPerSecPerRpm // ω_s, rad/s
 
-// Rated electric output S in W: the same chain as calculateElectricityOutput at the rated flow and drop
+// Rated electric output S in W: rated flow x rated drop x turbine and generator efficiency
 const ratedOutput: number =
   CstTurbine.RatedSteamFlow *
   CstTurbine.RatedEnthalpyDrop *
   JPerKJ *
   CstTurbine.IsentropicEfficiency *
   CstTurbine.GeneratorEfficiency
+
+/** Rated electric output in MW (130.6): the load setpoint's upper limit and the base of the load rate. */
+export const ratedOutputMW: number = ratedOutput / 1e6
+
+// Load setpoint step per tick in MW: the load moves at one fixed rate, up and down (ADR 0027)
+const loadStepPerTick: number = (CstTurbine.LoadRate * ratedOutputMW * CstSimulation.DeltaTime) / 60
+
+/** The load after one tick of moving toward the setpoint at the load rate; never overshoots it. */
+export function loadAfter(load: number, loadSetpoint: number): number {
+  return load < loadSetpoint
+    ? Math.min(loadSetpoint, load + loadStepPerTick)
+    : Math.max(loadSetpoint, load - loadStepPerTick)
+}
+
+// Why the load setpoint cannot be set, or undefined when it can: only with the breaker closed, in any speed mode.
+// The reducer refuses on it and the UI shows it on the disabled control.
+export function loadSetpointRefusal({ generatorBreaker }: TurbineState): string | undefined {
+  return generatorBreaker ? undefined : "Close the generator breaker first"
+}
 
 // Shaft inertia in kg·m²: J = 2·H·S / ω_s²
 const inertia: number = (2 * CstTurbine.InertiaConstant * ratedOutput) / syncSpeed ** 2
@@ -106,19 +106,22 @@ const lossCoefficient: number = noLoadPower / syncSpeed ** 3
  * Calculates the RPM of the turbine after one tick from the shaft power the steam delivers.
  * Shaft power P = flow x enthalpy drop x isentropic efficiency (W). Torque follows T = (P / ω_s)(2 − ω / ω_s):
  * twice the sync-speed torque at standstill and no division by zero. Losses take torque k·ω² (power ∝ ω³),
- * calibrated so the no-load flow holds sync speed. J·dω/dt = T − k·ω², with J derived from H (ADR 0021).
+ * calibrated so the no-load flow holds sync speed. J·dω/dt = T − k·ω² − T_load, with J derived from H (ADR 0021).
+ * The generator load is a constant power: T_load = (load / generator efficiency) / ω (ADR 0027).
  *
  * @param currentRPM - The current RPM of the turbine
  * @param steamFlow - The steam flow through the turbine in kg/s
  * @param enthalpyDrop - Isentropic enthalpy drop from boiler to condenser pressure in kJ/kg
+ * @param loadMW - The electric load the generator carries in MW (0 with the breaker open)
  * @returns The new RPM value
  */
-export function calculateRPM(currentRPM: number, steamFlow: number, enthalpyDrop: number): number {
+export function calculateRPM(currentRPM: number, steamFlow: number, enthalpyDrop: number, loadMW = 0): number {
   const omega: number = currentRPM * RadPerSecPerRpm
   const shaftPower: number = Math.max(0, steamFlow * enthalpyDrop * JPerKJ * CstTurbine.IsentropicEfficiency)
   const steamTorque: number = (shaftPower / syncSpeed) * (2 - omega / syncSpeed)
   const lossTorque: number = lossCoefficient * omega ** 2
-  const angularAcceleration: number = (steamTorque - lossTorque) / inertia
+  const loadTorque: number = omega > 0 ? (loadMW * 1e6) / CstTurbine.GeneratorEfficiency / omega : 0
+  const angularAcceleration: number = (steamTorque - lossTorque - loadTorque) / inertia
   const newOmega: number = Math.max(0, omega + angularAcceleration * CstSimulation.DeltaTime)
   return newOmega / RadPerSecPerRpm
 }

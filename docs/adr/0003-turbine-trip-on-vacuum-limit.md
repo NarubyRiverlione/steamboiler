@@ -16,3 +16,4 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 - `TurbineState` carries a trip flag that the turbine panel shows. The flag is set by a trip and cleared by the next successful opening.
 - Scenarios have to pull vacuum before they open the turbine valve: SJAE enabled and its valve opened once the boiler is above the main steam valve minimum pressure.
 - The bypass valve and the generator breaker are not affected.
+- The vacuum limit is no longer the only cause of a turbine trip: the main steam valve closing on low pressure with the turbine valve open trips the turbine the same way ([ADR 0026](0026-valve-flow-follows-pressure.md)).

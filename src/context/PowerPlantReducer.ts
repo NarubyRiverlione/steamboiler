@@ -1,7 +1,7 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
-import { isAtSyncSpeed, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, ratedOutputMW, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -66,6 +66,7 @@ export const makeInitialState = (): PowerPlantState => ({
   },
   Turbine: {
     electricOutput: 0, // MW,
+    loadSetpoint: 0, // MW
     bypassValvePosition: 0,
     bypassSteamFlowOut: 0,
     turbineValvePosition: 0,
@@ -161,8 +162,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
   TOGGLE_MAIN_STEAM_VALVE: (state) =>
     withTurbine(state, {
-      mainSteamValve:
-        !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
+      mainSteamValve: !state.Turbine.mainSteamValve && isAboveMainSteamValveMinimum(state.Boiler.pressure),
     }),
   ADJUST_STEAM_BYPASS_VALVE: (state, { payload }) =>
     withTurbine(state, {
@@ -204,10 +204,14 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     })
   },
   // Allow closing the breaker if RPM is within the margin of sync speed; toggling a closed breaker opens it
-  TOGGLE_GENERATOR_BREAKER: (state) =>
-    withTurbine(state, {
-      generatorBreaker: !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm),
-    }),
+  // Whenever the breaker ends up open, the load and the load setpoint are 0 (ADR 0027)
+  TOGGLE_GENERATOR_BREAKER: (state) => {
+    const generatorBreaker: boolean = !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm)
+    return withTurbine(state, generatorBreaker ? { generatorBreaker } : { generatorBreaker, electricOutput: 0, loadSetpoint: 0 })
+  },
+  // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to the rated output. The load follows at the load rate.
+  SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
+    loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, ratedOutputMW) }),
   //#endregion
 }
 

@@ -51,10 +51,10 @@ Loop targets, the working band and the operator that holds them are in [feedwate
 
 The condenser takes steam from two paths: the turbine exhaust and the boiler bypass valve. `PowerPlantTick` removes the steam from the boiler first and passes those same-tick flows to `CondenserTick`, so every kg through either valve arrives in the condenser in that tick (`intakeFlowRate` is their sum). Condenser vacuum acts on turbine back-pressure and power, not on the exhaust mass flow (#14).
 
-The two intakes differ by what is already liquid ([ADR 0026](../adr/0026-exhaust-splits-by-quality-at-condenser-intake.md)):
+The two intakes differ by what is already liquid ([ADR 0028](../adr/0028-exhaust-splits-by-quality-at-condenser-intake.md)):
 
 - **Bypass:** plain vapour into the steam pool, charged the latent heat (a simplification, see [design-basis.md](design-basis.md#deliberate-departures-from-a-real-plant)).
-- **Turbine exhaust:** split by its exhaust quality (`getExhaustQuality`, `steamTable.ts`; about 0.67 at 165 bar to 100 mbar). `PowerPlantTick` works it out from the same pressures `TurbineTick` uses for the enthalpy drop, see [turbine.md](turbine.md#electric-output-14). The vapour joins the pool. The moisture goes straight to the hotwell in the same tick, at saturation temperature, and no longer counts in the steam-mass pressure term.
+- **Turbine exhaust:** split by its exhaust quality (`getExhaustQuality`, `steamTable.ts`; about 0.67 at 165 bar to 100 mbar). `PowerPlantTick` works it out from the same pressures `TurbineTick` uses for the enthalpy drop, see [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried). The vapour joins the pool. The moisture goes straight to the hotwell in the same tick, at saturation temperature, and no longer counts in the steam-mass pressure term.
 - **Full hotwell:** moisture that does not fit in the room left joins the pool, so no mass is lost; condensation and makeup get what room remains.
 
 `condensationRate` counts everything entering the hotwell, moisture included, so it equals the intake in a steady state.

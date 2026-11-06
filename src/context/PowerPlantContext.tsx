@@ -16,6 +16,7 @@ type PowerPlantContextType = {
   setSpeedMode: (speedMode: SpeedMode) => void
   selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
+  setLoadSetpoint: (loadSetpoint: number) => void
   // Condenser
   toggleAirExtractionPump: () => void
   toggleSjae: () => void

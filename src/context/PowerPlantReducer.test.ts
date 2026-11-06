@@ -4,6 +4,7 @@ import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
+import { ratedOutputMW } from "../utils/turbineCalculations"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 const base = makeInitialState()
@@ -331,6 +332,47 @@ describe("powerPlantReducer", () => {
         const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, atRpm(CstTurbine.SyncRPM))
         expect(toggle(closed).generatorBreaker).toBe(false)
       })
+    })
+  })
+
+  describe("load setpoint", () => {
+    const withTurbine = (patch: Partial<PowerPlantState["Turbine"]>): PowerPlantState => ({
+      ...base,
+      Turbine: { ...base.Turbine, ...patch },
+    })
+    const setLoad = (loadSetpoint: number, state: PowerPlantState) =>
+      reduce({ type: "SET_LOAD_SETPOINT", payload: { loadSetpoint } }, state)
+
+    test("is refused with the breaker open and leaves the state unchanged", () => {
+      const state = withTurbine({ generatorBreaker: false })
+      expect(setLoad(50, state)).toBe(state)
+    })
+
+    test("is set with the breaker closed, in any speed mode", () => {
+      for (const speedMode of ["free", "rampUp", "hold"] as const) {
+        const state = withTurbine({ generatorBreaker: true, speedMode })
+        expect(setLoad(50, state).Turbine.loadSetpoint).toBe(50)
+      }
+    })
+
+    test("is limited to 0 up to the rated output", () => {
+      const state = withTurbine({ generatorBreaker: true })
+      expect(setLoad(-5, state).Turbine.loadSetpoint).toBe(0)
+      expect(setLoad(1000, state).Turbine.loadSetpoint).toBe(ratedOutputMW)
+    })
+
+    test("opening the breaker by hand drops the load and the setpoint to 0", () => {
+      const state = withTurbine({ generatorBreaker: true, rpm: CstTurbine.SyncRPM, electricOutput: 40, loadSetpoint: 60 })
+      const opened = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, state).Turbine
+      expect(opened.generatorBreaker).toBe(false)
+      expect(opened.electricOutput).toBe(0)
+      expect(opened.loadSetpoint).toBe(0)
+    })
+
+    test("closing the breaker starts with no load", () => {
+      const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, withTurbine({ rpm: CstTurbine.SyncRPM })).Turbine
+      expect(closed.generatorBreaker).toBe(true)
+      expect(closed.loadSetpoint).toBe(0)
     })
   })
 
