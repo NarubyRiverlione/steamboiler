@@ -57,8 +57,20 @@ The steam flow through the turbine valve or the bypass when fully open: 200 kg/s
 _Avoid_: Max steam removal, rated steam flow
 
 **Electric output**:
-The power the generator delivers to the grid, in MW. Only produced with the breaker closed at sync speed; it follows from the steam flow and from the energy the turbine takes out of each kilogram, which depends on boiler pressure and condenser pressure.
+The power the generator delivers to the grid, in MW: the load it carries. It is an input to the shaft, not a result of the steam flow, and is 0 MW with the breaker open or at the no-load flow.
 _Avoid_: Power, electricity, MW readout
+
+**Load**:
+The electric power the generator carries, a resisting torque on the shaft. More load slows the shaft, so the Hold mode opens the valve and takes more steam.
+_Avoid_: Demand, consumption
+
+**Load setpoint**:
+The load the operator asks for, in MW, from 0 up to the rated output. Only settable with the breaker closed. The load moves toward it at the load rate.
+_Avoid_: Demand, target load
+
+**Load rate**:
+The rate at which the load moves toward the load setpoint: 3% of the rated output per minute, up and down.
+_Avoid_: Ramp rate (that is the run-up rate), load ramp
 
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.

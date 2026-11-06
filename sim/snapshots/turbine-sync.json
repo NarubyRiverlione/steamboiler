@@ -43,7 +43,8 @@
     "deltaWaterMass": 0.27418610772292595
   },
   "Turbine": {
-    "electricOutput": 3.918615408439104,
+    "electricOutput": 0,
+    "loadSetpoint": 0,
     "bypassValvePosition": 0.05,
     "bypassSteamFlowOut": 10,
     "turbineValvePosition": 0.02185295456119799,

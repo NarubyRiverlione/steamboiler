@@ -3,12 +3,13 @@ import TurbineTick from "./TurbineTick"
 import { TurbineState } from "../PowerPlantState"
 
 import { CstSimulation } from "../const"
-import { calculateRPM } from "../../utils/turbineCalculations"
+import { loadAfter, ratedOutputMW } from "../../utils/turbineCalculations"
 import { getIsentropicEnthalpyDrop } from "../../utils/steamTable"
 
 describe("TurbineTick", () => {
   const initialState: TurbineState = { 
     electricOutput: 0,
+    loadSetpoint: 0,
     bypassValvePosition: 0,
     bypassSteamFlowOut: 0,
     turbineValvePosition: 0,
@@ -37,71 +38,96 @@ describe("TurbineTick", () => {
     })
   })
   
-  // Sync speed with the breaker closed: output follows the actual steam flow and the live conditions
-  const loadedState: TurbineState = {
-    ...initialState,
-    rpm: CstSimulation.CstTurbine.SyncRPM,
-    generatorBreaker: true,
-    mainSteamValve: true,
-    turbineSteamFlowOut: 100, // kg/s
-  }
-  // The shaft carries no generator load yet (#71), so this much steam accelerates it out of the breaker margin in a
-  // tick. Start from the speed that one tick of calculateRPM takes to sync speed, so the breaker stays closed and
-  // these tests keep checking the output chain.
-  const speedThatTicksToSync = (flow: number, boiler: number, condenserMbar: number): number => {
-    const drop: number = getIsentropicEnthalpyDrop(boiler, condenserMbar / 1000)
-    let low = 0
-    let high: number = CstSimulation.CstTurbine.SyncRPM
-    for (let i = 0; i < 60; i++) {
-      const mid: number = (low + high) / 2
-      if (calculateRPM(mid, flow, drop) < CstSimulation.CstTurbine.SyncRPM) low = mid
-      else high = mid
+  // Generator load (#71, ADR 0026): the electric output is the load carried, an input to the shaft balance
+  describe("generator load", () => {
+    const { NoLoadFlowFraction, RatedSteamFlow, SyncRPM } = CstSimulation.CstTurbine
+    const noLoadFlow: number = NoLoadFlowFraction * RatedSteamFlow
+    const synced: TurbineState = {
+      ...initialState,
+      rpm: SyncRPM,
+      generatorBreaker: true,
+      mainSteamValve: true,
+      turbineSteamFlowOut: noLoadFlow,
     }
-    return low
-  }
-  const toMW = (state: TurbineState, boiler: number, condenserMbar: number): number =>
-    TurbineTick(
-      { ...state, rpm: state.rpm !== CstSimulation.CstTurbine.SyncRPM ? state.rpm : speedThatTicksToSync(state.turbineSteamFlowOut, boiler, condenserMbar) },
-      boiler,
-      condenserMbar,
-    ).electricOutput
+    const drop = (boiler: number, mbar: number): number => getIsentropicEnthalpyDrop(boiler, mbar / 1000)
+    // Steam flow that carries the load at sync speed: losses plus load / generator efficiency
+    const flowFor = (loadMW: number, boiler: number, mbar: number): number =>
+      noLoadFlow +
+      (loadMW * 1e6) / CstSimulation.CstTurbine.GeneratorEfficiency /
+        (drop(boiler, mbar) * 1000 * CstSimulation.CstTurbine.IsentropicEfficiency)
 
-  it("should generate the IF97 output at sync speed: 100 kg/s, 20 bar to 100 mbar = 65.95 MW", () => {
-    expect(Math.abs(toMW(loadedState, 20, 100) - 65.95)).toBeLessThan(65.95 * 0.005)
+    it("carries 0 MW at the no-load flow and holds sync speed", () => {
+      const result: TurbineState = TurbineTick(synced, 165, 100)
+      expect(result.electricOutput).toBe(0)
+      expect(result.generatorBreaker).toBe(true)
+      expect(result.rpm).toBeCloseTo(SyncRPM, 1) // the no-load flow is calibrated at the rated drop, not at this state's
+    })
+
+    it("reports no output from steam alone: more steam than the no-load flow accelerates, it does not make MW", () => {
+      const result: TurbineState = TurbineTick({ ...synced, turbineSteamFlowOut: 100 }, 165, 100)
+      expect(result.electricOutput).toBe(0)
+      expect(result.rpm).toBeGreaterThan(SyncRPM)
+    })
+
+    it("moves the load toward the setpoint at the load rate and keeps it from tick to tick", () => {
+      const first: TurbineState = TurbineTick({ ...synced, loadSetpoint: 100 }, 165, 100)
+      expect(first.electricOutput).toBeCloseTo(loadAfter(0, 100), 9)
+      const second: TurbineState = TurbineTick(first, 165, 100)
+      expect(second.electricOutput).toBeCloseTo(loadAfter(first.electricOutput, 100), 9)
+      expect(second.loadSetpoint).toBe(100)
+    })
+
+    it("lowers the load at the load rate when the setpoint drops, and stops at the setpoint", () => {
+      const result: TurbineState = TurbineTick({ ...synced, electricOutput: 1, loadSetpoint: 0 }, 165, 100)
+      expect(result.electricOutput).toBeCloseTo(loadAfter(1, 0), 9)
+      expect(result.electricOutput).toBeLessThan(1)
+      expect(TurbineTick({ ...synced, electricOutput: 0.005, loadSetpoint: 0 }, 165, 100).electricOutput).toBe(0)
+    })
+
+    it("holds sync speed when the steam carries the load", () => {
+      const loaded: TurbineState = { ...synced, electricOutput: 50, loadSetpoint: 50, turbineSteamFlowOut: flowFor(50, 165, 100) }
+      const result: TurbineState = TurbineTick(loaded, 165, 100)
+      expect(result.rpm).toBeCloseTo(SyncRPM, 2)
+      expect(result.electricOutput).toBe(50)
+    })
+
+    it("slows the shaft when the steam falls short of the load", () => {
+      const loaded: TurbineState = { ...synced, electricOutput: 50, loadSetpoint: 50 }
+      expect(TurbineTick(loaded, 165, 100).rpm).toBeLessThan(SyncRPM)
+    })
+
+    it("opens the breaker when steam cannot carry the load: load and setpoint 0 on that tick, no NaN", () => {
+      const loaded: TurbineState = { ...synced, rpm: SyncRPM - 1.99, electricOutput: 100, loadSetpoint: ratedOutputMW }
+      const result: TurbineState = TurbineTick(loaded, 165, 100)
+      expect(result.generatorBreaker).toBe(false)
+      expect(result.electricOutput).toBe(0)
+      expect(result.loadSetpoint).toBe(0)
+      expect(Number.isFinite(result.rpm)).toBe(true)
+    })
+
+    it("a reclose does not bring the load back: the setpoint stays 0", () => {
+      const opened: TurbineState = TurbineTick({ ...synced, rpm: SyncRPM - 1.99, electricOutput: 100, loadSetpoint: 100 }, 165, 100)
+      const closedAgain: TurbineState = TurbineTick({ ...opened, rpm: SyncRPM, generatorBreaker: true }, 165, 100)
+      expect(closedAgain.electricOutput).toBe(0)
+    })
+
+    it("carries no load with the breaker open, whatever the setpoint says", () => {
+      const result: TurbineState = TurbineTick({ ...synced, generatorBreaker: false, loadSetpoint: 50, electricOutput: 50 }, 165, 100)
+      expect(result.electricOutput).toBe(0)
+      expect(result.loadSetpoint).toBe(0)
+    })
+
+    it("a vacuum trip with load on ends with the breaker open", () => {
+      let state: TurbineState = { ...synced, electricOutput: 100, loadSetpoint: 100, turbineValvePosition: 0.6, turbineSteamFlowOut: flowFor(100, 165, 100) }
+      const aboveLimit: number = CstSimulation.CstCondenser.VacuumLimit + 10
+      for (let i = 0; i < 600 && state.generatorBreaker; i++) state = { ...TurbineTick(state, 165, aboveLimit), turbineSteamFlowOut: 0 }
+      expect(state.turbineTripped).toBe(true)
+      expect(state.generatorBreaker).toBe(false)
+      expect(state.electricOutput).toBe(0)
+      expect(Number.isFinite(state.rpm)).toBe(true)
+    })
   })
 
-  it("should give the output at valve capacity: 200 kg/s, 165 bar to 100 mbar = 152.8 MWe", () => {
-    const atCapacity: TurbineState = { ...loadedState, turbineSteamFlowOut: CstSimulation.CstTurbine.MaxSteamRemovalRate }
-    expect(Math.abs(toMW(atCapacity, 165, 100) - 152.8)).toBeLessThan(152.8 * 0.005)
-  })
-
-  it("should give 130.6 MWe at the 171 kg/s of full gas (165 bar, 100 mbar)", () => {
-    expect(Math.abs(toMW({ ...loadedState, turbineSteamFlowOut: 171 }, 165, 100) - 130.6)).toBeLessThan(130.6 * 0.005)
-  })
-
-  it("should produce nothing off sync speed", () => {
-    expect(toMW({ ...loadedState, rpm: CstSimulation.CstTurbine.SyncRPM - 100 }, 20, 100)).toBe(0)
-  })
-
-  it("should follow the steam flow in the state, whatever the valve position is", () => {
-    const closedValve: number = toMW({ ...loadedState, turbineValvePosition: 0 }, 20, 100)
-    expect(Math.abs(closedValve - 65.95)).toBeLessThan(65.95 * 0.005)
-    expect(toMW({ ...loadedState, turbineSteamFlowOut: 50 }, 20, 100)).toBeCloseTo(toMW(loadedState, 20, 100) / 2, 1)
-  })
-
-  it("should lose output when the condenser vacuum worsens: 200 mbar = 59.30 MW", () => {
-    expect(Math.abs(toMW(loadedState, 20, 200) - 59.3)).toBeLessThan(59.3 * 0.005)
-  })
-
-  it("should lose output when the boiler pressure drops, at equal flow", () => {
-    expect(toMW(loadedState, 10, 100)).toBeLessThan(toMW(loadedState, 20, 100))
-  })
-
-  it("should produce nothing with the breaker open or without flow", () => {
-    expect(toMW({ ...loadedState, generatorBreaker: false }, 20, 100)).toBe(0)
-    expect(toMW({ ...loadedState, turbineSteamFlowOut: 0 }, 20, 100)).toBe(0)
-  })
-  
   it("should calculate RPM based on steam flow and boiler pressure", () => {
     // Arrange
     const testState: TurbineState = {

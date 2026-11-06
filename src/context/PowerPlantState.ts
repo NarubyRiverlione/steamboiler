@@ -43,7 +43,8 @@ export type CondenserState = {
 }
 export type SpeedMode = "free" | "rampUp" | "hold" // Free: operator moves the valve; Ramp up and Hold: the PID does (ADR 0021)
 export type TurbineState = {
-  electricOutput: number // MW
+  electricOutput: number // MW, the load the generator carries (an input to the shaft balance, ADR 0026)
+  loadSetpoint: number // MW, the operator's load target; the load moves toward it at LoadRate
   bypassValvePosition: number // 0-1 (0-100%) open
   bypassSteamFlowOut: number // kg/s
   turbineValvePosition: number // 0-1 (0-100%) open

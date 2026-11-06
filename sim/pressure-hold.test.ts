@@ -21,6 +21,12 @@ const gasChange = (actions: PowerPlantAction[]): number => {
 }
 
 describe("holdPressureWithGas", () => {
+  test("a given ceiling replaces the heat-up gas as the limit", () => {
+    expect(holdPressureWithGas(boiler(P.Target - P.Band - 1, StartGas), P.LoadGasCeiling)).toEqual([
+      { type: "INCREASE_GAS_FLOW", amount: P.GasStep },
+    ])
+  })
+
   test("lowers gas above the band", () => {
     expect(gasChange(holdPressureWithGas(boiler(P.Target + P.Band + 1, StartGas)))).toBe(-P.GasStep)
   })
