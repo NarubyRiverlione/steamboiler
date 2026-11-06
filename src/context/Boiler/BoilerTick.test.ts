@@ -180,7 +180,7 @@ describe("BoilerRemoveSteam", () => {
   const halfOpenFlow = 0.5 * CstTurbine.MaxSteamRemovalRate
   const halfOpenPerTick = halfOpenFlow * DeltaTime
 
-  test("caps the flow at the valve rate when the boiler holds plenty of steam", () => {
+  test("passes the valve flow when the boiler holds plenty of steam", () => {
     const plenty = 100 * halfOpenPerTick
     const { boilerState, turbineState } = BoilerRemoveSteam(
       { ...atRating, steamMass: plenty },

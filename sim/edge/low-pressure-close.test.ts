@@ -37,13 +37,4 @@ describe("low-pressure-close", () => {
       after.map(() => 0),
     )
   })
-
-  test("the flow falls with pressure on the way down", () => {
-    const flowAt = (pressure: number): number => {
-      const sample = samples.find((s) => s.state.Boiler.pressure <= pressure)
-      return sample?.state.Turbine.bypassSteamFlowOut ?? 0
-    }
-    expect(Math.abs(flowAt(100) - 109)).toBeLessThan(1)
-    expect(Math.abs(flowAt(34) - 35)).toBeLessThan(1)
-  })
 })

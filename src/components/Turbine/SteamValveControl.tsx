@@ -1,5 +1,6 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
+import { isAboveMainSteamValveMinimum } from "../../utils/turbineCalculations"
 // import useEMA from "../../utils/useEMA"
 import Indicator from "../Indicator"
 import ValveSlider from "../ValveSlider"
@@ -38,7 +39,7 @@ const SteamValveControl = () => {
             {mainSteamValve ? "Open" : "Closed"}
           </button>
           <Indicator
-            isActive={pressure <= MainSteamValveMinimumPressure}
+            isActive={!isAboveMainSteamValveMinimum(pressure)}
             label={"Opening not possible"}
             title={`Main Steam Valve can only be opened if pressure is greater then ${(MainSteamValveMinimumPressure / 10).toFixed(1)} Mpa - ${MainSteamValveMinimumPressure.toFixed(0)} bar`}
           />

@@ -1,7 +1,7 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
-import { isAtSyncSpeed, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtSyncSpeed, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -161,8 +161,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
   TOGGLE_MAIN_STEAM_VALVE: (state) =>
     withTurbine(state, {
-      mainSteamValve:
-        !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
+      mainSteamValve: !state.Turbine.mainSteamValve && isAboveMainSteamValveMinimum(state.Boiler.pressure),
     }),
   ADJUST_STEAM_BYPASS_VALVE: (state, { payload }) =>
     withTurbine(state, {

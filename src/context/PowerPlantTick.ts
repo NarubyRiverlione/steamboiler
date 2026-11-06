@@ -11,10 +11,10 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   const ventedBoiler = BoilerVent(BoilerBurnerTrip(state.Boiler))
 
   // The main steam valve closes on low pressure before any steam leaves through it (ADR 0026)
-  const closedTurbine: TurbineState = MainSteamValveLowPressureClosure(state.Turbine, state.Boiler.pressure)
+  const turbineAfterClosure: TurbineState = MainSteamValveLowPressureClosure(state.Turbine, state.Boiler.pressure)
 
   // remove steam via bypass valve
-  const bypassResult = BoilerRemoveSteam(ventedBoiler, closedTurbine, "BYPASS")
+  const bypassResult = BoilerRemoveSteam(ventedBoiler, turbineAfterClosure, "BYPASS")
 
   // Turbine
   const turbineNewState: TurbineState = TurbineTick(

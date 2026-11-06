@@ -3,6 +3,7 @@ import {
   calculateElectricityOutput,
   calculateRPM,
   calculateValveAdjustment,
+  isAboveMainSteamValveMinimum,
   isAboveVacuumLimit,
   isAtSyncSpeed,
   isWithinHoldWindow,
@@ -81,7 +82,7 @@ const turbineTrip: Pick<TurbineState, keyof SpeedControl | "turbineTripped"> = {
 // Low-pressure closure: at or below the minimum pressure at the start of the tick the main steam valve closes, before
 // any steam leaves, until the operator reopens it above the limit. An open turbine valve makes it a turbine trip (ADR 0026)
 export function MainSteamValveLowPressureClosure(turbineState: TurbineState, boilerPressure: number): TurbineState {
-  if (!turbineState.mainSteamValve || boilerPressure > CstTurbine.MainSteamValveMinimumPressure) return turbineState
+  if (!turbineState.mainSteamValve || isAboveMainSteamValveMinimum(boilerPressure)) return turbineState
   const trip = turbineState.turbineValvePosition > 0 ? turbineTrip : {}
   return { ...turbineState, mainSteamValve: false, ...trip }
 }
