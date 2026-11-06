@@ -29,14 +29,14 @@ The condenser pressure, shown as a vacuum readout in mbar, is controlled by two 
 3. Temperature difference between the saturated steam and the cold intake water (no condensation at or below the intake temperature)
 4. Energy absorbed: Q = m · cp · ΔT
 5. Condensed steam mass = Q ÷ latent heat at the saturation temperature
-6. Steam and liquid masses (kg) adjusted by exactly that energy balance (no speed-up factor; the recirculation pump is sized for it, see [design-basis.md](design-basis.md#condenser-and-water-loop)), limited by the room left in the hotwell (`CstCondenser.TotalVolume` minus its volume, ÷ the specific volume at the hotter of the hotwell and the condensate, so the mix stays within the hotwell volume); the hotwell collects the condensate
-7. The condensate outlet temperature is exactly the saturation temperature: a pure function of the condenser pressure. The cooling water only sets how much steam condenses, not the condensate temperature, and the bypass or turbine steam temperature plays no part. With no recirculation flow nothing condenses and the temperature is still the saturation temperature. There is no sub-cooling.
+6. Steam and liquid masses (kg) adjusted by exactly that energy balance (no speed-up factor; the recirculation pump is sized for it, see [design-basis.md](design-basis.md#condenser-and-water-loop)), limited by the room left in the hotwell after the exhaust moisture (`CstCondenser.TotalVolume` minus its volume, ÷ the specific volume at the hotter of the hotwell and the condensate, so the mix stays within the hotwell volume); the hotwell collects the condensate
+7. The condensate outlet temperature is exactly the saturation temperature: a pure function of the condenser pressure. The cooling water only sets how much steam condenses, not the condensate temperature. The incoming steam matters only through the exhaust quality (see [Intakes](#intakes)): the pool holds vapour, so each kg of it costs the latent heat. With no recirculation flow nothing condenses and the temperature is still the saturation temperature. There is no sub-cooling.
 
 A condensation pump moves hotwell water into the boiler as the **Return** (`returnRate`, kg per tick; the pump flow in L/s is converted at the hotwell temperature). It is the boiler's only water supply ([ADR 0002](../adr/0002-makeup-into-hotwell.md)); its limits are in [feedwater-loop.md](feedwater-loop.md#return-and-capacity).
 
 The hotwell is 50 m³, starting at 35 m³ (70%), sized at about 3 minutes of full-gas condensate below the normal level ([ADR 0009](../adr/0009-hotwell-sized-from-condensate-flow.md)). It holds `hotwellWaterMass` (kg); `hotwellWaterVolume` and the level are derived from it at `hotwellTemperature` ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), so a hot hotwell shows a higher level for the same water. Makeup and reject are valve flows in L/s converted to kg at the hotwell temperature; makeup stops at the hotwell room.
 
-The hotwell temperature is the mass-weighted mix of the existing hotwell water, the condensate at saturation temperature and the makeup water (20 °C). In `bypass-loop` it settles near 30 °C (condenser at 15 to 65 mbar). At full recirculation (3600 L/s) the condensing capacity at 40 °C saturation is about 190 kg/s and falls with the saturation temperature, so at the 15 mbar of `bypass-loop` (about 13 °C, 3 K above the intake) it is only about the 20 kg/s bypass steam: the condenser holds a few hundred kg of steam and its pressure settles where condensation equals the intake. No utility was resized for #35.
+The hotwell temperature is the mass-weighted mix of the existing hotwell water, the condensate and exhaust moisture at saturation temperature and the makeup water (20 °C). In `bypass-loop` it settles near 30 °C (condenser at 15 to 65 mbar). At full recirculation (3600 L/s) the condensing capacity at 40 °C saturation is about 190 kg/s and falls with the saturation temperature, so at the 15 mbar of `bypass-loop` (about 13 °C, 3 K above the intake) it is only about the 20 kg/s bypass steam: the condenser holds a few hundred kg of steam and its pressure settles where condensation equals the intake. No utility was resized for #35.
 
 ## Hotwell makeup and reject
 
@@ -49,7 +49,15 @@ Loop targets, the working band and the operator that holds them are in [feedwate
 
 ## Intakes
 
-The condenser takes steam from two paths: the turbine exhaust and the boiler bypass valve. `PowerPlantTick` removes the steam from the boiler first and passes those same-tick flows to `CondenserTick`, so every kg through either valve arrives in the condenser in that tick (`intakeFlowRate` is their sum). Condenser vacuum should act on turbine back-pressure and power, not on the exhaust mass flow; that coupling is not modelled yet (#14).
+The condenser takes steam from two paths: the turbine exhaust and the boiler bypass valve. `PowerPlantTick` removes the steam from the boiler first and passes those same-tick flows to `CondenserTick`, so every kg through either valve arrives in the condenser in that tick (`intakeFlowRate` is their sum). Condenser vacuum acts on turbine back-pressure and power, not on the exhaust mass flow (#14).
+
+The two intakes differ by what is already liquid ([ADR 0026](../adr/0026-exhaust-splits-by-quality-at-condenser-intake.md)):
+
+- **Bypass:** plain vapour into the steam pool, charged the latent heat (a simplification, see [design-basis.md](design-basis.md#deliberate-departures-from-a-real-plant)).
+- **Turbine exhaust:** split by its exhaust quality (`getExhaustQuality`, `steamTable.ts`; about 0.67 at 165 bar to 100 mbar). `PowerPlantTick` works it out from the same pressures `TurbineTick` uses for the enthalpy drop, see [turbine.md](turbine.md#electric-output-14). The vapour joins the pool. The moisture goes straight to the hotwell in the same tick, at saturation temperature, and no longer counts in the steam-mass pressure term.
+- **Full hotwell:** moisture that does not fit in the room left joins the pool, so no mass is lost; condensation and makeup get what room remains.
+
+`condensationRate` counts everything entering the hotwell, moisture included, so it equals the intake in a steady state.
 
 ## Remaining empirical areas
 

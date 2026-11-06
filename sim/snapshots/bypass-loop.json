@@ -21,11 +21,11 @@
     "deltaSteamMass": 20.421736258244987
   },
   "Condenser": {
-    "pressure": 14.462366162058288,
-    "hotwellWaterMass": 32879.7446408928,
-    "hotwellWaterVolume": 32938.92818124641,
-    "hotwellTemperature": 13.558764318566933,
-    "steamMass": 845.8472935987289,
+    "pressure": 14.462366162061926,
+    "hotwellWaterMass": 32879.74464089375,
+    "hotwellWaterVolume": 32938.92818124736,
+    "hotwellTemperature": 13.558764318567743,
+    "steamMass": 845.8472935989824,
     "intakeFlowRate": 20,
     "returnRate": 1.7967658215212616,
     "condensationRate": 15.492203711837647,

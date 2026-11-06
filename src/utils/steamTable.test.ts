@@ -3,6 +3,7 @@ import { CstSimulation } from "../context/const"
 import { steamTable } from "./steamData"
 import {
   getBoilingPoint,
+  getExhaustQuality,
   getIsentropicEnthalpyDrop,
   getLatentHeat,
   getSaturatedSteamDensity,
@@ -189,6 +190,39 @@ describe("getIsentropicEnthalpyDrop", () => {
 
   test("clamps outside the table instead of throwing", () => {
     expect(Number.isFinite(getIsentropicEnthalpyDrop(500, 0.001))).toBe(true)
+  })
+})
+
+describe("getExhaustQuality", () => {
+  const { IsentropicEfficiency } = CstSimulation.CstTurbine
+
+  // Hand calculation from IF97 values: x = (hg(boiler) - efficiency * drop - hf(exhaust)) / hfg(exhaust)
+  const Qualities: number[][] = [
+    [165, 0.1, 0.667],
+    [40, 0.1, 0.778],
+  ]
+
+  test.each(Qualities)("%f bar to %f bar leaves about %f of the exhaust as vapour", (boiler, exhaust, expected) => {
+    expect(getExhaustQuality(boiler, exhaust, IsentropicEfficiency)).toBeCloseTo(expected, 2)
+  })
+
+  test("a less efficient turbine leaves drier exhaust", () => {
+    expect(getExhaustQuality(165, 0.1, 0.5)).toBeGreaterThan(getExhaustQuality(165, 0.1, IsentropicEfficiency))
+  })
+
+  test("is 1 with a zero or negative enthalpy drop", () => {
+    expect(getExhaustQuality(10, 10, IsentropicEfficiency)).toBe(1)
+    expect(getExhaustQuality(0.5, 1.013, IsentropicEfficiency)).toBe(1)
+  })
+
+  test("stays within 0-1 at any boiler and condenser pressure, also outside the table", () => {
+    for (const boiler of [0.001, 0.01, 1, 10, 100, 165, 178, 220, 500]) {
+      for (const exhaust of [0.001, 0.005, 0.0133, 0.1, 0.327, 1.013, 2]) {
+        const quality: number = getExhaustQuality(boiler, exhaust, IsentropicEfficiency)
+        expect(quality).toBeGreaterThanOrEqual(0)
+        expect(quality).toBeLessThanOrEqual(1)
+      }
+    }
   })
 })
 

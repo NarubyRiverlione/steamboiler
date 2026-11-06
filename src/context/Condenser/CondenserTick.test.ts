@@ -88,10 +88,9 @@ describe("CondenserTick", () => {
       // For simplicity, use turbine steam as the sole input.
       const steamFromTurbine = {
         flow: turbineSteamFlowOut,
-        temp: CstSimulation.CstTurbine.steamOutflowTemperature,
-        pressure: CstSimulation.CstTurbine.steamOutflowPressure,
+        quality: 1,
       }
-      const steamFromBypass = { flow: 0, temp: 300 }
+      const steamFromBypass = { flow: 0 }
 
       const newState = CondenserTick(state, boilerPressure, steamFromBypass, steamFromTurbine, boilerRoom)
       expect(newState).not.toBeInstanceOf(Error)
@@ -130,10 +129,9 @@ describe("CondenserTick", () => {
     // For simplicity, use turbine steam as the sole input.
     const steamFromTurbine = {
       flow: turbineSteamFlowOut,
-      temp: CstSimulation.CstTurbine.steamOutflowTemperature,
-      pressure: CstSimulation.CstTurbine.steamOutflowPressure,
+      quality: 1,
     }
-    const steamFromBypass = { flow: 0, temp: 300 }
+    const steamFromBypass = { flow: 0 }
 
     let testCounter = 0
     const testTick = () => {
@@ -185,10 +183,9 @@ describe("CondenserTick", () => {
     // For simplicity, use turbine steam as the sole input.
     const steamFromTurbine = {
       flow: turbineSteamFlowOut,
-      temp: CstSimulation.CstTurbine.steamOutflowTemperature,
-      pressure: CstSimulation.CstTurbine.steamOutflowPressure,
+      quality: 1,
     }
-    const steamFromBypass = { flow: 0, temp: 300 }
+    const steamFromBypass = { flow: 0 }
 
     // condensate pump at 100 %
     state.condensationPumpValvePosition = 1
@@ -234,16 +231,106 @@ describe("CondenserTick", () => {
     ["80 mbar", 80],
   ])("all turbine exhaust and bypass steam arrives at %s condenser pressure", (_, pressure) => {
     const noCondensation = { ...initialState, pressure, recirculationPumpValvePosition: 0, isSjaeEnabled: false }
-    const exhaust = { flow: 10, temp: 40, pressure: 0.1 }
-    const bypass = { flow: 5, temp: 300 }
+    const exhaust = { flow: 10, quality: 1 }
+    const bypass = { flow: 5 }
     const next = CondenserTick(noCondensation, 100, bypass, exhaust, boilerRoom)
     expect(next.steamMass).toBeCloseTo(1.5, 9)
     expect(next.intakeFlowRate).toBe(15)
   })
 
+  describe("intake split by exhaust quality", () => {
+    const { DeltaTime, CstCondenser } = CstSimulation
+    // 10 kg/s for one 0.1 s tick = 1 kg, of which 0.67 kg is vapour and 0.33 kg is moisture
+    const exhaust = { flow: 10, quality: 0.67 }
+    const noBypass = { flow: 0 }
+    const noExhaust = { flow: 0, quality: 1 }
+    const noCondensation: CondenserState = {
+      ...initialState,
+      pressure: 80,
+      recirculationPumpValvePosition: 0,
+      isSjaeEnabled: false,
+    }
+
+    it("turbine exhaust grows the pool slower than bypass steam, by the moisture share", () => {
+      const fromTurbine = CondenserTick(noCondensation, 100, noBypass, exhaust, boilerRoom)
+      const fromBypass = CondenserTick(noCondensation, 100, { flow: 10 }, noExhaust, boilerRoom)
+      expect(fromBypass.steamMass).toBeCloseTo(1, 9)
+      expect(fromTurbine.steamMass).toBeCloseTo(0.67, 9)
+    })
+
+    it("moisture reaches the hotwell in the tick it arrives and counts as condensation", () => {
+      const next = CondenserTick(noCondensation, 100, noBypass, exhaust, boilerRoom)
+      expect(next.hotwellWaterMass).toBeCloseTo(noCondensation.hotwellWaterMass + 0.33, 9)
+      expect(next.condensationRate).toBeCloseTo(3.3, 9)
+    })
+
+    it("moisture enters the hotwell at the saturation temperature, like other condensate", () => {
+      const next = CondenserTick(noCondensation, 100, noBypass, exhaust, boilerRoom)
+      const hotwell: number = noCondensation.hotwellWaterMass
+      const saturation: number = saturationTemperature(next.pressure)
+      const mixed: number = (hotwell * noCondensation.hotwellTemperature + 0.33 * saturation) / (hotwell + 0.33)
+      expect(next.hotwellTemperature).toBeCloseTo(mixed, 9)
+    })
+
+    it("intake stays the total of exhaust and bypass, moisture included", () => {
+      const next = CondenserTick(noCondensation, 100, { flow: 5 }, exhaust, boilerRoom)
+      expect(next.intakeFlowRate).toBe(15)
+    })
+
+    it("condensationRate adds the moisture to what the recirculation condenses from the pool", () => {
+      const pool: CondenserState = { ...noCondensation, steamMass: 500, recirculationPumpValvePosition: 1 }
+      const dry = CondenserTick(pool, 100, noBypass, { flow: 10, quality: 1 }, boilerRoom)
+      const wet = CondenserTick(pool, 100, noBypass, exhaust, boilerRoom)
+      expect(dry.condensationRate).toBeGreaterThan(0)
+      expect(wet.condensationRate).toBeCloseTo(dry.condensationRate + 3.3, 9)
+    })
+
+    it("with a full hotwell the moisture goes to the pool, so no mass is lost", () => {
+      const full: CondenserState = { ...noCondensation, hotwellWaterVolume: CstCondenser.TotalVolume }
+      const next = CondenserTick(full, 100, noBypass, exhaust, boilerRoom)
+      expect(next.steamMass).toBeCloseTo(1, 9)
+      expect(next.condensationRate).toBe(0)
+    })
+
+    it("moisture beyond the room left goes to the pool, the rest to the hotwell", () => {
+      // Room for about 0.1 kg of the 0.33 kg of moisture
+      const nearlyFull: CondenserState = { ...noCondensation, hotwellWaterVolume: CstCondenser.TotalVolume - 0.1 }
+      const next = CondenserTick(nearlyFull, 100, noBypass, exhaust, boilerRoom)
+      const entered: number = next.condensationRate * DeltaTime
+      expect(entered).toBeGreaterThan(0.09)
+      expect(entered).toBeLessThan(0.11)
+      expect(next.steamMass + entered).toBeCloseTo(1, 9)
+    })
+
+    it("moisture takes room from the makeup, so the two never overfill the hotwell", () => {
+      const nearlyFull: CondenserState = {
+        ...noCondensation,
+        hotwellWaterVolume: CstCondenser.TotalVolume - 0.1,
+        makeupValvePosition: 1,
+      }
+      const next = CondenserTick(nearlyFull, 100, noBypass, exhaust, boilerRoom)
+      expect(next.makeupTotal).toBeCloseTo(0, 9)
+    })
+
+    it("mass balances: what enters the pool and the hotwell equals the intake", () => {
+      const running: CondenserState = { ...noCondensation, steamMass: 200, recirculationPumpValvePosition: 1 }
+      const next = CondenserTick(running, 100, { flow: 5 }, exhaust, boilerRoom)
+      const pool: number = next.steamMass - running.steamMass
+      const hotwell: number = next.hotwellWaterMass - running.hotwellWaterMass
+      expect(pool + hotwell).toBeCloseTo(next.intakeFlowRate * DeltaTime, 9)
+    })
+
+    it("dry exhaust behaves exactly like bypass steam", () => {
+      const running: CondenserState = { ...noCondensation, steamMass: 200, recirculationPumpValvePosition: 1 }
+      const fromTurbine = CondenserTick(running, 100, noBypass, { flow: 10, quality: 1 }, boilerRoom)
+      const fromBypass = CondenserTick(running, 100, { flow: 10 }, noExhaust, boilerRoom)
+      expect(fromTurbine).toEqual(fromBypass)
+    })
+  })
+
   it("makeup and reject go into the totalizers and the hotwell", () => {
-    const noSteam = { flow: 0, temp: 0 }
-    const exhaust = { flow: 0, temp: 0, pressure: 0 }
+    const noSteam = { flow: 0 }
+    const exhaust = { flow: 0, quality: 1 }
     const { DeltaTime, CstCondenser } = CstSimulation
     const makeup = CondenserTick({ ...initialState, makeupValvePosition: 1 }, 1, noSteam, exhaust, boilerRoom)
     const makeupKg: number = (CstCondenser.Makeup_MaxFlowRate * DeltaTime) / getWaterSpecificVolume(20)
@@ -264,8 +351,8 @@ describe("CondenserTick", () => {
       makeupValvePosition: 1,
       steamMass: 100,
     }
-    const exhaust = { flow: 0, temp: 40, pressure: 0.1 }
-    const next = CondenserTick(full, 1, { flow: 0, temp: 0 }, exhaust, boilerRoom)
+    const exhaust = { flow: 0, quality: 1 }
+    const next = CondenserTick(full, 1, { flow: 0 }, exhaust, boilerRoom)
     expect(next.hotwellWaterVolume).toBeLessThanOrEqual(CstSimulation.CstCondenser.TotalVolume + 1e-6)
     const before: number = full.hotwellWaterMass + full.steamMass
     const after: number = next.hotwellWaterMass + next.steamMass + next.returnRate - next.makeupTotal + next.rejectTotal
@@ -274,14 +361,14 @@ describe("CondenserTick", () => {
 
   it("the hotwell follows the condenser saturation temperature, not the temperature of the steam", () => {
     const state = { ...initialState, steamMass: 50, recirculationPumpValvePosition: 1 }
-    const next = CondenserTick(state, 1, { flow: 0, temp: 0 }, { flow: 10, temp: 150, pressure: 0.1 }, boilerRoom)
+    const next = CondenserTick(state, 1, { flow: 0 }, { flow: 10, quality: 1 }, boilerRoom)
     expect(next.hotwellTemperature).toBeGreaterThan(CstPhysics.AmbientTemperature)
     expect(next.hotwellTemperature).toBeLessThanOrEqual(saturationTemperature(next.pressure))
   })
 
   describe("hotwell protections", () => {
-    const noSteam = { flow: 0, temp: 0 }
-    const exhaust = { flow: 0, temp: 0, pressure: 0 }
+    const noSteam = { flow: 0 }
+    const exhaust = { flow: 0, quality: 1 }
     const { TotalVolume, HotwellLowLow } = CstSimulation.CstCondenser
     const atLevel = (level: number, extra: Partial<CondenserState> = {}): CondenserState => ({
       ...initialState,

@@ -188,3 +188,22 @@ export function getIsentropicEnthalpyDrop(boilerPressure: number, exhaustPressur
   const exhaustEnthalpy: number = exhaust.liquidEnthalpy + quality * (exhaust.vaporEnthalpy - exhaust.liquidEnthalpy)
   return inlet.vaporEnthalpy - exhaustEnthalpy
 }
+
+// Exhaust quality: the share of the turbine exhaust that is still vapour, by mass (0-1). The real expansion takes only
+// isentropicEfficiency of the drop, so the exhaust enthalpy is the inlet enthalpy minus that part. It takes the same
+// pressures as the drop; with a zero or negative drop nothing expands and the steam stays vapour.
+export function getExhaustQuality(
+  boilerPressure: number,
+  exhaustPressure: number,
+  isentropicEfficiency: number,
+): number {
+  const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, exhaustPressure)
+  if (enthalpyDrop <= 0) return 1
+
+  const inlet: SaturationEntropyRow = getSaturationEntropyRow(boilerPressure)
+  const exhaust: SaturationEntropyRow = getSaturationEntropyRow(exhaustPressure)
+  const exhaustEnthalpy: number = inlet.vaporEnthalpy - isentropicEfficiency * enthalpyDrop
+  const quality: number =
+    (exhaustEnthalpy - exhaust.liquidEnthalpy) / (exhaust.vaporEnthalpy - exhaust.liquidEnthalpy)
+  return Math.max(0, Math.min(1, quality))
+}

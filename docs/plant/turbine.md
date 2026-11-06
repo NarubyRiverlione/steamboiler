@@ -19,7 +19,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 
 ## Phase 2: condenser coupling
 
-- Steam leaving the turbine has reduced energy: `outputTemp` and `outputPressure`, via a dedicated heuristic or empirical loss calculation
+- Steam leaving the turbine has reduced energy: its exhaust quality, the vapour share by mass, follows from the enthalpy drop at the live condenser pressure (see [Electric output](#electric-output-14), #81)
 - The condenser takes its steam from the turbine instead of the bypass valve; all exhaust arrives, whatever the vacuum (#20)
 - The bypass valve gets its own condenser intake
 - Both intakes are used in the condenser calculations (see [condenser.md](condenser.md))
@@ -113,4 +113,5 @@ Sync is not reachable from a cold start today (#18).
 - **Constants:** `IsentropicEfficiency` 0.85, `GeneratorEfficiency` 0.98 (`CstTurbine`). `steamToElectricityEfficiency` is gone.
 - **Gating:** breaker closed and at sync speed, otherwise 0 MW. Clamped at 0 MW for no flow or a non-positive drop, never negative.
 - **Scope:** MW readout, from the same enthalpy drop that drives the speed model (#69); no shaft load torque (#71) and no net demand in MW.
+- **Exhaust quality:** `getExhaustQuality(boilerPressure, condenserPressure, IsentropicEfficiency)` (`steamTable.ts`): the exhaust enthalpy is the inlet enthalpy minus `IsentropicEfficiency` × the drop, about 0.67 vapour at 165 bar to 100 mbar. Limited to 0–1, and 1 with a zero or negative drop. It ignores shaft speed. The condenser splits the exhaust by it ([ADR 0026](../adr/0026-exhaust-splits-by-quality-at-condenser-intake.md), [condenser.md](condenser.md#intakes)).
 - Rated values: see [design-basis.md](design-basis.md). Scenario: `turbine-load` (golden path).
