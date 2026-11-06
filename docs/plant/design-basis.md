@@ -61,8 +61,8 @@ Gas flow and the condensation pump are not departures: the sizing check found th
 
 | | Value |
 |---|---|
-| Valve capacity (turbine valve or bypass fully open, main steam valve open) | 200 kg/s each, so up to 400 kg/s with both; a valve limit, not a steady flow |
-| Main steam valve minimum pressure | 10 bar |
+| Valve capacity (turbine valve or bypass fully open, main steam valve open) | 200 kg/s each at 165 bar (`CstTurbine.ValveRatingPressure`), so 400 kg/s with both at working pressure; a valve rating, not a steady flow. The flow follows √(P·ρ): about 223 kg/s at 178 bar, 109 at 100, 35 at 34, 10.5 at 10 ([ADR 0026](../adr/0026-valve-flow-follows-pressure.md)) |
+| Main steam valve minimum pressure | 10 bar: opening is refused at or below it, and an open valve closes there ([ADR 0026](../adr/0026-valve-flow-follows-pressure.md)) |
 | Vacuum limit (turbine trip) | 327 mbar absolute (`CstCondenser.VacuumLimit`); see the source below |
 | Sync speed | 3000 RPM (50 Hz grid) |
 | Overspeed limit | 3300 RPM (110%) |
@@ -83,7 +83,7 @@ Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbi
 | Hold engage window | ±5 rpm of the selected run-up point | **estimate**, no source | `HoldEngageWindow` (#70). The owner's choice: Hold engages at its target, and Ramp up arrives inside it |
 | Speed tolerance at no load | governor droop 5% sourced; hold band stays ±2 rpm | band is an estimate | |
 
-Simplifications of the speed model: no generator load torque on the shaft (#71), no overspeed trip (#72; the linear torque curve gives zero torque at twice sync speed, and a cracked turbine valve would spin the unloaded rotor past `MaxRPM`: 10 kg/s at 5% against about 4.3 kg/s of no-load flow, so `turbine-runup` builds pressure on the bypass and lets Ramp up open the turbine valve), one lumped shaft line for turbine and generator, and the loss exponent fixed at 3.
+Simplifications of the speed model: no generator load torque on the shaft (#71), no overspeed trip (#72; the linear torque curve gives zero torque at twice sync speed, and a cracked turbine valve would spin the unloaded rotor past `MaxRPM`: 10 kg/s at 5% at working pressure against about 4.3 kg/s of no-load flow, so `turbine-runup` builds pressure on the bypass and lets Ramp up open the turbine valve), one lumped shaft line for turbine and generator, and the loss exponent fixed at 3.
 
 Source of the vacuum limit: the low-vacuum electrical trip of a KWU-type (Siemens design) fossil turbine acts when "the Condenser pressure falls to -0.7Kg/cm2", from three vacuum switches in 2-out-of-3 logic ([KWU turbine interlocks, slide 7](https://www.slideshare.net/slideshow/steam-turbine-turbine-interlocks-for-kwu-turbine/71755509)). −0.7 kg/cm² gauge is 1013.25 − 0.7 × 980.665 ≈ 327 mbar absolute. The source is a training deck, not an OEM setting sheet, and does not state the unit size; this turbine type is built as 210 and 500 MW sets. Cross-check: the ABWR Design Control Document (Tier 2, §10.4.1.5.2) trips the turbine at 0.074 MPa vacuum, about 273 mbar absolute ([NRC ML103080368](https://www.nrc.gov/docs/ML1030/ML103080368.pdf)), on a ~1350 MWe nuclear unit. The limit is a real-plant value, not a departure. It sits above the 213 mbar the air extraction pump reaches on its own, so the SJAE is not needed to reach it, only to go deeper. Decision: [ADR 0003](../adr/0003-turbine-trip-on-vacuum-limit.md).
 

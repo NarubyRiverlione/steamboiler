@@ -19,7 +19,7 @@ const { RunUpPoints } = CstSimulation.CstTurbine
 
 export const StartupSettings = {
   SettlingTime: 600, // sim-seconds in Hold at sync speed before the run ends: the same window turbine-sync judges
-  Duration: 5800, // sim-seconds: pressure build to ~1500 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5100 s) and the settling time
+  Duration: 5800, // sim-seconds: pressure build to ~1410 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5010 s) and the settling time
 }
 
 // At working pressure: from Free, select the first point above the speed and start Ramp up; in Hold at a point

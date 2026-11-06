@@ -4,6 +4,7 @@ import { bypassLoop } from "./bypass-loop"
 import { heatUpAtLimit } from "./heat-up"
 import { hotwellHigh } from "./hotwell-high"
 import { hotwellLow } from "./hotwell-low"
+import { lowPressureClose } from "./low-pressure-close"
 import { reliefLift } from "./relief-lift"
 import { turbineLoad } from "./turbine-load"
 import { turbineRunup } from "./turbine-runup"
@@ -13,7 +14,7 @@ import { turbineSync } from "./turbine-sync"
 export const goldenPath: Scenario[] = [bypassLoop, turbineRunup, turbineSync, turbineLoad]
 
 // Edge: drive the plant past one limit and check that its protection acts.
-export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, heatUpAtLimit]
+export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, heatUpAtLimit, lowPressureClose]
 
 // Every scenario here is selectable with `pnpm sim <name>` and checked against every invariant.
 export const scenarios: Record<string, Scenario> = Object.fromEntries([...goldenPath, ...edge].map((s) => [s.name, s]))

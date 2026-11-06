@@ -4,6 +4,7 @@ import {
   waterMassOf,
   waterVolumeOf,
   calculateGasEnergy,
+  valveFlowFactor,
 } from "../../utils/boilerCalculations"
 import {
   CriticalTemperature,
@@ -174,9 +175,12 @@ export function BoilerRemoveSteam(
     return { boilerState, turbineState: { ...turbineState, turbineSteamFlowOut: 0, bypassSteamFlowOut: 0 } }
   }
 
-  // The valve passes at most its rate (kg/s) over one tick, and never more than the boiler holds
+  // The valve passes its pressure-driven flow (kg/s, ADR 0026) over one tick, and never more than the boiler holds
   const valveMassPerTick =
-    valvePositionFor(turbineState, removeBy) * CstTurbine.MaxSteamRemovalRate * CstSimulation.DeltaTime
+    valvePositionFor(turbineState, removeBy) *
+    CstTurbine.MaxSteamRemovalRate *
+    valveFlowFactor(boilerState.pressure) *
+    CstSimulation.DeltaTime
   const removedSteamMass = Math.min(boilerState.steamMass, valveMassPerTick)
 
   return {

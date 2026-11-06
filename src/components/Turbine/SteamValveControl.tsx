@@ -38,7 +38,7 @@ const SteamValveControl = () => {
             {mainSteamValve ? "Open" : "Closed"}
           </button>
           <Indicator
-            isActive={pressure < MainSteamValveMinimumPressure}
+            isActive={pressure <= MainSteamValveMinimumPressure}
             label={"Opening not possible"}
             title={`Main Steam Valve can only be opened if pressure is greater then ${(MainSteamValveMinimumPressure / 10).toFixed(1)} Mpa - ${MainSteamValveMinimumPressure.toFixed(0)} bar`}
           />
