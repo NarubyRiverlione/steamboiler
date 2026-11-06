@@ -29,7 +29,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 - RPM readout, run-up point buttons and a Free / Ramp up / Hold mode selector in the turbine control panel
 - Ramp up and Hold move the turbine valve automatically (the PID); Free leaves it to the operator
 
-**RPM physics** (#69, [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md)): the speed follows from the shaft power the steam delivers, in physical units (`calculateRPM`, `turbineCalculations.ts`). `TurbineTick` computes the enthalpy drop once (`getIsentropicEnthalpyDrop`) and passes it to both `calculateRPM` and `calculateElectricityOutput`.
+**RPM physics** (#69, [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md)): the speed follows from the shaft power the steam delivers, in physical units (`calculateRPM`, `turbineCalculations.ts`). `TurbineTick` computes the enthalpy drop once (`getIsentropicEnthalpyDrop`) and passes it to `calculateRPM` together with the load the generator carries (see Generator load).
 
 - **Shaft power** P = flow [kg/s] × enthalpy drop [kJ/kg] × `IsentropicEfficiency`, in W.
 - **Drive torque** T = (P / ω_s) · (2 − ω / ω_s) in N·m, ω_s = 2π · `SyncRPM` / 60: twice the sync-speed torque at standstill, no division by zero. It falls to zero at 2·ω_s (about 6000 rpm); there is no overspeed trip yet (#72).

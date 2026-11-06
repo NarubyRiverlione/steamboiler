@@ -25,7 +25,7 @@ const LoadControl = () => {
         <input
           type="number"
           min={0}
-          max={Math.floor(ratedOutputMW)}
+          max={ratedOutputMW}
           step={1}
           value={draft === "" ? Turbine.loadSetpoint.toFixed(1) : draft}
           disabled={refusal !== undefined}

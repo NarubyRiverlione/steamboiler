@@ -59,7 +59,7 @@ const JPerKJ = 1000 // kJ to J, so kg/s x kJ/kg gives W
 
 const syncSpeed: number = CstTurbine.SyncRPM * RadPerSecPerRpm // ω_s, rad/s
 
-// Rated electric output S in W: the same chain as calculateElectricityOutput at the rated flow and drop
+// Rated electric output S in W: rated flow x rated drop x turbine and generator efficiency
 const ratedOutput: number =
   CstTurbine.RatedSteamFlow *
   CstTurbine.RatedEnthalpyDrop *
