@@ -63,6 +63,8 @@ Sources and the departures: [design-basis.md](design-basis.md#turbine-speed-mode
 
 **PID controller** (Ramp up and Hold): Kp = 0.001 (current error), Ki = 0.0001 (accumulated error, removes steady-state error), Kd = 0.0005 (damping). D acts on the measured rpm, `−Kd · (rpm_now − rpm_before_tick) / dt`, not on the error, so engaging the controller or changing the setpoint gives no derivative kick and D needs no memory. The only memory is `pidIntegralError` in `TurbineState` (a tick depends on its input state alone); it is reset to 0 whenever the PID is inactive (Free or main steam valve closed), so every (re)engage starts with a zero integral ([ADR 0010](../adr/0010-pid-derivative-on-measurement.md)).
 
+These gains need no retune for the engage (#63). Hold engaged from Free at the edge of its window, with the valve at 0.5 to 1.5 times its no-load position, stays between 2994 and 3006 rpm, is back within ±2 rpm in under a second, and the valve never shuts (0.4–4.0%). Behaviour under generator load is not judged yet (#71).
+
 **Electricity** is only generated with the breaker closed at sync speed (3000 RPM ±2), as the generator must match the 50 Hz grid. `MaxRPM` (3300) is the overspeed figure (no trip yet, #72).
 
 **Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. With the breaker closed it still follows the free rpm until the speed locks to the grid (#71).
