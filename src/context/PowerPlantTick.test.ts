@@ -93,7 +93,20 @@ describe("PowerPlantTick turbine exhaust", () => {
     }
     const next = PowerPlantTick(turbineOpen)
     expect(next.Turbine.turbineSteamFlowOut).toBeCloseTo(10, 9)
-    expect(next.Condenser.steamMass).toBeCloseTo(1, 9)
+    expect(next.Condenser.intakeFlowRate).toBeCloseTo(10, 9)
+  })
+
+  test("the exhaust splits by its quality at the boiler pressure and the live condenser pressure", () => {
+    // 1 kg as above; 165 bar to 100 mbar leaves about two-thirds vapour, the moisture goes to the hotwell
+    const atLoad: PowerPlantState = {
+      ...cold,
+      Boiler: { ...cold.Boiler, steamMass: 1_000, pressure: 165 },
+      Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.05, turbineSteamFlowOut: 0 },
+      Condenser: { ...cold.Condenser, steamMass: 0, pressure: 100, recirculationPumpValvePosition: 0 },
+    }
+    const next = PowerPlantTick(atLoad)
+    expect(next.Condenser.intakeFlowRate).toBeCloseTo(10, 9)
+    expect(next.Condenser.steamMass).toBeCloseTo(0.667, 2)
   })
 })
 

@@ -21,14 +21,14 @@
     "deltaSteamMass": 18.97285181098079
   },
   "Condenser": {
-    "pressure": 15.615394543504408,
-    "hotwellWaterMass": 33309.10223561329,
-    "hotwellWaterVolume": 33369.05861963739,
-    "hotwellTemperature": 13.570048746209482,
-    "steamMass": 850.3368558531632,
+    "pressure": 15.615394543521347,
+    "hotwellWaterMass": 33309.10223561126,
+    "hotwellWaterVolume": 33369.05861963536,
+    "hotwellTemperature": 13.570048746209997,
+    "steamMass": 850.3368558531461,
     "intakeFlowRate": 19.998112899985657,
     "returnRate": 2.3956877620283494,
-    "condensationRate": 22.647117628730484,
+    "condensationRate": 22.647117628803244,
     "coolingRate": 1,
     "isAirExtractionPumpEnabled": true,
     "isSjaeEnabled": true,
@@ -40,7 +40,7 @@
     "rejectValvePosition": 0,
     "makeupTotal": 0,
     "rejectTotal": 0,
-    "deltaWaterMass": -0.13097599915636238
+    "deltaWaterMass": -0.13097599914908642
   },
   "Turbine": {
     "electricOutput": 0,

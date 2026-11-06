@@ -19,7 +19,7 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 
 ## Phase 2: condenser coupling
 
-- Steam leaving the turbine has reduced energy: `outputTemp` and `outputPressure`, via a dedicated heuristic or empirical loss calculation
+- Steam leaving the turbine has reduced energy: its exhaust quality, the vapour share by mass, follows from the enthalpy drop at the live condenser pressure (see [Electric output](#electric-output-14-since-71-the-load-carried), #81)
 - The condenser takes its steam from the turbine instead of the bypass valve; all exhaust arrives, whatever the vacuum (#20)
 - The bypass valve gets its own condenser intake
 - Both intakes are used in the condenser calculations (see [condenser.md](condenser.md))
@@ -116,7 +116,7 @@ Sync is not reachable from a cold start today (#18).
 - **Load rate:** `electricOutput` moves toward the setpoint at `LoadRate` (3% of rated output per minute, about 3.9 MW/min), up and down (`loadAfter`), kept from tick to tick.
 - **Breaker:** the ±2 rpm rule stays. Whenever it opens, the load and setpoint are 0 on that tick and a reclose brings no load back. Steam that cannot carry the load, or a vacuum trip with load on, makes the speed fall and ends there. No reverse power protection or runback. A load lost in Free has no overspeed protection until #72.
 - **UI:** `LoadControl.tsx` (setpoint field, disabled with the refusal as its reason) and the load and load setpoint readouts in `TurbineReadouts.tsx`.
-- **Scenario:** `turbine-load` sets the setpoint to rated output at t = 0 and runs 3000 s with the gas ceiling at full gas: speed within 0.02 rpm of sync, 165 bar, breaker never opens, output 130.6 MW from about 2000 s (steam 170 kg/s, valve 85%).
+- **Scenario:** `turbine-load` sets the setpoint to rated output at t = 0 and runs 3000 s with the gas ceiling at full gas: speed within 0.02 rpm of sync, 165 bar, breaker never opens, output 130.6 MW from about 2000 s (steam 162 kg/s, valve 81%, condenser 39–40 mbar).
 
 ## Electric output (#14, since #71 the load carried)
 
@@ -124,4 +124,5 @@ The enthalpy drop (`getIsentropicEnthalpyDrop`, `steamTable.ts`) no longer sets 
 
 - **Drop:** `getIsentropicEnthalpyDrop(boilerPressure, condenserPressure)`: saturated steam from the boiler pressure (no superheater) expanded at constant entropy to the live condenser pressure, so poor vacuum and low boiler pressure cost shaft power, and so steam, for the same load. Data: `steamEntropyData.ts`, IAPWS-IF97, 0.01 bar to 220 bar, interpolated in ln(pressure); pressures outside it clamp.
 - **Constants:** `IsentropicEfficiency` 0.85, `GeneratorEfficiency` 0.98 (`CstTurbine`). `calculateElectricityOutput` and `steamToElectricityEfficiency` are gone.
+- **Exhaust quality:** `getExhaustQuality(boilerPressure, condenserPressure, IsentropicEfficiency)` (`steamTable.ts`): the exhaust enthalpy is the inlet enthalpy minus `IsentropicEfficiency` × the drop, about 0.67 vapour at 165 bar to 100 mbar. Limited to 0–1, and 1 with a zero or negative drop. It ignores shaft speed. The condenser splits the exhaust by it ([ADR 0028](../adr/0028-exhaust-splits-by-quality-at-condenser-intake.md), [condenser.md](condenser.md#intakes)).
 - Rated values: see [design-basis.md](design-basis.md). Scenario: `turbine-load` (golden path).

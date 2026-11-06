@@ -27,7 +27,7 @@ export type CondenserState = {
   hotwellTemperature: number // Celsius
   intakeFlowRate: number // kg/s turbine exhaust plus bypass steam into the condenser
   returnRate: number // kg returned to the boiler over the last tick
-  condensationRate: number // kg/s steam condensed into the hotwell
+  condensationRate: number // kg/s into the hotwell: steam condensed from the pool plus exhaust moisture
   coolingRate: number
   isAirExtractionPumpEnabled: boolean
   isSjaeEnabled: boolean

@@ -57,6 +57,8 @@ Scenarios (`pnpm sim <name>`), defined and classed in [testing.md](testing.md). 
 | `heat-up` | edge | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~980 s (16.3 min), smoothed rate peaks at 23.4 K/min, no alarm; gas off at 165 bar |
 | `low-pressure-close` | edge | `turbine-sync` | gas off and bypass fully open with the turbine in Hold: the burner trips on low level at ~191 s, the hotwell reaches 95% so its clamp forces the reject open, and at ~388 s the first tick starting at or below 10 bar closes the main steam valve and trips the turbine, under vacuum, so the trip can only be the closure; no steam leaves through either valve after that (ADR 0026). Expected failure of "natural cooldown stops steam generation": a draw flashes water with the gas off (#58) |
 
+`sim/golden/exhaust-split.test.ts` runs no named scenario: from the `bypass-loop` snapshot it puts the same 25% on the bypass and on the turbine valve for 120 s, and checks the exhaust leaves less steam in the pool and counts its moisture in `condensationRate` (#81).
+
 The turbine valve only opens under the vacuum limit, and above it an open valve closes in a turbine
 trip (ADR 0003). So the turbine scenarios hold the vacuum: `heatUp` starts the air extraction pump at
 t=0 (under the limit within seconds), and `openMainSteam` enables the SJAE and opens its valve once

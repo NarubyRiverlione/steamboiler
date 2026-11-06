@@ -104,6 +104,10 @@ _Avoid_: Idle flow, minimum flow
 The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit, or when the main steam valve closes on low pressure with the turbine valve open. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
 _Avoid_: Trip (on its own), shutdown
 
+**Exhaust quality**:
+The share of the turbine exhaust that is still vapour, by mass. The rest is exhaust moisture, already liquid when it reaches the condenser.
+_Avoid_: Dryness, wetness
+
 ### Operation
 
 **Ambient temperature**:
