@@ -2,6 +2,7 @@ import { CstSimulation } from "../const"
 import {
   calculateRPM,
   calculateValveAdjustment,
+  isAboveMainSteamValveMinimum,
   isAboveVacuumLimit,
   isAtSyncSpeed,
   isWithinHoldWindow,
@@ -32,7 +33,7 @@ function TurbineTick(
   condenserPressure: number,
 ): TurbineState {
   // The enthalpy drop gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed
-  // only) and is a resisting torque on the shaft, never derived from the steam flow (ADR 0026)
+  // only) and is a resisting torque on the shaft, never derived from the steam flow (ADR 0027)
   const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, condenserPressure / MbarPerBar)
   const load: number = turbineState.generatorBreaker ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint) : 0
   const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
@@ -70,6 +71,14 @@ const turbineTrip: Pick<TurbineState, keyof SpeedControl | "turbineTripped"> = {
   pidIntegralError: 0,
   speedReference: 0,
   turbineTripped: true,
+}
+
+// Low-pressure closure: at or below the minimum pressure at the start of the tick the main steam valve closes, before
+// any steam leaves, until the operator reopens it above the limit. An open turbine valve makes it a turbine trip (ADR 0026)
+export function MainSteamValveLowPressureClosure(turbineState: TurbineState, boilerPressure: number): TurbineState {
+  if (!turbineState.mainSteamValve || isAboveMainSteamValveMinimum(boilerPressure)) return turbineState
+  const trip = turbineState.turbineValvePosition > 0 ? turbineTrip : {}
+  return { ...turbineState, mainSteamValve: false, ...trip }
 }
 
 // Ramp up: the reference climbs at the run-up rate and stops at the point; Hold aims at the point itself

@@ -38,7 +38,7 @@ describe("TurbineTick", () => {
     })
   })
   
-  // Generator load (#71, ADR 0026): the electric output is the load carried, an input to the shaft balance
+  // Generator load (#71, ADR 0027): the electric output is the load carried, an input to the shaft balance
   describe("generator load", () => {
     const { NoLoadFlowFraction, RatedSteamFlow, SyncRPM } = CstSimulation.CstTurbine
     const noLoadFlow: number = NoLoadFlowFraction * RatedSteamFlow

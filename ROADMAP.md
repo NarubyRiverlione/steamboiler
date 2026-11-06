@@ -10,21 +10,21 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#80](https://github.com/NarubyRiverlione/steamboiler/issues/80) Steam flow through the bypass and turbine valve ignores boiler pressure | P2 | ready-for-agent |  |  |
-| 2 | [#81](https://github.com/NarubyRiverlione/steamboiler/issues/81) Condenser charges turbine exhaust the full latent heat | P2 | ready-for-agent |  | [#82](https://github.com/NarubyRiverlione/steamboiler/issues/82) |
-| 3 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down to cold | P3 | needs-triage |  |  |
-| 4 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
-| 5 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
-| 6 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage |  |  |
-| 7 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P3 | needs-triage |  |  |
-| 8 | [#64](https://github.com/NarubyRiverlione/steamboiler/issues/64) Hot-start scenario: startup-hot from a hot-standby snapshot | P3 | needs-triage |  |  |
-| 9 | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) Choose the UI style (ADR 0015) | P3 | ready-for-human |  | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) |
-| 10 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
-| 11 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
-| 12 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
-| 13 | [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) RPM set point control: rpm wording instead of valve wording | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
-| 14 | [#76](https://github.com/NarubyRiverlione/steamboiler/issues/76) RPM set point moves 0.5 rpm per click instead of RPMStep | P3 | ready-for-agent |  |  |
-| 15 | [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) Simulation time control in the UI: real start-up durations, played faster than real time | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
+| 1 | [#81](https://github.com/NarubyRiverlione/steamboiler/issues/81) Condenser charges turbine exhaust the full latent heat | P2 | ready-for-agent |  | [#82](https://github.com/NarubyRiverlione/steamboiler/issues/82) |
+| 2 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down to cold | P3 | needs-triage |  |  |
+| 3 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
+| 4 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 5 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage |  |  |
+| 6 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P3 | needs-triage |  |  |
+| 7 | [#64](https://github.com/NarubyRiverlione/steamboiler/issues/64) Hot-start scenario: startup-hot from a hot-standby snapshot | P3 | needs-triage |  |  |
+| 8 | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) Choose the UI style (ADR 0015) | P3 | ready-for-human |  | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) |
+| 9 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
+| 10 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
+| 11 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
+| 12 | [#57](https://github.com/NarubyRiverlione/steamboiler/issues/57) RPM set point control: rpm wording instead of valve wording | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
+| 13 | [#76](https://github.com/NarubyRiverlione/steamboiler/issues/76) RPM set point moves 0.5 rpm per click instead of RPMStep | P3 | ready-for-agent |  |  |
+| 14 | [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) Simulation time control in the UI: real start-up durations, played faster than real time | P3 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
+| 15 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
 | 16 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P4 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
 | 17 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P4 | needs-triage | [#75](https://github.com/NarubyRiverlione/steamboiler/issues/75) |  |
 | 18 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |  |

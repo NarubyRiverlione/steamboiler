@@ -43,6 +43,10 @@ export function runUpPointRefusal(turbine: TurbineState, point: number): string 
   return undefined
 }
 
+// True when boiler pressure (bar) is above the main steam valve minimum: only then may the valve open or stay open (ADR 0026)
+export const isAboveMainSteamValveMinimum = (boilerPressure: number): boolean =>
+  boilerPressure > CstTurbine.MainSteamValveMinimumPressure
+
 // True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit
 
@@ -70,7 +74,7 @@ const ratedOutput: number =
 /** Rated electric output in MW (130.6): the load setpoint's upper limit and the base of the load rate. */
 export const ratedOutputMW: number = ratedOutput / 1e6
 
-// Load setpoint step per tick in MW: the load moves at one fixed rate, up and down (ADR 0026)
+// Load setpoint step per tick in MW: the load moves at one fixed rate, up and down (ADR 0027)
 const loadStepPerTick: number = (CstTurbine.LoadRate * ratedOutputMW * CstSimulation.DeltaTime) / 60
 
 /** The load after one tick of moving toward the setpoint at the load rate; never overshoots it. */
@@ -103,7 +107,7 @@ const lossCoefficient: number = noLoadPower / syncSpeed ** 3
  * Shaft power P = flow x enthalpy drop x isentropic efficiency (W). Torque follows T = (P / ω_s)(2 − ω / ω_s):
  * twice the sync-speed torque at standstill and no division by zero. Losses take torque k·ω² (power ∝ ω³),
  * calibrated so the no-load flow holds sync speed. J·dω/dt = T − k·ω² − T_load, with J derived from H (ADR 0021).
- * The generator load is a constant power: T_load = (load / generator efficiency) / ω (ADR 0026).
+ * The generator load is a constant power: T_load = (load / generator efficiency) / ω (ADR 0027).
  *
  * @param currentRPM - The current RPM of the turbine
  * @param steamFlow - The steam flow through the turbine in kg/s

@@ -67,7 +67,7 @@ These gains need no retune for the engage (#63). Hold engaged from Free at the e
 
 **Electricity** is only generated with the breaker closed at sync speed (3000 RPM ±2), as the generator must match the 50 Hz grid. `MaxRPM` (3300) is the overspeed figure (no trip yet, #72).
 
-**Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. The speed is never locked to the grid ([ADR 0026](../adr/0026-generator-load-is-a-resisting-torque.md)): with the breaker closed it still follows the free rpm, which sags under load.
+**Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. The speed is never locked to the grid ([ADR 0027](../adr/0027-generator-load-is-a-resisting-torque.md)): with the breaker closed it still follows the free rpm, which sags under load.
 
 Calculations: `src/utils/turbineCalculations.ts`; tick: `src/context/Turbine/TurbineTick.ts`.
 
@@ -81,6 +81,13 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 - **Trip flag:** `turbineTripped` in `TurbineState` is set by a trip and cleared by the next opening of the valve, by the operator or by the PID. The turbine status panel shows it as the "Turbine trip" indicator.
 
 The checks (`isAboveVacuumLimit`, `maxTurbineValvePosition`, `turbineTrippedAfter`) live in `src/utils/turbineCalculations.ts`, shared by the reducer and the tick. The bypass valve and the generator breaker are not interlocked with the vacuum.
+
+## Low-pressure closure
+
+When boiler pressure at the start of a tick is at or below `MainSteamValveMinimumPressure` (10 bar), `MainSteamValveLowPressureClosure` closes the main steam valve. `PowerPlantTick` runs it before any steam is removed, so no steam leaves on that tick. The valve stays closed until the operator reopens it, and `TOGGLE_MAIN_STEAM_VALVE` refuses that at or below 10 bar; the "Opening not possible" indicator matches that refusal exactly. There is no hysteresis and no automatic reopening. Decision: [ADR 0026](../adr/0026-valve-flow-follows-pressure.md).
+
+- **Turbine valve open:** the closure is a turbine trip, with the same values as the vacuum trip: valve to 0, speed mode to Free, `pidIntegralError` to 0, `turbineTripped` set.
+- **Turbine valve shut:** only the main steam valve closes. No trip flag, and the speed mode stays. The bypass valve keeps its position in both cases, passing nothing while the main steam valve is shut.
 
 ## Phase 4: generator breaker
 
@@ -101,7 +108,7 @@ Sync is not reachable from a cold start today (#18).
 
 ## Generator load (#71)
 
-[ADR 0026](../adr/0026-generator-load-is-a-resisting-torque.md). The electric output is the load the generator carries, an input to the shaft balance, not a result of the steam flow.
+[ADR 0027](../adr/0027-generator-load-is-a-resisting-torque.md). The electric output is the load the generator carries, an input to the shaft balance, not a result of the steam flow.
 
 - **Shaft balance:** `J·dω/dt = drive torque − loss torque − load torque`, `load torque = (load / GeneratorEfficiency) / ω` (constant power). `calculateRPM(rpm, flow, drop, loadMW)`; the load is 0 with the breaker open.
 - **Speed is free** (island model): it sags under load, the Hold PID opens the valve, and more load takes more steam. At the no-load flow the output is 0 MW.

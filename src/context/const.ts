@@ -52,7 +52,8 @@ export const CstSimulation = {
   },
 
   CstTurbine: {
-    MaxSteamRemovalRate: 200, // valve capacity: kg/second when the valve is fully open
+    MaxSteamRemovalRate: 200, // valve capacity: kg/second when the valve is fully open at ValveRatingPressure
+    ValveRatingPressure: 165, // bar: working pressure, where the valve capacity holds (ADR 0026)
     BypassValveStep: 5, // % per click open/close
     TurbineValveStep: 1, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa
@@ -86,7 +87,7 @@ export const CstSimulation = {
     // Phase 4: Generator breaker constants
     BreakerRPMMargin: 2, // Allow ±2 RPM from SyncRPM for breaker operation
 
-    // Generator load (#71, ADR 0026): a constant-power resisting torque on the shaft
+    // Generator load (#71, ADR 0027): a constant-power resisting torque on the shaft
     LoadRate: 0.03, // share of rated output per minute, up and down (sourced from coal units, docs/research/2026-11-generator-load-rate.md)
   },
 }

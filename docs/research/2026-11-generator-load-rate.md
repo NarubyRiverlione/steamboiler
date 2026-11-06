@@ -1,6 +1,6 @@
 # Generator load rate
 
-Frozen research record. The plant as built is in [plant/design-basis.md](../plant/design-basis.md) and [plant/turbine.md](../plant/turbine.md); the decision this feeds is [ADR 0026](../adr/0026-generator-load-is-a-resisting-torque.md). Ticket #71.
+Frozen research record. The plant as built is in [plant/design-basis.md](../plant/design-basis.md) and [plant/turbine.md](../plant/turbine.md); the decision this feeds is [ADR 0027](../adr/0027-generator-load-is-a-resisting-torque.md). Ticket #71.
 
 **Provenance.** The figures below were found during triage of #71 and given in the ticket. They were **not re-read for this note**: treat them as **UNVERIFIED** until someone opens the sources.
 

@@ -84,10 +84,10 @@ describe("PowerPlantTick dry boiler", () => {
 
 describe("PowerPlantTick turbine exhaust", () => {
   test("the condenser receives the steam through the turbine valve in the same tick", () => {
-    // 5% of 200 kg/s for one 0.1 s tick = 1 kg; recirculation off so none of it condenses yet
+    // 5% of 200 kg/s at working pressure for one 0.1 s tick = 1 kg; recirculation off so none of it condenses yet
     const turbineOpen: PowerPlantState = {
       ...cold,
-      Boiler: { ...cold.Boiler, steamMass: 1_000 },
+      Boiler: { ...cold.Boiler, pressure: 165, steamMass: 1_000 },
       Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.05, turbineSteamFlowOut: 0 },
       Condenser: { ...cold.Condenser, steamMass: 0, recirculationPumpValvePosition: 0 },
     }
@@ -173,5 +173,70 @@ describe("PowerPlantTick burner trip", () => {
     for (let i = 0; i < 100 && !state.Boiler.burnerTripped; i++) state = PowerPlantTick(state)
     expect(state.Boiler.burnerTripped).toBe(true)
     expect(state.Boiler.gasFlow).toBe(0)
+  })
+})
+
+describe("PowerPlantTick low-pressure closure", () => {
+  const min = CstSimulation.CstTurbine.MainSteamValveMinimumPressure
+  // Under vacuum, so a trip here can only come from the closure and not from the vacuum limit
+  const open = (pressure: number, turbine: Partial<PowerPlantState["Turbine"]>): PowerPlantState => ({
+    ...cold,
+    Boiler: { ...cold.Boiler, pressure, steamMass: 1_000 },
+    Condenser: {
+      ...cold.Condenser,
+      pressure: CstSimulation.CstCondenser.VacuumLimit,
+      recirculationPumpValvePosition: 0,
+    },
+    Turbine: { ...cold.Turbine, mainSteamValve: true, ...turbine },
+  })
+
+  test("at the limit the main steam valve closes on that tick and no steam leaves in it", () => {
+    const next = PowerPlantTick(open(min, { bypassValvePosition: 1, turbineValvePosition: 0.5 }))
+    expect(next.Turbine.mainSteamValve).toBe(false)
+    expect(next.Turbine.bypassSteamFlowOut).toBe(0)
+    expect(next.Turbine.turbineSteamFlowOut).toBe(0)
+    expect(next.Condenser.intakeFlowRate).toBe(0)
+  })
+
+  test("above the limit the valve stays open and steam flows", () => {
+    const next = PowerPlantTick(open(min + 0.01, { bypassValvePosition: 1 }))
+    expect(next.Turbine.mainSteamValve).toBe(true)
+    expect(next.Turbine.bypassSteamFlowOut).toBeGreaterThan(10)
+  })
+
+  test("with the turbine valve open the closure is a turbine trip", () => {
+    const next = PowerPlantTick(open(min, { turbineValvePosition: 0.5, speedMode: "hold", pidIntegralError: 3 }))
+    expect(next.Turbine.turbineValvePosition).toBe(0)
+    expect(next.Turbine.speedMode).toBe("free")
+    expect(next.Turbine.pidIntegralError).toBe(0)
+    expect(next.Turbine.turbineTripped).toBe(true)
+  })
+
+  test("the trip indicator stays set on the ticks after the closure", () => {
+    const next = PowerPlantTick(PowerPlantTick(open(min, { turbineValvePosition: 0.5, speedMode: "hold" })))
+    expect(next.Turbine.turbineTripped).toBe(true)
+    expect(next.Turbine.mainSteamValve).toBe(false)
+  })
+
+  test("with the turbine valve shut only the main steam valve closes", () => {
+    const next = PowerPlantTick(open(min, { bypassValvePosition: 0.3, speedMode: "rampUp" }))
+    expect(next.Turbine.mainSteamValve).toBe(false)
+    expect(next.Turbine.turbineTripped).toBe(false)
+    expect(next.Turbine.speedMode).toBe("rampUp")
+    expect(next.Turbine.bypassValvePosition).toBe(0.3)
+  })
+
+  test("a closed valve at low pressure sets no trip", () => {
+    const next = PowerPlantTick(open(min, { mainSteamValve: false, turbineValvePosition: 0.5, speedMode: "hold" }))
+    expect(next.Turbine.turbineTripped).toBe(false)
+    expect(next.Turbine.turbineValvePosition).toBe(0.5)
+  })
+
+  test("boiler loss, reported flow and condenser intake match at a pressure below the rating", () => {
+    const state = open(100, { bypassValvePosition: 0.5, turbineValvePosition: 0.25 })
+    const next = PowerPlantTick({ ...state, Boiler: { ...state.Boiler, temperature: 311 } })
+    const flow = next.Turbine.bypassSteamFlowOut + next.Turbine.turbineSteamFlowOut
+    expect(flow).toBeCloseTo(0.75 * 109, 0)
+    expect(next.Condenser.intakeFlowRate).toBeCloseTo(flow, 9)
   })
 })
