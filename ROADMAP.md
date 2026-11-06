@@ -5,13 +5,20 @@
 _Updated 2026-11-06 · 21 open tickets_
 
 Order: a ticket comes after every open ticket blocking it, otherwise by priority (`P1` first).
-A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`.
+A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`, and sits in that priority's section.
 Next: the first ticket with nothing under Waiting on.
+
+## P2: realism in scope
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 1 | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) Feedwater heating: returned water costs the boiler no heat | P2 | needs-triage |  | [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) [#82](https://github.com/NarubyRiverlione/steamboiler/issues/82) |
 | 2 | [#82](https://github.com/NarubyRiverlione/steamboiler/issues/82) Condenser heat model: real enthalpy per stream and a limited heat exchanger | P2 | needs-triage | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) |  |
+
+## P3: experience and project health
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
 | 3 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P3 | ready-for-agent |  |  |
 | 4 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
 | 5 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage |  |  |
@@ -21,9 +28,19 @@ Next: the first ticket with nothing under Waiting on.
 | 9 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | needs-triage |  |  |
 | 10 | [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) Simulation time control: real start-up durations, played faster than real time | P3 | needs-triage | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) | [#86](https://github.com/NarubyRiverlione/steamboiler/issues/86) |
 | 11 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
+
+## P4: parked
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
 | 12 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |  |
 | 13 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
 | 14 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
+
+## P5: UI and UX
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
 | 15 | [#85](https://github.com/NarubyRiverlione/steamboiler/issues/85) UI redo: rebuild the app as the analog board (ADR 0015) | P5 | needs-triage |  | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) [#86](https://github.com/NarubyRiverlione/steamboiler/issues/86) |
 | 16 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P5 | needs-triage | [#85](https://github.com/NarubyRiverlione/steamboiler/issues/85) |  |
 | 17 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P5 | needs-triage | [#85](https://github.com/NarubyRiverlione/steamboiler/issues/85) |  |
