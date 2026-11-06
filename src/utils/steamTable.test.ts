@@ -206,7 +206,7 @@ describe("getExhaustQuality", () => {
     expect(getExhaustQuality(boiler, exhaust, IsentropicEfficiency)).toBeCloseTo(expected, 2)
   })
 
-  test("a less efficient turbine leaves drier exhaust", () => {
+  test("a less efficient turbine leaves a higher exhaust quality", () => {
     expect(getExhaustQuality(165, 0.1, 0.5)).toBeGreaterThan(getExhaustQuality(165, 0.1, IsentropicEfficiency))
   })
 

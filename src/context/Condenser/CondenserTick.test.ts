@@ -279,10 +279,10 @@ describe("CondenserTick", () => {
 
     it("condensationRate adds the moisture to what the recirculation condenses from the pool", () => {
       const pool: CondenserState = { ...noCondensation, steamMass: 500, recirculationPumpValvePosition: 1 }
-      const dry = CondenserTick(pool, 100, noBypass, { flow: 10, quality: 1 }, boilerRoom)
-      const wet = CondenserTick(pool, 100, noBypass, exhaust, boilerRoom)
-      expect(dry.condensationRate).toBeGreaterThan(0)
-      expect(wet.condensationRate).toBeCloseTo(dry.condensationRate + 3.3, 9)
+      const vapourOnly = CondenserTick(pool, 100, noBypass, { flow: 10, quality: 1 }, boilerRoom)
+      const withMoisture = CondenserTick(pool, 100, noBypass, exhaust, boilerRoom)
+      expect(vapourOnly.condensationRate).toBeGreaterThan(0)
+      expect(withMoisture.condensationRate).toBeCloseTo(vapourOnly.condensationRate + 3.3, 9)
     })
 
     it("with a full hotwell the moisture goes to the pool, so no mass is lost", () => {
@@ -320,7 +320,7 @@ describe("CondenserTick", () => {
       expect(pool + hotwell).toBeCloseTo(next.intakeFlowRate * DeltaTime, 9)
     })
 
-    it("dry exhaust behaves exactly like bypass steam", () => {
+    it("exhaust without moisture behaves exactly like bypass steam", () => {
       const running: CondenserState = { ...noCondensation, steamMass: 200, recirculationPumpValvePosition: 1 }
       const fromTurbine = CondenserTick(running, 100, noBypass, { flow: 10, quality: 1 }, boilerRoom)
       const fromBypass = CondenserTick(running, 100, { flow: 10 }, noExhaust, boilerRoom)

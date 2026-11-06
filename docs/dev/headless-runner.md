@@ -56,6 +56,8 @@ Scenarios (`pnpm sim <name>`), defined and classed in [testing.md](testing.md). 
 | `boiler-low` | edge | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 98 K/min), the relief valve lifts at ~229 s and holds the pressure below design (peak ≈ 177.5 bar, 355.7 °C), until the burner trips at ~270 s with ~18 m³ left (ADR 0017); the boiler never runs dry |
 | `heat-up` | edge | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~980 s (16.3 min), smoothed rate peaks at 23.4 K/min, no alarm; gas off at 165 bar |
 
+`sim/golden/exhaust-split.test.ts` runs no named scenario: from the `bypass-loop` snapshot it puts the same 25% on the bypass and on the turbine valve for 120 s, and checks the exhaust leaves less steam in the pool and counts its moisture in `condensationRate` (#81).
+
 The turbine valve only opens under the vacuum limit, and above it an open valve closes in a turbine
 trip (ADR 0003). So the turbine scenarios hold the vacuum: `heatUp` starts the air extraction pump at
 t=0 (under the limit within seconds), and `openMainSteam` enables the SJAE and opens its valve once

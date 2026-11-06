@@ -1,6 +1,6 @@
 # The turbine exhaust splits by its quality at the condenser intake
 
-All steam entering the condenser joined one steam pool and was charged the full latent heat at condenser pressure. With no superheater the turbine exhaust is wet: about two-thirds vapour by mass at 165 bar to 100 mbar, so it was charged about 1.5× too much and 25% on the turbine valve behaved exactly like 25% on the bypass. Decided in #81.
+All steam entering the condenser joined one steam pool and was charged the full latent heat at condenser pressure. With no superheater the turbine exhaust carries moisture: about two-thirds vapour by mass at 165 bar to 100 mbar, so it was charged about 1.5× too much and 25% on the turbine valve behaved exactly like 25% on the bypass. Decided in #81.
 
 ## Considered options
 
@@ -18,7 +18,8 @@ All steam entering the condenser joined one steam pool and was charged the full 
 ## Consequences
 
 - The bypass stays plain vapour on the latent heat: under 1% off at 165 bar, about 8% at 10 bar.
-- Quality ignores shaft speed: a turbine running up takes less work out of the steam than the full drop, so its exhaust is really drier than modelled.
-- The exhaust is far wetter than a real last stage allows, a result of having no superheater. Moisture is not a turbine limit here.
+- Quality ignores shaft speed: a turbine running up takes less work out of the steam than the full drop, so its exhaust quality is really higher than modelled.
+- The exhaust holds far more moisture than a real last stage allows, a result of having no superheater. Moisture is not a turbine limit here.
 - The recirculation pump keeps its 3600 L/s; its sizing note now starts from the real heat load ([design-basis.md](../plant/design-basis.md#condenser-and-water-loop)).
+- Goal check: `sim/golden/exhaust-split.test.ts`, the same 25% through the bypass and the turbine valve from `bypass-loop` no longer gives the same condenser.
 - The fixed `steamOutflowTemperature` and `steamOutflowPressure` are gone, as are the unused `temp` and `pressure` condenser inputs.
