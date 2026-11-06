@@ -1,5 +1,5 @@
 import { CondenserTick } from "./Condenser/CondenserTick"
-import TurbineTick from "./Turbine/TurbineTick"
+import TurbineTick, { MainSteamValveLowPressureClosure } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerRemoveSteam, BoilerVent } from "./Boiler/BoilerTick"
 
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
@@ -10,8 +10,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
   const ventedBoiler = BoilerVent(BoilerBurnerTrip(state.Boiler))
 
+  // The main steam valve closes on low pressure before any steam leaves through it (ADR 0026)
+  const turbineAfterClosure: TurbineState = MainSteamValveLowPressureClosure(state.Turbine, state.Boiler.pressure)
+
   // remove steam via bypass valve
-  const bypassResult = BoilerRemoveSteam(ventedBoiler, state.Turbine, "BYPASS")
+  const bypassResult = BoilerRemoveSteam(ventedBoiler, turbineAfterClosure, "BYPASS")
 
   // Turbine
   const turbineNewState: TurbineState = TurbineTick(

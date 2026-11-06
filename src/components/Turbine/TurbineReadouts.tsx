@@ -38,7 +38,7 @@ const TurbineReadouts = () => {
       </div>
       <Indicator
         isActive={turbineTripped}
-        title="Turbine tripped: condenser pressure rose above the vacuum limit"
+        title="Turbine tripped: condenser pressure rose above the vacuum limit, or the main steam valve closed on low boiler pressure"
         label="Turbine trip"
       />
     </div>

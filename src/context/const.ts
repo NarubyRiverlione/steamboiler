@@ -52,7 +52,8 @@ export const CstSimulation = {
   },
 
   CstTurbine: {
-    MaxSteamRemovalRate: 200, // valve capacity: kg/second when the valve is fully open
+    MaxSteamRemovalRate: 200, // valve capacity: kg/second when the valve is fully open at ValveRatingPressure
+    ValveRatingPressure: 165, // bar: working pressure, where the valve capacity holds (ADR 0026)
     BypassValveStep: 5, // % per click open/close
     TurbineValveStep: 1, // % per click open/close
     MainSteamValveMinimumPressure: 10, // bar = 1MPa

@@ -53,7 +53,7 @@ The steam flow the plant is rated for, the full-gas steam flow: 171 kg/s. A desi
 _Avoid_: Nominal flow
 
 **Valve capacity**:
-The steam flow through the turbine valve or the bypass when fully open: 200 kg/s each. A valve limit, not a steady flow.
+The steam flow through the turbine valve or the bypass when fully open at working pressure: 200 kg/s each. The flow falls with boiler pressure. A valve limit, not a steady flow.
 _Avoid_: Max steam removal, rated steam flow
 
 **Electric output**:
@@ -89,7 +89,7 @@ The steam flow that holds the turbine at sync speed with the breaker open: it on
 _Avoid_: Idle flow, minimum flow
 
 **Turbine trip**:
-The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
+The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit, or when the main steam valve closes on low pressure with the turbine valve open. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
 _Avoid_: Trip (on its own), shutdown
 
 ### Operation

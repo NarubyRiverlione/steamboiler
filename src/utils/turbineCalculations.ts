@@ -43,6 +43,10 @@ export function runUpPointRefusal(turbine: TurbineState, point: number): string 
   return undefined
 }
 
+// True when boiler pressure (bar) is above the main steam valve minimum: only then may the valve open or stay open (ADR 0026)
+export const isAboveMainSteamValveMinimum = (boilerPressure: number): boolean =>
+  boilerPressure > CstTurbine.MainSteamValveMinimumPressure
+
 // True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit
 

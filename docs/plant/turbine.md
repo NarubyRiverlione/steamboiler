@@ -82,6 +82,13 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 
 The checks (`isAboveVacuumLimit`, `maxTurbineValvePosition`, `turbineTrippedAfter`) live in `src/utils/turbineCalculations.ts`, shared by the reducer and the tick. The bypass valve and the generator breaker are not interlocked with the vacuum.
 
+## Low-pressure closure
+
+When boiler pressure at the start of a tick is at or below `MainSteamValveMinimumPressure` (10 bar), `MainSteamValveLowPressureClosure` closes the main steam valve. `PowerPlantTick` runs it before any steam is removed, so no steam leaves on that tick. The valve stays closed until the operator reopens it, and `TOGGLE_MAIN_STEAM_VALVE` refuses that at or below 10 bar; the "Opening not possible" indicator matches that refusal exactly. There is no hysteresis and no automatic reopening. Decision: [ADR 0026](../adr/0026-valve-flow-follows-pressure.md).
+
+- **Turbine valve open:** the closure is a turbine trip, with the same values as the vacuum trip: valve to 0, speed mode to Free, `pidIntegralError` to 0, `turbineTripped` set.
+- **Turbine valve shut:** only the main steam valve closes. No trip flag, and the speed mode stays. The bypass valve keeps its position in both cases, passing nothing while the main steam valve is shut.
+
 ## Phase 4: generator breaker
 
 Done:
