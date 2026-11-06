@@ -27,6 +27,7 @@ A redo replaces only the presentation (`src/components/`, `src/navigation/`). Th
 ## Consequences
 
 - New UI work follows option A. The foundation of the rebuild is #85.
+- An overview diagram of all parts of the plant replaces the rotary selector of the full-board mockup: a part with controls can be clicked to open it, a part without controls is shown but can't be clicked. The mockup still shows the selector (#85).
 - The open UI tickets build on #85 and are blocked by it: #15 (faster gas control), #24 (start presets), #36 (history visualisation), #41 (continuous-fire valve buttons), #54 (hotwell level zones) and #86 (styled speed control and clock).
 - The sim side of a UI idea doesn't wait for the redo: the hotwell alarms (#59) and the time control (#78) are built first, and #85 and #86 give them their board controls.
 - The MC-v2 components are copied and adapted into this repo, not shared as a package. The LiquidCrystal font licence must be checked first; Stardos Stencil is OFL.
