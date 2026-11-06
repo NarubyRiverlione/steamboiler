@@ -44,6 +44,7 @@
   },
   "Turbine": {
     "electricOutput": 0,
+    "loadSetpoint": 0,
     "bypassValvePosition": 0.1,
     "bypassSteamFlowOut": 20,
     "turbineValvePosition": 0,

@@ -85,6 +85,9 @@ export const CstSimulation = {
 
     // Phase 4: Generator breaker constants
     BreakerRPMMargin: 2, // Allow ±2 RPM from SyncRPM for breaker operation
+
+    // Generator load (#71, ADR 0026): a constant-power resisting torque on the shaft
+    LoadRate: 0.03, // share of rated output per minute, up and down (sourced from coal units, docs/research/2026-11-generator-load-rate.md)
   },
 }
 

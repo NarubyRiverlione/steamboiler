@@ -51,6 +51,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleGeneratorBreaker = () => {
     dispatch({ type: "TOGGLE_GENERATOR_BREAKER" })
   }
+  const setLoadSetpoint = (loadSetpoint: number) => {
+    dispatch({ type: "SET_LOAD_SETPOINT", payload: { loadSetpoint } })
+  }
   //#endregion
 
   //#region Condenser action creators
@@ -107,6 +110,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         adjustTurbineValve,
         setSpeedMode,
         selectRunUpPoint,
+        setLoadSetpoint,
         toggleGeneratorBreaker,
         // condenser actions
         toggleAirExtractionPump,

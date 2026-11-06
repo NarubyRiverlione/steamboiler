@@ -4,6 +4,7 @@
 import SteamValveControl from "./SteamValveControl"
 import RPMControl from "./RPMControl"
 import GeneratorBreakerControl from "./GeneratorBreakerControl"
+import LoadControl from "./LoadControl"
 
 const TurbineControlPanel = () => {
   return (
@@ -11,6 +12,7 @@ const TurbineControlPanel = () => {
       <SteamValveControl />
       <RPMControl />
       <GeneratorBreakerControl />
+      <LoadControl />
     </div>
   )
 }

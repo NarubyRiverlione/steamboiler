@@ -9,7 +9,7 @@ const speedModeLabels: Record<SpeedMode, string> = { free: "FREE", rampUp: "RAMP
 const TurbineReadouts = () => {
   const {
     state: {
-      Turbine: { electricOutput, rpm, runUpPoint, speedMode, turbineSteamFlowOut, generatorBreaker, turbineTripped },
+      Turbine: { electricOutput, loadSetpoint, rpm, runUpPoint, speedMode, turbineSteamFlowOut, generatorBreaker, turbineTripped },
     },
   } = usePowerPlant()
 
@@ -17,7 +17,8 @@ const TurbineReadouts = () => {
     <div className="readouts-panel">
       <h3>Turbine Status</h3>
       <Readout title="Steam flow " value={useEMA(turbineSteamFlowOut, 0.05)} unit="kg/s" />
-      <Readout title="Generator output" value={electricOutput} unit="MW" />
+      <Readout title="Generator load" value={electricOutput} unit="MW" fixed={1} />
+      <Readout title="Load setpoint" value={loadSetpoint} unit="MW" fixed={1} />
       <Readout title="Turbine speed" value={rpm} unit="RPM" fixed={0} />
       <Readout
         title="Run-up point"

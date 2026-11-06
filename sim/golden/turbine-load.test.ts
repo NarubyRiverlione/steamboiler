@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { runScenario } from "../scenario"
-import { turbineLoad } from "../scenarios/turbine-load"
+import { LoadTarget, turbineLoad } from "../scenarios/turbine-load"
 import { LoopSettings } from "../scenarios/loop-operator"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
 import { CstSimulation } from "../../src/context/const"
@@ -20,11 +20,21 @@ describe("turbine-load", () => {
     expect(Math.abs(Turbine.rpm - CstTurbine.SyncRPM)).toBeLessThanOrEqual(CstTurbine.BreakerRPMMargin)
   })
 
-  test("the generator carries load throughout: positive MW with the breaker closed", () => {
+  test("the speed stays within ±2 rpm throughout and the breaker never opens", () => {
     for (const { state } of samples) {
       expect(state.Turbine.generatorBreaker).toBe(true)
-      expect(state.Turbine.electricOutput).toBeGreaterThan(0)
+      expect(Math.abs(state.Turbine.rpm - CstTurbine.SyncRPM)).toBeLessThanOrEqual(CstTurbine.BreakerRPMMargin)
     }
+  })
+
+  test("the electric output is the load carried: it climbs at the load rate and reaches the setpoint", () => {
+    const perSecond: number = (CstTurbine.LoadRate * LoadTarget) / 60
+    for (const { time, state } of samples) {
+      expect(state.Turbine.loadSetpoint).toBe(LoadTarget)
+      expect(state.Turbine.electricOutput).toBeLessThanOrEqual(Math.min(LoadTarget, perSecond * (time + 1)) + 1e-9)
+      expect(state.Turbine.electricOutput).toBeGreaterThanOrEqual(Math.min(LoadTarget, perSecond * (time - 1)) - 1e-9)
+    }
+    expect(samples.at(-1)?.state.Turbine.electricOutput).toBeCloseTo(LoadTarget, 6)
   })
 
   test("over the last 600 s boiler pressure holds the band", () => {
