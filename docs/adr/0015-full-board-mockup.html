@@ -69,6 +69,12 @@
   --mimic-pipe: #7b7f84;
   --mimic-gas-pipe: #9c7a1a;
   --mimic-gas-flow: #ffd34d;
+  --mimic-heat: #d9480f;
+  --mimic-steam: #9c36b5;
+  --mimic-water: #1971c2;
+  --mimic-cooling: #0c8599;
+  --mimic-power: #b08900;
+  --mimic-vacuum: #6c757d;
   --level-glass: #e9ecef;
   --level-housing: #3a3d40;
   --shadow-lens: 0 3px 3px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.25);
@@ -143,7 +149,7 @@ body { margin: 0; }
 .lens-btn:active { transform: translateY(2px); }
 .lens-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .lens-row { display: flex; flex-wrap: wrap; gap: var(--space-8); }
-.lens-btn:focus-visible, .knob:focus-visible, .guard-btn:focus-visible, .sel-pos:focus-visible, .advanced summary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.lens-btn:focus-visible, .knob:focus-visible, .guard-btn:focus-visible, .advanced summary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
 
 /* LED */
 .led { display: inline-flex; align-items: center; gap: var(--space-6); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
@@ -179,11 +185,22 @@ body { margin: 0; }
 .valve-row { display: flex; align-items: center; gap: var(--space-6); }
 .valve-values { display: flex; flex-wrap: wrap; gap: var(--space-4); justify-content: center; }
 
-/* Selector */
-.selector { display: grid; justify-items: center; gap: var(--space-4); }
-.sel-positions { display: flex; gap: var(--space-14); }
-.sel-pos { padding: 2px var(--space-4); background: none; border: 0; color: var(--ink); font-family: var(--font-stencil); font-size: 0.9rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; }
-.sel-pos[aria-pressed='true'] { border-bottom-color: var(--ink); }
+/* Plant overview: a raised part opens its controls, a flat part has none */
+.overview svg { display: block; width: 100%; height: auto; }
+.part-box { fill: var(--mimic-bg); }
+.part-open { cursor: pointer; outline: none; }
+.part-open .part-box { fill: var(--gauge-face); filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4)); }
+.part-open:hover .part-box { fill: var(--panel-edge); }
+.part-open.selected .part-box { fill: var(--lens-lit-bg); filter: drop-shadow(0 0 7px var(--lens-lit-glow)); }
+.part-open:focus-visible .part-box { stroke: var(--focus-ring); stroke-width: 5px; }
+.part-parked { opacity: 0.7; }
+.group.focused { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+
+/* Setpoint: a knob and a field to type in */
+.lcd-input { width: 9ch; font-variant-numeric: tabular-nums; }
+.lcd-input:disabled { opacity: 0.6; cursor: not-allowed; }
+.lcd-input:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.stack { display: grid; gap: var(--space-14); align-content: start; min-width: 0; }
 
 /* Advanced drawer */
 .advanced summary { cursor: pointer; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; user-select: none; }
@@ -194,7 +211,7 @@ body { margin: 0; }
 
 /* Board */
 .board { padding: var(--space-16); background: var(--floor); color: var(--floor-text); font-family: var(--font-sans); display: grid; gap: var(--space-14); }
-.board-head { display: grid; grid-template-columns: minmax(230px, 1fr) auto minmax(300px, 1.4fr); gap: var(--space-16); align-items: center; }
+.board-head { display: grid; grid-template-columns: minmax(230px, 1fr) minmax(300px, 1.4fr); gap: var(--space-16); align-items: center; }
 .board-title { margin: 0; font-size: 1.7rem; font-weight: 700; letter-spacing: 0.08em; line-height: 1.1; }
 .board-stats { display: grid; gap: var(--space-6); margin-top: var(--space-8); }
 .board-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-14); color: var(--floor-muted); font-size: 14px; line-height: 1.5; }
@@ -384,51 +401,124 @@ body { margin: 0; }
     };
   }
 
-  // Selector: rotary switch with named positions. { positions: ['Boiler', …], value, onChange }
-  function selector(root, o) {
-    root.className = 'selector';
-    var row = document.createElement('div');
-    row.className = 'sel-positions';
-    var svg = el('svg', { viewBox: '0 0 80 80', width: 72, height: 72, 'aria-hidden': 'true' });
-    var id = 'se' + (++uid);
+  // The parts of the plant to be (docs/adr/0029-target-plant.svg). open: the section with its controls, group: the
+  // control group in it. A part without open has no controls and can't be clicked.
+  var PARTS = [
+    { id: 'gas', name: ['Gas supply'], x: 205, y: 14, w: 120, h: 40, m: 'heat', round: 1 },
+    { id: 'burner', name: ['Burner'], x: 200, y: 78, w: 130, h: 44, m: 'heat', open: 'boiler', group: 'g-gas' },
+    { id: 'surface', name: ['Boiler surface'], x: 200, y: 146, w: 130, h: 54, m: 'heat' },
+    { id: 'economizer', name: ['Economizer'], x: 200, y: 460, w: 130, h: 90, m: 'heat' },
+    { id: 'preheater', name: ['Air preheater'], x: 200, y: 586, w: 130, h: 44, m: 'heat', parked: 1 },
+    { id: 'stack', name: ['Stack'], x: 210, y: 654, w: 110, h: 38, m: 'heat', round: 1 },
+    { id: 'surroundings', name: ['Surroundings'], x: 400, y: 40, w: 125, h: 44, m: 'heat', round: 1 },
+    { id: 'air', name: ['Combustion air'], x: 420, y: 586, w: 140, h: 44, m: 'heat', round: 1 },
+    { id: 'boiler', name: ['Boiler'], x: 400, y: 146, w: 120, h: 54, m: 'water', open: 'boiler' },
+    { id: 'relief', name: ['Relief valve'], x: 700, y: 40, w: 120, h: 44, m: 'steam' },
+    { id: 'atmosphere', name: ['Atmosphere'], x: 890, y: 40, w: 120, h: 44, m: 'steam', round: 1 },
+    { id: 'msv', name: ['Main steam', 'valve'], x: 820, y: 146, w: 120, h: 54, m: 'steam', open: 'turbine', group: 'g-steam' },
+    { id: 'turbinevalve', name: ['Turbine valve'], x: 1000, y: 146, w: 130, h: 54, m: 'steam', open: 'turbine', group: 'g-steam' },
+    { id: 'turbine', name: ['Turbine'], x: 1190, y: 146, w: 120, h: 54, m: 'steam', open: 'turbine', group: 'g-speed' },
+    { id: 'generator', name: ['Generator'], x: 1370, y: 146, w: 120, h: 54, m: 'power', open: 'turbine', group: 'g-breaker' },
+    { id: 'load', name: ['Load'], x: 1550, y: 150, w: 80, h: 46, m: 'power', round: 1 },
+    { id: 'bypass', name: ['Bypass valve'], x: 820, y: 250, w: 120, h: 44, m: 'steam', open: 'turbine', group: 'g-steam' },
+    { id: 'drain', name: ['Drain'], x: 370, y: 250, w: 100, h: 40, m: 'water', open: 'boiler', group: 'g-water' },
+    { id: 'condenser', name: ['Condenser'], x: 1190, y: 310, w: 120, h: 110, m: 'cooling', open: 'condenser' },
+    { id: 'car', name: ['Air extraction pump'], x: 920, y: 316, w: 190, h: 36, m: 'vacuum', open: 'condenser', group: 'g-press' },
+    { id: 'sjae', name: ['SJAE'], x: 920, y: 362, w: 190, h: 36, m: 'vacuum', open: 'condenser', group: 'g-press' },
+    { id: 'recirc', name: ['Recirculation', 'pump'], x: 1370, y: 312, w: 120, h: 50, m: 'cooling', open: 'condenser', group: 'g-recirc' },
+    { id: 'coolin', name: ['Cooling water,', '10 °C'], x: 1525, y: 308, w: 125, h: 58, m: 'cooling', round: 1 },
+    { id: 'coolout', name: ['Cooling water out'], x: 1370, y: 380, w: 170, h: 36, m: 'cooling', round: 1 },
+    { id: 'hotwell', name: ['Hotwell'], x: 1190, y: 470, w: 120, h: 76, m: 'water', open: 'condenser', group: 'g-hotwell' },
+    { id: 'condpump', name: ['Condensation', 'pump'], x: 820, y: 480, w: 140, h: 54, m: 'water', open: 'condenser', group: 'g-cond' },
+    { id: 'heater', name: ['Extraction heater'], x: 560, y: 480, w: 160, h: 54, m: 'steam' },
+    { id: 'storagein', name: ['Storage'], x: 1420, y: 462, w: 100, h: 34, m: 'water', round: 1 },
+    { id: 'storageout', name: ['Storage'], x: 1420, y: 520, w: 100, h: 34, m: 'water', round: 1 }
+  ];
+  var PIPES = [
+    ['heat', 'M265 54 L265 77'], ['heat', 'M265 122 L265 145'], ['heat', 'M265 200 L265 459'], ['heat', 'M265 550 L265 585'],
+    ['heat', 'M265 630 L265 653'], ['heat', 'M330 173 L399 173'], ['heat', 'M462 146 L462 85'],
+    ['heat', 'M420 608 L331 608', 1], ['heat', 'M200 608 L110 608 L110 100 L199 100', 1],
+    ['steam', 'M520 173 L819 173'], ['steam', 'M760 173 L760 85'], ['steam', 'M820 62 L889 62'], ['steam', 'M940 173 L999 173'],
+    ['steam', 'M1130 173 L1189 173'], ['steam', 'M880 200 L880 249'], ['steam', 'M940 272 L1220 272 L1220 309'], ['steam', 'M1280 200 L1280 309'],
+    ['steam', 'M1220 200 L1220 224 L890 224 A10 10 0 0 0 870 224 L640 224 L640 479'],
+    ['water', 'M420 200 L420 249'], ['water', 'M1220 420 L1220 469'], ['water', 'M1280 420 L1280 469'], ['water', 'M1190 508 L961 508'],
+    ['water', 'M820 508 L721 508'], ['water', 'M560 508 L331 508'], ['water', 'M330 472 L490 472 L490 201'], ['water', 'M1420 479 L1311 494'],
+    ['water', 'M1310 522 L1419 537'], ['water', 'M640 534 L640 566 L500 566 L500 509'],
+    ['cooling', 'M1525 337 L1491 337'], ['cooling', 'M1370 337 L1311 337'], ['cooling', 'M1310 398 L1369 398'],
+    ['power', 'M1310 173 L1369 173'], ['power', 'M1490 173 L1549 173'],
+    ['vacuum', 'M1110 334 L1189 334', 1], ['vacuum', 'M1110 380 L1189 380', 1], ['vacuum', 'M850 380 L919 380', 1]
+  ];
+  var PIPE_LABELS = [
+    [275, 138, 'flue gas'], [275, 335, 'flue gas'], [275, 572, 'flue gas'], [365, 164, 'heat', 'middle'], [472, 118, 'heat loss'], [120, 360, 'hot air'],
+    [640, 164, 'steam', 'middle'], [1080, 262, 'vapour', 'middle'], [1292, 262, 'exhaust'], [1050, 215, 'extraction steam', 'middle'], [395, 230, 'drain', 'middle'],
+    [1210, 450, 'condensate', 'end'], [1292, 450, 'exhaust moisture'], [770, 498, 'Return', 'middle', 1], [445, 498, 'hotter Return', 'middle', 1],
+    [502, 350, 'hottest Return', 'start', 1], [652, 560, 'heater drain, pumped forward'], [1365, 470, 'makeup', 'middle'], [1365, 545, 'reject', 'middle'],
+    [1340, 390, 'heat', 'middle'], [1340, 164, 'shaft', 'middle'], [1520, 164, 'electricity', 'middle'], [1150, 325, 'vacuum', 'middle'], [1150, 371, 'vacuum', 'middle'],
+    [840, 372, 'motive steam', 'end'], [640, 650, 'Dashed: the air preheater, parked in #90.']
+  ];
+  var CHIPS = [
+    { id: 'pressure', x: 530, y: 180, w: 120 },
+    { id: 'load', x: 1535, y: 200, w: 115 },
+    { id: 'stack', x: 330, y: 656, w: 120 }
+  ];
+
+  // Overview diagram of all parts of the plant: { onOpen(section, group), value: part id }
+  function overview(svg, o) {
+    var id = 'ov' + (++uid), selected = o.value, boxes = {}, chips = {};
+    svg.setAttribute('viewBox', '0 0 1660 704');
+    svg.setAttribute('role', 'group');
+    svg.setAttribute('aria-label', 'Plant overview');
     var defs = el('defs', {}, svg);
-    var bz = el('linearGradient', { id: id, x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
-    el('stop', { offset: 0, 'stop-color': 'var(--gauge-bezel-hi)' }, bz);
-    el('stop', { offset: 1, 'stop-color': 'var(--gauge-bezel-lo)' }, bz);
-    el('circle', { cx: 40, cy: 40, r: 36, fill: 'url(#' + id + ')', stroke: 'var(--gauge-bezel-line)' }, svg);
-    var cap = el('g', {}, svg);
-    el('circle', { cx: 40, cy: 40, r: 28, fill: 'var(--knob-cap-hi)' }, cap);
-    el('rect', { x: 36, y: 6, width: 8, height: 34, rx: 3, fill: 'var(--knob-cap-lo)', stroke: 'var(--knob-pointer)' }, cap);
-    var value = o.value || 0;
-    var buttons = o.positions.map(function (name, i) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'sel-pos';
-      b.textContent = name;
-      b.addEventListener('click', function () { pick(i); });
-      row.appendChild(b);
-      return b;
+    ['heat', 'steam', 'water', 'cooling', 'power', 'vacuum'].forEach(function (m) {
+      var mk = el('marker', { id: id + m, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto' }, defs);
+      el('path', { d: 'M0 0L10 5L0 10z', fill: 'var(--mimic-' + m + ')' }, mk);
     });
-    function draw() {
-      var n = o.positions.length;
-      var deg = n > 1 ? -45 + 90 * value / (n - 1) : 0;
-      cap.setAttribute('transform', 'rotate(' + deg + ' 40 40)');
-      buttons.forEach(function (b, i) { b.setAttribute('aria-pressed', String(i === value)); });
+    el('rect', { width: 1660, height: 704, rx: 8, fill: 'var(--mimic-bg)' }, svg);
+    PIPES.forEach(function (p) {
+      var line = el('path', { d: p[1], fill: 'none', stroke: 'var(--mimic-' + p[0] + ')', 'stroke-width': 3.5, 'marker-end': 'url(#' + id + p[0] + ')' }, svg);
+      if (p[2]) line.setAttribute('stroke-dasharray', '8 6');
+    });
+    PIPE_LABELS.forEach(function (l) {
+      var t = text(svg, l[0], l[1], l[2], 15, l[3] === 'middle' || l[3] === 'end' ? l[3] : 'start', l[4] ? 700 : 400);
+      t.style.paintOrder = 'stroke';
+      t.style.stroke = 'var(--mimic-bg)';
+      t.style.strokeWidth = '5px';
+    });
+    PARTS.forEach(function (p) {
+      var g = el('g', { 'class': 'part' + (p.open ? ' part-open' : '') + (p.parked ? ' part-parked' : '') }, svg);
+      var box = el('rect', { 'class': 'part-box', x: p.x, y: p.y, width: p.w, height: p.h, rx: p.round ? p.h / 2 : 4, stroke: 'var(--mimic-' + p.m + ')', 'stroke-width': 3 }, g);
+      if (p.parked) box.setAttribute('stroke-dasharray', '8 6');
+      var first = p.y + p.h / 2 + 6 - (p.name.length - 1) * 9;
+      p.name.forEach(function (line, i) { text(g, p.x + p.w / 2, first + i * 18, line, 16); });
+      if (!p.open) return;
+      boxes[p.id] = g;
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('role', 'button');
+      g.setAttribute('aria-label', 'Open ' + p.name.join(' '));
+      var pick = function () { select(p.id); if (o.onOpen) o.onOpen(p.open, p.group); };
+      g.addEventListener('click', pick);
+      g.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
+      });
+    });
+    CHIPS.forEach(function (c) {
+      el('rect', { x: c.x, y: c.y, width: c.w, height: 28, fill: 'var(--lcd-bg)', stroke: 'var(--lcd-border)', 'stroke-width': 2 }, svg);
+      var t = el('text', { x: c.x + c.w - 8, y: c.y + 20, 'text-anchor': 'end', 'font-size': 18, fill: 'var(--lcd-text)' }, svg);
+      t.style.fontFamily = 'var(--font-lcd)';
+      chips[c.id] = t;
+    });
+    function select(partId) {
+      selected = partId;
+      Object.keys(boxes).forEach(function (k) {
+        boxes[k].classList.toggle('selected', k === selected);
+        boxes[k].setAttribute('aria-pressed', String(k === selected));
+      });
     }
-    function pick(i) {
-      value = i;
-      draw();
-      if (o.onChange) o.onChange(i, o.positions[i]);
-    }
-    svg.style.cursor = 'pointer';
-    svg.addEventListener('click', function () { pick((value + 1) % o.positions.length); });
-    root.appendChild(row);
-    root.appendChild(svg);
-    draw();
-    return { pick: pick };
+    select(selected);
+    return { select: select, value: function (chip, str) { chips[chip].textContent = str; } };
   }
 
-  window.Steamboiler = { gauge: gauge, level: level, knob: knob, selector: selector };
+  window.Steamboiler = { gauge: gauge, level: level, knob: knob, overview: overview };
 })();
 </script>
 </head>
@@ -445,7 +535,6 @@ body { margin: 0; }
             <div class="readout"><span>Pressure</span><output class="lcd sm" id="ms-press"></output></div>
           </div>
         </div>
-        <div id="selector"></div>
         <div class="annunciator">
           <div class="annun-grid" id="annun"></div>
           <div class="lens-row">
@@ -456,6 +545,13 @@ body { margin: 0; }
       </div>
     </div>
   </div>
+
+  <!-- Overview: click a raised part to open its controls -->
+  <section class="plate" aria-labelledby="ov-title">
+    <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+    <h2 class="plate-title" id="ov-title">Plant</h2>
+    <div class="plate-inner"><div class="overview"><svg id="overview"></svg></div></div>
+  </section>
 
   <!-- Boiler -->
   <section class="section plate" id="sec-boiler">
@@ -487,7 +583,7 @@ body { margin: 0; }
         <div class="cluster">
           <div class="instrument"><div class="instrument-label">Pressure</div><svg id="g-press" width="210" height="200"></svg><output class="lcd" id="b-press"></output></div>
         </div>
-        <div class="group">
+        <div class="group" id="g-gas">
           <h3 class="group-title">Gas Flow Control</h3>
           <div class="valve">
             <svg id="k-gas" width="150" height="150"></svg>
@@ -502,7 +598,7 @@ body { margin: 0; }
         </div>
         <div class="cluster">
           <div class="instrument"><div class="instrument-label">Water volume</div><svg id="g-level" width="96" height="190"></svg><output class="lcd" id="b-water"></output></div>
-          <div class="group">
+          <div class="group" id="g-water">
             <h3 class="group-title">Water Valve Control</h3>
             <div class="readout-label">Drain Valve</div>
             <button type="button" class="lens-btn" id="drain"></button>
@@ -516,12 +612,15 @@ body { margin: 0; }
         <div class="readout"><span>Heating rate</span><span class="readout-values"><span class="led" id="l-rate" title="Alarm above 24 K/min"><span class="led-lamp"></span>Over limit</span><output class="lcd" id="b-rate"></output></span></div>
         <div class="readout"><span>Relief valve</span><span class="readout-values"><span class="led" id="l-relief" title="Opens at 178 bar, closes at 171 bar"><span class="led-lamp"></span>Open</span><output class="lcd" id="b-vent"></output></span></div>
         <div class="readout"><span>Burner trip</span><span class="led" id="l-burner" title="Gas shut off below 20% water, raise the gas to restart"><span class="led-lamp"></span>Tripped</span></div>
+        <div class="readout"><span>Stack temperature</span><output class="lcd" id="b-stack"></output></div>
+        <div class="readout"><span>Boiler efficiency</span><output class="lcd" id="b-eff"></output></div>
       </div>
       <details class="advanced">
         <summary>Advanced</summary>
         <div class="readouts">
           <div class="readout"><span>Steam Mass</span><span class="readout-values"><output class="lcd" id="b-steam"></output><output class="lcd sm" id="b-dsteam"></output></span></div>
           <div class="readout"><span>Energy</span><output class="lcd" id="b-energy"></output></div>
+          <div class="readout"><span>Steam Removal</span><output class="lcd" id="b-removal"></output></div>
         </div>
       </details>
     </div>
@@ -539,7 +638,7 @@ body { margin: 0; }
           </div>
           <div class="instrument"><div class="instrument-label">Hotwell level</div><svg id="g-hot" width="96" height="190"></svg><output class="lcd" id="c-level"></output><output class="lcd sm" id="c-dlevel"></output></div>
         </div>
-        <div class="group">
+        <div class="group" id="g-press">
           <h3 class="group-title">Pressure Control</h3>
           <div class="cols-2">
             <div class="valve">
@@ -555,9 +654,9 @@ body { margin: 0; }
         </div>
       </div>
       <div class="cols-3" style="grid-template-columns:1fr 1fr 2fr">
-        <div class="group"><h3 class="group-title">Recirculation Pump</h3><div data-valve="recirc"></div></div>
-        <div class="group"><h3 class="group-title">Condensation Pump</h3><div data-valve="cond"></div></div>
-        <div class="group"><h3 class="group-title">Hotwell Makeup &amp; Reject</h3><div class="cols-2"><div data-valve="makeup"></div><div data-valve="reject"></div></div></div>
+        <div class="group" id="g-recirc"><h3 class="group-title">Recirculation Pump</h3><div data-valve="recirc"></div></div>
+        <div class="group" id="g-cond"><h3 class="group-title">Condensation Pump</h3><div data-valve="cond"></div></div>
+        <div class="group" id="g-hotwell"><h3 class="group-title">Hotwell Makeup &amp; Reject</h3><div class="cols-2"><div data-valve="makeup"></div><div data-valve="reject"></div></div></div>
       </div>
       <h3 class="group-title">Condenser Status</h3>
       <div class="readouts">
@@ -575,7 +674,7 @@ body { margin: 0; }
     <h2 class="plate-title">Turbine</h2>
     <div class="plate-inner">
       <div class="cols-3" style="grid-template-columns:1.5fr 1fr 1.1fr">
-        <div class="group">
+        <div class="group" id="g-steam">
           <h3 class="group-title">Steam Flow</h3>
           <div class="readout-label">Main Steam Valve</div>
           <div class="lens-row" style="align-items:center">
@@ -584,14 +683,25 @@ body { margin: 0; }
           </div>
           <div class="cols-2"><div data-valve="bypass"></div><div data-valve="turbine"></div></div>
         </div>
-        <div class="group">
+        <div class="stack">
+        <div class="group" id="g-speed">
           <h3 class="group-title">Turbine Speed Control</h3>
           <div class="readout-label">Speed mode</div>
           <div class="lens-row" id="modes"></div>
           <div class="readout-label">Run-up point</div>
           <div class="lens-row" id="points"></div>
         </div>
-        <div class="group">
+        <div class="group" id="g-load">
+          <h3 class="group-title">Generator Load</h3>
+          <div class="valve">
+            <div class="readout-label">Load setpoint (MW)</div>
+            <svg id="k-load" width="96" height="96"></svg>
+            <input class="lcd lcd-input" id="load-input" type="number" min="0" max="200" step="1" aria-label="Load setpoint in MW">
+          </div>
+          <div class="lcd-msg" id="load-refusal">Close the generator breaker first</div>
+        </div>
+        </div>
+        <div class="group" id="g-breaker">
           <h3 class="group-title">Generator Breaker</h3>
           <div class="hazard"><div class="well"><button type="button" class="guard-btn" id="breaker"></button></div></div>
           <span class="led green" id="l-ready" title="Breaker can be closed when RPM is between 2998 and 3002"><span class="led-lamp"></span>Ready to close</span>
@@ -602,12 +712,13 @@ body { margin: 0; }
       <h3 class="group-title">Turbine Status</h3>
       <div class="readouts">
         <div class="readout"><span>Steam flow</span><output class="lcd" id="t-steam"></output></div>
-        <div class="readout"><span>Generator output</span><output class="lcd" id="t-mw"></output></div>
+        <div class="readout"><span>Generator load</span><output class="lcd" id="t-mw"></output></div>
+        <div class="readout"><span>Load setpoint</span><output class="lcd" id="t-load"></output></div>
         <div class="readout"><span>Turbine speed</span><output class="lcd" id="t-rpm"></output></div>
         <div class="readout"><span>Run-up point</span><output class="lcd" id="t-set"></output></div>
         <div class="readout"><span>Mode</span><output class="lcd" id="t-mode"></output></div>
         <div class="readout"><span>Breaker</span><output class="lcd" id="t-breaker"></output></div>
-        <div class="readout"><span class="led" id="l-ttrip" title="Turbine tripped: condenser pressure rose above the vacuum limit"><span class="led-lamp"></span>Turbine trip</span></div>
+        <div class="readout"><span class="led" id="l-ttrip" title="Turbine tripped: condenser pressure rose above the vacuum limit, or the main steam valve closed on low boiler pressure"><span class="led-lamp"></span>Turbine trip</span></div>
       </div>
     </div>
   </section>
@@ -641,16 +752,17 @@ body { margin: 0; }
   // Limits from src/context/const.ts
   var MAX_GAS = 12000, RELIEF_OPEN = 178, RELIEF_CLOSE = 171, HEAT_LIMIT = 24, BURNER_LOW = 20;
   var VAC_HIGH = 100, VAC_LOW = 60, VAC_LIMIT = 327, SYNC = 3000, MARGIN = 2, MAX_RPM = 3300, MSV_MIN = 10;
+  var LOAD_RATE = 0.03 * 123 / 60, NO_LOAD_FLOW = 4.83;
   var RUN_UP_POINTS = [500, 1500, 2500, 3000], RUN_UP_RATE = 50, HOLD_WINDOW = 5;
 
   var COLD = { gas: 0, water: 35, press: 1.013, drain: false, relief: false, vented: 0, burnerTrip: false, rate: 0, de: 0, steam: 0, dsteam: 0, energy: 0,
     car: false, sjaeOn: false, vac: 1013, hot: 70, dhot: 0, hotTemp: 20, cSteam: 0, returnFlow: 0, intake: 0,
-    msv: false, mode: 'free', breaker: false, rpm: 0, point: 3000, trip: false, tSteam: 0, mw: 0,
+    msv: false, mode: 'free', breaker: false, rpm: 0, point: 3000, trip: false, tSteam: 0, mw: 0, load: 0, stack: 20, eff: 0,
     v: { sjae: 0, recirc: 0, cond: 0, makeup: 0, reject: 0, bypass: 0, turbine: 0 } };
-  var RUN = { gas: 7700, water: 50, press: 165, drain: false, relief: false, vented: 0, burnerTrip: false, rate: 0, de: 0, steam: 5500, dsteam: 0, energy: 180000,
+  var RUN = { gas: 3200, water: 50, press: 165, drain: false, relief: false, vented: 0, burnerTrip: false, rate: 0, de: 0, steam: 5500, dsteam: 0, energy: 180000,
     car: true, sjaeOn: true, vac: 80, hot: 70, dhot: 0, hotTemp: 40, cSteam: 1000, returnFlow: 120, intake: 2000,
-    msv: true, mode: 'rampUp', breaker: false, rpm: 2980, point: 3000, trip: false, tSteam: 60, mw: 0,
-    v: { sjae: 0.5, recirc: 0.6, cond: 0.5, makeup: 0, reject: 0, bypass: 0.1, turbine: 0.35 } };
+    msv: true, mode: 'rampUp', breaker: false, rpm: 2980, point: 3000, trip: false, tSteam: 6, mw: 0, load: 0, stack: 160, eff: 93,
+    v: { sjae: 0.5, recirc: 0.6, cond: 0.5, makeup: 0, reject: 0, bypass: 0.1, turbine: 0.03 } };
   var s = JSON.parse(JSON.stringify(RUN));
 
   // Instruments
@@ -660,6 +772,7 @@ body { margin: 0; }
   var gVac = S.gauge($('g-vac'), { min: 0, max: 1100, major: 200, minor: 100, unit: 'mBar', zones: [[0, VAC_LOW, O], [VAC_LOW, VAC_HIGH, G], [VAC_HIGH, VAC_LIMIT, O], [VAC_LIMIT, 1100, R]] });
   var gHot = S.level($('g-hot'), { zones: [[0, 10, R], [10, 55, O], [55, 75, G], [75, 95, O], [95, 100, R]], ticks: [0, 55, 75, 100] });
   var gRpm = S.gauge($('g-rpm'), { min: 0, max: MAX_RPM, major: 1100, minor: 275, unit: 'RPM', marks: [SYNC] });
+  var kLoad = S.knob($('k-load'), { min: 0, max: 200, step: 1, label: 'Load setpoint', ends: ['0', '200'], onChange: function (v) { s.load = v; render(); } });
   var kGas = S.knob($('k-gas'), { min: 0, max: MAX_GAS, step: 250, value: s.gas, label: 'Gas flow', ends: ['OFF', 'MAX'], onChange: function (v) { setGas(v); } });
 
   function setGas(v) {
@@ -759,18 +872,37 @@ body { margin: 0; }
   $('car').addEventListener('click', function () { s.car = !s.car; render(); });
   $('sjae').addEventListener('click', function () { s.sjaeOn = !s.sjaeOn; render(); });
   $('msv').addEventListener('click', function () {
-    if (!s.msv && s.press < MSV_MIN) return;
+    if (!s.msv && s.press <= MSV_MIN) return;
     s.msv = !s.msv;
     render();
   });
-  $('breaker').addEventListener('click', function () { s.breaker = !s.breaker; render(); });
+  $('breaker').addEventListener('click', function () {
+    s.breaker = !s.breaker;
+    if (!s.breaker) loseLoad();
+    render();
+  });
+  function loseLoad() { s.load = 0; s.mw = 0; kLoad.set(0); }
 
-  var view = 0;
-  S.selector($('selector'), { positions: ['Boiler', 'Condenser', 'Turbine'], onChange: function (i) { view = i; render(); } });
+  $('load-input').addEventListener('change', function () {
+    var v = Number($('load-input').value);
+    if (Number.isFinite(v) && s.breaker) { s.load = clamp(v, 0, 200); kLoad.set(s.load); }
+    $('load-input').blur();
+    render();
+  });
+
+  var view = 'boiler', focused = null;
+  var plant = S.overview($('overview'), { value: 'boiler', onOpen: function (section, group) {
+    view = section;
+    if (focused) focused.classList.remove('focused');
+    focused = group ? $(group) : null;
+    if (focused) focused.classList.add('focused');
+    render();
+  } });
 
   function scenario(from) {
     s = JSON.parse(JSON.stringify(from));
     kGas.set(s.gas);
+    kLoad.set(s.load);
     Object.keys(VALVES).forEach(function (k) { VALVES[k].knob.set(s.v[k] * 100); });
     ALARMS.forEach(function (a) { a.acked = false; });
     render();
@@ -781,6 +913,7 @@ body { margin: 0; }
   // Stand-in dynamics, 5 ticks a second. Not the simulator.
   function tick() {
     var dt = 0.2, t0 = tsat(s.press), steamOut = 0;
+    if (s.msv && s.press <= MSV_MIN) { s.msv = false; if (s.rpm > 0) s.trip = true; }
     if (s.drain) s.water = Math.max(0, s.water - 0.5 * dt);
     if (s.water < BURNER_LOW && s.gas > 0) { s.burnerTrip = true; s.gas = 0; kGas.set(0); }
     if (s.msv) steamOut = (s.v.bypass + (s.trip ? 0 : s.v.turbine)) * 200;
@@ -811,11 +944,11 @@ body { margin: 0; }
     if (s.vac > VAC_LIMIT && s.rpm > 0 && (s.msv || s.breaker)) s.trip = true;
     if (s.vac <= VAC_LIMIT && s.rpm === 0) s.trip = false;
 
-    if (s.trip) { s.breaker = false; s.mode = 'free'; s.rpm = Math.max(0, s.rpm - 40 * dt); }
+    if (s.trip) { if (s.breaker) loseLoad(); s.breaker = false; s.mode = 'free'; s.rpm = Math.max(0, s.rpm - 40 * dt); }
     else if (s.breaker) s.rpm = SYNC;
     else {
       if (s.mode === 'free') {
-        var target = s.tSteam / 200 * MAX_RPM * 2;
+        var target = s.tSteam / NO_LOAD_FLOW * SYNC;
         s.rpm = clamp(s.rpm + clamp(target - s.rpm, -60 * dt, 60 * dt), 0, MAX_RPM);
       } else if (s.mode === 'rampUp') {
         s.rpm = Math.min(s.point, s.rpm + RUN_UP_RATE / 60 * dt);
@@ -824,7 +957,15 @@ body { margin: 0; }
         s.rpm += (s.point - s.rpm) * 0.1;
       }
     }
-    s.mw = s.breaker ? s.tSteam * 0.76 : 0;
+    if (s.breaker) s.mw += clamp(s.load - s.mw, -LOAD_RATE * dt, LOAD_RATE * dt);
+    if (s.breaker && s.mode === 'hold') {
+      var wanted = (NO_LOAD_FLOW + s.mw / 0.76) / 200;
+      s.v.turbine = clamp(s.v.turbine + clamp(wanted - s.v.turbine, -0.002, 0.002), 0, 1);
+      VALVES.turbine.knob.set(s.v.turbine * 100);
+    }
+    var share = clamp(s.returnFlow / 171, 0, 1);
+    s.eff = s.gas > 0 ? 79 + 14.4 * share : 0;
+    s.stack = s.gas > 0 ? 160 + 220 * (1 - share) : 20;
     render();
   }
 
@@ -833,9 +974,11 @@ body { margin: 0; }
   function lens(id, on, label) { var b = $(id); b.textContent = label; b.classList.toggle('lit', !!on); }
 
   function render() {
-    ['sec-boiler', 'sec-condenser', 'sec-turbine'].forEach(function (id, i) { $(id).hidden = i !== view; });
-    $('main-stats').hidden = view === 0;
-    $('main-stats').style.display = view === 0 ? 'none' : '';
+    ['boiler', 'condenser', 'turbine'].forEach(function (name) { $('sec-' + name).hidden = name !== view; });
+    $('main-stats').style.display = view === 'boiler' ? 'none' : '';
+    plant.value('pressure', s.press.toFixed(1) + ' bar');
+    plant.value('load', s.mw.toFixed(1) + ' MW');
+    plant.value('stack', s.stack.toFixed(0) + ' °C');
     txt('ms-water', (s.water / 100).toFixed(1) + ' - Δ ' + s.dsteam.toFixed(0) + ' kg');
     txt('ms-press', s.press.toFixed(0) + ' bar');
 
@@ -854,6 +997,9 @@ body { margin: 0; }
     led('l-relief', s.relief);
     txt('b-vent', (s.vented / 1e3).toFixed(1) + ' t vented');
     led('l-burner', s.burnerTrip);
+    txt('b-stack', s.stack.toFixed(0) + ' °C');
+    txt('b-eff', s.eff.toFixed(1) + ' %');
+    txt('b-removal', ((s.msv ? s.v.bypass * 200 : 0) + s.tSteam).toFixed(1) + ' kg/s');
     txt('b-steam', s.steam.toFixed(1) + ' kg');
     txt('b-dsteam', 'Δ ' + s.dsteam.toFixed(2) + ' kg');
     txt('b-energy', s.energy.toFixed(1) + ' MJ');
@@ -888,7 +1034,7 @@ body { margin: 0; }
     });
 
     lens('msv', s.msv, s.msv ? 'Open' : 'Closed');
-    led('l-msv', s.press < MSV_MIN);
+    led('l-msv', s.press <= MSV_MIN);
     modeButtons.forEach(function (m) {
       var why = modeRefusal(m.key);
       m.el.classList.toggle('lit', s.mode === m.key);
@@ -912,7 +1058,13 @@ body { margin: 0; }
     $('breaker-warn').innerHTML = 'Breaker can only be closed when RPM is between 2998 and 3002<br>Current RPM: ' + s.rpm.toFixed(0);
     gRpm.set(s.rpm);
     txt('t-steam', s.tSteam.toFixed(0) + ' kg/s');
-    txt('t-mw', s.mw.toFixed(0) + ' MW');
+    txt('t-mw', s.mw.toFixed(1) + ' MW');
+    txt('t-load', s.load.toFixed(1) + ' MW');
+    kLoad.disable(!s.breaker);
+    $('load-input').disabled = !s.breaker;
+    $('load-input').title = s.breaker ? '' : 'Close the generator breaker first';
+    if (document.activeElement !== $('load-input')) $('load-input').value = s.load.toFixed(1);
+    $('load-refusal').hidden = s.breaker;
     txt('t-rpm', s.rpm.toFixed(0) + ' RPM');
     txt('t-set', (s.mode !== 'free' ? '+' : '') + s.point.toFixed(0) + ' RPM');
     txt('t-mode', MODE_LABELS[s.mode]);
