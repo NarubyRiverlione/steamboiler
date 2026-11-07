@@ -150,6 +150,28 @@ _Avoid_: Temperature rise, delta T
 How far the cooling water leaves below the saturation temperature of the condenser.
 _Avoid_: TTD, approach
 
+### Condenser vacuum
+
+**Condenser pressure**:
+The absolute pressure in the condenser shell: the shell vapour pressure plus the air pressure.
+_Avoid_: Vacuum (that is how far it is below atmospheric), back-pressure (that is the turbine's view of it)
+
+**Shell vapour pressure**:
+The pressure of the steam in the condenser shell: the saturation pressure at the temperature where the cooling water takes exactly the heat the exhaust brings.
+_Avoid_: Saturation pressure (that is the boiler's), steam pressure
+
+**Air pressure**:
+The pressure of the air in the condenser shell, from the air inventory.
+_Avoid_: Vacuum offset, air partial vacuum
+
+**Air in-leakage**:
+Air that leaks into the shell from outside, in kg/s. With the vacuum system stopped it is the only reason the vacuum is lost.
+_Avoid_: Leak (the Vent is steam leaving the boiler), vacuum decay
+
+**Vacuum system**:
+The air extraction pump and the SJAE together: the machines that remove air from the shell.
+_Avoid_: Vacuum reducers, vacuum pumps
+
 ### Operation
 
 **Ambient temperature**:

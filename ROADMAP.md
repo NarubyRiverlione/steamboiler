@@ -12,8 +12,8 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#88](https://github.com/NarubyRiverlione/steamboiler/issues/88) Extraction heaters: turbine steam heats the Return | P2 | ready-for-agent |  | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) |
-| 2 | [#91](https://github.com/NarubyRiverlione/steamboiler/issues/91) Condenser pressure: derive it physically instead of the steam-mass term | P2 | needs-triage |  |  |
+| 1 | [#100](https://github.com/NarubyRiverlione/steamboiler/issues/100) Condenser pressure: research and ADR for the physical model (ticket A of #91) | P2 | ready-for-agent |  | [#91](https://github.com/NarubyRiverlione/steamboiler/issues/91) |
+| 2 | [#91](https://github.com/NarubyRiverlione/steamboiler/issues/91) Condenser pressure: derive it physically instead of the steam-mass term | P2 | ready-for-agent | [#100](https://github.com/NarubyRiverlione/steamboiler/issues/100) |  |
 
 ## P3: experience and project health
 
@@ -44,7 +44,7 @@ Next: the first ticket with nothing under Waiting on.
 | 20 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |  |
 | 21 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
 | 22 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
-| 23 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage | [#88](https://github.com/NarubyRiverlione/steamboiler/issues/88) |  |
+| 23 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
 
 ## P5: UI and UX
 
