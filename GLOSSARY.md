@@ -49,7 +49,7 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow the plant is rated for, the full-gas steam flow: 171 kg/s. A design figure: the sim can pass more at 165 bar (see the departures in `design-basis.md`).
+The steam flow the plant is rated for, the full-gas steam flow: 161 kg/s, what full gas makes at 165 bar with the Return matching the steam, measured in a headless run (#74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 123 MWe.
 _Avoid_: Nominal flow
 
 **Valve capacity**:

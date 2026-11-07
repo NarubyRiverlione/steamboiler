@@ -34,12 +34,12 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 - **Shaft power** P = flow [kg/s] × enthalpy drop [kJ/kg] × `IsentropicEfficiency`, in W.
 - **Drive torque** T = (P / ω_s) · (2 − ω / ω_s) in N·m, ω_s = 2π · `SyncRPM` / 60: twice the sync-speed torque at standstill, no division by zero. It falls to zero at 2·ω_s (about 6000 rpm); there is no overspeed trip yet (#72).
 - **Losses** torque k·ω² (power k·ω³). k is calibrated so the no-load flow (`NoLoadFlowFraction` × `RatedSteamFlow`, at the rated drop) delivers exactly the loss power at sync speed: k = P_noload / ω_s³, about 4.0 MW at sync speed, so 3% of rated flow (5.1 kg/s at 917 kJ/kg) holds 3000 rpm in Free. The generator load is a separate torque (see Generator load).
-- **Inertia** J = 2·H·S / ω_s² in kg·m², with H = `InertiaConstant` (4 s) and S the rated electric output (`RatedSteamFlow` × `RatedEnthalpyDrop` × the two efficiencies, 130.6 MW), about 10 590 kg·m². Power factor is ignored (a real S is in MVA, about 15% more).
+- **Inertia** J = 2·H·S / ω_s² in kg·m², with H = `InertiaConstant` (4 s) and S the rated electric output (`RatedSteamFlow` × `RatedEnthalpyDrop` × the two efficiencies, 123.0 MW), about 9 970 kg·m². Power factor is ignored (a real S is in MVA, about 15% more).
 - **Motion** J · dω/dt = T − k·ω², stepped once per tick (Euler), floored at 0 rpm.
 
 | Constant (`CstTurbine`) | Value | Role |
 |---|---|---|
-| RatedSteamFlow | 171 kg/s | the design steam flow; sizes S and the loss |
+| RatedSteamFlow | 161 kg/s | what full gas makes at 165 bar with the Return matching the steam (measured, #74, ADR 0030); sizes S and the loss |
 | RatedEnthalpyDrop | 917 kJ/kg | isentropic drop at 165 bar to 100 mbar; sizes S and the loss |
 | InertiaConstant | 4 s | H of the shaft line; J is derived from it |
 | NoLoadFlowFraction | 0.03 | of rated flow; calibrates the losses |
@@ -112,11 +112,11 @@ Sync is not reachable from a cold start today (#18).
 
 - **Shaft balance:** `J·dω/dt = drive torque − loss torque − load torque`, `load torque = (load / GeneratorEfficiency) / ω` (constant power). `calculateRPM(rpm, flow, drop, loadMW)`; the load is 0 with the breaker open.
 - **Speed is free** (island model): it sags under load, the Hold PID opens the valve, and more load takes more steam. At the no-load flow the output is 0 MW.
-- **Load setpoint** (`TurbineState.loadSetpoint`, action `SET_LOAD_SETPOINT`): MW, default 0, clamped to 0 up to `LoadSetpointLimit` (200), above the rated output (`ratedOutputMW`, 130.6), so the steam limits the load (#84). Only with the breaker closed, in any speed mode; otherwise refused by `loadSetpointRefusal` ("Close the generator breaker first") and the state is unchanged. Hold has no new interlock; in Free the operator follows the load by hand.
+- **Load setpoint** (`TurbineState.loadSetpoint`, action `SET_LOAD_SETPOINT`): MW, default 0, clamped to 0 up to `LoadSetpointLimit` (200), above the rated output (`ratedOutputMW`, 123.0), so the steam limits the load (#84). Only with the breaker closed, in any speed mode; otherwise refused by `loadSetpointRefusal` ("Close the generator breaker first") and the state is unchanged. Hold has no new interlock; in Free the operator follows the load by hand.
 - **Load rate:** `electricOutput` moves toward the setpoint at `LoadRate` (3% of rated output per minute, about 3.9 MW/min), up and down (`loadAfter`), kept from tick to tick.
 - **Breaker:** the ±2 rpm rule stays. Whenever it opens, the load and setpoint are 0 on that tick and a reclose brings no load back. Steam that cannot carry the load, or a vacuum trip with load on, makes the speed fall and ends there. No reverse power protection or runback. A load lost in Free has no overspeed protection until #72.
 - **UI:** `LoadControl.tsx` (setpoint field, disabled with the refusal as its reason) and the load and load setpoint readouts in `TurbineReadouts.tsx`.
-- **Scenario:** `turbine-load` sets the setpoint to rated output at t = 0 and runs 3000 s with the gas ceiling at full gas: speed within 0.02 rpm of sync, 165 bar, breaker never opens, output 130.6 MW from about 2000 s (steam 162 kg/s, valve 81%, condenser 39–40 mbar). `max-output` (#84) takes the load past rated with the bypass shut: valve fully open at about 159 MW (200 kg/s, 50 mbar), then the speed sags and the breaker opens at −2 rpm. The load rejection that follows peaks at about 3144 rpm, Hold shuts the valve and is back within ±2 rpm in about 12 s, and the steam it no longer takes lifts the relief valve, because the gas hold comes down slowly.
+- **Scenario:** `turbine-load` shuts the bypass and sets the setpoint to rated output at t = 0 (#74: the 10 kg/s through the bypass is heat rated output cannot afford) and runs 3000 s with the gas ceiling at full gas: speed within ±2 rpm of sync, 165 bar, breaker never opens, output 123.0 MW from about 2000 s (steam 150 kg/s, valve 75%, gas about 11 250 L/s, condenser 33 mbar). `max-output` (#84) takes the load past rated with the bypass shut: the gas is the limit. Full gas at about 130 MW and 160 kg/s, pressure then sags, the valve is fully open at about 142 MW (172 kg/s, 147 bar), then the speed sags and the breaker opens at −2 rpm. The load rejection that follows peaks at about 3140 rpm, Hold shuts the valve and is back within ±2 rpm in about 12 s, and the steam it no longer takes lifts the relief valve, because the gas hold comes down slowly.
 
 ## Electric output (#14, since #71 the load carried)
 

@@ -17,7 +17,7 @@ All steam entering the condenser joined one steam pool and was charged the full 
 
 ## Consequences
 
-- At rated output (`turbine-load`, 130.6 MW) the condenser settles at 39–40 mbar instead of 69 mbar, and the better vacuum takes 162 kg/s of steam instead of 170.
+- At rated output (`turbine-load`, 130.6 MW before #74) the condenser settled at 39–40 mbar instead of 69 mbar, and the better vacuum took 162 kg/s of steam instead of 170. After #74 rated output is 123.0 MW, 150 kg/s and 33 mbar.
 - The bypass stays plain vapour on the latent heat: under 1% off at 165 bar, about 8% at 10 bar.
 - Quality ignores shaft speed: a turbine running up takes less work out of the steam than the full drop, so its exhaust quality is really higher than modelled.
 - The exhaust holds far more moisture than a real last stage allows, a result of having no superheater. Moisture is not a turbine limit here.

@@ -2,21 +2,21 @@ import { CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
-import { bandDirection } from "./band"
 import { atWorkingPressure, holdPressureWithGas, PressureHoldSettings } from "./pressure-hold"
 import { isAdjustTime, StartGas } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
 // Valve actions are deltas, so the operator asks for the difference to the position it wants.
 
-const { CstBoiler, CstTurbine } = CstSimulation
+const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
 export const LoopSettings = {
   BypassLoadOpening: 0.1, // bypass position once the main steam valve opens: 20 kg/s, close to the turbine's ~18 kg/s at sync speed
   SjaeOpening: 1, // SJAE valve position once there is steam
   CondensationPumpOpening: 0.1, // condensation pump position when the main steam valve opens
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
-  BoilerLevelBand: 0.05, // no pump change within target ± band
+  BoilerLevelBand: 0.05, // the level the scenarios judge the hold by: target ± band
+  LevelGain: 1, // pump position per unit of level error: 0.05 of level trims 0.05 of the pump (15 L/s)
   HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (normal level 70%)
   HotwellBandHigh: 0.75, // reject opens above the working band
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
@@ -39,8 +39,11 @@ export function hotwellValvePositions(level: number): { makeup: number; reject: 
 }
 
 // Valve actions are deltas: ask for the difference to the wanted position, nothing when already there
-const toPosition = (current: number, wanted: number, make: (delta: number) => PowerPlantAction): PowerPlantAction[] =>
-  current === wanted ? [] : [make(wanted - current)]
+const toPosition = (
+  current: number,
+  wanted: number,
+  make: (delta: number) => PowerPlantAction,
+): PowerPlantAction[] => (current === wanted ? [] : [make(wanted - current)])
 
 // At pressure: gas down to the heat-up gas, main steam valve open, bypass and condensation pump to their start positions
 function openMainSteam({ Boiler, Turbine, Condenser }: PowerPlantState): PowerPlantAction[] {
@@ -53,17 +56,23 @@ function openMainSteam({ Boiler, Turbine, Condenser }: PowerPlantState): PowerPl
       type: "ADJUST_STEAM_BYPASS_VALVE",
       payload: { bypassValvePosition },
     })),
-    ...toPosition(Condenser.condensationPumpValvePosition, S.CondensationPumpOpening, (condensationPumpValvePosition) => ({
-      type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
-      payload: { condensationPumpValvePosition },
-    })),
+    ...toPosition(
+      Condenser.condensationPumpValvePosition,
+      S.CondensationPumpOpening,
+      (condensationPumpValvePosition) => ({
+        type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
+        payload: { condensationPumpValvePosition },
+      }),
+    ),
   ]
 }
 
 // The SJAE trips below main-steam-valve pressure; restart it at its opening once there is steam
 function restartSjae({ Condenser }: PowerPlantState): PowerPlantAction[] {
   return [
-    ...(Condenser.isSjaeEnabled ? [] : [{ type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } } as const]),
+    ...(Condenser.isSjaeEnabled
+      ? []
+      : [{ type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } } as const]),
     ...toPosition(Condenser.sjaeValvePosition, S.SjaeOpening, (sjaeValvePosition) => ({
       type: "SET_SJAE_VALVE_POSITION",
       payload: { sjaeValvePosition },
@@ -78,14 +87,18 @@ function startSteam(state: PowerPlantState): PowerPlantAction[] {
   return [...(atWorkingPressure(state.Boiler.pressure) ? openMainSteam(state) : []), ...restartSjae(state)]
 }
 
+// Feedforward feedwater control (#74): the Return costs heat, so the pump follows the steam leaving the boiler and the
+// level only trims it. The pump position that returns the steam flow, plus LevelGain per unit of level error.
 function holdBoilerLevel({ Boiler, Condenser, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
-  const direction = bandDirection(level - S.BoilerLevelTarget, S.BoilerLevelBand, Boiler.deltaWaterMass)
-  const delta = nudge(Condenser.condensationPumpValvePosition, direction)
-  return delta === 0
-    ? []
-    : [{ type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: delta } }]
+  const steamOut = Turbine.turbineSteamFlowOut + Turbine.bypassSteamFlowOut
+  const feedforward = steamOut / CstCondenser.CondensationPump_MaxFlowRate
+  const wanted = Math.max(0, Math.min(1, feedforward + S.LevelGain * (S.BoilerLevelTarget - level)))
+  return toPosition(Condenser.condensationPumpValvePosition, wanted, (condensationPumpValvePosition) => ({
+    type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
+    payload: { condensationPumpValvePosition },
+  }))
 }
 
 function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {

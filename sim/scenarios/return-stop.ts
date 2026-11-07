@@ -11,14 +11,15 @@ export const ReturnStopAt = 15
 
 const initial = loadSnapshot("bypass-loop")
 
-// Edge (#87): the Return stops at full gas. The economizer recovers nothing, so about 60 MW less goes into the water in
+// Edge (#87, #74): the Return stops at full gas. The economizer recovers nothing, so about 60 MW less goes into the water in
 // one tick (no thermal mass in the economizer, ADR 0029); the pressure must stay controlled with no lag added. From the
 // settled bypass loop the gas goes to full and the bypass fully open, which cannot carry what full gas makes, so the
 // relief valve holds the pressure. At ReturnStopAt the condensation pump is shut and held shut. The gas stays at full:
 // the operator's pressure hold is taken away, as are the pump nudges after the stop.
 export const returnStop: Scenario = {
   name: "return-stop",
-  description: "From the bypass-loop snapshot: full gas and the bypass fully open, then the condensation pump shuts at 15 s and the Return stops",
+  description:
+    "From the bypass-loop snapshot: full gas and the bypass fully open, then the condensation pump shuts at 15 s and the Return stops",
   duration: 120,
   sampleEvery: 1,
   initial,
@@ -33,7 +34,10 @@ export const returnStop: Scenario = {
     },
     {
       at: ReturnStopAt,
-      action: { type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: -1 } },
+      action: {
+        type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
+        payload: { condensationPumpValvePosition: -1 },
+      },
     },
   ],
   operator: (state, time) =>

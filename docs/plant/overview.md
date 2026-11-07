@@ -36,17 +36,16 @@ How the parts of the plant connect, what each one does, and where the energy com
 
 ## Where the energy comes from
 
-Measured at the end of `turbine-load`: 130.6 MW, 165 bar, 172 kg/s of steam, of which 10 kg/s through the bypass. Heat figures are calculated from that run with the steam table.
+Measured at the end of `turbine-load` (#74): 123.0 MW, 165 bar, 150 kg/s of steam, the bypass shut, gas 11 240 L/s. Heat figures are calculated from that run.
 
 | In | MW | | Out | MW |
 |---|---|---|---|---|
-| Gas | 162 | | Electricity | 131 |
-| **Free heat in the Return** | **226** | | Generator and turbine losses | 7 |
-| | | | Stack | 5 |
+| Gas (fuel heat) | 393 | | Electricity | 123.0 |
+| | | | Stack | 24 |
 | | | | Boiler heat loss | 0.5 |
-| | | | Cooling water | 244 |
-| **Total** | **388** | | **Total** | **388** |
+| | | | Generator and turbine losses, cooling water | 246 |
+| **Total** | **393** | | **Total** | **393** |
 
-Gas alone would give the plant an efficiency of 81%, which no steam plant reaches. The Return is the reason: it enters the boiler at about 29 °C, is warmed to 64 °C by the flue gas in the economizer (that heat is in the gas share), and then costs no heat, as if it were already at the boiler's 350 °C. That is 1400 kJ per kg, more heat than the gas gives. Counting it, the efficiency is 34%. This is the free-feedwater departure in [design-basis.md](design-basis.md#deliberate-departures-from-a-real-plant), and [ADR 0030](../adr/0030-return-pays-real-enthalpy.md) removes it.
+The Return pays for its heat: it enters the boiler at about 26 °C, is warmed to 118 °C by the flue gas in the economizer, and the boiler heats it the rest of the way to the steam. The plant efficiency is 31.3%, electricity over fuel heat, the baseline for #88. The earlier free-feedwater departure is gone ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
 
 Not in the table: makeup, reject and drain carry a little heat when they run, and no pump uses power.

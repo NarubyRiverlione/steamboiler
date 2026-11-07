@@ -9,15 +9,20 @@ const setLoad: PowerPlantAction = {
   type: "SET_LOAD_SETPOINT",
   payload: { loadSetpoint: CstSimulation.CstTurbine.LoadSetpointLimit },
 }
-const bypassShut: PowerPlantAction = { type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: 0 } }
+const bypassShut: PowerPlantAction = {
+  type: "ADJUST_STEAM_BYPASS_VALVE",
+  payload: { bypassValvePosition: -1 },
+}
 
-// From the settled sync: the bypass shuts and the setpoint goes to its limit, above anything the steam can carry, so the
-// load climbs at the load rate past rated output. Hold opens the valve until it is fully open; the speed then sags and
-// the breaker opens at -2 rpm (#84). The electric output is the load carried, so the last load before that is the most
+// From the settled sync: the bypass shuts (the action is a delta) and the setpoint goes to its limit, above anything the
+// steam can carry, so the load climbs at the load rate past rated output. The gas is the limit (#74): full gas is
+// reached at about 130 MW and pressure then sags while Hold keeps opening the valve until it is fully open; the speed
+// then sags and the breaker opens at -2 rpm (#84). The electric output is the load carried, so the last load before that is the most
 // the plant can give. A fixed 100% valve would not measure it: with nothing to absorb the power the shaft speeds up.
 export const maxOutput: Scenario = {
   name: "max-output",
-  description: "From the turbine-sync snapshot: load past rated until the turbine valve is fully open and the breaker opens on the speed sag",
+  description:
+    "From the turbine-sync snapshot: load past rated until the turbine valve is fully open and the breaker opens on the speed sag",
   duration: 3000,
   sampleEvery: 1,
   initial: loadSnapshot("turbine-sync"),

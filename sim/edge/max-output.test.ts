@@ -6,7 +6,8 @@ import { maxOutput } from "../scenarios/max-output"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const MaxOutputMW = 159 // measured: 200 kg/s at 165 bar and 50 mbar (design-basis.md)
+const GasLimitMW = 130 // measured: full gas first reached at about 130 MW and 160 kg/s, at 165 bar (design-basis.md, #74)
+const MaxOutputMW = 142 // measured: the load carried when the breaker opens, 172 kg/s at 147 bar, living off the boiler's stored heat
 
 describe("max-output", () => {
   // every tick, so the breaker opening can be pinned to one tick
@@ -22,17 +23,38 @@ describe("max-output", () => {
     expect(full?.state.Turbine.electricOutput).toBeGreaterThan(ratedOutputMW)
   })
 
-  test("the most the plant carries with the valve fully open is about 159 MW, and the gas is not the limit", () => {
-    expect(before.Turbine.electricOutput).toBeCloseTo(MaxOutputMW, 0)
-    expect(before.Turbine.turbineValvePosition).toBe(1)
-    expect(before.Boiler.gasFlow).toBeLessThan(CstBoiler.MaxGasFlow)
+  test("the gas is the limit: full gas is reached before the valve is full, near the rated flow, and pressure then sags", () => {
+    const fullGas = carrying.findIndex((s) => s.state.Boiler.gasFlow >= CstBoiler.MaxGasFlow)
+    const fullValve = carrying.findIndex((s) => s.state.Turbine.turbineValvePosition === 1)
+    expect(fullGas).toBeGreaterThan(0)
+    expect(fullGas).toBeLessThan(fullValve)
+    expect(carrying[fullGas].state.Turbine.electricOutput).toBeCloseTo(GasLimitMW, -1)
+    // RatedSteamFlow is measured, so the test fails if the plant drifts from it (ADR 0030)
+    expect(
+      Math.abs(carrying[fullGas].state.Turbine.turbineSteamFlowOut - CstTurbine.RatedSteamFlow),
+    ).toBeLessThan(2)
+    expect(
+      Math.abs(carrying[fullGas].state.Boiler.pressure - PressureHoldSettings.Target),
+    ).toBeLessThanOrEqual(PressureHoldSettings.Band)
+    expect(carrying[carrying.length - 1].state.Boiler.pressure).toBeLessThan(
+      PressureHoldSettings.Target - PressureHoldSettings.Band,
+    )
   })
 
-  test("pressure holds its band and the vacuum its limit while the load climbs", () => {
-    for (const { state } of carrying) {
-      expect(Math.abs(state.Boiler.pressure - PressureHoldSettings.Target)).toBeLessThanOrEqual(PressureHoldSettings.Band)
-      expect(state.Condenser.pressure).toBeLessThan(CstCondenser.VacuumLimit)
-    }
+  test("the most the plant carries is the load when the valve is fully open and the pressure has sagged, about 142 MW", () => {
+    expect(before.Turbine.electricOutput).toBeCloseTo(MaxOutputMW, -1)
+    expect(before.Turbine.electricOutput).toBeGreaterThan(GasLimitMW)
+    expect(before.Turbine.turbineValvePosition).toBe(1)
+    expect(before.Boiler.gasFlow).toBe(CstBoiler.MaxGasFlow)
+  })
+
+  test("pressure holds its band until full gas, and the vacuum holds its limit while the load climbs", () => {
+    const fullGas = carrying.findIndex((s) => s.state.Boiler.gasFlow >= CstBoiler.MaxGasFlow)
+    for (const { state } of carrying.slice(0, fullGas))
+      expect(Math.abs(state.Boiler.pressure - PressureHoldSettings.Target)).toBeLessThanOrEqual(
+        PressureHoldSettings.Band,
+      )
+    for (const { state } of carrying) expect(state.Condenser.pressure).toBeLessThan(CstCondenser.VacuumLimit)
   })
 
   test("the breaker opens on the speed sag and the load and setpoint drop to 0 on that tick", () => {
@@ -51,6 +73,8 @@ describe("max-output", () => {
   test("the steam the turbine no longer takes lifts the relief valve, which keeps pressure below design", () => {
     expect(before.Boiler.reliefLifts).toBe(0)
     expect(samples[samples.length - 1].state.Boiler.reliefLifts).toBeGreaterThan(0)
-    expect(Math.max(...samples.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(CstBoiler.DesignPressure)
+    expect(Math.max(...samples.map((s) => s.state.Boiler.pressure))).toBeLessThanOrEqual(
+      CstBoiler.DesignPressure,
+    )
   })
 })

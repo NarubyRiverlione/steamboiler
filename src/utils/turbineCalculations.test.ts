@@ -44,8 +44,8 @@ describe("isAtSyncSpeed", () => {
 })
 
 describe("ratedOutputMW", () => {
-  test("is the 130.6 MW of the rated flow and drop", () => {
-    expect(ratedOutputMW).toBeCloseTo(130.6, 1)
+  test("is the 123.0 MW of the rated flow and drop", () => {
+    expect(ratedOutputMW).toBeCloseTo(123.0, 1)
   })
 })
 
@@ -111,10 +111,10 @@ describe("calculateRPM", () => {
 
   // Hand calculation, one tick from standstill with 10 kg/s at 900 kJ/kg:
   //   P = 10 x 900e3 x 0.85 = 7.65 MW;  T = P / ω_s x (2 − 0) = 7.65e6 / 314.159 x 2 = 48 701 N·m (losses 0 at rest)
-  //   S = 171 x 917e3 x 0.85 x 0.98 = 130.62 MW;  J = 2 x 4 x S / ω_s² = 10 587 kg·m²
-  //   Δω = T / J x 0.1 s = 0.4600 rad/s = 4.393 rpm
+  //   S = 161 x 917e3 x 0.85 x 0.98 = 122.97 MW;  J = 2 x 4 x S / ω_s² = 9 967 kg·m²
+  //   Δω = T / J x 0.1 s = 0.4886 rad/s = 4.665 rpm
   test("hand-calculated first tick from standstill", () => {
-    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.393, 2)
+    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.665, 2)
   })
 
   // Load power at sync speed: the generator draws load / efficiency from the shaft, so the steam must cover the

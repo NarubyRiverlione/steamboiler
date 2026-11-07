@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick, { BoilerRemoveSteam, BoilerVent, ReliefCapacity, drainBoiler, heatLossOf, warmBy } from "./BoilerTick"
+import BoilerTick, {
+  BoilerRemoveSteam,
+  BoilerVent,
+  ReliefCapacity,
+  drainBoiler,
+  heatLossOf,
+  returnHeatOf,
+  warmBy,
+} from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 import {
@@ -77,7 +85,6 @@ describe("BoilerTick heat loss", () => {
   test("reports the heat loss (kW) of the tick", () => {
     expect(BoilerTick(settled(170)).heatLoss).toBeCloseTo(heatLossOf(170), 6)
   })
-
 })
 
 describe("BoilerTick thermal mass", () => {
@@ -217,10 +224,19 @@ describe("BoilerRemoveSteam", () => {
 
   describe("flow follows boiler pressure", () => {
     const plenty = 1e6
-    const fullyOpen = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 1, bypassValvePosition: 1 }
+    const fullyOpen = {
+      ...plant.Turbine,
+      mainSteamValve: true,
+      turbineValvePosition: 1,
+      bypassValvePosition: 1,
+    }
     const flowAt = (pressure: number, position: number, removeBy: "BYPASS" | "TURBINE"): number => {
       const valves = { ...fullyOpen, turbineValvePosition: position, bypassValvePosition: position }
-      const { turbineState } = BoilerRemoveSteam({ ...plant.Boiler, pressure, steamMass: plenty }, valves, removeBy)
+      const { turbineState } = BoilerRemoveSteam(
+        { ...plant.Boiler, pressure, steamMass: plenty },
+        valves,
+        removeBy,
+      )
       return removeBy === "BYPASS" ? turbineState.bypassSteamFlowOut : turbineState.turbineSteamFlowOut
     }
 
@@ -352,9 +368,41 @@ describe("BoilerTick flue gas heat balance (ADR 0029)", () => {
   test("the heat into the water of the tick is the fuel heat less the stack heat", () => {
     const withReturn = BoilerTick(fullGas, { flow: 171, temperature: 37 })
     const without = BoilerTick(fullGas)
-    const stepMW = (calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 171, 37).heatIntoWater - calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 0, 37).heatIntoWater) / 1000
+    const stepMW =
+      (calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 171, 37).heatIntoWater -
+        calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 0, 37).heatIntoWater) /
+      1000
     expect(stepMW).toBeCloseTo(60.8, 0)
-    expect(withReturn.energyDelta).toBeGreaterThan(without.energyDelta)
+    // The cold Return costs more than the economizer recovers (ADR 0030)
+    expect(withReturn.energyDelta).toBeLessThan(without.energyDelta)
+  })
+
+  test("a Return of cold water cools the boiler and lowers its energy by the enthalpy difference (ADR 0030)", () => {
+    const idle = settled(350)
+    const feed = { flow: 100, temperature: 37 }
+    const cooled = BoilerTick(idle, feed)
+    const untouched = BoilerTick(idle)
+    const expected: number = returnHeatOf(100 * CstSimulation.DeltaTime, 37, 350)
+    expect(cooled.temperature).toBeLessThan(untouched.temperature)
+    // A fixed specific heat (4.18) would be about half the real cost at 350 °C
+    expect(expected).toBeLessThan(100 * CstSimulation.DeltaTime * 4.18 * (37 - 350) * 0.6)
+    // The steam flashed at the new temperature moves the energy a little more, so within a tenth
+    const change: number = (cooled.energyDelta - untouched.energyDelta) * CstSimulation.DeltaTime
+    expect(Math.abs(change / expected - 1)).toBeLessThan(0.1)
+  })
+
+  test("a Return hotter than the boiler warms it", () => {
+    const warm = settled(100)
+    expect(BoilerTick(warm, { flow: 100, temperature: 250 }).temperature).toBeGreaterThan(
+      BoilerTick(warm).temperature,
+    )
+  })
+
+  test("a Return of zero flow changes nothing", () => {
+    const idle = settled(350)
+    const withZero = { ...BoilerTick(idle, { flow: 0, temperature: 37 }), returnTemperatureOut: 0 }
+    const without = { ...BoilerTick(idle), returnTemperatureOut: 0 }
+    expect(withZero).toEqual(without)
   })
 
   test("a stopped burner reports no efficiency and the ambient stack", () => {
@@ -365,21 +413,27 @@ describe("BoilerTick flue gas heat balance (ADR 0029)", () => {
 })
 
 describe("BoilerVent relief valve", () => {
-  test("the capacity beats the steam full gas makes at the opening pressure at the highest efficiency", () => {
+  test("the capacity beats the steam full gas makes at the opening pressure, whatever the Return (ADR 0030)", () => {
     const openingTemperature = getBoilingPoint(CstBoiler.ReliefOpenPressure)
     let mostHeat = 0
     for (const flow of [0, 24, 171, 250, 299.5])
-      for (const hotwell of [10, 20, 40])
-        mostHeat = Math.max(
-          mostHeat,
-          calculateFlueGasHeatBalance(CstBoiler.MaxGasFlow, openingTemperature, flow, hotwell).heatIntoWater,
-        )
+      for (const hotwell of [10, 20, 40]) {
+        const balance = calculateFlueGasHeatBalance(CstBoiler.MaxGasFlow, openingTemperature, flow, hotwell)
+        // Heat left for steam: the boiler stage, less what the Return costs to bring to the boiler temperature
+        const steaming: number =
+          balance.heatIntoWater -
+          balance.economizerHeat +
+          returnHeatOf(flow, balance.returnTemperatureOut, openingTemperature)
+        mostHeat = Math.max(mostHeat, steaming)
+      }
     expect(ReliefCapacity).toBeGreaterThan(mostHeat / getLatentHeat(openingTemperature))
+    expect(ReliefCapacity).toBeGreaterThan(450)
+    expect(ReliefCapacity).toBeLessThan(470)
   })
 
-  // 1.1 × the worst-case heat into the water (full gas at 178 bar, Return at the pump's maximum flow, ADR 0029) over
-  // about 790 kJ/kg latent heat at 178 bar (356.2 °C, IAPWS-IF97) ≈ 551 kg/s
-  const capacityPerTick = 551 * DeltaTime
+  // 1.1 × the worst-case heat into the water (full gas at 178 bar, no Return, ADR 0030) over about 790 kJ/kg latent
+  // heat at 178 bar (356.2 °C, IAPWS-IF97) ≈ 457 kg/s
+  const capacityPerTick = ReliefCapacity * DeltaTime
   const at = (pressure: number, reliefValveOpen = false) => ({
     ...cold,
     pressure,

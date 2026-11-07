@@ -71,7 +71,7 @@ export const CstSimulation = {
     HoldEngageWindow: 5, // rpm: Hold engages within ± this of the selected run-up point (estimate, design-basis.md)
 
     // Speed model (ADR 0021, figures in docs/plant/design-basis.md): shaft power from steam, losses and inertia derived
-    RatedSteamFlow: 171, // kg/s, the design steam flow (design-basis.md); S and the no-load loss are sized on it
+    RatedSteamFlow: 161, // kg/s, what full gas makes at 165 bar with the Return matching the steam (measured, #74, ADR 0030); S and the no-load loss are sized on it
     RatedEnthalpyDrop: 917, // kJ/kg, isentropic drop at the rated state: 165 bar to 100 mbar (IF97, #14)
     InertiaConstant: 4, // s, H of the whole shaft line (sourced range 2.5-6 s); J = 2·H·S / ω_s²
     NoLoadFlowFraction: 0.03, // of rated flow: holds sync speed unloaded; loss power ∝ ω³ is calibrated on it (sourced 1.5-3%)
@@ -113,7 +113,7 @@ export const CstFlueGas = {
   BoilerApproachAtDesign: 100, // K, flue gas above the water leaving the boiler stage at full gas and DesignWaterTemperature (ESTIMATE; sourced span 60-150 K, design-basis.md)
   DesignWaterTemperature: 350, // °C, boiler water the boiler stage is sized at (the plant works at 350-357 °C)
   EconomizerDesignStack: 160, // °C, stack temperature at full gas with the design Return (Ganapathy Tables 1.8, 3.4: 160-164 °C; design choice)
-  EconomizerDesignReturn: 171, // kg/s, the Return the economizer is sized for (RatedSteamFlow before #74)
+  EconomizerDesignReturn: 171, // kg/s, the Return the economizer is sized for (171 kg/s, the design flow before #74; #88 moves it)
   EconomizerDesignReturnTemperature: 37, // °C, hotwell temperature the economizer is sized for
   ReturnSaturationMargin: 28, // K, the Return leaves the economizer at least this far below saturation (UNVERIFIED, no steaming in the economizer)
 }

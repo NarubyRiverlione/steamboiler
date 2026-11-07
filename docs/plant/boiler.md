@@ -82,7 +82,7 @@ Efficiency        = Heat into water / Fuel heat
 - **No Return:** the economizer recovers nothing and the stack is the boiler stage exit (79% at full gas and 350 °C). **No gas:** no heat in, none up the stack, efficiency 0, stack at ambient.
 - **Closing the balance:** every tick, fuel heat = heat into the water + heat up the stack. The existing heat loss still comes off the water afterwards; there is no radiation term.
 - **State:** `stackTemperature` (°C), `boilerEfficiency` (0 to 1) and `returnTemperatureOut` (°C, the Return after the economizer; the hotwell temperature when it takes no heat). The CSV carries them; the sim report plots the Return temperature after the economizer. Showing them on the board is #89.
-- **Still free:** the Return does not yet cost the boiler its heat. The economizer heat comes on top of it until #74 ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
+- **The Return pays its enthalpy** ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md), #74): `BoilerTick` adds `returnHeatOf` to the energy of the tick, this tick's Return mass times the saturated liquid enthalpy at its temperature after the economizer less that at the boiler temperature (`getLiquidEnthalpy`, not a specific heat: cp near 350 °C is more than double the cold value). A cold Return lowers the temperature and `energy`; a Return hotter than the boiler warms it. The economizer heat is counted once, in the Return's own enthalpy, so the gas share of the tick is the heat into the water less the economizer heat. Pump work (about 16 kJ/kg, 1% of the Return's cost) is ignored.
 
 Simplifications and the figures behind them are in [design-basis.md](design-basis.md); the sources in [the research note](../research/2026-11-economizer-flue-gas.md).
 
@@ -91,8 +91,8 @@ Simplifications and the figures behind them are in [design-basis.md](design-basi
 The boiler's automatic relief valve on the drum ([ADR 0005](../adr/0005-relief-valve-vents-to-atmosphere.md), `BoilerVent`, run first in `PowerPlantTick`, upstream of the main steam valve, so it vents with that valve closed). It opens fully at 178 bar and stays fully open until it closes at 171 bar (7 bar blowdown, about 4%). It decides on the pressure at the start of the tick; 178 bar leaves 2 bar below the 180 bar design pressure for the rise within one tick.
 
 ```
-Relief capacity = 1.1 × worst-case heat into the water / latent heat at 178 bar ≈ 1.1 × 398 MW / 794 kJ/kg ≈ 551 kg/s
-Worst case       = full gas, boiler at the saturation of 178 bar, Return at the condensation pump's maximum flow (300 L/s) and 10 °C (the coldest water in the loop)
+Relief capacity = 1.1 × worst-case heat into the water / latent heat at 178 bar ≈ 1.1 × 330 MW / 794 kJ/kg ≈ 457 kg/s
+Worst case       = full gas, boiler at the saturation of 178 bar, no Return (the economizer recovers nothing, and all the heat goes into steam, ADR 0030)
 Vented this tick = min(relief capacity × tick, steam mass in the boiler)   (while open)
 ```
 
@@ -128,7 +128,7 @@ Pressure is the saturation pressure of the water temperature, never below atmosp
 | Item | Value |
 |---|---|
 | Gas energy density | 35 000 kJ/m³, a lower heating value at 25 °C combustion and 0 °C metering (`CstPhysics.GasEnergyDensity`) |
-| Boiler efficiency | not a constant: follows from the flue gas heat balance, about 93.4% at full gas, 350 °C and 171 kg/s of Return, about 79% with no Return |
+| Boiler efficiency | not a constant: follows from the flue gas heat balance, about 93.4% at full gas, 350 °C and 171 kg/s of Return (93.9% at rated output), about 79% with no Return |
 | Metal mass | 100 t steel at 0.5 kJ/kg·K (`CstBoiler.MetalMass`, `CstPhysics.Steel_SpecificHeat`) |
 | Heat loss | 0.5 MW at design temperature, proportional to T − ambient (`CstBoiler.HeatLossAtDesign`): about 250 kW and 3.6 K per hour at 190 °C, so a cooldown takes days |
 | Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s, alarm only |
