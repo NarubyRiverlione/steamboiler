@@ -4,62 +4,7 @@ How the parts of the plant connect, what each one does, and where the energy com
 
 ## Schema
 
-```mermaid
-flowchart LR
-    GAS([Gas supply]) --> BURNER[Burner]
-    BURNER -->|85% of the fuel heat| BOILER[(Boiler)]
-    BURNER -->|15% fixed loss| STACK([Stack])
-    BOILER -->|heat loss| AMBIENT([Surroundings])
-
-    BOILER -->|steam| RELIEF[Relief valve]
-    RELIEF --> ATMOSPHERE([Atmosphere])
-    BOILER -->|steam| MSV[Main steam valve]
-    MSV --> TV[Turbine valve]
-    MSV --> BYPASS[Bypass valve]
-    TV --> TURBINE[Turbine]
-    TURBINE -->|exhaust vapour| CONDENSER[(Condenser)]
-    BYPASS -->|vapour| CONDENSER
-
-    TURBINE -->|exhaust moisture| HOTWELL[(Hotwell)]
-    CONDENSER -->|condensate| HOTWELL
-    HOTWELL --> PUMP[Condensation pump]
-    PUMP -->|Return| BOILER
-    MAKEUP([Storage]) -->|makeup| HOTWELL
-    HOTWELL -->|reject| REJECT([Storage])
-    BOILER -->|drain| DRAIN([Drain])
-
-    INTAKE([Cooling water, 10 °C]) --> RECIRC[Recirculation pump]
-    RECIRC --> CONDENSER
-    CONDENSER -->|condensing heat| OUTFALL([Cooling water out])
-
-    TURBINE -->|shaft| GENERATOR[Generator]
-    GENERATOR -->|electricity| LOAD([Load])
-
-    CAR[Air extraction pump] -.->|vacuum| CONDENSER
-    SJAE[SJAE] -.->|vacuum| CONDENSER
-    BOILER -.->|motive steam, none taken| SJAE
-
-    classDef heat fill:#d9480f,stroke:#d9480f,color:#fff
-    classDef steam fill:#9c36b5,stroke:#9c36b5,color:#fff
-    classDef water fill:#1971c2,stroke:#1971c2,color:#fff
-    classDef cooling fill:#0c8599,stroke:#0c8599,color:#fff
-    classDef power fill:#b08900,stroke:#b08900,color:#fff
-    classDef vacuum fill:#6c757d,stroke:#6c757d,color:#fff
-    class GAS,BURNER,STACK,AMBIENT heat
-    class RELIEF,ATMOSPHERE,MSV,TV,BYPASS,TURBINE steam
-    class BOILER,HOTWELL,PUMP,MAKEUP,REJECT,DRAIN water
-    class CONDENSER,INTAKE,RECIRC,OUTFALL cooling
-    class GENERATOR,LOAD power
-    class CAR,SJAE vacuum
-
-    %% Edges are numbered in the order written above; keep each medium's edges together
-    linkStyle 0,1,2,3 stroke:#d9480f,stroke-width:3px
-    linkStyle 4,5,6,7,8,9,10,11 stroke:#9c36b5,stroke-width:3px
-    linkStyle 12,13,14,15,16,17,18 stroke:#1971c2,stroke-width:3px
-    linkStyle 19,20,21 stroke:#0c8599,stroke-width:3px
-    linkStyle 22,23 stroke:#b08900,stroke-width:3px
-    linkStyle 24,25,26 stroke:#6c757d,stroke-width:2px
-```
+![Schema of the plant as built: the water and steam loop, with gas heat coming in and the cooling water taking heat out](overview-schema.svg)
 
 | Colour | Medium |
 |---|---|

@@ -17,47 +17,7 @@ Expected at full gas and 350 °C: about 93.4% with the design Return, about 79% 
 
 The plant as built: [overview.md](../plant/overview.md). This is the plant this ADR and [ADR 0030](0030-return-pays-real-enthalpy.md) lead to, with only the parts that matter here. The dashed parts are the extraction heaters of #88: not decided yet, so their number and place can change.
 
-```mermaid
-flowchart LR
-    GAS([Gas supply]) --> BURNER[Burner]
-    BURNER -->|flue gas| SURFACE[Boiler surface]
-    SURFACE -->|flue gas| ECONOMIZER[Economizer]
-    ECONOMIZER -->|flue gas| STACK([Stack])
-    SURFACE -->|heat| BOILER[(Boiler)]
-
-    BOILER -->|steam| TURBINE[Turbine]
-    TURBINE -->|exhaust| CONDENSER[(Condenser and hotwell)]
-
-    CONDENSER -->|Return| ECONOMIZER
-    ECONOMIZER -->|hotter Return| BOILER
-
-    CONDENSER -.->|Return| HEATER[Extraction heater]
-    HEATER -.->|hotter Return| ECONOMIZER
-    TURBINE -.->|extraction steam| HEATER
-    HEATER -.->|drain| CONDENSER
-
-    TURBINE -->|shaft| GENERATOR[Generator]
-    CONDENSER -->|heat| COOLING([Cooling water])
-
-    classDef heat fill:#d9480f,stroke:#d9480f,color:#fff
-    classDef steam fill:#9c36b5,stroke:#9c36b5,color:#fff
-    classDef water fill:#1971c2,stroke:#1971c2,color:#fff
-    classDef cooling fill:#0c8599,stroke:#0c8599,color:#fff
-    classDef power fill:#b08900,stroke:#b08900,color:#fff
-    classDef planned fill:#fff,stroke:#9c36b5,color:#333,stroke-dasharray:5
-    class GAS,BURNER,SURFACE,ECONOMIZER,STACK heat
-    class TURBINE steam
-    class BOILER water
-    class CONDENSER,COOLING cooling
-    class GENERATOR power
-    class HEATER planned
-
-    linkStyle 0,1,2,3,4 stroke:#d9480f,stroke-width:3px
-    linkStyle 5,6,11 stroke:#9c36b5,stroke-width:3px
-    linkStyle 7,8,9,10,12 stroke:#1971c2,stroke-width:3px
-    linkStyle 13 stroke:#b08900,stroke-width:3px
-    linkStyle 14 stroke:#0c8599,stroke-width:3px
-```
+![Target plant: flue gas through the boiler surface and the economizer, the Return through the economizer, and the planned extraction heater dashed](0029-target-plant.svg)
 
 Until #88 lands, the Return runs from the hotwell straight to the economizer. After it, the water gets its heat from three places, in order: extraction steam, flue gas, and last the boiler itself. Heat the flue gas gives the Return is heat that would otherwise leave up the stack.
 

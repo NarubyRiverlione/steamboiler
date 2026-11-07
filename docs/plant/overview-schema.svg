@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 730" width="1480" role="img" aria-labelledby="t d">
+  <title id="t">The plant as built</title>
+  <desc id="d">Water and steam run round one loop: boiler, main steam valve, turbine, condenser, hotwell, condensation pump, back to the boiler. Gas heat enters at the top left and leaves through the stack and the cooling water.</desc>
+  <style>
+    :root { --bg: #ffffff; --fg: #24292f; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0d1117; --fg: #e6edf3; } }
+    .bg { fill: var(--bg); }
+    text { font: 14px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .name { fill: #fff; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+    .label { fill: var(--fg); font-size: 13px; paint-order: stroke; stroke: var(--bg); stroke-width: 5px; }
+    .mid { text-anchor: middle; }
+    .strong { font-weight: 700; }
+    .line { fill: none; stroke-width: 3; }
+    .dash { stroke-dasharray: 8 6; }
+    .planned { fill: var(--bg); stroke-dasharray: 8 6; stroke-width: 2; }
+    .planned-name { fill: var(--fg); }
+    .l-heat { stroke: #d9480f; }
+    .n-heat { fill: #d9480f; stroke: #d9480f; }
+    .l-steam { stroke: #9c36b5; }
+    .n-steam { fill: #9c36b5; stroke: #9c36b5; }
+    .l-water { stroke: #1971c2; }
+    .n-water { fill: #1971c2; stroke: #1971c2; }
+    .l-cooling { stroke: #0c8599; }
+    .n-cooling { fill: #0c8599; stroke: #0c8599; }
+    .l-power { stroke: #b08900; }
+    .n-power { fill: #b08900; stroke: #b08900; }
+    .l-vacuum { stroke: #6c757d; }
+    .n-vacuum { fill: #6c757d; stroke: #6c757d; }
+  </style>
+  <defs>
+    <marker id="a-heat" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#d9480f"/></marker>
+    <marker id="a-steam" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9c36b5"/></marker>
+    <marker id="a-water" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1971c2"/></marker>
+    <marker id="a-cooling" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0c8599"/></marker>
+    <marker id="a-power" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b08900"/></marker>
+    <marker id="a-vacuum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6c757d"/></marker>
+  </defs>
+  <rect class="bg" width="1480" height="730"/>
+
+  <!-- Gas and heat -->
+  <rect class="n-heat" x="30" y="50" width="110" height="50" rx="25"/><text class="name" x="85" y="75">Gas supply</text>
+  <rect class="n-heat" x="180" y="50" width="120" height="50" rx="3"/><text class="name" x="240" y="75">Burner</text>
+  <rect class="n-heat" x="420" y="50" width="90" height="50" rx="25"/><text class="name" x="465" y="75">Stack</text>
+  <rect class="n-heat" x="20" y="200" width="125" height="60" rx="30"/><text class="name" x="82.5" y="230">Surroundings</text>
+  <path class="line l-heat" d="M140 75 L179 75" marker-end="url(#a-heat)"/>
+  <path class="line l-heat" d="M300 75 L419 75" marker-end="url(#a-heat)"/>
+  <path class="line l-heat" d="M240 100 L240 199" marker-end="url(#a-heat)"/>
+  <path class="line l-heat" d="M180 230 L146 230" marker-end="url(#a-heat)"/>
+  <text class="label mid" x="360" y="66">15% fixed loss</text>
+  <text class="label" x="250" y="155">85% of the fuel heat</text>
+  <text class="label mid" x="163" y="190">heat loss</text>
+
+  <!-- Steam -->
+  <rect class="n-water" x="180" y="200" width="120" height="60" rx="14"/><text class="name" x="240" y="230">Boiler</text>
+  <rect class="n-steam" x="520" y="50" width="120" height="50" rx="3"/><text class="name" x="580" y="75">Relief valve</text>
+  <rect class="n-steam" x="710" y="50" width="120" height="50" rx="25"/><text class="name" x="770" y="75">Atmosphere</text>
+  <rect class="n-steam" x="640" y="200" width="120" height="60" rx="3"/><text class="name" x="700" y="221.5">Main steam</text><text class="name" x="700" y="238.5">valve</text>
+  <rect class="n-steam" x="820" y="200" width="130" height="60" rx="3"/><text class="name" x="885" y="230">Turbine valve</text>
+  <rect class="n-steam" x="1010" y="200" width="120" height="60" rx="3"/><text class="name" x="1070" y="230">Turbine</text>
+  <rect class="n-steam" x="640" y="330" width="120" height="50" rx="3"/><text class="name" x="700" y="355">Bypass valve</text>
+  <path class="line l-steam" d="M300 230 L639 230" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M580 230 L580 101" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M640 75 L709 75" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M760 230 L819 230" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M950 230 L1009 230" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M700 260 L700 329" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M760 355 L1040 355 L1040 419" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M1100 260 L1100 419" marker-end="url(#a-steam)"/>
+  <text class="label mid" x="440" y="220">steam</text>
+  <text class="label mid" x="900" y="345">vapour</text>
+  <text class="label" x="1112" y="345">exhaust</text>
+
+  <!-- Water -->
+  <rect class="n-water" x="140" y="340" width="100" height="44" rx="22"/><text class="name" x="190" y="362">Drain</text>
+  <rect class="n-cooling" x="1010" y="420" width="120" height="110" rx="14"/><text class="name" x="1070" y="475">Condenser</text>
+  <rect class="n-water" x="1010" y="610" width="120" height="90" rx="14"/><text class="name" x="1070" y="655">Hotwell</text>
+  <rect class="n-water" x="640" y="625" width="140" height="60" rx="3"/><text class="name" x="710" y="646.5">Condensation</text><text class="name" x="710" y="663.5">pump</text>
+  <rect class="n-water" x="1240" y="595" width="100" height="40" rx="20"/><text class="name" x="1290" y="615">Storage</text>
+  <rect class="n-water" x="1240" y="670" width="100" height="40" rx="20"/><text class="name" x="1290" y="690">Storage</text>
+  <path class="line l-water" d="M200 260 L200 339" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M1040 530 L1040 609" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M1100 530 L1100 609" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M1010 655 L781 655" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M640 655 L270 655 L270 261" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M1240 615 L1131 630" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M1130 680 L1239 690" marker-end="url(#a-water)"/>
+  <text class="label mid" x="170" y="305">drain</text>
+  <text class="label" text-anchor="end" x="1030" y="575">condensate</text>
+  <text class="label" x="1112" y="575">exhaust moisture</text>
+  <text class="label mid strong" x="450" y="645">Return</text>
+  <text class="label mid" x="1185" y="612">makeup</text>
+  <text class="label mid" x="1185" y="705">reject</text>
+
+  <!-- Cooling water -->
+  <rect class="n-cooling" x="1190" y="410" width="120" height="50" rx="3"/><text class="name" x="1250" y="426.5">Recirculation</text><text class="name" x="1250" y="443.5">pump</text>
+  <rect class="n-cooling" x="1345" y="405" width="125" height="60" rx="30"/><text class="name" x="1407.5" y="426.5">Cooling water,</text><text class="name" x="1407.5" y="443.5">10 °C</text>
+  <rect class="n-cooling" x="1190" y="490" width="150" height="40" rx="20"/><text class="name" x="1265" y="510">Cooling water out</text>
+  <path class="line l-cooling" d="M1345 435 L1311 435" marker-end="url(#a-cooling)"/>
+  <path class="line l-cooling" d="M1190 435 L1131 435" marker-end="url(#a-cooling)"/>
+  <path class="line l-cooling" d="M1130 510 L1189 510" marker-end="url(#a-cooling)"/>
+  <text class="label mid" x="1160" y="500">heat</text>
+
+  <!-- Shaft and electricity -->
+  <rect class="n-power" x="1190" y="200" width="120" height="60" rx="3"/><text class="name" x="1250" y="230">Generator</text>
+  <rect class="n-power" x="1370" y="205" width="80" height="50" rx="25"/><text class="name" x="1410" y="230">Load</text>
+  <path class="line l-power" d="M1130 230 L1189 230" marker-end="url(#a-power)"/>
+  <path class="line l-power" d="M1310 230 L1369 230" marker-end="url(#a-power)"/>
+  <text class="label mid" x="1160" y="220">shaft</text>
+  <text class="label mid" x="1340" y="220">electricity</text>
+
+  <!-- Vacuum: no water or heat moves on these lines -->
+  <rect class="n-vacuum" x="760" y="420" width="170" height="44" rx="3"/><text class="name" x="845" y="442">Air extraction pump</text>
+  <rect class="n-vacuum" x="760" y="486" width="170" height="44" rx="3"/><text class="name" x="845" y="508">SJAE</text>
+  <path class="line l-vacuum dash" d="M930 442 L1009 442" marker-end="url(#a-vacuum)"/>
+  <path class="line l-vacuum dash" d="M930 508 L1009 508" marker-end="url(#a-vacuum)"/>
+  <path class="line l-vacuum dash" d="M690 508 L759 508" marker-end="url(#a-vacuum)"/>
+  <text class="label mid" x="970" y="432">vacuum</text>
+  <text class="label mid" x="970" y="498">vacuum</text>
+  <text class="label mid" x="620" y="500">motive steam from</text>
+  <text class="label mid" x="620" y="518">the boiler, none taken</text>
+</svg>
