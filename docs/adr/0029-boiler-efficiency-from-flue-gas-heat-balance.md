@@ -31,7 +31,7 @@ The economizer sits outside the vessel and has no temperature or mass of its own
 - **A fixed stack temperature:** rejected. It ignores the Return's flow and temperature, and hides what hotter Return does in #88.
 - **A fixed approach above the boiler water:** first choice, dropped once the research came in. In the one source with part-load data the approach falls from 149 K at full load to 30 K at 25%, and with a fixed approach the Return outlet temperature moves the wrong way as load falls. A sized surface falls to about the same share in a hand check, for about the same effort. That check rests on one table from a superheated industrial unit.
 - **Thermal mass in the economizer:** left out for now. It needs a new state and a figure with no measured source. Added only if the headless runs show the pressure hold misbehaving.
-- **An air preheater:** left out. The need comes with hot Return in #88, so it is reconsidered there.
+- **An air preheater:** left out. The need comes with the hotter Return of #88, and it has its own ticket, #90.
 
 ## Consequences
 

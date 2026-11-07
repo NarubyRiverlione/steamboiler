@@ -126,6 +126,18 @@ _Avoid_: Exit temperature, chimney temperature
 The share of the fuel's lower heating value that ends up in the water, counting the boiler and the economizer together.
 _Avoid_: Burner efficiency, gas efficiency
 
+**Extraction steam**:
+Steam taken from the turbine partway through its expansion.
+_Avoid_: Bleed steam, tap steam
+
+**Extraction heater**:
+The heat exchanger where extraction steam heats the Return on its way to the economizer.
+_Avoid_: Feedwater heater, preheater
+
+**Heater drain**:
+The condensed extraction steam, pumped forward into the Return after the extraction heater.
+_Avoid_: Drain (that is the boiler's)
+
 ### Operation
 
 **Ambient temperature**:
