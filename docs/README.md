@@ -62,6 +62,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0027](adr/0027-generator-load-is-a-resisting-torque.md) | The generator load is a resisting torque on a free-running shaft; electric output is the load carried |
 | [0028](adr/0028-exhaust-splits-by-quality-at-condenser-intake.md) | The turbine exhaust splits by its quality at the condenser intake |
 | [0029](adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md) | Boiler efficiency follows from a two-stage flue gas heat balance |
+| [0030](adr/0030-return-pays-real-enthalpy.md) | The Return pays its real enthalpy, and rated steam flow follows what full gas makes |
 
 ## Research (dated, frozen)
 
