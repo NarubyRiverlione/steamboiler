@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstPhysics, CstSimulation } from "./const"
+import { CstHeater, CstPhysics, CstSimulation } from "./const"
 import { getWaterSpecificVolume } from "../utils/steamTable"
 import { calculateSteamInventory } from "../utils/boilerCalculations"
 import PowerPlantState from "./PowerPlantState"
@@ -297,5 +297,98 @@ describe("PowerPlantTick low-pressure closure", () => {
     const flow = next.Turbine.bypassSteamFlowOut + next.Turbine.turbineSteamFlowOut
     expect(flow).toBeCloseTo(0.75 * 109, 0)
     expect(next.Condenser.intakeFlowRate).toBeCloseTo(flow, 9)
+  })
+})
+
+describe("PowerPlantTick extraction heater (ADR 0031)", () => {
+  const { RatedSteamFlow, SyncRPM } = CstSimulation.CstTurbine
+  // A hot plant at sync speed with the turbine passing about the rated flow and a Return flowing from a warm hotwell
+  const running = (turbineFlow: number, returnRate: number): PowerPlantState => ({
+    ...cold,
+    Boiler: {
+      ...cold.Boiler,
+      temperature: 350,
+      pressure: 165,
+      steamMass: 5_000,
+      waterMass: 40_000,
+      waterVolume: 50_000 * 0.8,
+      gasFlow: 0,
+    },
+    Turbine: {
+      ...cold.Turbine,
+      mainSteamValve: true,
+      turbineValvePosition: turbineFlow / 200,
+      turbineSteamFlowOut: turbineFlow,
+      rpm: SyncRPM,
+    },
+    Condenser: {
+      ...cold.Condenser,
+      pressure: 31,
+      hotwellTemperature: 25,
+      hotwellWaterMass: 30_000,
+      hotwellWaterVolume: 30_000,
+      returnRate: returnRate * CstSimulation.DeltaTime,
+      recirculationPumpValvePosition: 1,
+      condensationPumpValvePosition: 0.5,
+    },
+  })
+
+  test("a plant at rest extracts nothing and sends the hotwell temperature to the economizer", () => {
+    const next = PowerPlantTick(cold)
+    expect(next.Heater.extractionFlow).toBe(0)
+    expect(next.Heater.returnTemperature).toBe(next.Condenser.hotwellTemperature)
+  })
+
+  test("with no Return there is no extraction, even with the turbine running", () => {
+    expect(PowerPlantTick(running(RatedSteamFlow, 0)).Heater.extractionFlow).toBe(0)
+  })
+
+  test("with the turbine stopped there is no extraction, even with a Return", () => {
+    expect(PowerPlantTick(running(0, 100)).Heater.extractionFlow).toBe(0)
+  })
+
+  test("at the rated flow the heater takes steam, the tap is at its rated pressure and the Return is heated to about 150 °C", () => {
+    const next = PowerPlantTick(running(RatedSteamFlow, 140))
+    expect(next.Heater.extractionFlow).toBeGreaterThan(30)
+    expect(next.Heater.tapPressure).toBeCloseTo(CstHeater.TapPressureAtRated, 1)
+    expect(next.Heater.heaterPressure).toBeCloseTo(next.Heater.tapPressure * (1 - CstHeater.LineDrop), 6)
+    expect(next.Heater.returnTemperature).toBeGreaterThan(138)
+    expect(next.Heater.returnTemperature).toBeLessThan(152)
+  })
+
+  test("the extraction leaves the turbine: the condenser receives only the rest", () => {
+    const next = PowerPlantTick(running(RatedSteamFlow, 140))
+    expect(next.Condenser.intakeFlowRate).toBeCloseTo(next.Turbine.turbineSteamFlowOut - next.Heater.extractionFlow, 9)
+  })
+
+  test("water is conserved across the turbine, heater and Return in one tick", () => {
+    const start = running(RatedSteamFlow, 140)
+    const next = PowerPlantTick(start)
+    const water = (s: PowerPlantState): number =>
+      s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.steamMass + s.Condenser.hotwellWaterMass
+    expect(water(next) - water(start)).toBeCloseTo(
+      next.Condenser.makeupTotal - start.Condenser.makeupTotal - (next.Condenser.rejectTotal - start.Condenser.rejectTotal),
+      6,
+    )
+  })
+
+  test("the heater drain joins the Return: the boiler gets the Return and the extraction steam", () => {
+    const start = running(RatedSteamFlow, 140)
+    const next = PowerPlantTick(start)
+    const gained: number = next.Boiler.waterMass - start.Boiler.waterMass
+    const steamLeft: number = next.Turbine.turbineSteamFlowOut * CstSimulation.DeltaTime
+    // flash exchanges water and steam inside the boiler, so test through the whole plant balance of water in the boiler
+    expect(gained + (next.Boiler.steamMass - start.Boiler.steamMass) + steamLeft).toBeCloseTo(
+      next.Condenser.returnRate + next.Heater.extractionFlow * CstSimulation.DeltaTime,
+      6,
+    )
+  })
+
+  test("tap pressure and the Return temperature fall as the turbine flow falls", () => {
+    const full = PowerPlantTick(running(RatedSteamFlow, 140))
+    const half = PowerPlantTick(running(RatedSteamFlow / 2, 70))
+    expect(half.Heater.tapPressure).toBeLessThan(full.Heater.tapPressure)
+    expect(half.Heater.returnTemperature).toBeLessThan(full.Heater.returnTemperature)
+    expect(half.Heater.returnTemperature).toBeGreaterThan(half.Condenser.hotwellTemperature)
   })
 })

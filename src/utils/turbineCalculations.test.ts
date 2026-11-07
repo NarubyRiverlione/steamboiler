@@ -61,9 +61,16 @@ describe("shaftWorkFraction", () => {
 })
 
 describe("ratedOutputMW", () => {
-  test("is the 133.7 MW of the rated flow and the drop at the 31 mbar design vacuum (ADR 0032)", () => {
-    // 158 kg/s x 1016 kJ/kg x 0.85 x 0.98; 164 kg/s, the hand-estimated flow, would give about 139 MWe
-    expect(ratedOutputMW).toBeCloseTo(133.7, 1)
+  test("is the 141.3 MW of the rated flow, the 31 mbar design vacuum and the extraction steam that stops working at the tap (ADR 0031)", () => {
+    // 192 kg/s x 0.85 x 0.98 x the drop that does work: 1016 kJ/kg less the extracted share (about a quarter) of what is below
+    // the tap; with no extraction it would be 162.5 MW
+    expect(ratedOutputMW).toBeCloseTo(141.3, 1)
+  })
+
+  test("is less than the same flow would give with no extraction", () => {
+    const noExtraction: number =
+      (CstTurbine.RatedSteamFlow * CstTurbine.RatedEnthalpyDrop * 1000 * CstTurbine.IsentropicEfficiency * CstTurbine.GeneratorEfficiency) / 1e6
+    expect(ratedOutputMW).toBeLessThan(noExtraction)
   })
 })
 
@@ -132,8 +139,8 @@ describe("calculateRPM", () => {
   //   S = 161 x 917e3 x 0.85 x 0.98 = 122.97 MW;  J = 2 x 4 x S / ω_s² = 9 967 kg·m²
   //   Δω = T / J x 0.1 s = 0.4886 rad/s = 4.665 rpm
   test("hand-calculated first tick from standstill", () => {
-    // J scales with the rated output (133.7 MW since ADR 0032; 4.665 at 123.0 MW)
-    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.292, 2)
+    // J scales with the rated output (141.3 MW since ADR 0031; 4.292 at 133.7 MW, 4.665 at 123.0 MW)
+    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.060, 2)
   })
 
   // Load power at sync speed: the generator draws load / efficiency from the shaft, so the steam must cover the
@@ -193,7 +200,7 @@ describe("calculateRPM", () => {
   test("free acceleration at the rated flow takes the time that follows from J and P", () => {
     const omegaSync: number = (2 * Math.PI * SyncRPM) / 60
     const shaftPower: number = RatedSteamFlow * RatedEnthalpyDrop * 1000 * CstTurbine.IsentropicEfficiency
-    const ratedOutput: number = shaftPower * CstTurbine.GeneratorEfficiency
+    const ratedOutput: number = ratedOutputMW * 1e6
     const inertia: number = (2 * CstTurbine.InertiaConstant * ratedOutput) / omegaSync ** 2
     const expected: number = ((inertia * omegaSync ** 2) / shaftPower) * Math.LN2
     let rpm = 0

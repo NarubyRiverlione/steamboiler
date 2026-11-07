@@ -63,8 +63,16 @@ export type TurbineState = {
   turbineTripped: boolean // set by a turbine trip, cleared by the next opening of the turbine valve
 }
 
+export type HeaterState = {
+  extractionFlow: number // kg/s of turbine steam taken at the tap, zero with no turbine flow or no Return
+  tapPressure: number // bar, at the turbine tap: proportional to turbine flow
+  heaterPressure: number // bar, the tap pressure less the line drop
+  returnTemperature: number // Celsius, the Return after the heater and its drain, what the economizer receives
+}
+
 type PowerPlantState = {
   Boiler: BoilerState
+  Heater: HeaterState
   Condenser: CondenserState
   Turbine: TurbineState
 }

@@ -14,7 +14,7 @@ A burner sized for a 200 MWe class unit giving about 125 MWe is deliberate. A re
 
 ## Consequences
 
-- `RatedSteamFlow` stays a named constant, set from a headless run with the Return matching the steam flow, because the economizer output depends on that flow. A test pins it. The turbine figures derived from it follow.
+- `RatedSteamFlow` stays a named constant, set from a headless run with the Return matching the steam flow, because the economizer output depends on that flow (192 kg/s since #88 heats the Return with the extraction heater; ADR 0031). A test pins it. The turbine figures derived from it follow.
 - The relief valve's worst case becomes **no Return**: all the boiler heat goes into steam, about 457 kg/s at 178 bar ([ADR 0005](0005-relief-valve-vents-to-atmosphere.md)). Under [ADR 0029](0029-boiler-efficiency-from-flue-gas-heat-balance.md) it was full Return, as long as the Return was free.
 - Stopping the Return at full gas now frees about 185 MW for steaming, so pressure rises. Starting full flow at once cools the boiler by roughly 0.5 K/s. If pressure leaves its band, the scenario operator feeds more smoothly; the plant does not change.
 - In `max-output` the gas becomes the limit, not the turbine valve: full gas is reached at about 130 MW, and the plant only goes on to 142 MW on the boiler's stored heat.

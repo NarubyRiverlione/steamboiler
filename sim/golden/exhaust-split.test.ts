@@ -28,8 +28,13 @@ describe("exhaust split", () => {
   const onTurbine: PowerPlantState = after3s(0, 0.25, SyncRPM)
   const atStandstill: PowerPlantState = after3s(0, 0.25, 0)
 
-  test("both paths bring the same steam flow to the condenser", () => {
-    expect(onTurbine.Condenser.intakeFlowRate).toBeCloseTo(onBypass.Condenser.intakeFlowRate, 0)
+  test("both paths bring the same steam flow to the condenser, the turbine's less what the heater takes (ADR 0031)", () => {
+    expect(onBypass.Heater.extractionFlow).toBe(0)
+    expect(onTurbine.Heater.extractionFlow).toBeGreaterThan(0)
+    expect(onTurbine.Condenser.intakeFlowRate + onTurbine.Heater.extractionFlow).toBeCloseTo(
+      onBypass.Condenser.intakeFlowRate,
+      0,
+    )
   })
 
   test("turbine exhaust leaves less steam in the pool than bypass steam", () => {

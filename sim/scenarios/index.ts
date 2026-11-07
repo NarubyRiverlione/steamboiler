@@ -11,12 +11,13 @@ import { returnStop } from "./return-stop"
 import { turbineLoad } from "./turbine-load"
 import { turbineRunup } from "./turbine-runup"
 import { turbineSync } from "./turbine-sync"
+import { turbineTrip } from "./turbine-trip"
 
 // Golden path: how the plant is meant to be run. Each step adds one thing (loop → speed → breaker → load).
 export const goldenPath: Scenario[] = [bypassLoop, turbineRunup, turbineSync, turbineLoad]
 
 // Edge: drive the plant past one limit and check that its protection acts.
-export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, heatUpAtLimit, lowPressureClose, maxOutput, returnStop]
+export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, heatUpAtLimit, lowPressureClose, maxOutput, returnStop, turbineTrip]
 
 // Every scenario here is selectable with `pnpm sim <name>` and checked against every invariant.
 export const scenarios: Record<string, Scenario> = Object.fromEntries([...goldenPath, ...edge].map((s) => [s.name, s]))

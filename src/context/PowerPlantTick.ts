@@ -2,11 +2,12 @@ import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick, { MainSteamValveLowPressureClosure } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerRemoveSteam, BoilerVent } from "./Boiler/BoilerTick"
 
-import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
+import PowerPlantState, { BoilerState, CondenserState, HeaterState, TurbineState } from "./PowerPlantState"
 import { CstSimulation } from "./const"
 import { roomInKg } from "../utils/boilerCalculations"
 import { getExhaustEnthalpy, getSaturationEnthalpies } from "../utils/steamTable"
 import { shaftWorkFraction } from "../utils/turbineCalculations"
+import { calculateExtraction, Extraction, mixReturn } from "../utils/extractionHeater"
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
   // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
@@ -23,6 +24,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     bypassResult.turbineState,
     bypassResult.boilerState.pressure,
     state.Condenser.pressure,
+    state.Heater.extractionFlow,
   )
 
   // remove steam via turbine valve
@@ -30,6 +32,16 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
 
   // Condenser: receives the steam removed from the boiler in this same tick
   const boilerPressure: number = bypassResult.boilerState.pressure
+
+  // Extraction heater (ADR 0031): the steam it takes follows from the heat the Return takes, and leaves the turbine before
+  // the condenser. The Return is last tick's (the condenser runs after the exhaust is known), a lag of one tick.
+  const extraction: Extraction = calculateExtraction({
+    turbineFlow: turbineResult.turbineState.turbineSteamFlowOut,
+    workFraction: shaftWorkFraction(state.Turbine.rpm),
+    boilerPressure,
+    returnFlow: state.Condenser.returnRate / CstSimulation.DeltaTime,
+    returnTemperature: state.Condenser.hotwellTemperature,
+  })
   // Bypass steam is saturated vapour at the boiler pressure
   const steamFromBypass: { flow: number; enthalpy: number } = {
     flow: turbineResult.turbineState.bypassSteamFlowOut,
@@ -38,7 +50,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // Exhaust enthalpy at the same pressures as the enthalpy drop in TurbineTick, less the work the shaft takes at its
   // speed: at standstill the exhaust is the inlet steam
   const steamFromTurbine: { flow: number; enthalpy: number } = {
-    flow: turbineResult.turbineState.turbineSteamFlowOut,
+    flow: turbineResult.turbineState.turbineSteamFlowOut - extraction.flow,
     enthalpy: getExhaustEnthalpy(
       boilerPressure,
       state.Condenser.pressure / 1000,
@@ -48,10 +60,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   }
   // The return fills the boiler at most to its total volume (kg at the boiler temperature); steam and drain only lower
   // it afterwards
-  const boilerRoom: number = roomInKg(
-    CstSimulation.CstBoiler.TotalVolume,
-    state.Boiler.waterVolume,
-    state.Boiler.temperature,
+  // The heater drain joins the Return, so it takes room in the boiler first
+  const boilerRoom: number = Math.max(
+    0,
+    roomInKg(CstSimulation.CstBoiler.TotalVolume, state.Boiler.waterVolume, state.Boiler.temperature) -
+      extraction.flow * CstSimulation.DeltaTime,
   )
   const condenserNewState: CondenserState = CondenserTick(
     state.Condenser,
@@ -61,18 +74,33 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     boilerRoom,
   )
 
+  // The heater drain is pumped forward into the Return: this tick's Return and the extraction steam, condensed, together
+  const heated = mixReturn(
+    condenserNewState.returnRate,
+    condenserNewState.hotwellTemperature,
+    extraction.flow * CstSimulation.DeltaTime,
+    extraction,
+  )
+
   // Boiler
-  // add this tick's return before recalculating the boiler state
+  // add this tick's return, drain included, before recalculating the boiler state
   const boilerRemovedSteam: BoilerState = {
     ...turbineResult.boilerState,
-    waterMass: turbineResult.boilerState.waterMass + condenserNewState.returnRate,
+    waterMass: turbineResult.boilerState.waterMass + heated.mass,
   }
-  
-  // The economizer heats this tick's Return with the flue gas; the Return enters the boiler at the hotwell temperature
+
+  // The economizer heats this tick's Return with the flue gas; the Return arrives from the heater
   const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam, {
-    flow: condenserNewState.returnRate / CstSimulation.DeltaTime,
-    temperature: condenserNewState.hotwellTemperature,
+    flow: heated.mass / CstSimulation.DeltaTime,
+    temperature: heated.temperature,
   })
+
+  const heaterNewState: HeaterState = {
+    extractionFlow: extraction.flow,
+    tapPressure: extraction.tapPressure,
+    heaterPressure: extraction.heaterPressure,
+    returnTemperature: heated.temperature,
+  }
   
   // Update turbine state with the new flow values
   const updatedTurbineState: TurbineState = {
@@ -85,6 +113,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     ...state,
     Boiler: boilerNewState,
     Condenser: condenserNewState,
+    Heater: heaterNewState,
     Turbine: updatedTurbineState,
   }
 }

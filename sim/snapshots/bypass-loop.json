@@ -46,6 +46,12 @@
     "rejectTotal": 0,
     "deltaWaterMass": -0.1173706232366385
   },
+  "Heater": {
+    "extractionFlow": 0,
+    "tapPressure": 0,
+    "heaterPressure": 0,
+    "returnTemperature": 12.964165619761838
+  },
   "Turbine": {
     "electricOutput": 0,
     "loadSetpoint": 0,
