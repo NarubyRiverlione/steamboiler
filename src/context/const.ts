@@ -71,7 +71,7 @@ export const CstSimulation = {
     HoldEngageWindow: 5, // rpm: Hold engages within ± this of the selected run-up point (estimate, design-basis.md)
 
     // Speed model (ADR 0021, figures in docs/plant/design-basis.md): shaft power from steam, losses and inertia derived
-    RatedSteamFlow: 158, // kg/s, what full gas makes at 165 bar with the Return matching the steam (measured: 157.7 kg/s at 130 MW in max-output, #82; was 161 before the condensate came back colder, #74, ADR 0030); S and the no-load loss are sized on it
+    RatedSteamFlow: 192, // kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater (measured: 192.3 kg/s at 138 MW in max-output, #88; was 158 with no heater, #82, ADR 0031); S, the no-load loss and the tap pressure are sized on it
     RatedEnthalpyDrop: 1016, // kJ/kg, isentropic drop at the rated state: 165 bar to the 31 mbar design vacuum (IF97, ADR 0032)
     InertiaConstant: 4, // s, H of the whole shaft line (sourced range 2.5-6 s); J = 2·H·S / ω_s²
     NoLoadFlowFraction: 0.03, // of rated flow: holds sync speed unloaded; loss power ∝ ω³ is calibrated on it (sourced 1.5-3%)
@@ -88,6 +88,13 @@ export const CstSimulation = {
     LoadRate: 0.03, // share of rated output per minute, up and down (sourced from coal units, docs/research/2026-11-generator-load-rate.md)
     LoadSetpointLimit: 200, // MW: top of the 180-200 MWe class the utilities are sized for, so the steam limits the load, not the setpoint (design-basis.md)
   },
+}
+
+// Extraction heater (ADR 0031, figures in docs/plant/design-basis.md and docs/research/2026-11-extraction-heaters.md)
+export const CstHeater = {
+  TapPressureAtRated: 5, // bar, the turbine tap at RatedSteamFlow (own estimate: the Return leaves at about 150 °C); proportional to turbine flow
+  LineDrop: 0.06, // share of the tap pressure lost on the way to the heater (6% from a shell opening, PRESTO default)
+  TerminalTemperatureDifference: 2, // K, the Return leaves this far below the saturation temperature of the heater pressure (1.7-2.8 K sourced, weak)
 }
 
 export const CstPhysics = {
@@ -113,7 +120,7 @@ export const CstFlueGas = {
   BoilerApproachAtDesign: 100, // K, flue gas above the water leaving the boiler stage at full gas and DesignWaterTemperature (ESTIMATE; sourced span 60-150 K, design-basis.md)
   DesignWaterTemperature: 350, // °C, boiler water the boiler stage is sized at (the plant works at 350-357 °C)
   EconomizerDesignStack: 160, // °C, stack temperature at full gas with the design Return (Ganapathy Tables 1.8, 3.4: 160-164 °C; design choice)
-  EconomizerDesignReturn: 171, // kg/s, the Return the economizer is sized for (171 kg/s, the design flow before #74; #88 moves it)
+  EconomizerDesignReturn: 171, // kg/s, the Return the economizer is sized for (171 kg/s, the design flow before #74; #88 leaves the surface as it is)
   EconomizerDesignReturnTemperature: 37, // °C, hotwell temperature the economizer is sized for
   ReturnSaturationMargin: 28, // K, the Return leaves the economizer at least this far below saturation (UNVERIFIED, no steaming in the economizer)
 }

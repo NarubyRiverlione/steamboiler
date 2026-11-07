@@ -26,6 +26,7 @@ How the parts of the plant connect, what each one does, and where the energy com
 | Turbine valve | Sets the steam flow to the turbine | [turbine.md](turbine.md) |
 | Bypass valve | Sends steam straight to the condenser, past the turbine | [condenser.md](condenser.md#intakes) |
 | Turbine | Takes the enthalpy drop from boiler pressure to condenser pressure as shaft power, in one stage. The steam is saturated, as there is no superheater | [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried) |
+| Extraction heater | Takes steam from the turbine at a tap (about 5 bar at the rated flow) and heats the Return to about 150 °C before the economizer; its drain is pumped forward into the Return. Passive: no controls | [turbine.md](turbine.md#extraction-heater-88) |
 | Generator | Turns shaft power into the load it carries, at 98% | [turbine.md](turbine.md#generator-load-71) |
 | Condenser | Condenses the vapour under vacuum. Cooling water carries the heat away | [condenser.md](condenser.md#energy-balance) |
 | Recirculation pump | Brings cooling water at 10 °C to the condenser | [condenser.md](condenser.md#energy-balance) |
@@ -36,18 +37,18 @@ How the parts of the plant connect, what each one does, and where the energy com
 
 ## Where the energy comes from
 
-Measured at the end of `turbine-load` (#74, #82): 125.0 MW, 165 bar, 152 kg/s of steam, the bypass shut, gas 11 380 L/s. Heat figures are calculated from that run; the balance closes within 0.5% of the fuel heat (golden test).
+Measured at the end of `turbine-load` (#74, #82, #88): 125.0 MW, 165 bar, 173 kg/s of steam of which 44 kg/s is extracted, the bypass shut, gas 10 770 L/s. Heat figures are calculated from that run; the balance closes within 0.5% of the fuel heat (golden test).
 
 | In | MW | | Out | MW |
 |---|---|---|---|---|
-| Gas (fuel heat) | 398 | | Electricity | 125.0 |
-| | | | Stack | 24 |
+| Gas (fuel heat) | 377 | | Electricity | 125.0 |
+| | | | Stack | 37 |
 | | | | Boiler heat loss | 0.5 |
-| | | | Generator and shaft losses | 6.6 |
-| | | | Cooling water (rise 7.8 K) | 241.5 |
-| | | | Not accounted (storage drift) | 0.7 |
-| **Total** | **398** | | **Total** | **398** |
+| | | | Generator and shaft losses | 7.5 |
+| | | | Cooling water (rise 6.7 K) | 206.5 |
+| | | | Not accounted (storage drift) | 0.2 |
+| **Total** | **377** | | **Total** | **377** |
 
-The Return pays for its heat: it enters the boiler at about 26 °C, is warmed to 118 °C by the flue gas in the economizer, and the boiler heats it the rest of the way to the steam. The plant efficiency is 31.4%, electricity over fuel heat, the baseline for #88. The earlier free-feedwater departure is gone ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
+The Return pays for its heat: it enters at the hotwell temperature (about 21 °C), is warmed to about 144 °C by the extraction steam, to about 197 °C by the flue gas in the economizer, and the boiler heats it the rest of the way to the steam. The plant efficiency is 33.2%, electricity over fuel heat, against 31.4% before the heater (#82). The heater gains the cycle about 2 points, but the Return reaches the economizer hotter, so the stack rises from 148 to 227 °C and boiler efficiency falls from 94% to 90%; only part of the cycle gain survives ([ADR 0031](../adr/0031-one-extraction-heater.md)). The earlier free-feedwater departure is gone ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
 
 Not in the table: makeup, reject and drain carry a little heat when they run, and no pump uses power.

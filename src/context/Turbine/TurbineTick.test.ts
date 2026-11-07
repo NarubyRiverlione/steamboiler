@@ -91,6 +91,15 @@ describe("TurbineTick", () => {
       expect(result.electricOutput).toBe(50)
     })
 
+    it("takes less shaft power from the same flow when the heater extracts steam at the tap (ADR 0031)", () => {
+      const flowing: TurbineState = { ...synced, turbineSteamFlowOut: 100 }
+      const whole: TurbineState = TurbineTick(flowing, 165, 31)
+      const extracted: TurbineState = TurbineTick(flowing, 165, 31, 30)
+      expect(extracted.rpm).toBeLessThan(whole.rpm)
+      // no extraction is the plain tick, bit for bit
+      expect(TurbineTick(flowing, 165, 31, 0)).toEqual(whole)
+    })
+
     it("slows the shaft when the steam falls short of the load", () => {
       const loaded: TurbineState = { ...synced, electricOutput: 50, loadSetpoint: 50 }
       expect(TurbineTick(loaded, 165, 100).rpm).toBeLessThan(SyncRPM)

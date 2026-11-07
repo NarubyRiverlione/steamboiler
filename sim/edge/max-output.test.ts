@@ -6,8 +6,8 @@ import { maxOutput } from "../scenarios/max-output"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const GasLimitMW = 130 // measured: full gas first reached at about 130 MW and 160 kg/s, at 165 bar (design-basis.md, #74)
-const MaxOutputMW = 142 // measured: the load carried when the breaker opens, 172 kg/s at 147 bar, living off the boiler's stored heat
+const GasLimitMW = 138 // measured: full gas first reached at about 138 MW and 194 kg/s, at 165 bar, with the extraction heater (design-basis.md, #88)
+const MaxOutputMW = 142 // measured: the load carried when the breaker opens, living off the boiler's stored heat
 
 describe("max-output", () => {
   // every tick, so the breaker opening can be pinned to one tick
@@ -18,12 +18,13 @@ describe("max-output", () => {
   const at = samples[opened].state
   const after = samples.slice(opened)
 
-  test("the valve opens fully only above rated output", () => {
+  test("the valve opens fully only at the top of the output: past what full gas carries, near rated output", () => {
     const full = carrying.find((s) => s.state.Turbine.turbineValvePosition === 1)
-    expect(full?.state.Turbine.electricOutput).toBeGreaterThan(ratedOutputMW)
+    expect(full?.state.Turbine.electricOutput).toBeGreaterThan(GasLimitMW)
+    expect(full?.state.Turbine.electricOutput).toBeGreaterThan(0.95 * ratedOutputMW)
   })
 
-  test("the gas is the limit: full gas is reached before the valve is full, near the rated flow, and pressure then sags", () => {
+  test("the gas is the limit: full gas is reached before the valve is full, near the rated flow, and pressure then sags a little", () => {
     const fullGas = carrying.findIndex((s) => s.state.Boiler.gasFlow >= CstBoiler.MaxGasFlow)
     const fullValve = carrying.findIndex((s) => s.state.Turbine.turbineValvePosition === 1)
     expect(fullGas).toBeGreaterThan(0)
@@ -36,9 +37,8 @@ describe("max-output", () => {
     expect(
       Math.abs(carrying[fullGas].state.Boiler.pressure - PressureHoldSettings.Target),
     ).toBeLessThanOrEqual(PressureHoldSettings.Band)
-    expect(carrying[carrying.length - 1].state.Boiler.pressure).toBeLessThan(
-      PressureHoldSettings.Target - PressureHoldSettings.Band,
-    )
+    // the sag is only a bar or two: the valve (200 kg/s) is nearly full at the rated flow (ADR 0031)
+    expect(carrying[carrying.length - 1].state.Boiler.pressure).toBeLessThan(PressureHoldSettings.Target - 1)
   })
 
   test("the most the plant carries is the load when the valve is fully open and the pressure has sagged, about 142 MW", () => {
