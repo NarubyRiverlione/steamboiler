@@ -3,6 +3,7 @@ import { CstFlueGas, CstPhysics, CstSimulation } from "../context/const"
 import {
   BoilerStageSurface,
   EconomizerSurface,
+  bisectDuty,
   calculateFlueGasHeatBalance,
   flueGasEnthalpy,
   flueGasTemperature,
@@ -179,5 +180,15 @@ describe("relief valve worst case", () => {
         expect(
           calculateFlueGasHeatBalance(MaxGasFlow, openingTemperature, flow, hotwell).heatIntoWater,
         ).toBeLessThanOrEqual(worst + 1e-6)
+  })
+})
+
+describe("bisectDuty", () => {
+  test("finds the root of a rising shortfall inside the ceiling", () => {
+    expect(bisectDuty((duty) => duty - 37.5, 100)).toBeCloseTo(37.5, 9)
+  })
+
+  test("converges on the ceiling end when the shortfall never turns positive", () => {
+    expect(bisectDuty((duty) => duty - 500, 100)).toBeCloseTo(100, 9)
   })
 })

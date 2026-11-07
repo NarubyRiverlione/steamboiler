@@ -74,25 +74,17 @@ type EconomizerInput = {
   returnLimit: number // °C, the hottest the Return may leave
 }
 
-// Heat (kW) the flue gas gives the Return, counterflow: the heat that closes the balance on both sides and equals
-// surface × log-mean difference, never past what the Return may take or the gas can give (the gas does not cool below ambient). Bisection on the heat.
-function economizerDuty({ gasFlow, gasInlet, surface, returnFlow, returnInlet, returnLimit }: EconomizerInput): number {
+// The most heat (kW) the economizer can pass: what the Return may take up to its limit or what the gas can give (it does
+// not cool below ambient), whichever is less. Zero when there is no flow or no room to heat.
+function economizerCeiling({ gasFlow, gasInlet, returnFlow, returnInlet, returnLimit }: EconomizerInput): number {
   if (returnFlow <= 0 || gasFlow <= 0 || returnLimit <= returnInlet) return 0
-  const gasEnthalpy: number = flueGasEnthalpy(gasInlet)
-  const returnEnthalpy: number = getLiquidEnthalpy(returnInlet)
-  const returnCapacity: number = returnFlow * (getLiquidEnthalpy(returnLimit) - returnEnthalpy)
-  const gasCapacity: number = gasFlow * (gasEnthalpy - flueGasEnthalpy(Math.max(returnInlet, Ambient)))
-  const ceiling: number = Math.min(returnCapacity, gasCapacity)
-  if (ceiling <= 0) return 0
+  const returnCapacity: number = returnFlow * (getLiquidEnthalpy(returnLimit) - getLiquidEnthalpy(returnInlet))
+  const gasCapacity: number = gasFlow * (flueGasEnthalpy(gasInlet) - flueGasEnthalpy(Math.max(returnInlet, Ambient)))
+  return Math.max(0, Math.min(returnCapacity, gasCapacity))
+}
 
-  const shortfall = (duty: number): number => {
-    const gasOutlet: number = flueGasTemperature(gasEnthalpy - duty / gasFlow)
-    const returnOutlet: number = getLiquidTemperature(returnEnthalpy + duty / returnFlow)
-    return duty - surface * logMeanDifference(gasInlet - returnOutlet, gasOutlet - returnInlet)
-  }
-  // The surface cannot pass the ceiling: the Return limit (or the gas) decides
-  if (shortfall(ceiling) <= 0) return ceiling
-
+// The duty in (0, ceiling) where the shortfall changes sign, by bisection. The shortfall grows with the duty.
+export function bisectDuty(shortfall: (duty: number) => number, ceiling: number): number {
   let low = 0
   let high: number = ceiling
   for (let i = 0; i < Iterations; i++) {
@@ -101,6 +93,25 @@ function economizerDuty({ gasFlow, gasInlet, surface, returnFlow, returnInlet, r
     else low = mid
   }
   return (low + high) / 2
+}
+
+// Heat (kW) the flue gas gives the Return, counterflow: the heat that closes the balance on both sides and equals
+// surface × log-mean difference, never past the ceiling.
+function economizerDuty(input: EconomizerInput): number {
+  const { gasFlow, gasInlet, surface, returnFlow, returnInlet } = input
+  const ceiling: number = economizerCeiling(input)
+  if (ceiling <= 0) return 0
+  const gasEnthalpy: number = flueGasEnthalpy(gasInlet)
+  const returnEnthalpy: number = getLiquidEnthalpy(returnInlet)
+
+  const shortfall = (duty: number): number => {
+    const gasOutlet: number = flueGasTemperature(gasEnthalpy - duty / gasFlow)
+    const returnOutlet: number = getLiquidTemperature(returnEnthalpy + duty / returnFlow)
+    return duty - surface * logMeanDifference(gasInlet - returnOutlet, gasOutlet - returnInlet)
+  }
+  // The surface cannot pass the ceiling: the Return limit (or the gas) decides
+  if (shortfall(ceiling) <= 0) return ceiling
+  return bisectDuty(shortfall, ceiling)
 }
 
 // Sizing at full gas (ADR 0029): the boiler stage for flue gas BoilerApproachAtDesign above the water at
