@@ -209,6 +209,15 @@ body { margin: 0; }
 /* Mimic */
 .mimic svg { display: block; width: 100%; height: auto; }
 
+/* Header: clock, speed and navigation stay on every page */
+.clock-block { display: grid; gap: var(--space-6); margin-top: var(--space-8); }
+.lcd.paused { animation: tile-flash 1.2s steps(1) infinite; }
+.board-nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-14); padding-top: var(--space-8); border-top: 2px solid var(--panel-edge); }
+.board-nav .lens-btn[aria-current='page'] { cursor: default; }
+.crumb { margin-left: auto; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.tile[role='button'] { cursor: pointer; }
+.tile[role='button']:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
 /* Board */
 .board { padding: var(--space-16); background: var(--floor); color: var(--floor-text); font-family: var(--font-sans); display: grid; gap: var(--space-14); }
 .board-head { display: grid; grid-template-columns: minmax(230px, 1fr) minmax(300px, 1.4fr); gap: var(--space-16); align-items: center; }
@@ -222,7 +231,7 @@ body { margin: 0; }
 .cols-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-14); align-items: start; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tile.flash { animation-duration: 2s; }
+  .tile.flash, .lcd.paused { animation-duration: 2s; }
   .lens-btn { transition: none; }
 }
 </style>
@@ -530,6 +539,10 @@ body { margin: 0; }
       <div class="board-head">
         <div>
           <h1 class="board-title">Powerplant Simulation</h1>
+          <div class="clock-block">
+            <div class="readout"><span>Simulated time</span><output class="lcd" id="clock" title="Elapsed simulated time, hours:minutes:seconds">00:00:00</output></div>
+            <div class="lens-row" id="speeds" role="group" aria-label="Simulation speed"></div>
+          </div>
           <div class="board-stats" id="main-stats">
             <div class="readout"><span>Water Volume</span><output class="lcd sm" id="ms-water"></output></div>
             <div class="readout"><span>Pressure</span><output class="lcd sm" id="ms-press"></output></div>
@@ -543,11 +556,15 @@ body { margin: 0; }
           </div>
         </div>
       </div>
+      <nav class="board-nav" aria-label="Plant navigation">
+        <button type="button" class="lens-btn sm" id="nav-overview">Plant overview</button>
+        <span class="crumb" id="crumb"></span>
+      </nav>
     </div>
   </div>
 
   <!-- Overview: click a raised part to open its controls -->
-  <section class="plate" aria-labelledby="ov-title">
+  <section class="section plate" id="sec-overview" aria-labelledby="ov-title">
     <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
     <h2 class="plate-title" id="ov-title">Plant</h2>
     <div class="plate-inner"><div class="overview"><svg id="overview"></svg></div></div>
@@ -846,17 +863,24 @@ body { margin: 0; }
 
   // Annunciator: one tile for each alarm indicator the app has
   var ALARMS = [
-    { label: 'HEATING RATE OVER LIMIT', on: function () { return s.rate > HEAT_LIMIT; } },
-    { label: 'RELIEF VALVE OPEN', crit: true, on: function () { return s.relief; } },
-    { label: 'BURNER TRIP', crit: true, on: function () { return s.burnerTrip; } },
-    { label: 'CONDENSER PRESSURE HIGH', on: function () { return s.vac > VAC_HIGH; } },
-    { label: 'CONDENSER PRESSURE LOW', on: function () { return s.vac < VAC_LOW; } },
-    { label: 'TURBINE TRIP', crit: true, on: function () { return s.trip; } }
+    { label: 'HEATING RATE OVER LIMIT', part: 'boiler', on: function () { return s.rate > HEAT_LIMIT; } },
+    { label: 'RELIEF VALVE OPEN', part: 'boiler', crit: true, on: function () { return s.relief; } },
+    { label: 'BURNER TRIP', part: 'boiler', crit: true, on: function () { return s.burnerTrip; } },
+    { label: 'CONDENSER PRESSURE HIGH', part: 'condenser', on: function () { return s.vac > VAC_HIGH; } },
+    { label: 'CONDENSER PRESSURE LOW', part: 'condenser', on: function () { return s.vac < VAC_LOW; } },
+    { label: 'TURBINE TRIP', part: 'turbine', crit: true, on: function () { return s.trip; } }
   ];
   ALARMS.forEach(function (a) {
     a.tile = document.createElement('div');
     a.tile.className = 'tile';
     a.tile.textContent = a.label;
+    a.tile.setAttribute('role', 'button');
+    a.tile.setAttribute('tabindex', '0');
+    a.tile.title = 'Open ' + a.part + ' controls';
+    a.tile.addEventListener('click', function () { go(a.part); });
+    a.tile.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(a.part); }
+    });
     $('annun').appendChild(a.tile);
   });
   var testing = false;
@@ -890,14 +914,41 @@ body { margin: 0; }
     render();
   });
 
-  var view = 'boiler', focused = null;
-  var plant = S.overview($('overview'), { value: 'boiler', onOpen: function (section, group) {
+  // The header stays; the page below is the plant overview or one part's controls
+  var view = 'overview', focused = null;
+  var PART_NAMES = { boiler: 'Boiler', condenser: 'Condenser', turbine: 'Turbine' };
+  function go(section, group) {
     view = section;
     if (focused) focused.classList.remove('focused');
     focused = group ? $(group) : null;
     if (focused) focused.classList.add('focused');
+    if (PART_NAMES[section]) plant.select(section);
     render();
-  } });
+  }
+  var plant = S.overview($('overview'), { value: 'boiler', onOpen: go });
+  $('nav-overview').addEventListener('click', function () { go('overview'); });
+  // Esc goes back to the overview. Page Down / Right and Page Up / Left cycle through the parts with controls.
+  // A knob or a field being used keeps those keys for itself.
+  var CYCLE = ['boiler', 'condenser', 'turbine'];
+  document.addEventListener('keydown', function (e) {
+    var t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.getAttribute && t.getAttribute('role') === 'slider')) return;
+    if (e.key === 'Escape' && view !== 'overview') { go('overview'); return; }
+    var dir = e.key === 'PageDown' || e.key === 'ArrowRight' ? 1 : e.key === 'PageUp' || e.key === 'ArrowLeft' ? -1 : 0;
+    if (!dir) return;
+    e.preventDefault();
+    var i = CYCLE.indexOf(view);
+    go(CYCLE[i < 0 ? (dir > 0 ? 0 : CYCLE.length - 1) : (i + dir + CYCLE.length) % CYCLE.length]);
+  });
+
+  // Simulated clock and speed: 0 is pause. The speed multiplies how many stand-in steps run per tick.
+  var SPEEDS = [[0, 'Pause'], [1, '1x'], [10, '10x'], [60, '60x']];
+  var speed = 1, simTime = 0;
+  var speedButtons = lensGroup($('speeds'), SPEEDS, function (v) { speed = v; });
+  function clockText(t) {
+    var n = Math.floor(t), pad = function (v) { return (v < 10 ? '0' : '') + v; };
+    return pad(Math.floor(n / 3600)) + ':' + pad(Math.floor(n % 3600 / 60)) + ':' + pad(n % 60);
+  }
 
   function scenario(from) {
     s = JSON.parse(JSON.stringify(from));
@@ -905,13 +956,14 @@ body { margin: 0; }
     kLoad.set(s.load);
     Object.keys(VALVES).forEach(function (k) { VALVES[k].knob.set(s.v[k] * 100); });
     ALARMS.forEach(function (a) { a.acked = false; });
+    simTime = 0;
     render();
   }
   $('sc-cold').addEventListener('click', function () { scenario(COLD); });
   $('sc-run').addEventListener('click', function () { scenario(RUN); });
 
   // Stand-in dynamics, 5 ticks a second. Not the simulator.
-  function tick() {
+  function step() {
     var dt = 0.2, t0 = tsat(s.press), steamOut = 0;
     if (s.msv && s.press <= MSV_MIN) { s.msv = false; if (s.rpm > 0) s.trip = true; }
     if (s.drain) s.water = Math.max(0, s.water - 0.5 * dt);
@@ -966,6 +1018,10 @@ body { margin: 0; }
     var share = clamp(s.returnFlow / 171, 0, 1);
     s.eff = s.gas > 0 ? 79 + 14.4 * share : 0;
     s.stack = s.gas > 0 ? 160 + 220 * (1 - share) : 20;
+  }
+  function tick() {
+    for (var i = 0; i < speed; i++) step();
+    simTime += 0.2 * speed;
     render();
   }
 
@@ -974,7 +1030,14 @@ body { margin: 0; }
   function lens(id, on, label) { var b = $(id); b.textContent = label; b.classList.toggle('lit', !!on); }
 
   function render() {
-    ['boiler', 'condenser', 'turbine'].forEach(function (name) { $('sec-' + name).hidden = name !== view; });
+    ['overview', 'boiler', 'condenser', 'turbine'].forEach(function (name) { $('sec-' + name).hidden = name !== view; });
+    txt('clock', clockText(simTime));
+    $('clock').classList.toggle('paused', speed === 0);
+    speedButtons.forEach(function (b) { b.el.classList.toggle('lit', speed === b.key); b.el.setAttribute('aria-pressed', String(speed === b.key)); });
+    var home = $('nav-overview');
+    home.classList.toggle('lit', view === 'overview');
+    if (view === 'overview') home.setAttribute('aria-current', 'page'); else home.removeAttribute('aria-current');
+    txt('crumb', view === 'overview' ? 'Plant overview' : 'Plant overview \u203a ' + PART_NAMES[view]);
     $('main-stats').style.display = view === 'boiler' ? 'none' : '';
     plant.value('pressure', s.press.toFixed(1) + ' bar');
     plant.value('load', s.mw.toFixed(1) + ' MW');
