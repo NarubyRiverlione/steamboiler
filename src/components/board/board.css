@@ -1,0 +1,145 @@
+/* Board tokens and bundled fonts, adapted from MC-v2 (console.css, fonts.css). Every name carries the --board- prefix so it cannot clash with simulator.css and App.css. */
+
+@font-face {
+  font-family: "Stardos Stencil";
+  font-weight: 400;
+  src: url("../../assets/fonts/stardos-stencil-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Stardos Stencil";
+  font-weight: 700;
+  src: url("../../assets/fonts/stardos-stencil-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Share Tech Mono";
+  font-weight: 400;
+  src: url("../../assets/fonts/share-tech-mono-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Condensed";
+  font-weight: 400;
+  src: url("../../assets/fonts/ibm-plex-sans-condensed-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Condensed";
+  font-weight: 700;
+  src: url("../../assets/fonts/ibm-plex-sans-condensed-latin-700-normal.woff2") format("woff2");
+}
+
+:root {
+  --board-font-stencil: "Stardos Stencil", sans-serif;
+  --board-font-lcd: "Share Tech Mono", monospace;
+  --board-font-label: "IBM Plex Sans Condensed", sans-serif;
+  --board-page-bg: #a9a9a9;
+  --board-text: #1a1a1a;
+  --board-text-glow: rgba(255, 255, 255, 0.9);
+  --board-plate-bg: #d4d4d4;
+  --board-plate-border: #8a8a8a;
+  --board-panel-bg: #dcdcdc;
+  --board-panel-edge: #ffffff;
+  --board-screw-bg: #c4c4c4;
+  --board-screw-edge: #8f8f8f;
+  --board-lcd-bg: #000000;
+  --board-lcd-border: #808080;
+  --board-lcd-text: #7dff7d;
+  --board-lcd-alarm: #ff4d4d;
+}
+
+.board-plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  background: var(--board-plate-bg);
+  border: 2px solid var(--board-plate-border);
+  border-radius: 8px;
+  color: var(--board-text);
+}
+
+.board-panel {
+  flex: 1;
+  padding: 0.5rem 0.75rem 0.75rem;
+  background: var(--board-panel-bg);
+  border: 2px solid var(--board-panel-edge);
+  border-radius: 36px;
+}
+
+.board-title {
+  margin: 0 0 0.25rem;
+  font-family: var(--board-font-stencil);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 1px 1px 1px var(--board-text-glow);
+  text-transform: uppercase;
+}
+
+.board-screw {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  background: var(--board-screw-bg);
+  border: 1px solid var(--board-screw-edge);
+  border-radius: 50%;
+}
+
+.board-screw::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--board-screw-edge);
+}
+
+.board-screw-top-left {
+  top: 0.3rem;
+  left: 0.3rem;
+}
+
+.board-screw-top-right {
+  top: 0.3rem;
+  right: 0.3rem;
+}
+
+.board-screw-bottom-left {
+  bottom: 0.3rem;
+  left: 0.3rem;
+}
+
+.board-screw-bottom-right {
+  bottom: 0.3rem;
+  right: 0.3rem;
+}
+
+.board-label {
+  margin: 0;
+  font-family: var(--board-font-label);
+  text-align: center;
+}
+
+.board-display {
+  display: block;
+  min-width: 0;
+  min-height: 1.6rem;
+  padding: 0.2rem 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--board-lcd-bg);
+  border: 2px solid var(--board-lcd-border);
+  color: var(--board-lcd-text);
+  font-family: var(--board-font-lcd);
+  font-size: 1.4rem;
+}
+
+.board-display-alarm {
+  color: var(--board-lcd-alarm);
+}
