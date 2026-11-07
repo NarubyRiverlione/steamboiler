@@ -9,10 +9,29 @@ const OWN_KEYS = "input, textarea, select, [contenteditable], [role='slider'], [
 // A focused button or link keeps the arrows (Close and Open on the pages not yet migrated), not Esc
 const OWN_ARROWS = "button, a[href]"
 
+const STEPS: Readonly<Partial<Record<string, 1 | -1>>> = {
+  PageDown: 1,
+  ArrowRight: 1,
+  PageUp: -1,
+  ArrowLeft: -1,
+}
+
 function keepsKeys(target: EventTarget | null, key: string): boolean {
   if (!(target instanceof Element)) return false
   if (target.closest(OWN_KEYS) !== null) return true
   return key.startsWith("Arrow") && target.closest(OWN_ARROWS) !== null
+}
+
+// The path a key goes to from the current path; undefined for a key the board does not use
+function targetPath(key: string, pathname: string): string | undefined {
+  if (key === "Escape") return OVERVIEW_PATH
+  const step: 1 | -1 | undefined = STEPS[key]
+  return step === undefined ? undefined : neighbourPath(pathname, step)
+}
+
+// A modifier or a handled event leaves the key alone
+function isPlain(event: KeyboardEvent): boolean {
+  return !(event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey)
 }
 
 export function useBoardKeys(): void {
@@ -21,18 +40,10 @@ export function useBoardKeys(): void {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (
-        event.defaultPrevented ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        keepsKeys(event.target, event.key)
-      )
-        return
-      if (event.key === "PageDown" || event.key === "ArrowRight") void navigate(neighbourPath(pathname, 1))
-      else if (event.key === "PageUp" || event.key === "ArrowLeft") void navigate(neighbourPath(pathname, -1))
-      else if (event.key === "Escape") void navigate(OVERVIEW_PATH)
-      else return
+      if (!isPlain(event) || keepsKeys(event.target, event.key)) return
+      const path: string | undefined = targetPath(event.key, pathname)
+      if (path === undefined) return
+      void navigate(path)
       event.preventDefault()
     }
     window.addEventListener("keydown", onKeyDown)
