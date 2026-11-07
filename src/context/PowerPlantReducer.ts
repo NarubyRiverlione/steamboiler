@@ -1,7 +1,7 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
-import { isAtSyncSpeed, maxTurbineValvePosition, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -33,6 +33,9 @@ export const makeInitialState = (): PowerPlantState => ({
     ventedTotal: 0, // kg
     reliefLifts: 0,
     burnerTripped: false,
+    stackTemperature: AmbientTemperature, // Celsius, no gas burning
+    boilerEfficiency: 0,
+    returnTemperatureOut: AmbientTemperature, // Celsius
     energy:
       calculateHeatingEnergy(startBoilerMass, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s
@@ -66,14 +69,16 @@ export const makeInitialState = (): PowerPlantState => ({
   },
   Turbine: {
     electricOutput: 0, // MW,
+    loadSetpoint: 0, // MW
     bypassValvePosition: 0,
     bypassSteamFlowOut: 0,
     turbineValvePosition: 0,
     turbineSteamFlowOut: 0,
     mainSteamValve: false, // closed
     rpm: 0,
-    rpmSetPoint: CstTurbine.DefaultRPMSetPoint,
-    holdMode: false,
+    runUpPoint: CstTurbine.DefaultRunUpPoint,
+    speedMode: "free",
+    speedReference: 0,
     generatorBreaker: false, // Phase 4: Initially open
     pidIntegralError: 0,
     turbineTripped: false,
@@ -160,8 +165,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
   TOGGLE_MAIN_STEAM_VALVE: (state) =>
     withTurbine(state, {
-      mainSteamValve:
-        !state.Turbine.mainSteamValve && state.Boiler.pressure > CstTurbine.MainSteamValveMinimumPressure,
+      mainSteamValve: !state.Turbine.mainSteamValve && isAboveMainSteamValveMinimum(state.Boiler.pressure),
     }),
   ADJUST_STEAM_BYPASS_VALVE: (state, { payload }) =>
     withTurbine(state, {
@@ -177,20 +181,40 @@ const handlers: { [T in ActionType]: Handler<T> } = {
       turbineTripped: turbineTrippedAfter(turbineTripped, current, requested),
     })
   },
-  ADJUST_RPM_SETPOINT: (state, { payload }) =>
-    withTurbine(state, {
-      rpmSetPoint: clamp(
-        state.Turbine.rpmSetPoint + payload.rpmAdjustment,
-        CstTurbine.MinRPM,
-        CstTurbine.MaxRPM,
-      ),
-    }),
-  TOGGLE_HOLD_MODE: (state) => withTurbine(state, { holdMode: !state.Turbine.holdMode }),
+  // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
+  SET_SPEED_MODE: (state, { payload: { speedMode } }) => {
+    if (speedModeRefusal(state.Turbine, speedMode)) return state
+    const { rpm, runUpPoint } = state.Turbine
+    if (speedMode === "free") return withTurbine(state, { speedMode })
+    return withTurbine(state, {
+      speedMode,
+      speedReference: speedMode === "hold" ? runUpPoint : rpm,
+      pidIntegralError: 0,
+    })
+  },
+  // In Free a point only selects the target; in Ramp up or Hold a point above the speed (re)starts Ramp up toward it,
+  // and a running ramp keeps its reference
+  SELECT_RUN_UP_POINT: (state, { payload: { runUpPoint } }) => {
+    if (runUpPointRefusal(state.Turbine, runUpPoint)) return state
+    const { speedMode, rpm, speedReference, pidIntegralError } = state.Turbine
+    if (speedMode === "free") return withTurbine(state, { runUpPoint })
+    const ramping: boolean = speedMode === "rampUp"
+    return withTurbine(state, {
+      runUpPoint,
+      speedMode: "rampUp",
+      speedReference: ramping ? speedReference : rpm,
+      pidIntegralError: ramping ? pidIntegralError : 0,
+    })
+  },
   // Allow closing the breaker if RPM is within the margin of sync speed; toggling a closed breaker opens it
-  TOGGLE_GENERATOR_BREAKER: (state) =>
-    withTurbine(state, {
-      generatorBreaker: !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm),
-    }),
+  // Whenever the breaker ends up open, the load and the load setpoint are 0 (ADR 0027)
+  TOGGLE_GENERATOR_BREAKER: (state) => {
+    const generatorBreaker: boolean = !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm)
+    return withTurbine(state, generatorBreaker ? { generatorBreaker } : { generatorBreaker, electricOutput: 0, loadSetpoint: 0 })
+  },
+  // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
+  SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
+    loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 

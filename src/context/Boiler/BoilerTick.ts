@@ -4,15 +4,18 @@ import {
   waterMassOf,
   waterVolumeOf,
   calculateGasEnergy,
+  valveFlowFactor,
 } from "../../utils/boilerCalculations"
 import {
   CriticalTemperature,
   getBoilingPoint,
   getLatentHeat,
   getWaterSpecificHeat,
+  getWaterSpecificVolume,
 } from "../../utils/steamTable"
 import { CstSimulation, CstPhysics } from "../const"
 import { BoilerState, TurbineState } from "../PowerPlantState"
+import { calculateFlueGasHeatBalance } from "../../utils/flueGas"
 
 const { CstBoiler, CstTurbine } = CstSimulation
 
@@ -60,14 +63,25 @@ export function smoothHeatingRate(previous: number, temperatureChange: number): 
   return previous + (instant - previous) * (CstSimulation.DeltaTime / CstBoiler.HeatingRateWindow)
 }
 
-function BoilerTick(boilerState: BoilerState): BoilerState {
+// The Return as the economizer sees it: kg/s and the hotwell temperature it leaves at
+export type ReturnFeed = { flow: number; temperature: number }
+
+const NoReturn: ReturnFeed = { flow: 0, temperature: CstPhysics.AmbientTemperature }
+
+function BoilerTick(boilerState: BoilerState, returnFeed: ReturnFeed = NoReturn): BoilerState {
   const drain = drainBoiler(boilerState)
   const waterMass = drain.waterMass
   // kJ/K, the water and the metal at one temperature
   const heatCapacity = waterMass * getWaterSpecificHeat(boilerState.temperature) + MetalHeatCapacity
 
-  // Energy from the gas actually flowing
-  const gasEnergy = calculateGasEnergy(boilerState.gasFlow) * CstSimulation.DeltaTime
+  // Energy from the gas actually flowing: the fuel heat less the stack heat, the economizer included (ADR 0029)
+  const balance = calculateFlueGasHeatBalance(
+    boilerState.gasFlow,
+    boilerState.temperature,
+    returnFeed.flow,
+    returnFeed.temperature,
+  )
+  const gasEnergy = balance.heatIntoWater * CstSimulation.DeltaTime
 
   // Heat lost to the surroundings this tick
   const heatLoss = heatLossOf(boilerState.temperature)
@@ -111,13 +125,28 @@ function BoilerTick(boilerState: BoilerState): BoilerState {
     heatLoss,
     heatingRate,
     heatingRateOverLimit: heatingRate > CstBoiler.HeatingRateLimit,
+    stackTemperature: balance.stackTemperature,
+    boilerEfficiency: balance.efficiency,
+    returnTemperatureOut: balance.returnTemperatureOut,
     deltaSteamMass: flashedMass / CstSimulation.DeltaTime, // kg/s flashed to steam (negative: condensing)
   }
 }
 
-// Relief capacity (kg/s): the steam full gas makes at the opening pressure, with the capacity margin on top
+const coldestLoopWater: number = CstSimulation.CstCondenser.RecirculationPump_IntakeTemperature
+
+// Worst case for the relief valve (ADR 0005, ADR 0029): full gas at the opening pressure with the Return at the
+// condensation pump's maximum flow and the coldest water in the loop (the cooling water intake temperature), which is
+// the highest efficiency
+const ReliefWorstCaseHeat: number = calculateGasEnergy(
+  CstBoiler.MaxGasFlow,
+  getBoilingPoint(CstBoiler.ReliefOpenPressure),
+  CstSimulation.CstCondenser.CondensationPump_MaxFlowRate / getWaterSpecificVolume(coldestLoopWater),
+  coldestLoopWater,
+)
+
+// Relief capacity (kg/s): the steam the worst-case heat makes at the opening pressure, with the capacity margin on top
 export const ReliefCapacity =
-  (CstBoiler.ReliefCapacityMargin * calculateGasEnergy(CstBoiler.MaxGasFlow)) /
+  (CstBoiler.ReliefCapacityMargin * ReliefWorstCaseHeat) /
   getLatentHeat(getBoilingPoint(CstBoiler.ReliefOpenPressure))
 
 // The relief valve on the drum vents steam to the atmosphere, upstream of the main steam valve. It decides on the
@@ -174,9 +203,12 @@ export function BoilerRemoveSteam(
     return { boilerState, turbineState: { ...turbineState, turbineSteamFlowOut: 0, bypassSteamFlowOut: 0 } }
   }
 
-  // The valve passes at most its rate (kg/s) over one tick, and never more than the boiler holds
+  // The valve passes its pressure-driven flow (kg/s, ADR 0026) over one tick, and never more than the boiler holds
   const valveMassPerTick =
-    valvePositionFor(turbineState, removeBy) * CstTurbine.MaxSteamRemovalRate * CstSimulation.DeltaTime
+    valvePositionFor(turbineState, removeBy) *
+    CstTurbine.MaxSteamRemovalRate *
+    valveFlowFactor(boilerState.pressure) *
+    CstSimulation.DeltaTime
   const removedSteamMass = Math.min(boilerState.steamMass, valveMassPerTick)
 
   return {

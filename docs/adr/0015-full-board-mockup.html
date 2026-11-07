@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Full Board Mockup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&family=Share+Tech+Mono&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+:root {
+  --floor: #2b2e31;
+  --floor-text: #d8dadc;
+  --floor-muted: #9ea3a8;
+  --plate-bg: #d4d4d4;
+  --plate-border: #8a8a8a;
+  --panel-bg: #dcdcdc;
+  --panel-edge: #ffffff;
+  --ink: #1a1a1a;
+  --screw-bg: #c4c4c4;
+  --screw-edge: #8f8f8f;
+  --lcd-bg: #000000;
+  --lcd-text: #7dff7d;
+  --lcd-error: #ff4d4d;
+  --lcd-border: #808080;
+  --lens-bezel: #1b1b1b;
+  --lens-bezel-light: #4a4a4a;
+  --lens-bg: rgba(70, 70, 70, 0.4);
+  --lens-lit-bg: #fff6c8;
+  --lens-lit-glow: #ffe98a;
+  --gauge-face: #f4f2ea;
+  --gauge-bezel-hi: #f2f2f2;
+  --gauge-bezel-lo: #6b6e72;
+  --gauge-bezel-line: #55585c;
+  --needle: #c0221b;
+  --needle-edge: #5a0b07;
+  --zone-green: #2e9d44;
+  --zone-orange: #f08a00;
+  --zone-red: #d0261e;
+  --knob-cap-hi: #2a2a2a;
+  --knob-cap-lo: #060606;
+  --knob-grip: #3a3a3a;
+  --knob-pointer: #cfd2d6;
+  --led-green: #2ecc40;
+  --led-green-hi: #b6ffbd;
+  --led-green-lo: #0f6a1a;
+  --led-red: #ff2d2d;
+  --led-red-hi: #ffb3b3;
+  --led-red-lo: #8a0000;
+  --led-off: #333333;
+  --led-off-hi: #666666;
+  --led-off-lo: #161616;
+  --annun-well: #1b1b1b;
+  --tile-off-bg: #5a5a52;
+  --tile-off-text: #3b3b3b;
+  --tile-lit-bg: #ffe58a;
+  --tile-lit-text: #2a1d00;
+  --tile-lit-glow: #ffd34d;
+  --tile-crit-bg: #ff8a7a;
+  --tile-crit-text: #2b0000;
+  --tile-crit-glow: #ff4d3a;
+  --hazard-yellow: #f2c200;
+  --hazard-black: #141414;
+  --guard-bg: #2f3b4a;
+  --guard-text: #ff8a7a;
+  --guard-rim: #bbbbbb;
+  --focus-ring: #1f5fbf;
+  --water: #3c78b4;
+  --steam: #c9ccd0;
+  --mimic-bg: #c9c9c3;
+  --mimic-pipe: #7b7f84;
+  --mimic-gas-pipe: #9c7a1a;
+  --mimic-gas-flow: #ffd34d;
+  --level-glass: #e9ecef;
+  --level-housing: #3a3d40;
+  --shadow-lens: 0 3px 3px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.25);
+  --shadow-lens-lit: 0 3px 3px rgba(0,0,0,0.4), 0 0 12px #ffe98a, inset 0 0 8px #ffffff;
+  --shadow-well: inset 0 2px 5px #000000;
+  --shadow-tile-off: inset 0 0 6px rgba(0,0,0,0.55);
+  --shadow-tile-lit: 0 0 10px #ffd34d, inset 0 0 8px #ffffff;
+  --shadow-tile-crit: 0 0 10px #ff4d3a, inset 0 0 8px #ffffff;
+  --shadow-hazard: 0 3px 4px rgba(0,0,0,0.45);
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --radius-tile: 2px;
+  --radius-well: 3px;
+  --radius-lens: 4px;
+  --radius-hazard: 6px;
+  --radius-plate: 8px;
+  --radius-guard: 10px;
+  --radius-panel: 36px;
+  --font-stencil: "Stardos Stencil", "Arial Narrow", sans-serif;
+  --font-lcd: "Share Tech Mono", ui-monospace, Menlo, monospace;
+  --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
+}
+body { background: var(--floor); }
+/* Steamboiler analog board: every value comes from tokens.css */
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+.ground { padding: var(--space-16); background: var(--panel-bg); color: var(--ink); font-family: var(--font-stencil); }
+.ground.row { display: flex; flex-wrap: wrap; gap: var(--space-16); align-items: center; }
+
+/* Plate */
+.plate { position: relative; padding: var(--space-12); background: var(--plate-bg); border: 2px solid var(--plate-border); border-radius: var(--radius-plate); color: var(--ink); font-family: var(--font-stencil); }
+.plate-title { margin: 0 0 var(--space-4); text-align: center; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5em; text-transform: uppercase; text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.9); }
+.plate-inner { padding: var(--space-12) var(--space-16); background: var(--panel-bg); border: 2px solid var(--panel-edge); border-radius: var(--radius-panel); display: grid; gap: var(--space-14); }
+.screw { position: absolute; width: 18px; height: 18px; background: var(--screw-bg); border: 1px solid var(--screw-edge); border-radius: 50%; }
+.screw::after { content: ''; position: absolute; top: 50%; left: 2px; right: 2px; height: 2px; margin-top: -1px; background: var(--screw-edge); }
+.screw.tl { top: 0.3rem; left: 0.3rem; transform: rotate(40deg); }
+.screw.tr { top: 0.3rem; right: 0.3rem; transform: rotate(115deg); }
+.screw.bl { bottom: 0.3rem; left: 0.3rem; transform: rotate(150deg); }
+.screw.br { bottom: 0.3rem; right: 0.3rem; transform: rotate(80deg); }
+
+/* Instruments */
+.instrument { display: grid; justify-items: center; align-content: start; gap: var(--space-6); min-width: 0; }
+.instrument-label { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; }
+.instrument svg { display: block; max-width: 100%; height: auto; }
+.group { display: grid; gap: var(--space-8); align-content: start; padding: var(--space-8) var(--space-12); border: 1px solid var(--plate-border); border-radius: var(--radius-hazard); min-width: 0; }
+.group-title { margin: 0; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; }
+.cluster { display: flex; flex-wrap: wrap; gap: var(--space-14); justify-content: space-around; align-items: flex-start; }
+
+/* LCD */
+.lcd { display: inline-block; min-width: 7.5ch; padding: 0.15rem 0.5rem; background: var(--lcd-bg); border: 2px solid var(--lcd-border); color: var(--lcd-text); font-family: var(--font-lcd); font-size: 1.25rem; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lcd[hidden], .lcd-msg[hidden] { display: none; }
+.lcd.err { color: var(--lcd-error); }
+.lcd.sm { font-size: 1rem; min-width: 6ch; }
+.lcd-msg { padding: var(--space-6) var(--space-8); background: var(--lcd-bg); border: 2px solid var(--lcd-border); color: var(--lcd-text); font-family: var(--font-lcd); font-size: 14px; line-height: 1.35; }
+
+/* Readouts */
+.readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: var(--space-8) var(--space-16); }
+.readout { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); min-height: 36px; }
+.readout > span:first-child, .readout-label { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.readout-values { display: flex; align-items: center; gap: var(--space-8); flex-wrap: wrap; justify-content: flex-end; }
+
+/* Lens button */
+.lens-btn { flex: 1; padding: 0.35rem 0.8rem; border: 3px solid var(--lens-bezel); border-top-color: var(--lens-bezel-light); border-radius: var(--radius-lens); background-color: var(--lens-bg); background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, 0.12)); color: #000; font-family: var(--font-stencil); font-size: 1rem; font-weight: 700; white-space: nowrap; cursor: pointer; box-shadow: var(--shadow-lens); transition: transform 120ms ease-out, box-shadow 120ms ease-out, background-color 120ms ease-out; }
+.lens-btn.sm { flex: 0 0 auto; padding: 0.2rem 0.5rem; font-size: 0.85rem; }
+.lens-btn[aria-pressed='true'], .lens-btn.lit { background-color: var(--lens-lit-bg); box-shadow: var(--shadow-lens-lit); }
+.lens-btn:active { transform: translateY(2px); }
+.lens-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.lens-row { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.lens-btn:focus-visible, .knob:focus-visible, .guard-btn:focus-visible, .sel-pos:focus-visible, .advanced summary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+
+/* LED */
+.led { display: inline-flex; align-items: center; gap: var(--space-6); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.led-lamp { position: relative; flex: none; width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(var(--gauge-bezel-hi), var(--gauge-bezel-lo)); border: 1px solid var(--led-off); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.led-lamp::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, var(--led-off-hi), var(--led-off) 50%, var(--led-off-lo)); }
+.led.on .led-lamp::after { background: radial-gradient(circle at 40% 35%, var(--led-red-hi), var(--led-red) 50%, var(--led-red-lo)); box-shadow: 0 0 8px var(--led-red); }
+.led.on.green .led-lamp::after { background: radial-gradient(circle at 40% 35%, var(--led-green-hi), var(--led-green) 50%, var(--led-green-lo)); box-shadow: 0 0 8px var(--led-green); }
+
+/* Annunciator */
+.annunciator { display: grid; gap: var(--space-8); }
+.annun-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); padding: var(--space-6); background: var(--annun-well); border-radius: var(--radius-lens); box-shadow: var(--shadow-well); }
+.tile { min-height: 3.1rem; display: grid; place-items: center; padding: var(--space-4); text-align: center; font-family: var(--font-stencil); font-weight: 700; font-size: 0.72rem; line-height: 1.15; letter-spacing: 0.06em; color: var(--tile-off-text); background: var(--tile-off-bg); border-radius: var(--radius-tile); box-shadow: var(--shadow-tile-off); }
+.tile.lit { color: var(--tile-lit-text); background: var(--tile-lit-bg); box-shadow: var(--shadow-tile-lit); }
+.tile.lit.crit { color: var(--tile-crit-text); background: var(--tile-crit-bg); box-shadow: var(--shadow-tile-crit); }
+.tile.flash { animation: tile-flash 0.7s steps(1) infinite; }
+@keyframes tile-flash { 50% { color: var(--tile-off-text); background: var(--tile-off-bg); box-shadow: var(--shadow-tile-off); } }
+
+/* Guarded control */
+.hazard { padding: var(--space-14); border-radius: var(--radius-hazard); background: repeating-linear-gradient(-45deg, var(--hazard-yellow) 0 12px, var(--hazard-black) 12px 24px); box-shadow: var(--shadow-hazard); }
+.well { padding: var(--space-6); border-radius: var(--radius-well); background: var(--annun-well); box-shadow: var(--shadow-well); }
+.guard-btn { display: block; width: 100%; height: 58px; border: 5px solid var(--guard-rim); border-radius: var(--radius-guard); background: var(--guard-bg); color: var(--guard-text); font-family: var(--font-stencil); font-size: 1.05rem; font-weight: 700; letter-spacing: 0.12em; cursor: pointer; }
+.guard-btn:active { transform: translateY(2px); }
+.guard-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.guard-btn.closed { background: var(--lens-lit-bg); color: var(--ink); }
+
+/* Knob */
+.knob { cursor: grab; touch-action: none; }
+.knob:active { cursor: grabbing; }
+.knob[aria-disabled='true'] { cursor: not-allowed; opacity: 0.55; }
+
+/* Valve control: knob flanked by Close and Open */
+.valve { display: grid; justify-items: center; gap: var(--space-6); min-width: 0; }
+.valve-row { display: flex; align-items: center; gap: var(--space-6); }
+.valve-values { display: flex; flex-wrap: wrap; gap: var(--space-4); justify-content: center; }
+
+/* Selector */
+.selector { display: grid; justify-items: center; gap: var(--space-4); }
+.sel-positions { display: flex; gap: var(--space-14); }
+.sel-pos { padding: 2px var(--space-4); background: none; border: 0; color: var(--ink); font-family: var(--font-stencil); font-size: 0.9rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; }
+.sel-pos[aria-pressed='true'] { border-bottom-color: var(--ink); }
+
+/* Advanced drawer */
+.advanced summary { cursor: pointer; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; user-select: none; }
+.advanced[open] summary { margin-bottom: var(--space-8); }
+
+/* Mimic */
+.mimic svg { display: block; width: 100%; height: auto; }
+
+/* Board */
+.board { padding: var(--space-16); background: var(--floor); color: var(--floor-text); font-family: var(--font-sans); display: grid; gap: var(--space-14); }
+.board-head { display: grid; grid-template-columns: minmax(230px, 1fr) auto minmax(300px, 1.4fr); gap: var(--space-16); align-items: center; }
+.board-title { margin: 0; font-size: 1.7rem; font-weight: 700; letter-spacing: 0.08em; line-height: 1.1; }
+.board-stats { display: grid; gap: var(--space-6); margin-top: var(--space-8); }
+.board-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-14); color: var(--floor-muted); font-size: 14px; line-height: 1.5; }
+.board-note .lens-btn { color: var(--floor-text); }
+.board-note .lens-btn:focus-visible { outline-color: var(--floor-text); }
+.section[hidden] { display: none; }
+.cols-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-14); align-items: start; }
+.cols-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-14); align-items: start; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tile.flash { animation-duration: 2s; }
+  .lens-btn { transition: none; }
+}
+</style>
+<script>
+// Plain-DOM instrument drawing, no framework. Each function takes an empty <svg> and returns a small handle.
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var uid = 0;
+  var PAINT = { fill: 1, stroke: 1, 'stop-color': 1 };
+
+  // Paint goes through style so that var(--token) works in SVG
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    Object.keys(attrs).forEach(function (k) {
+      if (PAINT[k]) e.style.setProperty(k, attrs[k]);
+      else e.setAttribute(k, attrs[k]);
+    });
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function polar(cx, cy, r, deg) {
+    var a = (deg - 90) * Math.PI / 180;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  }
+  function arc(cx, cy, r, a0, a1) {
+    var p0 = polar(cx, cy, r, a0), p1 = polar(cx, cy, r, a1);
+    return 'M' + p0[0] + ' ' + p0[1] + ' A' + r + ' ' + r + ' 0 ' + (a1 - a0 > 180 ? 1 : 0) + ' 1 ' + p1[0] + ' ' + p1[1];
+  }
+  function text(parent, x, y, str, size, anchor, weight) {
+    var t = el('text', { x: x, y: y, 'text-anchor': anchor || 'middle', 'font-size': size, 'font-weight': weight || 700, fill: 'var(--ink)' }, parent);
+    t.style.fontFamily = 'var(--font-stencil)';
+    t.textContent = str;
+    return t;
+  }
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  var SWEEP0 = -135, SWEEP1 = 135;
+
+  // Round gauge: { min, max, major, minor, unit, zones: [[from, to, 'var(--zone-green)']], marks: [value] }
+  function gauge(svg, o) {
+    var cx = 105, cy = 100, id = 'gz' + (++uid);
+    svg.setAttribute('viewBox', '0 0 210 200');
+    var ang = function (v) { return SWEEP0 + (SWEEP1 - SWEEP0) * (clamp(v, o.min, o.max) - o.min) / (o.max - o.min); };
+    var defs = el('defs', {}, svg);
+    var bz = el('linearGradient', { id: id, x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+    el('stop', { offset: 0, 'stop-color': 'var(--gauge-bezel-hi)' }, bz);
+    el('stop', { offset: 1, 'stop-color': 'var(--gauge-bezel-lo)' }, bz);
+    el('circle', { cx: cx, cy: cy + 2, r: 92, fill: 'rgba(0,0,0,0.3)' }, svg);
+    el('circle', { cx: cx, cy: cy, r: 92, fill: 'url(#' + id + ')', stroke: 'var(--gauge-bezel-line)' }, svg);
+    el('circle', { cx: cx, cy: cy, r: 84, fill: 'var(--gauge-face)', stroke: 'var(--ink)' }, svg);
+    (o.zones || []).forEach(function (z) {
+      el('path', { d: arc(cx, cy, 70, ang(z[0]), ang(z[1])), stroke: z[2], 'stroke-width': 6, fill: 'none' }, svg);
+    });
+    for (var v = o.min; v <= o.max + 1e-9; v += o.minor) {
+      var isMajor = Math.abs((v - o.min) / o.major - Math.round((v - o.min) / o.major)) < 1e-6;
+      var a = polar(cx, cy, isMajor ? 60 : 64, ang(v)), b = polar(cx, cy, 74, ang(v));
+      el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--ink)', 'stroke-width': isMajor ? 2 : 1 }, svg);
+      if (isMajor) {
+        var t = polar(cx, cy, 47, ang(v));
+        text(svg, t[0], t[1] + 4, String(Math.round(v)), 11);
+      }
+    }
+    (o.marks || []).forEach(function (m) {
+      var a2 = polar(cx, cy, 56, ang(m)), b2 = polar(cx, cy, 78, ang(m));
+      el('line', { x1: a2[0], y1: a2[1], x2: b2[0], y2: b2[1], stroke: 'var(--zone-green)', 'stroke-width': 3 }, svg);
+    });
+    text(svg, cx, cy + 40, o.unit, 12);
+    var needle = el('g', {}, svg);
+    el('path', { d: 'M' + (cx - 3) + ' ' + (cy + 14) + ' L' + cx + ' ' + (cy - 72) + ' L' + (cx + 3) + ' ' + (cy + 14) + ' Z', fill: 'var(--needle)', stroke: 'var(--needle-edge)', 'stroke-width': 0.6 }, needle);
+    el('circle', { cx: cx, cy: cy, r: 8, fill: 'var(--ink)' }, svg);
+    return { set: function (val) { needle.setAttribute('transform', 'rotate(' + ang(val) + ' ' + cx + ' ' + cy + ')'); } };
+  }
+
+  // Level gauge: { zones: [[from, to, colour]], ticks: [0, 50, 100] } in percent
+  function level(svg, o) {
+    var top = 14, bot = 176;
+    svg.setAttribute('viewBox', '0 0 96 190');
+    var y = function (p) { return bot - (bot - top) * clamp(p, 0, 100) / 100; };
+    el('rect', { x: 8, y: top - 8, width: 52, height: bot - top + 16, rx: 6, fill: 'var(--level-housing)', stroke: 'var(--ink)' }, svg);
+    el('rect', { x: 18, y: top, width: 32, height: bot - top, fill: 'var(--level-glass)', stroke: 'var(--ink)' }, svg);
+    var fill = el('rect', { x: 19, y: y(50), width: 30, height: bot - y(50), fill: 'var(--water)' }, svg);
+    (o.zones || []).forEach(function (z) {
+      el('rect', { x: 64, y: y(z[1]), width: 8, height: y(z[0]) - y(z[1]), fill: z[2] }, svg);
+    });
+    (o.ticks || [0, 50, 100]).forEach(function (v) {
+      el('line', { x1: 60, y1: y(v), x2: 76, y2: y(v), stroke: 'var(--ink)' }, svg);
+      text(svg, 78, y(v) + 4, String(v), 10, 'start', 400);
+    });
+    var ptr = el('path', { d: '', fill: 'var(--ink)' }, svg);
+    return {
+      set: function (p) {
+        var yy = y(p);
+        fill.setAttribute('y', yy);
+        fill.setAttribute('height', Math.max(0, bot - yy));
+        ptr.setAttribute('d', 'M62 ' + yy + ' l-8 -5 v10 Z');
+      }
+    };
+  }
+
+  // Knob: { min, max, step, value, label, size, onChange, ends: ['OFF', 'MAX'] }. Drag, scroll or arrow keys.
+  function knob(svg, o) {
+    var cx = 85, cy = 85, id = 'kn' + (++uid), value = o.value || 0, disabled = false;
+    var ang = function (v) { return SWEEP0 + (SWEEP1 - SWEEP0) * (v - o.min) / (o.max - o.min); };
+    svg.setAttribute('viewBox', '0 0 170 170');
+    svg.setAttribute('class', 'knob');
+    svg.setAttribute('tabindex', '0');
+    svg.setAttribute('role', 'slider');
+    svg.setAttribute('aria-label', o.label);
+    svg.setAttribute('aria-valuemin', o.min);
+    svg.setAttribute('aria-valuemax', o.max);
+    var defs = el('defs', {}, svg);
+    var bz = el('linearGradient', { id: id + 'b', x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+    el('stop', { offset: 0, 'stop-color': 'var(--gauge-bezel-hi)' }, bz);
+    el('stop', { offset: 1, 'stop-color': 'var(--gauge-bezel-lo)' }, bz);
+    var cg = el('radialGradient', { id: id + 'c', cx: 0.4, cy: 0.35, r: 0.8 }, defs);
+    el('stop', { offset: 0, 'stop-color': 'var(--knob-cap-hi)' }, cg);
+    el('stop', { offset: 1, 'stop-color': 'var(--knob-cap-lo)' }, cg);
+    for (var i = 0; i <= 10; i++) {
+      var deg = SWEEP0 + (SWEEP1 - SWEEP0) * i / 10;
+      var a = polar(cx, cy, 70, deg), b = polar(cx, cy, 78, deg);
+      el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: 'var(--ink)', 'stroke-width': i % 5 === 0 ? 2.5 : 1.2 }, svg);
+    }
+    var ends = o.ends || ['0', '100'];
+    text(svg, 34, 158, ends[0], 13);
+    text(svg, 136, 158, ends[1], 13);
+    el('circle', { cx: cx, cy: cy, r: 54, fill: 'url(#' + id + 'b)', stroke: 'var(--gauge-bezel-line)' }, svg);
+    el('circle', { cx: cx, cy: cy, r: 46, fill: 'var(--knob-cap-lo)' }, svg);
+    var cap = el('g', {}, svg);
+    el('circle', { cx: cx, cy: cy, r: 44, fill: 'url(#' + id + 'c)' }, cap);
+    for (var j = 0; j < 24; j++) {
+      var c = polar(cx, cy, 40, j * 15), d = polar(cx, cy, 44, j * 15);
+      el('line', { x1: c[0], y1: c[1], x2: d[0], y2: d[1], stroke: 'var(--knob-grip)', 'stroke-width': 2 }, cap);
+    }
+    el('rect', { x: cx - 3, y: cy - 40, width: 6, height: 24, rx: 2, fill: 'var(--knob-pointer)', stroke: 'var(--gauge-bezel-lo)' }, cap);
+
+    function draw() {
+      cap.setAttribute('transform', 'rotate(' + ang(value) + ' ' + cx + ' ' + cy + ')');
+      svg.setAttribute('aria-valuenow', Math.round(value));
+    }
+    function change(v) {
+      if (disabled) return;
+      value = clamp(v, o.min, o.max);
+      draw();
+      if (o.onChange) o.onChange(value);
+    }
+    var drag = null;
+    svg.addEventListener('pointerdown', function (e) {
+      if (disabled) return;
+      drag = { x: e.clientX, y: e.clientY, v: value };
+      svg.setPointerCapture(e.pointerId);
+    });
+    svg.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var moved = (drag.y - e.clientY) + (e.clientX - drag.x);
+      change(drag.v + moved * (o.max - o.min) / 200);
+    });
+    var end = function () { drag = null; };
+    svg.addEventListener('pointerup', end);
+    svg.addEventListener('pointercancel', end);
+    svg.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      change(value + (e.deltaY < 0 ? o.step : -o.step));
+    }, { passive: false });
+    svg.addEventListener('keydown', function (e) {
+      var steps = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 5, PageDown: -5 };
+      if (e.key in steps) { e.preventDefault(); change(value + steps[e.key] * o.step); }
+      if (e.key === 'Home') { e.preventDefault(); change(o.min); }
+      if (e.key === 'End') { e.preventDefault(); change(o.max); }
+    });
+    draw();
+    return {
+      set: function (v) { value = clamp(v, o.min, o.max); draw(); },
+      get: function () { return value; },
+      nudge: function (d) { change(value + d); },
+      disable: function (off) { disabled = off; svg.setAttribute('aria-disabled', String(off)); }
+    };
+  }
+
+  // Selector: rotary switch with named positions. { positions: ['Boiler', …], value, onChange }
+  function selector(root, o) {
+    root.className = 'selector';
+    var row = document.createElement('div');
+    row.className = 'sel-positions';
+    var svg = el('svg', { viewBox: '0 0 80 80', width: 72, height: 72, 'aria-hidden': 'true' });
+    var id = 'se' + (++uid);
+    var defs = el('defs', {}, svg);
+    var bz = el('linearGradient', { id: id, x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+    el('stop', { offset: 0, 'stop-color': 'var(--gauge-bezel-hi)' }, bz);
+    el('stop', { offset: 1, 'stop-color': 'var(--gauge-bezel-lo)' }, bz);
+    el('circle', { cx: 40, cy: 40, r: 36, fill: 'url(#' + id + ')', stroke: 'var(--gauge-bezel-line)' }, svg);
+    var cap = el('g', {}, svg);
+    el('circle', { cx: 40, cy: 40, r: 28, fill: 'var(--knob-cap-hi)' }, cap);
+    el('rect', { x: 36, y: 6, width: 8, height: 34, rx: 3, fill: 'var(--knob-cap-lo)', stroke: 'var(--knob-pointer)' }, cap);
+    var value = o.value || 0;
+    var buttons = o.positions.map(function (name, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sel-pos';
+      b.textContent = name;
+      b.addEventListener('click', function () { pick(i); });
+      row.appendChild(b);
+      return b;
+    });
+    function draw() {
+      var n = o.positions.length;
+      var deg = n > 1 ? -45 + 90 * value / (n - 1) : 0;
+      cap.setAttribute('transform', 'rotate(' + deg + ' 40 40)');
+      buttons.forEach(function (b, i) { b.setAttribute('aria-pressed', String(i === value)); });
+    }
+    function pick(i) {
+      value = i;
+      draw();
+      if (o.onChange) o.onChange(i, o.positions[i]);
+    }
+    svg.style.cursor = 'pointer';
+    svg.addEventListener('click', function () { pick((value + 1) % o.positions.length); });
+    root.appendChild(row);
+    root.appendChild(svg);
+    draw();
+    return { pick: pick };
+  }
+
+  window.Steamboiler = { gauge: gauge, level: level, knob: knob, selector: selector };
+})();
+</script>
+</head>
+<body>
+<div class="board" id="board">
+  <div class="plate">
+    <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+    <div class="plate-inner">
+      <div class="board-head">
+        <div>
+          <h1 class="board-title">Powerplant Simulation</h1>
+          <div class="board-stats" id="main-stats">
+            <div class="readout"><span>Water Volume</span><output class="lcd sm" id="ms-water"></output></div>
+            <div class="readout"><span>Pressure</span><output class="lcd sm" id="ms-press"></output></div>
+          </div>
+        </div>
+        <div id="selector"></div>
+        <div class="annunciator">
+          <div class="annun-grid" id="annun"></div>
+          <div class="lens-row">
+            <button type="button" class="lens-btn sm" style="flex:1" id="ack">ACK</button>
+            <button type="button" class="lens-btn sm" style="flex:1" id="test" aria-pressed="false">TEST</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boiler -->
+  <section class="section plate" id="sec-boiler">
+    <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+    <h2 class="plate-title">Boiler</h2>
+    <div class="plate-inner">
+      <div class="mimic">
+        <svg viewBox="0 0 960 90" role="img" aria-label="Mimic: gas to burner, drum, relief valve and steam line">
+          <rect x="0" y="0" width="960" height="90" rx="6" style="fill:var(--mimic-bg)"/>
+          <line x1="20" y1="62" x2="250" y2="62" stroke-width="6" style="stroke:var(--mimic-gas-pipe)"/>
+          <line id="m-gas" x1="20" y1="62" x2="250" y2="62" stroke-width="3" stroke-dasharray="8 8" style="stroke:var(--mimic-gas-flow)"/>
+          <text x="20" y="82" font-size="11" font-weight="700" style="fill:var(--ink);font-family:var(--font-stencil)">GAS</text>
+          <path id="m-flame" d="M250 72 L258 50 L266 72 Z" stroke-width="1" style="fill:var(--zone-orange);stroke:var(--ink)"/>
+          <rect x="276" y="18" width="180" height="56" rx="28" stroke-width="2" style="fill:var(--level-glass);stroke:var(--ink)"/>
+          <clipPath id="drum-clip"><rect x="277" y="19" width="178" height="54" rx="27"/></clipPath>
+          <rect id="m-water" clip-path="url(#drum-clip)" x="276" y="46" width="180" height="30" style="fill:var(--water)"/>
+          <text x="366" y="13" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--ink);font-family:var(--font-stencil)">DRUM</text>
+          <line x1="456" y1="34" x2="940" y2="34" stroke-width="6" style="stroke:var(--mimic-pipe)"/>
+          <line id="m-steam" x1="456" y1="34" x2="940" y2="34" stroke-width="3" stroke-dasharray="10 8" style="stroke:var(--panel-edge)"/>
+          <line x1="530" y1="34" x2="530" y2="12" stroke-width="4" style="stroke:var(--mimic-pipe)"/>
+          <circle id="m-relief" cx="530" cy="10" r="6" stroke-width="1" style="fill:var(--tile-off-bg);stroke:var(--ink)"/>
+          <text x="542" y="14" font-size="10" font-weight="700" style="fill:var(--ink);font-family:var(--font-stencil)">RELIEF</text>
+          <path id="m-msv" d="M640 24 L660 44 L660 24 L640 44 Z" stroke-width="1" style="fill:var(--tile-off-bg);stroke:var(--ink)"/>
+          <text x="650" y="58" text-anchor="middle" font-size="10" font-weight="700" style="fill:var(--ink);font-family:var(--font-stencil)">MAIN STEAM</text>
+          <text x="940" y="56" text-anchor="end" font-size="11" font-weight="700" style="fill:var(--ink);font-family:var(--font-stencil)">TO TURBINE / BYPASS</text>
+        </svg>
+      </div>
+      <div class="cols-3" style="grid-template-columns:1fr 1.4fr 1fr">
+        <div class="cluster">
+          <div class="instrument"><div class="instrument-label">Pressure</div><svg id="g-press" width="210" height="200"></svg><output class="lcd" id="b-press"></output></div>
+        </div>
+        <div class="group">
+          <h3 class="group-title">Gas Flow Control</h3>
+          <div class="valve">
+            <svg id="k-gas" width="150" height="150"></svg>
+            <output class="lcd" id="b-gas"></output>
+            <div class="lens-row">
+              <button type="button" class="lens-btn sm" data-gas="500">+ 500 L/s</button>
+              <button type="button" class="lens-btn sm" data-gas="250">+ 250 L/s</button>
+              <button type="button" class="lens-btn sm" data-gas="-250">- 250 L/s</button>
+              <button type="button" class="lens-btn sm" data-gas="-500">- 500 L/s</button>
+            </div>
+          </div>
+        </div>
+        <div class="cluster">
+          <div class="instrument"><div class="instrument-label">Water volume</div><svg id="g-level" width="96" height="190"></svg><output class="lcd" id="b-water"></output></div>
+          <div class="group">
+            <h3 class="group-title">Water Valve Control</h3>
+            <div class="readout-label">Drain Valve</div>
+            <button type="button" class="lens-btn" id="drain"></button>
+          </div>
+        </div>
+      </div>
+      <h3 class="group-title">Boiler Status</h3>
+      <div class="readouts">
+        <div class="readout"><span>Temperature</span><output class="lcd" id="b-temp"></output></div>
+        <div class="readout"><span>Energy Change</span><output class="lcd" id="b-de"></output></div>
+        <div class="readout"><span>Heating rate</span><span class="readout-values"><span class="led" id="l-rate" title="Alarm above 24 K/min"><span class="led-lamp"></span>Over limit</span><output class="lcd" id="b-rate"></output></span></div>
+        <div class="readout"><span>Relief valve</span><span class="readout-values"><span class="led" id="l-relief" title="Opens at 178 bar, closes at 171 bar"><span class="led-lamp"></span>Open</span><output class="lcd" id="b-vent"></output></span></div>
+        <div class="readout"><span>Burner trip</span><span class="led" id="l-burner" title="Gas shut off below 20% water, raise the gas to restart"><span class="led-lamp"></span>Tripped</span></div>
+      </div>
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <div class="readouts">
+          <div class="readout"><span>Steam Mass</span><span class="readout-values"><output class="lcd" id="b-steam"></output><output class="lcd sm" id="b-dsteam"></output></span></div>
+          <div class="readout"><span>Energy</span><output class="lcd" id="b-energy"></output></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Condenser -->
+  <section class="section plate" id="sec-condenser" hidden>
+    <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+    <h2 class="plate-title">Condenser</h2>
+    <div class="plate-inner">
+      <div class="cols-3" style="grid-template-columns:1fr 1.6fr">
+        <div class="cluster">
+          <div class="instrument"><div class="instrument-label">Pressure</div><svg id="g-vac" width="210" height="200"></svg><output class="lcd" id="c-press"></output>
+            <div class="lens-row"><span class="led" id="l-chigh" title="Pressure above 100 mBar"><span class="led-lamp"></span>High</span><span class="led" id="l-clow" title="Pressure below 60 mBar"><span class="led-lamp"></span>Low</span></div>
+          </div>
+          <div class="instrument"><div class="instrument-label">Hotwell level</div><svg id="g-hot" width="96" height="190"></svg><output class="lcd" id="c-level"></output><output class="lcd sm" id="c-dlevel"></output></div>
+        </div>
+        <div class="group">
+          <h3 class="group-title">Pressure Control</h3>
+          <div class="cols-2">
+            <div class="valve">
+              <div class="readout-label">Air Extraction Pump (CAR)</div>
+              <button type="button" class="lens-btn" style="flex:none;min-width:120px" id="car"></button>
+            </div>
+            <div class="valve">
+              <div class="readout-label">Steam Jet Air Extraction (SJAE)</div>
+              <button type="button" class="lens-btn" style="flex:none;min-width:120px" id="sjae"></button>
+              <div data-valve="sjae"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cols-3" style="grid-template-columns:1fr 1fr 2fr">
+        <div class="group"><h3 class="group-title">Recirculation Pump</h3><div data-valve="recirc"></div></div>
+        <div class="group"><h3 class="group-title">Condensation Pump</h3><div data-valve="cond"></div></div>
+        <div class="group"><h3 class="group-title">Hotwell Makeup &amp; Reject</h3><div class="cols-2"><div data-valve="makeup"></div><div data-valve="reject"></div></div></div>
+      </div>
+      <h3 class="group-title">Condenser Status</h3>
+      <div class="readouts">
+        <div class="readout"><span>Steam volume</span><output class="lcd" id="c-steam"></output></div>
+        <div class="readout"><span>Hotwell temperature</span><output class="lcd" id="c-temp"></output></div>
+        <div class="readout"><span>Intake flow</span><output class="lcd" id="c-intake"></output></div>
+        <div class="readout"><span>Return flow</span><output class="lcd" id="c-return"></output></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Turbine -->
+  <section class="section plate" id="sec-turbine" hidden>
+    <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+    <h2 class="plate-title">Turbine</h2>
+    <div class="plate-inner">
+      <div class="cols-3" style="grid-template-columns:1.5fr 1fr 1.1fr">
+        <div class="group">
+          <h3 class="group-title">Steam Flow</h3>
+          <div class="readout-label">Main Steam Valve</div>
+          <div class="lens-row" style="align-items:center">
+            <button type="button" class="lens-btn" style="flex:none;min-width:120px" id="msv"></button>
+            <span class="led" id="l-msv" title="Main Steam Valve can only be opened if pressure is greater then 1.0 Mpa - 10 bar"><span class="led-lamp"></span>Opening not possible</span>
+          </div>
+          <div class="cols-2"><div data-valve="bypass"></div><div data-valve="turbine"></div></div>
+        </div>
+        <div class="group">
+          <h3 class="group-title">Turbine Speed Control</h3>
+          <div class="readout-label">Speed mode</div>
+          <div class="lens-row" id="modes"></div>
+          <div class="readout-label">Run-up point</div>
+          <div class="lens-row" id="points"></div>
+        </div>
+        <div class="group">
+          <h3 class="group-title">Generator Breaker</h3>
+          <div class="hazard"><div class="well"><button type="button" class="guard-btn" id="breaker"></button></div></div>
+          <span class="led green" id="l-ready" title="Breaker can be closed when RPM is between 2998 and 3002"><span class="led-lamp"></span>Ready to close</span>
+          <div class="lcd-msg" id="breaker-warn"></div>
+          <div class="instrument"><svg id="g-rpm" width="190" height="180"></svg></div>
+        </div>
+      </div>
+      <h3 class="group-title">Turbine Status</h3>
+      <div class="readouts">
+        <div class="readout"><span>Steam flow</span><output class="lcd" id="t-steam"></output></div>
+        <div class="readout"><span>Generator output</span><output class="lcd" id="t-mw"></output></div>
+        <div class="readout"><span>Turbine speed</span><output class="lcd" id="t-rpm"></output></div>
+        <div class="readout"><span>Run-up point</span><output class="lcd" id="t-set"></output></div>
+        <div class="readout"><span>Mode</span><output class="lcd" id="t-mode"></output></div>
+        <div class="readout"><span>Breaker</span><output class="lcd" id="t-breaker"></output></div>
+        <div class="readout"><span class="led" id="l-ttrip" title="Turbine tripped: condenser pressure rose above the vacuum limit"><span class="led-lamp"></span>Turbine trip</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="board-note">
+    <span>Mockup only: a rough stand-in moves the numbers, not the simulator. Limits come from <code>const.ts</code> and the design basis.</span>
+    <span class="lens-row">
+      <button type="button" class="lens-btn sm" id="sc-cold">Cold start</button>
+      <button type="button" class="lens-btn sm" id="sc-run">At pressure, near sync</button>
+    </span>
+  </div>
+</div>
+
+<script>
+(function () {
+  var S = window.Steamboiler;
+  var $ = function (id) { return document.getElementById(id); };
+  var TSAT = [[1.013, 100], [5, 151.8], [10, 179.9], [20, 212.4], [40, 250.4], [60, 275.6], [80, 295], [100, 311], [120, 324.7], [140, 336.7], [160, 347.4], [165, 349.9], [180, 357], [200, 365.8]];
+  function tsat(p) {
+    if (p <= TSAT[0][0]) return 20 + (p / 1.013) * 80;
+    for (var i = 1; i < TSAT.length; i++) {
+      if (p <= TSAT[i][0]) {
+        var a = TSAT[i - 1], b = TSAT[i];
+        return a[1] + (b[1] - a[1]) * (p - a[0]) / (b[0] - a[0]);
+      }
+    }
+    return 365.8;
+  }
+  var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)); };
+
+  // Limits from src/context/const.ts
+  var MAX_GAS = 12000, RELIEF_OPEN = 178, RELIEF_CLOSE = 171, HEAT_LIMIT = 24, BURNER_LOW = 20;
+  var VAC_HIGH = 100, VAC_LOW = 60, VAC_LIMIT = 327, SYNC = 3000, MARGIN = 2, MAX_RPM = 3300, MSV_MIN = 10;
+  var RUN_UP_POINTS = [500, 1500, 2500, 3000], RUN_UP_RATE = 50, HOLD_WINDOW = 5;
+
+  var COLD = { gas: 0, water: 35, press: 1.013, drain: false, relief: false, vented: 0, burnerTrip: false, rate: 0, de: 0, steam: 0, dsteam: 0, energy: 0,
+    car: false, sjaeOn: false, vac: 1013, hot: 70, dhot: 0, hotTemp: 20, cSteam: 0, returnFlow: 0, intake: 0,
+    msv: false, mode: 'free', breaker: false, rpm: 0, point: 3000, trip: false, tSteam: 0, mw: 0,
+    v: { sjae: 0, recirc: 0, cond: 0, makeup: 0, reject: 0, bypass: 0, turbine: 0 } };
+  var RUN = { gas: 7700, water: 50, press: 165, drain: false, relief: false, vented: 0, burnerTrip: false, rate: 0, de: 0, steam: 5500, dsteam: 0, energy: 180000,
+    car: true, sjaeOn: true, vac: 80, hot: 70, dhot: 0, hotTemp: 40, cSteam: 1000, returnFlow: 120, intake: 2000,
+    msv: true, mode: 'rampUp', breaker: false, rpm: 2980, point: 3000, trip: false, tSteam: 60, mw: 0,
+    v: { sjae: 0.5, recirc: 0.6, cond: 0.5, makeup: 0, reject: 0, bypass: 0.1, turbine: 0.35 } };
+  var s = JSON.parse(JSON.stringify(RUN));
+
+  // Instruments
+  var G = 'var(--zone-green)', O = 'var(--zone-orange)', R = 'var(--zone-red)';
+  var gPress = S.gauge($('g-press'), { min: 0, max: 200, major: 40, minor: 10, unit: 'bar', zones: [[0, 165, G], [165, 178, O], [178, 200, R]] });
+  var gLevel = S.level($('g-level'), { zones: [[0, BURNER_LOW, R]], ticks: [0, 20, 50, 100] });
+  var gVac = S.gauge($('g-vac'), { min: 0, max: 1100, major: 200, minor: 100, unit: 'mBar', zones: [[0, VAC_LOW, O], [VAC_LOW, VAC_HIGH, G], [VAC_HIGH, VAC_LIMIT, O], [VAC_LIMIT, 1100, R]] });
+  var gHot = S.level($('g-hot'), { zones: [[0, 10, R], [10, 55, O], [55, 75, G], [75, 95, O], [95, 100, R]], ticks: [0, 55, 75, 100] });
+  var gRpm = S.gauge($('g-rpm'), { min: 0, max: MAX_RPM, major: 1100, minor: 275, unit: 'RPM', marks: [SYNC] });
+  var kGas = S.knob($('k-gas'), { min: 0, max: MAX_GAS, step: 250, value: s.gas, label: 'Gas flow', ends: ['OFF', 'MAX'], onChange: function (v) { setGas(v); } });
+
+  function setGas(v) {
+    var next = clamp(v, 0, MAX_GAS);
+    if (next > s.gas) s.burnerTrip = false;
+    s.gas = next;
+    kGas.set(next);
+    render();
+  }
+  document.querySelectorAll('[data-gas]').forEach(function (b) {
+    b.addEventListener('click', function () { setGas(s.gas + Number(b.dataset.gas)); });
+  });
+
+  // Valve controls: a knob flanked by Close and Open, one click is the app's step
+  var VALVES = {
+    sjae: { label: 'Position:', step: 5, read: function () { return ''; } },
+    recirc: { label: 'Flow Rate:', step: 5, read: function () { return (s.v.recirc * 3600).toFixed(1) + ' l/s'; } },
+    cond: { label: 'Flow Rate:', step: 5, read: function () { return ''; } },
+    makeup: { label: 'Makeup:', step: 5, read: function () { return (s.v.makeup * 50).toFixed(1) + ' l/s'; } },
+    reject: { label: 'Reject:', step: 5, read: function () { return (s.v.reject * 50).toFixed(1) + ' l/s'; } },
+    bypass: { label: 'Bypass Valve', step: 5, read: function () { return (s.msv ? s.v.bypass * 200 : 0).toFixed(1) + ' kg/s'; } },
+    turbine: { label: 'Turbine Valve', step: 1, read: function () { return ''; } }
+  };
+  function valveMarkup(root, label) {
+    root.className = 'valve';
+    root.innerHTML = '<div class="readout-label"></div><div class="valve-row"><button type="button" class="lens-btn sm">Close</button><svg width="96" height="96"></svg><button type="button" class="lens-btn sm">Open</button></div><div class="valve-values"></div>';
+    root.querySelector('.readout-label').textContent = label;
+    return { close: root.children[1].children[0], svg: root.querySelector('svg'), open: root.children[1].children[2], values: root.querySelector('.valve-values') };
+  }
+  Object.keys(VALVES).forEach(function (key) {
+    var c = VALVES[key], m = valveMarkup(document.querySelector('[data-valve="' + key + '"]'), c.label);
+    c.knob = S.knob(m.svg, { min: 0, max: 100, step: c.step, value: s.v[key] * 100, label: c.label.replace(':', ''), onChange: function (v) { s.v[key] = v / 100; render(); } });
+    m.close.addEventListener('click', function () { c.knob.nudge(-c.step); });
+    m.open.addEventListener('click', function () { c.knob.nudge(c.step); });
+    m.values.innerHTML = '<output class="lcd sm"></output><output class="lcd sm"></output>';
+    c.flow = m.values.children[0];
+    c.pct = m.values.children[1];
+  });
+  // Speed modes and run-up points, with the refusals of speedModeRefusal and runUpPointRefusal
+  var MODES = [['free', 'Free'], ['rampUp', 'Ramp up'], ['hold', 'Hold']];
+  var MODE_LABELS = { free: 'FREE', rampUp: 'RAMP UP', hold: 'HOLD' };
+  function modeRefusal(mode) {
+    if (mode === 'rampUp') {
+      if (!s.msv) return 'Open the main steam valve first';
+      return s.point <= s.rpm ? 'Select a run-up point above the current speed' : '';
+    }
+    if (mode === 'hold' && Math.abs(s.rpm - s.point) > HOLD_WINDOW) return 'Hold engages only within ±5 rpm of the run-up point';
+    return '';
+  }
+  function pointRefusal(point) {
+    if (s.mode === 'free') return '';
+    if (!s.msv) return 'Open the main steam valve first';
+    return point <= s.rpm ? 'Ramp up only goes up: switch to Free to slow down' : '';
+  }
+  function lensGroup(root, items, onPick) {
+    return items.map(function (item) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lens-btn sm';
+      b.textContent = item[1];
+      b.addEventListener('click', function () { onPick(item[0]); render(); });
+      root.appendChild(b);
+      return { key: item[0], el: b };
+    });
+  }
+  var modeButtons = lensGroup($('modes'), MODES, function (m) { s.mode = m; });
+  var pointButtons = lensGroup($('points'), RUN_UP_POINTS.map(function (p) { return [p, p + ' rpm']; }), function (p) {
+    s.point = p;
+    if (s.mode !== 'free') s.mode = 'rampUp';
+  });
+
+  // Annunciator: one tile for each alarm indicator the app has
+  var ALARMS = [
+    { label: 'HEATING RATE OVER LIMIT', on: function () { return s.rate > HEAT_LIMIT; } },
+    { label: 'RELIEF VALVE OPEN', crit: true, on: function () { return s.relief; } },
+    { label: 'BURNER TRIP', crit: true, on: function () { return s.burnerTrip; } },
+    { label: 'CONDENSER PRESSURE HIGH', on: function () { return s.vac > VAC_HIGH; } },
+    { label: 'CONDENSER PRESSURE LOW', on: function () { return s.vac < VAC_LOW; } },
+    { label: 'TURBINE TRIP', crit: true, on: function () { return s.trip; } }
+  ];
+  ALARMS.forEach(function (a) {
+    a.tile = document.createElement('div');
+    a.tile.className = 'tile';
+    a.tile.textContent = a.label;
+    $('annun').appendChild(a.tile);
+  });
+  var testing = false;
+  $('ack').addEventListener('click', function () { ALARMS.forEach(function (a) { a.acked = a.active; }); render(); });
+  var hold = function (on) { testing = on; $('test').setAttribute('aria-pressed', String(on)); render(); };
+  $('test').addEventListener('pointerdown', function () { hold(true); });
+  ['pointerup', 'pointerleave'].forEach(function (ev) { $('test').addEventListener(ev, function () { hold(false); }); });
+  $('test').addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') hold(true); });
+  $('test').addEventListener('keyup', function () { hold(false); });
+
+  // Two-state controls
+  $('drain').addEventListener('click', function () { s.drain = !s.drain; render(); });
+  $('car').addEventListener('click', function () { s.car = !s.car; render(); });
+  $('sjae').addEventListener('click', function () { s.sjaeOn = !s.sjaeOn; render(); });
+  $('msv').addEventListener('click', function () {
+    if (!s.msv && s.press < MSV_MIN) return;
+    s.msv = !s.msv;
+    render();
+  });
+  $('breaker').addEventListener('click', function () { s.breaker = !s.breaker; render(); });
+
+  var view = 0;
+  S.selector($('selector'), { positions: ['Boiler', 'Condenser', 'Turbine'], onChange: function (i) { view = i; render(); } });
+
+  function scenario(from) {
+    s = JSON.parse(JSON.stringify(from));
+    kGas.set(s.gas);
+    Object.keys(VALVES).forEach(function (k) { VALVES[k].knob.set(s.v[k] * 100); });
+    ALARMS.forEach(function (a) { a.acked = false; });
+    render();
+  }
+  $('sc-cold').addEventListener('click', function () { scenario(COLD); });
+  $('sc-run').addEventListener('click', function () { scenario(RUN); });
+
+  // Stand-in dynamics, 5 ticks a second. Not the simulator.
+  function tick() {
+    var dt = 0.2, t0 = tsat(s.press), steamOut = 0;
+    if (s.drain) s.water = Math.max(0, s.water - 0.5 * dt);
+    if (s.water < BURNER_LOW && s.gas > 0) { s.burnerTrip = true; s.gas = 0; kGas.set(0); }
+    if (s.msv) steamOut = (s.v.bypass + (s.trip ? 0 : s.v.turbine)) * 200;
+    s.tSteam = s.msv && !s.trip ? s.v.turbine * 200 : 0;
+    var made = s.gas / MAX_GAS * 171;
+    var vent = s.relief ? 180 : 0;
+    s.press = clamp(s.press + (made - steamOut - vent - s.press * 0.12) * 0.02 * dt, 1.013, 200);
+    if (s.press >= RELIEF_OPEN) s.relief = true;
+    if (s.press <= RELIEF_CLOSE) s.relief = false;
+    if (s.relief) s.vented += vent * dt;
+    var raw = (tsat(s.press) - t0) / dt * 60;
+    s.rate += (raw - s.rate) * 0.1;
+    s.de = (made - steamOut - vent) * 2.5;
+    s.energy += s.de * dt;
+    s.dsteam = (made - steamOut - vent) * dt;
+    s.steam = Math.max(0, s.steam + s.dsteam);
+
+    var pull = (s.car ? 15 : 0) + (s.sjaeOn ? s.v.sjae * 10 : 0) + s.v.recirc * 12;
+    var floor = s.car ? (s.sjaeOn && s.v.sjae > 0 ? 80 : 213) : 1013;
+    s.vac = clamp(s.vac + (s.vac > floor ? -pull : 5) * dt + steamOut * 0.002, 13, 1013);
+    s.intake = s.v.recirc * 3600;
+    s.cSteam = steamOut;
+    s.returnFlow = s.v.cond * 300;
+    var hot = (steamOut - s.returnFlow + (s.v.makeup - s.v.reject) * 50) / 500;
+    s.dhot = hot * 500;
+    s.hot = clamp(s.hot + hot * dt, 0, 100);
+    s.hotTemp += ((s.cSteam > 0 ? 40 : 20) - s.hotTemp) * 0.02;
+    if (s.vac > VAC_LIMIT && s.rpm > 0 && (s.msv || s.breaker)) s.trip = true;
+    if (s.vac <= VAC_LIMIT && s.rpm === 0) s.trip = false;
+
+    if (s.trip) { s.breaker = false; s.mode = 'free'; s.rpm = Math.max(0, s.rpm - 40 * dt); }
+    else if (s.breaker) s.rpm = SYNC;
+    else {
+      if (s.mode === 'free') {
+        var target = s.tSteam / 200 * MAX_RPM * 2;
+        s.rpm = clamp(s.rpm + clamp(target - s.rpm, -60 * dt, 60 * dt), 0, MAX_RPM);
+      } else if (s.mode === 'rampUp') {
+        s.rpm = Math.min(s.point, s.rpm + RUN_UP_RATE / 60 * dt);
+        if (Math.abs(s.rpm - s.point) <= HOLD_WINDOW) s.mode = 'hold';
+      } else {
+        s.rpm += (s.point - s.rpm) * 0.1;
+      }
+    }
+    s.mw = s.breaker ? s.tSteam * 0.76 : 0;
+    render();
+  }
+
+  function txt(id, v) { $(id).textContent = v; }
+  function led(id, on) { $(id).classList.toggle('on', !!on); }
+  function lens(id, on, label) { var b = $(id); b.textContent = label; b.classList.toggle('lit', !!on); }
+
+  function render() {
+    ['sec-boiler', 'sec-condenser', 'sec-turbine'].forEach(function (id, i) { $(id).hidden = i !== view; });
+    $('main-stats').hidden = view === 0;
+    $('main-stats').style.display = view === 0 ? 'none' : '';
+    txt('ms-water', (s.water / 100).toFixed(1) + ' - Δ ' + s.dsteam.toFixed(0) + ' kg');
+    txt('ms-press', s.press.toFixed(0) + ' bar');
+
+    gPress.set(s.press);
+    gLevel.set(s.water);
+    txt('b-press', s.press.toFixed(1) + ' bar');
+    txt('b-gas', s.gas.toFixed(0) + ' l/s');
+    txt('b-water', (s.water * 1000).toFixed(0) + ' l ' + (s.water / 100).toFixed(2));
+    lens('drain', s.drain, s.drain ? 'Open' : 'Closed');
+    txt('b-temp', tsat(s.press).toFixed(1) + ' °C');
+    var de = s.de;
+    txt('b-de', (de > 0 ? '+' : '') + de.toFixed(0) + ' MJ/s');
+    txt('b-rate', s.rate.toFixed(1) + ' K/min');
+    $('b-rate').classList.toggle('err', s.rate > HEAT_LIMIT);
+    led('l-rate', s.rate > HEAT_LIMIT);
+    led('l-relief', s.relief);
+    txt('b-vent', (s.vented / 1e3).toFixed(1) + ' t vented');
+    led('l-burner', s.burnerTrip);
+    txt('b-steam', s.steam.toFixed(1) + ' kg');
+    txt('b-dsteam', 'Δ ' + s.dsteam.toFixed(2) + ' kg');
+    txt('b-energy', s.energy.toFixed(1) + ' MJ');
+    $('m-gas').style.display = s.gas > 0 ? '' : 'none';
+    $('m-flame').style.display = s.gas > 0 ? '' : 'none';
+    $('m-steam').style.display = s.press > 1.1 ? '' : 'none';
+    var wy = 74 - 56 * clamp(s.water, 0, 100) / 100;
+    $('m-water').setAttribute('y', wy);
+    $('m-water').setAttribute('height', 74 - wy);
+    $('m-relief').style.fill = s.relief ? 'var(--zone-red)' : 'var(--tile-off-bg)';
+    $('m-msv').style.fill = s.msv ? 'var(--zone-green)' : 'var(--tile-off-bg)';
+
+    gVac.set(s.vac);
+    gHot.set(s.hot);
+    txt('c-press', s.vac.toFixed(0) + ' mBar');
+    led('l-chigh', s.vac > VAC_HIGH);
+    led('l-clow', s.vac < VAC_LOW);
+    txt('c-level', (s.hot / 100).toFixed(1));
+    txt('c-dlevel', 'Δ ' + s.dhot.toFixed(1));
+    lens('car', s.car, s.car ? 'STOP' : 'START');
+    lens('sjae', s.sjaeOn, s.sjaeOn ? 'DISABLE' : 'ENABLE');
+    txt('c-steam', s.cSteam.toFixed(0) + ' l');
+    txt('c-temp', s.hotTemp.toFixed(0) + ' °C');
+    txt('c-intake', s.intake.toFixed(0) + ' kg/s');
+    txt('c-return', s.returnFlow.toFixed(1) + ' kg');
+
+    Object.keys(VALVES).forEach(function (k) {
+      var c = VALVES[k], flow = c.read();
+      c.flow.textContent = flow;
+      c.flow.hidden = !flow;
+      c.pct.textContent = (s.v[k] * 100).toFixed(0) + ' % Open';
+    });
+
+    lens('msv', s.msv, s.msv ? 'Open' : 'Closed');
+    led('l-msv', s.press < MSV_MIN);
+    modeButtons.forEach(function (m) {
+      var why = modeRefusal(m.key);
+      m.el.classList.toggle('lit', s.mode === m.key);
+      m.el.disabled = !!why;
+      m.el.title = why;
+    });
+    pointButtons.forEach(function (p) {
+      var why = pointRefusal(p.key);
+      p.el.classList.toggle('lit', s.point === p.key);
+      p.el.disabled = !!why;
+      p.el.title = why;
+    });
+    var canClose = Math.abs(s.rpm - SYNC) <= MARGIN;
+    var b = $('breaker');
+    b.textContent = s.breaker ? 'Breaker Closed' : 'Breaker Open';
+    b.classList.toggle('closed', s.breaker);
+    b.disabled = !s.breaker && !canClose;
+    led('l-ready', canClose && !s.breaker);
+    var warn = !canClose && !s.breaker;
+    $('breaker-warn').hidden = !warn;
+    $('breaker-warn').innerHTML = 'Breaker can only be closed when RPM is between 2998 and 3002<br>Current RPM: ' + s.rpm.toFixed(0);
+    gRpm.set(s.rpm);
+    txt('t-steam', s.tSteam.toFixed(0) + ' kg/s');
+    txt('t-mw', s.mw.toFixed(0) + ' MW');
+    txt('t-rpm', s.rpm.toFixed(0) + ' RPM');
+    txt('t-set', (s.mode !== 'free' ? '+' : '') + s.point.toFixed(0) + ' RPM');
+    txt('t-mode', MODE_LABELS[s.mode]);
+    txt('t-breaker', s.breaker ? 'CLOSED' : 'OPEN');
+    led('l-ttrip', s.trip);
+
+    ALARMS.forEach(function (a) {
+      var active = a.on();
+      if (!active) a.acked = false;
+      a.active = active;
+      var lit = active || testing;
+      a.tile.classList.toggle('lit', lit);
+      a.tile.classList.toggle('crit', lit && !!a.crit);
+      a.tile.classList.toggle('flash', active && !a.acked && !testing);
+    });
+  }
+
+  render();
+  setInterval(tick, 200);
+})();
+</script>
+</body>
+</html>

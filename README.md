@@ -4,6 +4,12 @@ A physics-based simulator of a steam power plant: a gas-fired drum boiler drives
 
 Formerly called Steamboiler. React + TypeScript + Vite, no backend.
 
+## The plant
+
+![Schema of the plant: the water and steam loop, with gas heat coming in and the cooling water taking heat out](docs/plant/overview-schema.svg)
+
+What each part does and where the energy comes from: [plant overview](docs/plant/overview.md).
+
 ## Purpose
 
 An educational tool for the thermodynamics of steam generation and power production, without the risk or cost of a physical plant.

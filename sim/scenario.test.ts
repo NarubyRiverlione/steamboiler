@@ -93,15 +93,15 @@ describe("firstTimeWhere", () => {
   })
 })
 
-describe("hold mode", () => {
-  // From the settled run-up, hold mode on: the PID drives the turbine valve, and a run replays identically
+describe("Hold", () => {
+  // From the settled run-up in Hold: the PID drives the turbine valve, and a run replays identically
   const holdModeRun: Scenario = {
     name: "test-hold-mode",
     description: "Turbine at speed in hold mode",
     duration: 20,
     sampleEvery: 10,
     initial: loadSnapshot("turbine-runup"),
-    actions: [{ at: 0, action: { type: "TOGGLE_HOLD_MODE" } }],
+    actions: [],
   }
 
   test("replays identically when run twice in one process", () => {
@@ -169,6 +169,9 @@ describe("scenario registry", () => {
       "hotwell-low",
       "boiler-low",
       "heat-up",
+      "low-pressure-close",
+      "max-output",
+      "return-stop",
     ])
     for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })

@@ -18,6 +18,9 @@ export type BoilerState = {
   ventedTotal: number // kg of steam vented to the atmosphere since start (totalizer)
   reliefLifts: number // lifts of the relief valve since start (counter)
   burnerTripped: boolean // set by the low-low level trip, cleared by the next successful gas raise
+  stackTemperature: number // Celsius, flue gas after the economizer (ADR 0029)
+  boilerEfficiency: number // 0-1, heat into the water over fuel heat; 0 with no gas
+  returnTemperatureOut: number // Celsius, the Return after the economizer (the hotwell temperature when it takes no heat)
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)
@@ -27,7 +30,7 @@ export type CondenserState = {
   hotwellTemperature: number // Celsius
   intakeFlowRate: number // kg/s turbine exhaust plus bypass steam into the condenser
   returnRate: number // kg returned to the boiler over the last tick
-  condensationRate: number // kg/s steam condensed into the hotwell
+  condensationRate: number // kg/s into the hotwell: steam condensed from the pool plus exhaust moisture
   coolingRate: number
   isAirExtractionPumpEnabled: boolean
   isSjaeEnabled: boolean
@@ -41,18 +44,21 @@ export type CondenserState = {
   rejectTotal: number // kg rejected since start (totalizer)
   deltaWaterMass: number // kg change of the hotwell over the last tick
 }
+export type SpeedMode = "free" | "rampUp" | "hold" // Free: operator moves the valve; Ramp up and Hold: the PID does (ADR 0021)
 export type TurbineState = {
-  electricOutput: number // MW
+  electricOutput: number // MW, the load the generator carries (an input to the shaft balance, ADR 0027)
+  loadSetpoint: number // MW, the operator's load target; the load moves toward it at LoadRate
   bypassValvePosition: number // 0-1 (0-100%) open
   bypassSteamFlowOut: number // kg/s
   turbineValvePosition: number // 0-1 (0-100%) open
   turbineSteamFlowOut: number // kg/s
   mainSteamValve: boolean // open/close MSV
   rpm: number // Current RPM of the turbine
-  rpmSetPoint: number // Target RPM when in hold mode
-  holdMode: boolean // Whether the turbine is in hold mode
+  runUpPoint: number // Selected run-up point (rpm): the target of Ramp up and Hold
+  speedMode: SpeedMode // Free, Ramp up or Hold
+  speedReference: number // rpm the PID aims at in Ramp up; follows the speed while the PID is inactive
   generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
-  pidIntegralError: number // hold-mode PID accumulated rpm error (rpm·s, clamped to ±1)
+  pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
   turbineTripped: boolean // set by a turbine trip, cleared by the next opening of the turbine valve
 }
 

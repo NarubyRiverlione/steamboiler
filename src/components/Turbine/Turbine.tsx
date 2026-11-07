@@ -2,6 +2,7 @@ import TurbineReadouts from "./TurbineReadouts"
 import SteamValveControl from "./SteamValveControl"
 import RPMControl from "./RPMControl"
 import GeneratorBreakerControl from "./GeneratorBreakerControl"
+import LoadControl from "./LoadControl"
 
 const Turbine = () => {
   return (
@@ -12,6 +13,7 @@ const Turbine = () => {
       </div>
       <div className="controls-panel">
         <GeneratorBreakerControl />
+        <LoadControl />
       </div>
       <TurbineReadouts />
     </div>

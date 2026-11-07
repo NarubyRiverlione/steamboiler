@@ -1,5 +1,5 @@
 import { Dispatch, createContext, useContext } from "react"
-import PowerPlantState from "./PowerPlantState"
+import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantAction from "./PowerPlantActions"
 
 type PowerPlantContextType = {
@@ -13,9 +13,10 @@ type PowerPlantContextType = {
   adjustBypassValve: (amount: number) => void
   toggleMainSteamValve: () => void
   adjustTurbineValve: (amount: number) => void
-  adjustRPMSetPoint: (amount: number) => void
-  toggleHoldMode: () => void
+  setSpeedMode: (speedMode: SpeedMode) => void
+  selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
+  setLoadSetpoint: (loadSetpoint: number) => void
   // Condenser
   toggleAirExtractionPump: () => void
   toggleSjae: () => void

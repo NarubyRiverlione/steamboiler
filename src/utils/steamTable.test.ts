@@ -3,8 +3,11 @@ import { CstSimulation } from "../context/const"
 import { steamTable } from "./steamData"
 import {
   getBoilingPoint,
+  getExhaustQuality,
   getIsentropicEnthalpyDrop,
   getLatentHeat,
+  getLiquidEnthalpy,
+  getLiquidTemperature,
   getSaturatedSteamDensity,
   getSteamData,
   getWaterSpecificHeat,
@@ -192,6 +195,39 @@ describe("getIsentropicEnthalpyDrop", () => {
   })
 })
 
+describe("getExhaustQuality", () => {
+  const { IsentropicEfficiency } = CstSimulation.CstTurbine
+
+  // Hand calculation from IF97 values: x = (hg(boiler) - efficiency * drop - hf(exhaust)) / hfg(exhaust)
+  const Qualities: number[][] = [
+    [165, 0.1, 0.667],
+    [40, 0.1, 0.778],
+  ]
+
+  test.each(Qualities)("%f bar to %f bar leaves about %f of the exhaust as vapour", (boiler, exhaust, expected) => {
+    expect(getExhaustQuality(boiler, exhaust, IsentropicEfficiency)).toBeCloseTo(expected, 2)
+  })
+
+  test("a less efficient turbine leaves a higher exhaust quality", () => {
+    expect(getExhaustQuality(165, 0.1, 0.5)).toBeGreaterThan(getExhaustQuality(165, 0.1, IsentropicEfficiency))
+  })
+
+  test("is 1 with a zero or negative enthalpy drop", () => {
+    expect(getExhaustQuality(10, 10, IsentropicEfficiency)).toBe(1)
+    expect(getExhaustQuality(0.5, 1.013, IsentropicEfficiency)).toBe(1)
+  })
+
+  test("stays within 0-1 at any boiler and condenser pressure, also outside the table", () => {
+    for (const boiler of [0.001, 0.01, 1, 10, 100, 165, 178, 220, 500]) {
+      for (const exhaust of [0.001, 0.005, 0.0133, 0.1, 0.327, 1.013, 2]) {
+        const quality: number = getExhaustQuality(boiler, exhaust, IsentropicEfficiency)
+        expect(quality).toBeGreaterThanOrEqual(0)
+        expect(quality).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+})
+
 describe("getSaturatedSteamDensity", () => {
   // IAPWS-IF97 saturated vapour density: [°C, kg/m³]
   const VapourDensity: number[][] = [
@@ -226,6 +262,45 @@ describe("getSaturatedSteamDensity", () => {
       expect(Number.isFinite(density)).toBe(true)
       if (t <= 365) expect(density).toBeGreaterThanOrEqual(previous)
       previous = density
+    }
+  })
+})
+
+describe("saturated liquid enthalpy below the steam table", () => {
+  // IAPWS-IF97 saturated liquid: [°C, kJ/kg]
+  const Cold: number[][] = [
+    [10, 42.02],
+    [37, 155.0],
+    [60, 251.18],
+  ]
+
+  test.each(Cold)("%i °C holds %f kJ/kg", (temperature, enthalpy) => {
+    expect(getLiquidEnthalpy(temperature)).toBeCloseTo(enthalpy, 0)
+  })
+
+  test("is right below 80 °C, not the 80 °C value (about 335 kJ/kg) the steam table clamps to", () => {
+    expect(getLiquidEnthalpy(37)).toBeLessThan(160)
+  })
+
+  test("has no step at 80 °C: the slope on each side is the specific heat, 4.2 kJ/kg·K", () => {
+    expect(getLiquidEnthalpy(80)).toBeCloseTo(334.9, 1)
+    expect(getLiquidEnthalpy(79.9)).toBeCloseTo(334.9 - 0.42, 1)
+    expect(getLiquidEnthalpy(80.1)).toBeCloseTo(334.9 + 0.42, 1)
+  })
+
+  test("agrees with the steam table from 80 °C up and rises all the way", () => {
+    for (const row of steamTable) expect(getLiquidEnthalpy(row.temperature)).toBeCloseTo(row.enthalpy, 6)
+    let previous = -1
+    for (let temperature = 0; temperature <= 374; temperature += 0.5) {
+      const enthalpy: number = getLiquidEnthalpy(temperature)
+      expect(enthalpy).toBeGreaterThan(previous)
+      previous = enthalpy
+    }
+  })
+
+  test("the temperature function inverts it", () => {
+    for (const temperature of [5, 37, 79, 80, 122, 322, 350]) {
+      expect(getLiquidTemperature(getLiquidEnthalpy(temperature))).toBeCloseTo(temperature, 6)
     }
   })
 })

@@ -14,6 +14,8 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 
 | Topic | File |
 |---|---|
+| Schema of all parts, what each does, where the energy comes from | [plant/overview.md](plant/overview.md) |
+| What a real plant has that this one does not | [plant/real-plant-gaps.md](plant/real-plant-gaps.md) |
 | Size, limits and deliberate departures from a real plant (the register) | [plant/design-basis.md](plant/design-basis.md) |
 | Boiler physics and constants | [plant/boiler.md](plant/boiler.md) |
 | Turbine and generator, phases 1–5 | [plant/turbine.md](plant/turbine.md) |
@@ -47,7 +49,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
 | [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
 | [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
-| [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style, with a strong preference for the analog board (proposed, with a [mockup](adr/0015-boiler-panel-mockup.html)) |
+| [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style: the analog control-room board (with a [boiler mockup](adr/0015-boiler-panel-mockup.html) and a [full board mockup](adr/0015-full-board-mockup.html)) |
 | [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
 | [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |
 | [0018](adr/0018-cold-fill-at-35-percent.md) | The boiler is filled cold to 35% so it expands to the working level |
@@ -58,6 +60,13 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0023](adr/0023-runner-speed-guard-is-opt-in.md) | The runner speed guard is its own opt-in layer, outside the `dev` gate |
 | [0024](adr/0024-ticket-priority-by-kind-of-work.md) | Ticket priority says what kind of work a ticket is |
 | [0025](adr/0025-finer-steam-table-for-density-slope.md) | A finer steam table above 300 °C smooths the steam density slope |
+| [0026](adr/0026-valve-flow-follows-pressure.md) | Valve flow follows boiler pressure; the main steam valve closes at low pressure |
+| [0027](adr/0027-generator-load-is-a-resisting-torque.md) | The generator load is a resisting torque on a free-running shaft; electric output is the load carried |
+| [0028](adr/0028-exhaust-splits-by-quality-at-condenser-intake.md) | The turbine exhaust splits by its quality at the condenser intake |
+| [0029](adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md) | Boiler efficiency follows from a two-stage flue gas heat balance |
+| [0030](adr/0030-return-pays-real-enthalpy.md) | The Return pays its real enthalpy, and rated steam flow follows what full gas makes |
+| [0031](adr/0031-one-extraction-heater.md) | One passive extraction heater heats the Return, with its drain pumped forward |
+| [0032](adr/0032-limited-condenser-and-stream-enthalpy.md) | The condenser is a limited exchanger, and every stream enters at its real enthalpy |
 
 ## Research (dated, frozen)
 
@@ -67,6 +76,9 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Oct 2026 | [How real plants run the feedwater loop (sourced)](research/2026-10-feedwater-loop.md) |
 | Oct 2026 | [Sizing check: steam flow at full gas](research/2026-10-sizing-check.md) |
 | Oct 2026 | [Cold startup: how real plants do it (sourced)](research/2026-10-startup-procedure.md) |
+| Nov 2026 | [Condenser heat transfer: figures for a limited exchanger (sourced)](research/2026-11-condenser-heat-transfer.md) |
+| Nov 2026 | [Economizer and flue gas: figures for the two-stage model (sourced)](research/2026-11-economizer-flue-gas.md) |
+| Nov 2026 | [Extraction heaters: figures for regenerative feedwater heating (sourced)](research/2026-11-extraction-heaters.md) |
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
 | Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
 | Nov 2026 | [SJAE motive steam: where it comes from on a cold start (sourced)](research/2026-11-sjae-motive-steam.md) |

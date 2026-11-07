@@ -27,7 +27,7 @@ Each gate includes everything of the one above it. Test layers ([testing.md](tes
 
 The `dev` gate is run locally before the merge; GitHub cannot block a merge into `dev`. CI on every push to `dev` runs the layers again, edge included (reported, not required), so a regression shows near the commit that caused it. The `main` gate is the required check on the pull request.
 
-Not enforced yet: the hooks and the CI jobs per layer come with #61, after the test layers of #60. Until then, run `pnpm lint` and `pnpm test` before every merge.
+Not enforced yet: the hooks and the CI jobs per layer come with #61, which is parked. Until then, run `pnpm lint` and `pnpm test` before every merge.
 
 ## GitHub settings on `main`
 

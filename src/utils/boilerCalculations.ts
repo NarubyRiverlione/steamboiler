@@ -8,8 +8,21 @@ import {
   getLatentHeat,
   getBoilingPoint,
 } from "./steamTable"
+import { calculateFlueGasHeatBalance } from "./flueGas"
 
-const { CstBoiler } = CstSimulation
+const { CstBoiler, CstTurbine } = CstSimulation
+
+// √(P·ρ) of saturated steam at a pressure (bar): a choked valve passes mass in proportion to it
+const chokedFlowTerm = (pressure: number): number =>
+  Math.sqrt(pressure * getSaturatedSteamDensity(getBoilingPoint(pressure)))
+
+const RatedChokedFlowTerm: number = chokedFlowTerm(CstTurbine.ValveRatingPressure)
+
+// Share of the valve capacity a valve passes at this boiler pressure (bar): 1 at the rating pressure, above 1 past it,
+// since the capacity is a rating and not a cap (ADR 0026)
+export function valveFlowFactor(pressure: number): number {
+  return chokedFlowTerm(pressure) / RatedChokedFlowTerm
+}
 
 const EquilibriumTolerance = 1e-9 // kg
 const FlashIterations = 40 // bisection steps: the bracket is tonnes wide, 40 halvings is far below a gram
@@ -29,10 +42,16 @@ export function roomInKg(totalVolume: number, waterVolume: number, temperature: 
   return Math.max(0, totalVolume - waterVolume) / getWaterSpecificVolume(temperature)
 }
 
-// Calculate energy from gas flow
-export function calculateGasEnergy(gasFlow: number): number {
+// Heat (kW) into the boiler water from the gas: the fuel heat less what goes up the stack (ADR 0029). The boiler
+// temperature (°C), the Return flow (kg/s) and its inlet temperature (°C, the hotwell) decide how far the flue gas cools.
+export function calculateGasEnergy(
+  gasFlow: number,
+  boilerTemperature: number,
+  returnFlow: number,
+  returnTemperature: number,
+): number {
   // gasFlow in liters/second
-  return (gasFlow / 1000) * CstPhysics.GasEnergyDensity * CstBoiler.GasEfficiency
+  return calculateFlueGasHeatBalance(gasFlow, boilerTemperature, returnFlow, returnTemperature).heatIntoWater
 }
 
 // Calculate energy needed to heat water

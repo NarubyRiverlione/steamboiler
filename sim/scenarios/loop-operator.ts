@@ -3,7 +3,7 @@ import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { bandDirection } from "./band"
-import { atWorkingPressure, holdPressureWithGas } from "./pressure-hold"
+import { atWorkingPressure, holdPressureWithGas, PressureHoldSettings } from "./pressure-hold"
 import { isAdjustTime, StartGas } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
@@ -111,11 +111,19 @@ function holdHotwell({ Condenser }: PowerPlantState): PowerPlantAction[] {
   ]
 }
 
-// The holds once steam flows: hotwell every tick, gas, boiler level and cooling water every AdjustEvery seconds
-export function holdLoop(state: PowerPlantState, time: number): PowerPlantAction[] {
+// The holds once steam flows: hotwell every tick, gas, boiler level and cooling water every AdjustEvery seconds.
+// `holdLevel` false leaves the boiler level hold out (turbine-runup before working pressure, ADR 0018).
+// `gasCeiling` lifts the gas limit above the heat-up gas for a plant that carries load (turbine-load, #71).
+export function holdLoop(
+  state: PowerPlantState,
+  time: number,
+  holdLevel = true,
+  gasCeiling: number = PressureHoldSettings.GasCeiling,
+): PowerPlantAction[] {
   const adjustNow = isAdjustTime(time, S.AdjustEvery)
-  const gas = state.Turbine.mainSteamValve ? holdPressureWithGas(state) : []
-  return [...holdHotwell(state), ...(adjustNow ? [...gas, ...holdBoilerLevel(state), ...holdCondensing(state)] : [])]
+  const gas = state.Turbine.mainSteamValve ? holdPressureWithGas(state, gasCeiling) : []
+  const level = holdLevel ? holdBoilerLevel(state) : []
+  return [...holdHotwell(state), ...(adjustNow ? [...gas, ...level, ...holdCondensing(state)] : [])]
 }
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {

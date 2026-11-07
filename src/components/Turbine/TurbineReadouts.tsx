@@ -1,12 +1,15 @@
 import usePowerPlant from "../../context/PowerPlantContext"
+import { SpeedMode } from "../../context/PowerPlantState"
 import useEMA from "../../utils/useEMA"
 import Indicator from "../Indicator"
 import Readout from "../Readout"
 
+const speedModeLabels: Record<SpeedMode, string> = { free: "FREE", rampUp: "RAMP UP", hold: "HOLD" }
+
 const TurbineReadouts = () => {
   const {
     state: {
-      Turbine: { electricOutput, rpm, rpmSetPoint, holdMode, turbineSteamFlowOut, generatorBreaker, turbineTripped },
+      Turbine: { electricOutput, loadSetpoint, rpm, runUpPoint, speedMode, turbineSteamFlowOut, generatorBreaker, turbineTripped },
     },
   } = usePowerPlant()
 
@@ -14,18 +17,19 @@ const TurbineReadouts = () => {
     <div className="readouts-panel">
       <h3>Turbine Status</h3>
       <Readout title="Steam flow " value={useEMA(turbineSteamFlowOut, 0.05)} unit="kg/s" />
-      <Readout title="Generator output" value={electricOutput} unit="MW" />
+      <Readout title="Generator load" value={electricOutput} unit="MW" fixed={1} />
+      <Readout title="Load setpoint" value={loadSetpoint} unit="MW" fixed={1} />
       <Readout title="Turbine speed" value={rpm} unit="RPM" fixed={0} />
       <Readout
-        title="RPM setpoint"
-        value={rpmSetPoint}
+        title="Run-up point"
+        value={runUpPoint}
         unit="RPM"
         fixed={0}
-        colored={holdMode} // Highlight when in hold mode
+        colored={speedMode !== "free"} // Highlight while the PID moves the valve
       />
       <div className="mode-indicator">
         <span>Mode: </span>
-        <span className={holdMode ? "hold-mode" : "free-mode"}>{holdMode ? "HOLD" : "FREE"}</span>
+        <span className={speedMode === "free" ? "free-mode" : "hold-mode"}>{speedModeLabels[speedMode]}</span>
       </div>
       <div className="breaker-status">
         <span>Breaker: </span>
@@ -35,7 +39,7 @@ const TurbineReadouts = () => {
       </div>
       <Indicator
         isActive={turbineTripped}
-        title="Turbine tripped: condenser pressure rose above the vacuum limit"
+        title="Turbine tripped: condenser pressure rose above the vacuum limit, or the main steam valve closed on low boiler pressure"
         label="Turbine trip"
       />
     </div>
