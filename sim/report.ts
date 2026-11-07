@@ -45,6 +45,13 @@ export const panels: Panel[] = [
   },
   {
     group: "Boiler",
+    title: "Return after economizer",
+    kind: "temperature",
+    unit: "°C",
+    series: one("Return after economizer", (s) => s.Boiler.returnTemperatureOut),
+  },
+  {
+    group: "Boiler",
     title: "Heating rate",
     kind: "temperature",
     unit: "K/min",

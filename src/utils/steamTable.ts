@@ -82,6 +82,61 @@ export function getWaterSpecificVolume(temperature: number): number {
   return lowerV + ((temperature - lowerT) / (upperT - lowerT)) * (upperV - lowerV)
 }
 
+// IAPWS-IF97 saturated-liquid enthalpy below the steam table, kJ per kg: [°C, kJ/kg]
+const ColdLiquidEnthalpies: [number, number][] = [
+  [0, 0],
+  [5, 21.02],
+  [10, 42.02],
+  [15, 62.98],
+  [20, 83.91],
+  [25, 104.83],
+  [30, 125.73],
+  [35, 146.63],
+  [40, 167.53],
+  [45, 188.43],
+  [50, 209.34],
+  [55, 230.26],
+  [60, 251.18],
+  [65, 272.12],
+  [70, 293.07],
+  [75, 314.03],
+]
+
+// One curve of kJ per kg: the cold table, then every steam-table row up to the critical point
+const LiquidEnthalpyCurve: [number, number][] = [
+  ...ColdLiquidEnthalpies,
+  ...steamTable.map((row): [number, number] => [row.temperature, row.enthalpy]),
+]
+
+// Interpolate along the curve on one axis (0 temperature, 1 enthalpy) and read the other; both rise together
+function readLiquidEnthalpyCurve(from: 0 | 1, value: number): number {
+  const to: 0 | 1 = from === 0 ? 1 : 0
+  const last: number = LiquidEnthalpyCurve.length - 1
+  if (value <= LiquidEnthalpyCurve[0][from]) return LiquidEnthalpyCurve[0][to]
+  if (value >= LiquidEnthalpyCurve[last][from]) return LiquidEnthalpyCurve[last][to]
+  let low = 0
+  let high = last
+  while (high - low > 1) {
+    const mid: number = (low + high) >> 1
+    if (LiquidEnthalpyCurve[mid][from] <= value) low = mid
+    else high = mid
+  }
+  const lower: [number, number] = LiquidEnthalpyCurve[low]
+  const upper: [number, number] = LiquidEnthalpyCurve[high]
+  return lower[to] + ((value - lower[from]) / (upper[from] - lower[from])) * (upper[to] - lower[to])
+}
+
+// Enthalpy (kJ/kg) of saturated liquid water: IF97 from 0 °C up, one curve with no step at 80 °C where the cold table
+// meets the steam table (getSteamData clamps at 80 °C). Colder than 0 °C holds 0, past the critical point holds its value.
+export function getLiquidEnthalpy(temperature: number): number {
+  return readLiquidEnthalpyCurve(0, temperature)
+}
+
+// Temperature (°C) of saturated liquid water of this enthalpy (kJ/kg), the inverse of getLiquidEnthalpy
+export function getLiquidTemperature(enthalpy: number): number {
+  return readLiquidEnthalpyCurve(1, enthalpy)
+}
+
 // Get water specific heat based on temperature (kJ/kg°C)
 export function getWaterSpecificHeat(temperature: number): number {
   const steamData = getSteamData(temperature)

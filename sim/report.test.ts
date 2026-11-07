@@ -45,6 +45,7 @@ describe("toReportHtml", () => {
       "Electric output",
       "Hotwell level",
       "Return to boiler",
+      "Return after economizer",
     ])
       expect(html).toContain(title)
   })

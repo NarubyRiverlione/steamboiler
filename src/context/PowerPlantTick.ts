@@ -60,7 +60,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     waterMass: turbineResult.boilerState.waterMass + condenserNewState.returnRate,
   }
   
-  const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam)
+  // The economizer heats this tick's Return with the flue gas; the Return enters the boiler at the hotwell temperature
+  const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam, {
+    flow: condenserNewState.returnRate / CstSimulation.DeltaTime,
+    temperature: condenserNewState.hotwellTemperature,
+  })
   
   // Update turbine state with the new flow values
   const updatedTurbineState: TurbineState = {

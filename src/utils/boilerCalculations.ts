@@ -8,6 +8,7 @@ import {
   getLatentHeat,
   getBoilingPoint,
 } from "./steamTable"
+import { calculateFlueGasHeatBalance } from "./flueGas"
 
 const { CstBoiler, CstTurbine } = CstSimulation
 
@@ -41,10 +42,16 @@ export function roomInKg(totalVolume: number, waterVolume: number, temperature: 
   return Math.max(0, totalVolume - waterVolume) / getWaterSpecificVolume(temperature)
 }
 
-// Calculate energy from gas flow
-export function calculateGasEnergy(gasFlow: number): number {
+// Heat (kW) into the boiler water from the gas: the fuel heat less what goes up the stack (ADR 0029). The boiler
+// temperature (°C), the Return flow (kg/s) and its inlet temperature (°C, the hotwell) decide how far the flue gas cools.
+export function calculateGasEnergy(
+  gasFlow: number,
+  boilerTemperature: number,
+  returnFlow: number,
+  returnTemperature: number,
+): number {
   // gasFlow in liters/second
-  return (gasFlow / 1000) * CstPhysics.GasEnergyDensity * CstBoiler.GasEfficiency
+  return calculateFlueGasHeatBalance(gasFlow, boilerTemperature, returnFlow, returnTemperature).heatIntoWater
 }
 
 // Calculate energy needed to heat water

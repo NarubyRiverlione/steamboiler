@@ -4,7 +4,7 @@ import { Scenario } from "../scenario"
 
 const { MaxGasFlow } = CstSimulation.CstBoiler
 
-// Full gas lifts the relief valve at about 229 s (35% cold fill, ADR 0018); the gas goes off during that lift
+// Full gas lifts the relief valve at about 227 s (35% cold fill, ADR 0018); the gas goes off during that lift
 export const GasOffAt = 233
 
 // Full gas from cold with everything closed until the relief valve lifts, then gas off so it reseats and the boiler cools

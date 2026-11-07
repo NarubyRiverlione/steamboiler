@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick, { BoilerRemoveSteam, BoilerVent, drainBoiler, heatLossOf, warmBy } from "./BoilerTick"
+import BoilerTick, { BoilerRemoveSteam, BoilerVent, ReliefCapacity, drainBoiler, heatLossOf, warmBy } from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 import {
@@ -8,7 +8,8 @@ import {
   waterMassOf,
   waterVolumeOf,
 } from "../../utils/boilerCalculations"
-import { getWaterSpecificVolume } from "../../utils/steamTable"
+import { calculateFlueGasHeatBalance } from "../../utils/flueGas"
+import { getBoilingPoint, getLatentHeat, getWaterSpecificVolume } from "../../utils/steamTable"
 
 const { CstBoiler, CstTurbine, DeltaTime } = CstSimulation
 // The thermal-model numbers below are derived for 50 t of water, so the fixture pins that fill rather than following
@@ -80,11 +81,12 @@ describe("BoilerTick heat loss", () => {
 })
 
 describe("BoilerTick thermal mass", () => {
-  // Full gas is 357 MW, 35.7 MJ per tick. 50 t of water at 4.196 kJ/kg·K is 209.8 MJ/K; with 100 t of steel at
-  // 0.5 kJ/kg·K that becomes 259.8 MJ/K, so one tick warms 0.137 K instead of the water-only 0.170 K
+  // Full gas at 60 °C with no Return puts 389.9 MW into the water (flue gas leaves the cold boiler 92.8% spent, ADR
+  // 0029), 39.0 MJ per tick. 50 t of water at 4.18 kJ/kg·K is 209 MJ/K; with 100 t of steel at 0.5 kJ/kg·K that
+  // becomes 259 MJ/K, so one tick warms 0.150 K instead of the water-only 0.187 K
   test("the drum and tube metal slow the heat-up", () => {
     const next = BoilerTick({ ...settled(60), gasFlow: CstBoiler.MaxGasFlow })
-    expect(next.temperature - 60).toBeCloseTo(0.137, 2)
+    expect(next.temperature - 60).toBeCloseTo(0.15, 2)
   })
 })
 
@@ -94,15 +96,16 @@ describe("BoilerTick heating rate", () => {
     for (let i = 0; i < Math.round(seconds / DeltaTime); i++) state = BoilerTick(state)
     return state
   }
-  // 2000 L/s of gas is 59.5 MW into 259.8 MJ/K of water and metal: a steady rise of 0.229 K/s
+  // 2000 L/s of gas is 68.4 MW into 259 MJ/K of water and metal at 60 °C: a steady rise of 0.263 K/s
 
   test("settles at the true rate of rise", () => {
-    // 0.229 K/s at 60 °C; after 300 s the water is at about 128 °C, where its specific heat is 2% higher
-    expect(ticks(300, 2000).heatingRate).toBeCloseTo(0.224, 2)
+    // 0.263 K/s at 60 °C; after 300 s the water is at about 128 °C, where its specific heat is higher and the
+    // flue gas leaves hotter
+    expect(ticks(300, 2000).heatingRate).toBeCloseTo(0.247, 2)
   })
 
   test("is smoothed over 30 s: after a step it has covered about 63% of it in 30 s", () => {
-    expect(ticks(30, 2000).heatingRate).toBeCloseTo(0.632 * 0.229, 2)
+    expect(ticks(30, 2000).heatingRate).toBeCloseTo(0.632 * 0.263, 2)
   })
 
   test("raises no alarm below the limit", () => {
@@ -329,9 +332,54 @@ describe("BoilerTick helpers", () => {
   })
 })
 
+describe("BoilerTick flue gas heat balance (ADR 0029)", () => {
+  const fullGas = { ...settled(350), gasFlow: CstBoiler.MaxGasFlow }
+
+  test("reports the stack temperature, the efficiency and the Return after the economizer", () => {
+    const next = BoilerTick(fullGas, { flow: 171, temperature: 37 })
+    expect(next.stackTemperature).toBeCloseTo(160, 0)
+    expect(next.boilerEfficiency).toBeCloseTo(0.934, 2)
+    expect(next.returnTemperatureOut).toBeGreaterThan(120)
+    expect(next.returnTemperatureOut).toBeLessThan(124)
+  })
+
+  test("with no Return given, nothing is recovered", () => {
+    const next = BoilerTick(fullGas)
+    expect(next.boilerEfficiency).toBeCloseTo(0.79, 2)
+    expect(next.stackTemperature).toBeGreaterThan(400)
+  })
+
+  test("the heat into the water of the tick is the fuel heat less the stack heat", () => {
+    const withReturn = BoilerTick(fullGas, { flow: 171, temperature: 37 })
+    const without = BoilerTick(fullGas)
+    const stepMW = (calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 171, 37).heatIntoWater - calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 0, 37).heatIntoWater) / 1000
+    expect(stepMW).toBeCloseTo(60.8, 0)
+    expect(withReturn.energyDelta).toBeGreaterThan(without.energyDelta)
+  })
+
+  test("a stopped burner reports no efficiency and the ambient stack", () => {
+    const next = BoilerTick(settled(100), { flow: 50, temperature: 37 })
+    expect(next.boilerEfficiency).toBe(0)
+    expect(next.stackTemperature).toBe(CstPhysics.AmbientTemperature)
+  })
+})
+
 describe("BoilerVent relief valve", () => {
-  // 1.1 × 357 MW of heat over about 790 kJ/kg latent heat at 178 bar (356.2 °C, IAPWS-IF97) ≈ 497 kg/s
-  const capacityPerTick = 497 * DeltaTime
+  test("the capacity beats the steam full gas makes at the opening pressure at the highest efficiency", () => {
+    const openingTemperature = getBoilingPoint(CstBoiler.ReliefOpenPressure)
+    let mostHeat = 0
+    for (const flow of [0, 24, 171, 250, 299.5])
+      for (const hotwell of [10, 20, 40])
+        mostHeat = Math.max(
+          mostHeat,
+          calculateFlueGasHeatBalance(CstBoiler.MaxGasFlow, openingTemperature, flow, hotwell).heatIntoWater,
+        )
+    expect(ReliefCapacity).toBeGreaterThan(mostHeat / getLatentHeat(openingTemperature))
+  })
+
+  // 1.1 × the worst-case heat into the water (full gas at 178 bar, Return at the pump's maximum flow, ADR 0029) over
+  // about 790 kJ/kg latent heat at 178 bar (356.2 °C, IAPWS-IF97) ≈ 551 kg/s
+  const capacityPerTick = 551 * DeltaTime
   const at = (pressure: number, reliefValveOpen = false) => ({
     ...cold,
     pressure,

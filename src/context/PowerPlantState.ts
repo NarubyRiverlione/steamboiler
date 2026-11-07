@@ -18,6 +18,9 @@ export type BoilerState = {
   ventedTotal: number // kg of steam vented to the atmosphere since start (totalizer)
   reliefLifts: number // lifts of the relief valve since start (counter)
   burnerTripped: boolean // set by the low-low level trip, cleared by the next successful gas raise
+  stackTemperature: number // Celsius, flue gas after the economizer (ADR 0029)
+  boilerEfficiency: number // 0-1, heat into the water over fuel heat; 0 with no gas
+  returnTemperatureOut: number // Celsius, the Return after the economizer (the hotwell temperature when it takes no heat)
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)

@@ -33,6 +33,9 @@ export const makeInitialState = (): PowerPlantState => ({
     ventedTotal: 0, // kg
     reliefLifts: 0,
     burnerTripped: false,
+    stackTemperature: AmbientTemperature, // Celsius, no gas burning
+    boilerEfficiency: 0,
+    returnTemperatureOut: AmbientTemperature, // Celsius
     energy:
       calculateHeatingEnergy(startBoilerMass, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s

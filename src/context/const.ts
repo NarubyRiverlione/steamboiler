@@ -5,7 +5,6 @@ export const CstSimulation = {
     TotalVolume: 100e3, // liters (typical  20-100m3)
     MaxGasFlow: 12000, // liters/second, about 420 MW of fuel for a 200 MWe unit (docs/research/2026-10-sizing-check.md)
     DrainingRate: 0.005, // 0.5% per second
-    GasEfficiency: 0.85,
     GasChangeRateFast: 500, // °C per second
     GasChangeRateSlow: 250, // °C per second,
     DesignPressure: 180, // bar, the boiler must never exceed it (see GLOSSARY.md)
@@ -94,7 +93,27 @@ export const CstSimulation = {
 export const CstPhysics = {
   Water_SpecificHeat: 4.18, // kJ/kg°C (used as fallback for temperatures below 80°C)
   Steel_SpecificHeat: 0.5, // kJ/kg·K, carbon steel
-  GasEnergyDensity: 35000, // kJ/m³ (approximate energy density of natural gas)
+  GasEnergyDensity: 35000, // kJ/m³: LOWER heating value of natural gas (water leaves as vapour), at 25 °C combustion and 0 °C metering, 1 atm (IS 14504 Table 5: methane 35.8 MJ/m³ less inerts; owner decision, ADR 0029)
   AtmosphericPressure_mBar: 1013.25, // mbar
   AmbientTemperature: 20, // Celsius, the plant at rest and the floor of heat loss
+}
+
+// Flue gas, boiler stage and economizer (ADR 0029, figures in docs/plant/design-basis.md and
+// docs/research/2026-11-economizer-flue-gas.md)
+export const CstFlueGas = {
+  MassPerGasVolume: 14.7, // kg of flue gas per m³ of gas at 15% excess air (derived from Ganapathy Table 3.4: 176.7 kg/s at 420 MW)
+  // Flue gas enthalpy, Ganapathy Table A7b (natural gas, 15% excess air): [°C, kJ/kg] from 200, 600 and 1000 °F (Btu/lb x 2.326)
+  EnthalpyPoints: [
+    [(200 - 32) / 1.8, 37.1 * 2.326],
+    [(600 - 32) / 1.8, 147.9 * 2.326],
+    [(1000 - 32) / 1.8, 264.9 * 2.326],
+  ] as [number, number][],
+  CombustionTemperature: 1775, // °C, Ganapathy Table 4.2: natural gas, 15% excess air, no recirculation
+  SurfaceExponent: 0.65, // surface (UA) scales with gas flow to this power (Ganapathy, HRSG off-design, Q8.35a)
+  BoilerApproachAtDesign: 100, // K, flue gas above the water leaving the boiler stage at full gas and DesignWaterTemperature (ESTIMATE; sourced span 60-150 K, design-basis.md)
+  DesignWaterTemperature: 350, // °C, boiler water the boiler stage is sized at (the plant works at 350-357 °C)
+  EconomizerDesignStack: 160, // °C, stack temperature at full gas with the design Return (Ganapathy Tables 1.8, 3.4: 160-164 °C; design choice)
+  EconomizerDesignReturn: 171, // kg/s, the Return the economizer is sized for (RatedSteamFlow before #74)
+  EconomizerDesignReturnTemperature: 37, // °C, hotwell temperature the economizer is sized for
+  ReturnSaturationMargin: 28, // K, the Return leaves the economizer at least this far below saturation (UNVERIFIED, no steaming in the economizer)
 }

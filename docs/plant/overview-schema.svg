@@ -46,8 +46,8 @@
   <path class="line l-heat" d="M300 75 L419 75" marker-end="url(#a-heat)"/>
   <path class="line l-heat" d="M240 100 L240 199" marker-end="url(#a-heat)"/>
   <path class="line l-heat" d="M180 230 L146 230" marker-end="url(#a-heat)"/>
-  <text class="label mid" x="360" y="66">15% fixed loss</text>
-  <text class="label" x="250" y="155">85% of the fuel heat</text>
+  <text class="label mid" x="360" y="66">stack heat</text>
+  <text class="label" x="250" y="155">fuel heat less stack heat</text>
   <text class="label mid" x="163" y="190">heat loss</text>
 
   <!-- Steam -->

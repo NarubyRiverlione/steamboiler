@@ -28,6 +28,34 @@ const pumping = (boilerLitres: number, hotwellLitres = cold.Condenser.hotwellWat
   },
 })
 
+describe("PowerPlantTick economizer (ADR 0029)", () => {
+  // Full gas on a boiler at 350 °C and a full pump: the economizer takes the flow the hotwell gives this tick, at the
+  // hotwell temperature, and the boiler reports what it did
+  const hot = (pump: number): PowerPlantState => {
+    const start = pumping(50_000)
+    return {
+      ...start,
+      Boiler: { ...start.Boiler, temperature: 350, gasFlow: CstBoiler.MaxGasFlow },
+      Condenser: { ...start.Condenser, condensationPumpValvePosition: pump },
+    }
+  }
+
+  test("heats the Return of the tick with the flue gas and reports the stack", () => {
+    const next = PowerPlantTick(hot(1))
+    // the pump gives 300 l/s, more than the 171 kg/s the economizer is sized for: the stack is cooler than 160 °C
+    expect(next.Boiler.returnTemperatureOut).toBeGreaterThan(next.Condenser.hotwellTemperature + 50)
+    expect(next.Boiler.stackTemperature).toBeLessThan(160)
+    expect(next.Boiler.boilerEfficiency).toBeGreaterThan(0.93)
+  })
+
+  test("with the pump shut nothing is recovered", () => {
+    const next = PowerPlantTick(hot(0))
+    expect(next.Condenser.returnRate).toBe(0)
+    expect(next.Boiler.returnTemperatureOut).toBe(next.Condenser.hotwellTemperature)
+    expect(next.Boiler.boilerEfficiency).toBeCloseTo(0.79, 1)
+  })
+})
+
 describe("PowerPlantTick return", () => {
   test("the boiler receives the return in the same tick the hotwell gives it", () => {
     // full pump: 300 l/s for one 0.1 s tick = 30 L = 29.946 kg at 20 °C

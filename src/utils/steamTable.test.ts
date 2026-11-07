@@ -6,6 +6,8 @@ import {
   getExhaustQuality,
   getIsentropicEnthalpyDrop,
   getLatentHeat,
+  getLiquidEnthalpy,
+  getLiquidTemperature,
   getSaturatedSteamDensity,
   getSteamData,
   getWaterSpecificHeat,
@@ -260,6 +262,45 @@ describe("getSaturatedSteamDensity", () => {
       expect(Number.isFinite(density)).toBe(true)
       if (t <= 365) expect(density).toBeGreaterThanOrEqual(previous)
       previous = density
+    }
+  })
+})
+
+describe("saturated liquid enthalpy below the steam table", () => {
+  // IAPWS-IF97 saturated liquid: [°C, kJ/kg]
+  const Cold: number[][] = [
+    [10, 42.02],
+    [37, 155.0],
+    [60, 251.18],
+  ]
+
+  test.each(Cold)("%i °C holds %f kJ/kg", (temperature, enthalpy) => {
+    expect(getLiquidEnthalpy(temperature)).toBeCloseTo(enthalpy, 0)
+  })
+
+  test("is right below 80 °C, not the 80 °C value (about 335 kJ/kg) the steam table clamps to", () => {
+    expect(getLiquidEnthalpy(37)).toBeLessThan(160)
+  })
+
+  test("has no step at 80 °C: the slope on each side is the specific heat, 4.2 kJ/kg·K", () => {
+    expect(getLiquidEnthalpy(80)).toBeCloseTo(334.9, 1)
+    expect(getLiquidEnthalpy(79.9)).toBeCloseTo(334.9 - 0.42, 1)
+    expect(getLiquidEnthalpy(80.1)).toBeCloseTo(334.9 + 0.42, 1)
+  })
+
+  test("agrees with the steam table from 80 °C up and rises all the way", () => {
+    for (const row of steamTable) expect(getLiquidEnthalpy(row.temperature)).toBeCloseTo(row.enthalpy, 6)
+    let previous = -1
+    for (let temperature = 0; temperature <= 374; temperature += 0.5) {
+      const enthalpy: number = getLiquidEnthalpy(temperature)
+      expect(enthalpy).toBeGreaterThan(previous)
+      previous = enthalpy
+    }
+  })
+
+  test("the temperature function inverts it", () => {
+    for (const temperature of [5, 37, 79, 80, 122, 322, 350]) {
+      expect(getLiquidTemperature(getLiquidEnthalpy(temperature))).toBeCloseTo(temperature, 6)
     }
   })
 })

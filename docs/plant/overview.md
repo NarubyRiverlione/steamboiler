@@ -19,7 +19,7 @@ How the parts of the plant connect, what each one does, and where the energy com
 
 | Part | What it does | More |
 |---|---|---|
-| Burner | Burns gas. 85% of the fuel heat reaches the boiler water; the other 15% is a fixed loss, with no flue gas modelled | [boiler.md](boiler.md) |
+| Burner | Burns gas. The flue gas gives its heat to the boiler water, then to the Return in the economizer; what is left goes up the stack, so efficiency follows from the heat balance (about 93% at full gas) | [boiler.md](boiler.md) |
 | Boiler | One lumped vessel of water and steel. Heat turns water into saturated steam, and pressure follows the temperature | [boiler.md](boiler.md) |
 | Relief valve | Vents steam to the atmosphere at high pressure, upstream of the main steam valve | [boiler.md](boiler.md#relief-valve) |
 | Main steam valve | Opens or shuts the boiler to both the turbine valve and the bypass | [turbine.md](turbine.md#low-pressure-closure) |
@@ -40,13 +40,13 @@ Measured at the end of `turbine-load`: 130.6 MW, 165 bar, 172 kg/s of steam, of 
 
 | In | MW | | Out | MW |
 |---|---|---|---|---|
-| Gas | 181 | | Electricity | 131 |
-| **Free heat in the Return** | **267** | | Generator and turbine losses | 7 |
-| | | | Stack | 27 |
+| Gas | 162 | | Electricity | 131 |
+| **Free heat in the Return** | **226** | | Generator and turbine losses | 7 |
+| | | | Stack | 5 |
 | | | | Boiler heat loss | 0.5 |
-| | | | Cooling water | 283 |
-| **Total** | **448** | | **Total** | **448** |
+| | | | Cooling water | 244 |
+| **Total** | **388** | | **Total** | **388** |
 
-Gas alone would give the plant an efficiency of 72%, which no steam plant reaches. The Return is the reason: it enters the boiler at about 29 °C but costs no heat, as if it were already at the boiler's 350 °C. That is 1550 kJ per kg, more heat than the gas gives. Counting it, the efficiency is 29%. This is the free-feedwater departure in [design-basis.md](design-basis.md#deliberate-departures-from-a-real-plant), and [ADR 0030](../adr/0030-return-pays-real-enthalpy.md) removes it.
+Gas alone would give the plant an efficiency of 81%, which no steam plant reaches. The Return is the reason: it enters the boiler at about 29 °C, is warmed to 64 °C by the flue gas in the economizer (that heat is in the gas share), and then costs no heat, as if it were already at the boiler's 350 °C. That is 1400 kJ per kg, more heat than the gas gives. Counting it, the efficiency is 34%. This is the free-feedwater departure in [design-basis.md](design-basis.md#deliberate-departures-from-a-real-plant), and [ADR 0030](../adr/0030-return-pays-real-enthalpy.md) removes it.
 
 Not in the table: makeup, reject and drain carry a little heat when they run, and no pump uses power.

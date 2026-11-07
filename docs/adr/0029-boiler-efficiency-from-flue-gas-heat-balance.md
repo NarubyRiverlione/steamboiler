@@ -35,6 +35,7 @@ The economizer sits outside the vessel and has no temperature or mass of its own
 
 ## Consequences
 
+- Built in #87: economizer surface about 291 kW/K, boiler stage about 668 kW/K; measured 160 °C stack, 93.4% and 121.6 °C Return out at full gas, 79% with no Return, an 18 K gap at 25% gas. The relief capacity is about 551 kg/s. `return-stop` (edge) confirms the pressure stays controlled when the Return stops at full gas, with no lag.
 - #87 lands before #74, with no release to `main` between them. Until #74 the Return stays free and the economizer heat comes on top, so the free-feedwater departure in [design-basis.md](../plant/design-basis.md) grows for a while. #87 also calculates the Return temperature after the economizer, for #74 to use.
 - Relief valve sizing no longer has one efficiency to use. It takes the worst case: full gas at the opening pressure with the Return at the pump's maximum flow ([ADR 0005](0005-relief-valve-vents-to-atmosphere.md)). #74 re-derives the exact capacity.
 - When the Return stops, heat input steps down in one tick, about 60 MW at full gas.
