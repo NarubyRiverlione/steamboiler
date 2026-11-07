@@ -16,6 +16,11 @@ In `src/components/board/`. Each file opens with a comment saying it is adapted 
 | `Display` | LCD readout (an `<output>` named by its label); red while `alarm` is set |
 | `Screws` | The four corner screws at fixed angles; used by `PanelFrame` and `Header` |
 | `Led` | Round bezel LED for use inside an SVG (an `img` named "<label>: on/off"); red while `lit` |
+| `Lamp` | `Led` in its own SVG with a text label, for use in HTML |
+| `LensButton` | Illuminated button; lit while `pressed` (`aria-pressed`) |
+| `RoundGauge` | Round dial (`role="meter"`) with a needle and zones (`ok`, `warn`, `alarm`) |
+| `LevelGauge` | Vertical level gauge in percent (`role="meter"`) with a zone strip and a pointer |
+| `ValveControl` | Close and Open lens buttons around a bar (`role="meter"`), position on an LCD; props of the old `ValveSlider`, `cbAdjust(±Step/100)`. Used by the Condenser and Turbine pages until their own steps; #41 adds the knob |
 
 ## Shell and navigation
 
@@ -25,6 +30,10 @@ In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate lik
 - **Keys** (`useBoardKeys`): Page Down or Right and Page Up or Left cycle Boiler, Condenser, Turbine (from the overview: first or last, ends wrap); Esc returns to the overview. A focused button or link keeps the arrows (not Esc); an unknown path redirects to the overview. Ignored with Alt, Ctrl or Meta, and while the focus is in an `input`, `textarea`, `select`, `contenteditable`, `slider` or `spinbutton`, so a knob keeps its arrow keys.
 - **Parts** (`plantParts.ts`): the part list (path, name) and `partAlarms`, the alarm flags per part: Boiler `heatingRateOverLimit` or `burnerTripped`, Condenser `condensationPumpTripped`, Turbine `turbineTripped`. A new alarm flag is added there (and gets its annunciator tile in step 6).
 - **Overview** (`PlantOverview`, data in `plantDiagram.ts`): the plant of [ADR 0029](../adr/0029-target-plant.svg), laid out as in the full-board mockup, as a static SVG with no live numbers. A node with a `part` is a link to that page and drawn raised (Boiler: Burner, Boiler, Drain; Turbine: Main steam valve, Turbine valve, Turbine, Generator, Bypass valve; Condenser: Condenser, pumps, SJAE, Hotwell); the node marked `led` carries the part's alarm LED. The other nodes are flat; the extraction heater has no controls, the air preheater is dashed. When the plant changes, change `plantDiagram.ts` too.
+
+## Boiler page
+
+`src/components/Boiler/Boiler.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 200 bar; green to `ValveRatingPressure`, orange to `ReliefOpenPressure`, red above), the gas controls (four `LensButton` steps of `GasChangeRateFast` and `-Slow`; the knob is #15), the drum `LevelGauge` (one red zone below `BurnerLowLowLevel`) with the drain valve button, then the status readouts as `Display`s with `Lamp`s for heating rate over limit, relief valve open and burner tripped, and an Advanced `<details>`. The pressure and the energy change are smoothed with `useEMA`, as before. The page is not wrapped in `LegacyPage`.
 
 ## Building a part page
 

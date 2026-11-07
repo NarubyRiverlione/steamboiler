@@ -12,14 +12,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<PlantOverview />} />
-        <Route
-          path="boiler"
-          element={
-            <LegacyPage>
-              <Boiler />
-            </LegacyPage>
-          }
-        />
+        <Route path="boiler" element={<Boiler />} />
         <Route
           path="condenser"
           element={

@@ -50,6 +50,15 @@
   --board-led-off: #5a2a2a;
   --board-gauge-face: #f4f2ea;
   --board-focus-ring: #1f5fbf;
+  --board-zone-ok: #2f9e44;
+  --board-zone-warn: #f08c00;
+  --board-zone-alarm: #e03131;
+  --board-gauge-bezel-hi: #e8e8e8;
+  --board-gauge-bezel-lo: #8f8f8f;
+  --board-needle: #c92a2a;
+  --board-water: #1971c2;
+  --board-level-glass: #eef3f7;
+  --board-level-housing: #bdbdbd;
   --board-mimic-bg: #c9c9c3;
   --board-mimic-heat: #d9480f;
   --board-mimic-steam: #9c36b5;
@@ -400,4 +409,223 @@
   background: var(--board-page-bg);
   border-radius: 0;
   box-shadow: none;
+}
+
+.board-lens-button {
+  cursor: pointer;
+}
+
+.board-lens-button:focus-visible {
+  outline: 3px solid var(--board-focus-ring);
+  outline-offset: 3px;
+}
+
+.board-lens-button:active {
+  transform: translateY(2px);
+}
+
+.board-lens-small {
+  font-size: 0.85rem;
+}
+
+.board-gauge-bezel {
+  fill: var(--board-gauge-bezel-hi);
+  stroke: var(--board-gauge-bezel-lo);
+}
+
+.board-gauge-face {
+  fill: var(--board-gauge-face);
+  stroke: var(--board-text);
+}
+
+.board-zone {
+  fill: none;
+  stroke-width: 6;
+}
+
+.board-zone-ok {
+  stroke: var(--board-zone-ok);
+  fill: var(--board-zone-ok);
+}
+
+.board-zone-warn {
+  stroke: var(--board-zone-warn);
+  fill: var(--board-zone-warn);
+}
+
+.board-zone-alarm {
+  stroke: var(--board-zone-alarm);
+  fill: var(--board-zone-alarm);
+}
+
+path.board-zone {
+  fill: none;
+}
+
+.board-tick {
+  stroke: var(--board-text);
+  stroke-width: 1;
+}
+
+.board-tick-major {
+  stroke-width: 2;
+}
+
+.board-gauge-text {
+  fill: var(--board-text);
+  font-family: var(--board-font-label);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.board-gauge-unit {
+  font-size: 12px;
+}
+
+.board-needle path {
+  fill: var(--board-needle);
+}
+
+.board-hub {
+  fill: var(--board-text);
+}
+
+.board-level-housing {
+  fill: var(--board-level-housing);
+  stroke: var(--board-text);
+}
+
+.board-level-glass {
+  fill: var(--board-level-glass);
+  stroke: var(--board-text);
+}
+
+.board-level-fill {
+  fill: var(--board-water);
+}
+
+.board-level-tick {
+  font-size: 10px;
+  text-anchor: start;
+}
+
+.board-pointer {
+  fill: var(--board-text);
+}
+
+.board-lamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--board-font-label);
+}
+
+.board-valve {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+  font-family: var(--board-font-label);
+}
+
+.board-valve-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.board-valve-label {
+  font-family: var(--board-font-stencil);
+  font-weight: 700;
+}
+
+.board-valve-values {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.board-valve-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.board-valve-bar {
+  flex: 1;
+  height: 1rem;
+  background: var(--board-lcd-bg);
+  border: 2px solid var(--board-lcd-border);
+}
+
+.board-valve-bar-fill {
+  height: 100%;
+  background: var(--board-lcd-text);
+}
+
+.board-section {
+  margin-top: 0.75rem;
+}
+
+.board-group-title {
+  margin: 0 0 0.35rem;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--board-font-stencil);
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.board-boiler-main {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.board-instrument {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  font-family: var(--board-font-label);
+}
+
+.board-instrument-label,
+.board-readout-label {
+  font-family: var(--board-font-label);
+  font-weight: 700;
+}
+
+.board-lens-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.board-readouts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.35rem 1.5rem;
+}
+
+.board-readout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--board-font-label);
+}
+
+.board-readout-values {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.board-advanced summary {
+  cursor: pointer;
+  font-family: var(--board-font-stencil);
+  font-weight: 700;
 }
