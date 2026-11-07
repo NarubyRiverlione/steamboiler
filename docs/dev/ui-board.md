@@ -19,7 +19,7 @@ In `src/components/board/`. Each file opens with a comment saying it is adapted 
 
 ## Shell and navigation
 
-In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate like the part pages: the `h1` "Powerplant Simulation", a lens button "Plant overview" lit on the overview, the breadcrumb, and empty slots `data-slot="clock" | "speed" | "annunciator"` for #86 and step 6) above the routed page. There is no tab strip. Pages not yet migrated render below the header with their old styling (`LegacyLayout.css`, removed in #98).
+In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate like the part pages: the `h1` "Powerplant Simulation", a lens button "Plant overview" lit on the overview, the breadcrumb, and empty slots `data-slot="clock" | "speed" | "annunciator"` for #86 and step 6) above the routed page. There is no tab strip. The shell is the board floor (`--board-page-bg`, #2b2e31) with the plates on it. Pages not yet migrated render below the header with their old styling, in a light `LegacyPage` card so they stay readable on the floor (`LegacyLayout.css` and `LegacyPage`, removed in #98).
 
 - **Routes** (`AppRoutes`): `/` is `PlantOverview`; `/boiler`, `/condenser`, `/turbine` the detail pages.
 - **Keys** (`useBoardKeys`): Page Down or Right and Page Up or Left cycle Boiler, Condenser, Turbine (from the overview: first or last, ends wrap); Esc returns to the overview. A focused button or link keeps the arrows (not Esc); an unknown path redirects to the overview. Ignored with Alt, Ctrl or Meta, and while the focus is in an `input`, `textarea`, `select`, `contenteditable`, `slider` or `spinbutton`, so a knob keeps its arrow keys.

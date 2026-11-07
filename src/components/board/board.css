@@ -34,7 +34,7 @@
   --board-font-stencil: "Stardos Stencil", sans-serif;
   --board-font-lcd: "Share Tech Mono", monospace;
   --board-font-label: "IBM Plex Sans Condensed", sans-serif;
-  --board-page-bg: #a9a9a9;
+  --board-page-bg: #2b2e31; /* the floor below the plates */
   --board-text: #1a1a1a;
   --board-text-glow: rgba(255, 255, 255, 0.9);
   --board-plate-bg: #d4d4d4;
@@ -391,11 +391,12 @@
   stroke-width: 5px;
 }
 
-/* The shell sits on the board floor, not on the legacy white card */
+/* The shell is the board floor: dark, with the plates on it */
 .app.board-shell {
   max-width: none;
   margin: 0;
   padding: 0.5rem;
+  min-height: 100vh;
   background: var(--board-page-bg);
   border-radius: 0;
   box-shadow: none;

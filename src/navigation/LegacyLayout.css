@@ -41,3 +41,9 @@
   gap: 1rem;
   padding: 1rem;
 }
+
+.legacy-page {
+  padding: 1rem;
+  background: var(--light-gray);
+  border-radius: 8px;
+}
