@@ -108,6 +108,48 @@ _Avoid_: Trip (on its own); for the operator's planned stop see Shutdown
 The share of the turbine exhaust that is still vapour, by mass. The rest is exhaust moisture, already liquid when it reaches the condenser.
 _Avoid_: Dryness, wetness
 
+### Flue gas
+
+**Flue gas**:
+The exhaust of the burner, on its way through the boiler and the economizer to the chimney.
+_Avoid_: Exhaust (that is the turbine's), smoke
+
+**Economizer**:
+The heat exchanger where flue gas heats the Return on its way to the boiler. With no Return it recovers nothing.
+_Avoid_: Feedwater heater, preheater
+
+**Stack temperature**:
+The flue gas temperature where it leaves for the chimney.
+_Avoid_: Exit temperature, chimney temperature
+
+**Boiler efficiency**:
+The share of the fuel's lower heating value that ends up in the water, counting the boiler and the economizer together.
+_Avoid_: Burner efficiency, gas efficiency
+
+**Extraction steam**:
+Steam taken from the turbine partway through its expansion.
+_Avoid_: Bleed steam, tap steam
+
+**Extraction heater**:
+The heat exchanger where extraction steam heats the Return on its way to the economizer.
+_Avoid_: Feedwater heater, preheater
+
+**Heater drain**:
+The condensed extraction steam, pumped forward into the Return after the extraction heater.
+_Avoid_: Drain (that is the boiler's)
+
+**Cooling water**:
+The water that takes the condenser's heat, drawn in by the recirculation pump.
+_Avoid_: Recirculation water, circulating water
+
+**Cooling water rise**:
+How much the cooling water warms up across the condenser.
+_Avoid_: Temperature rise, delta T
+
+**Terminal temperature difference**:
+How far the cooling water leaves below the saturation temperature of the condenser.
+_Avoid_: TTD, approach
+
 ### Operation
 
 **Ambient temperature**:
@@ -135,7 +177,7 @@ Hotwell water sent out of the loop to storage when the hotwell is too full.
 _Avoid_: Dump, overflow
 
 **Return**:
-Hotwell water pumped into the boiler by the condensation pump. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
+Hotwell water pumped through the economizer into the boiler by the condensation pump. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
 _Avoid_: Feedwater, refill
 
 **Hotwell level**:
