@@ -11,6 +11,7 @@ import {
   loadSetpointRefusal,
   maxTurbineValvePosition,
   ratedOutputMW,
+  shaftWorkFraction,
   turbineTrippedAfter,
 } from "./turbineCalculations"
 
@@ -43,9 +44,26 @@ describe("isAtSyncSpeed", () => {
   })
 })
 
+describe("shaftWorkFraction", () => {
+  test("is 0 at standstill and 1 at sync speed", () => {
+    expect(shaftWorkFraction(0)).toBe(0)
+    expect(shaftWorkFraction(CstTurbine.SyncRPM)).toBe(1)
+  })
+
+  test("is the torque shape x(2 - x): 0.75 at half speed", () => {
+    expect(shaftWorkFraction(CstTurbine.SyncRPM / 2)).toBeCloseTo(0.75, 9)
+  })
+
+  test("stays within 0-1 above sync speed and at overspeed", () => {
+    expect(shaftWorkFraction(CstTurbine.MaxRPM)).toBeLessThanOrEqual(1)
+    expect(shaftWorkFraction(2 * CstTurbine.SyncRPM + 100)).toBe(0)
+  })
+})
+
 describe("ratedOutputMW", () => {
-  test("is the 123.0 MW of the rated flow and drop", () => {
-    expect(ratedOutputMW).toBeCloseTo(123.0, 1)
+  test("is the 133.7 MW of the rated flow and the drop at the 31 mbar design vacuum (ADR 0032)", () => {
+    // 158 kg/s x 1016 kJ/kg x 0.85 x 0.98; 164 kg/s, the hand-estimated flow, would give about 139 MWe
+    expect(ratedOutputMW).toBeCloseTo(133.7, 1)
   })
 })
 
@@ -114,7 +132,8 @@ describe("calculateRPM", () => {
   //   S = 161 x 917e3 x 0.85 x 0.98 = 122.97 MW;  J = 2 x 4 x S / ω_s² = 9 967 kg·m²
   //   Δω = T / J x 0.1 s = 0.4886 rad/s = 4.665 rpm
   test("hand-calculated first tick from standstill", () => {
-    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.665, 2)
+    // J scales with the rated output (133.7 MW since ADR 0032; 4.665 at 123.0 MW)
+    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.292, 2)
   })
 
   // Load power at sync speed: the generator draws load / efficiency from the shaft, so the steam must cover the
@@ -192,7 +211,7 @@ describe("calculateRPM", () => {
     expect(calculateRPM(SyncRPM, flow, drop)).toBeCloseTo(SyncRPM, 6)
   })
 
-  test("RatedEnthalpyDrop matches the steam table at 165 bar and 100 mbar", () => {
-    expect(Math.abs(getIsentropicEnthalpyDrop(165, 0.1) - RatedEnthalpyDrop)).toBeLessThan(RatedEnthalpyDrop * 0.005)
+  test("RatedEnthalpyDrop matches the steam table at 165 bar and the 31 mbar design vacuum", () => {
+    expect(Math.abs(getIsentropicEnthalpyDrop(165, 0.031) - RatedEnthalpyDrop)).toBeLessThan(RatedEnthalpyDrop * 0.005)
   })
 })

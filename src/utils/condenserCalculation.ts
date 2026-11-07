@@ -1,7 +1,7 @@
 import { CondenserState } from "../context/PowerPlantState"
 import { CstPhysics, CstSimulation } from "../context/const"
 import { waterMassOf } from "./boilerCalculations"
-import { getBoilingPoint, getLatentHeat } from "./steamTable"
+import { getBoilingPoint, getSaturationEnthalpies } from "./steamTable"
 
 // Air Extraction Pump (CAR) behavior
 const calcCARvacuum = (isAirExtractionPumpEnabled: boolean, previousVacuum: number) => {
@@ -125,16 +125,56 @@ export function saturationTemperature(condenserPressure: number): number {
   return getBoilingPoint(condenserPressure / 1000)
 }
 
+const MbarPerBar = 1000
+
+// Latent heat (kJ/kg) at the condenser pressure (mbar absolute), from the same rows as the stream enthalpies
+const latentHeatAt = (condenserPressure: number): number => {
+  const { liquid, vapor } = getSaturationEnthalpies(condenserPressure / MbarPerBar)
+  return vapor - liquid
+}
+
 /**
- * Calculates the condensation of steam based on an energy balance at the saturation temperature of the condenser
- * pressure. The condensate leaves at that temperature; the cooling water only sets how much steam condenses.
+ * A stream entering the condenser at its real enthalpy (kJ/kg). Below saturated vapour at the condenser pressure it
+ * splits into moisture and vapour (quality = vapour share by mass); above it, it is all vapour and the heat above
+ * saturated vapour (kJ/kg) loads the cooling water on top of the condensing (ADR 0032).
+ */
+export function splitStreamAtCondenser(
+  enthalpy: number,
+  condenserPressure: number,
+): { quality: number; excessHeat: number } {
+  const { liquid, vapor } = getSaturationEnthalpies(condenserPressure / MbarPerBar)
+  if (enthalpy >= vapor) return { quality: 1, excessHeat: enthalpy - vapor }
+  return { quality: Math.max(0, (enthalpy - liquid) / (vapor - liquid)), excessHeat: 0 }
+}
+
+/**
+ * Heat (kW) a single-pass condenser gives the cooling water at the given flow (L/s, about kg/s): the shell side is
+ * isothermal, so Q = ε·ṁ·cp·(Tsat − Tin) with ε = 1 − exp(−UA / (ṁ·cp)). UA scales with the flow to the power 0.5
+ * (HEI). No flow gives no heat, with no division by zero (ADR 0032).
+ */
+export function condenserHeatCapacity(coolingWaterFlow: number, saturationTemp: number): number {
+  const { RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature, HeatExchangerUA } = CstSimulation.CstCondenser
+  if (coolingWaterFlow <= 0) return 0
+
+  const capacityRate: number = coolingWaterFlow * CstPhysics.Water_SpecificHeat // kW/K
+  const ua: number = HeatExchangerUA * (coolingWaterFlow / RecirculationPump_MaxFlowRate) ** 0.5
+  const effectiveness: number = 1 - Math.exp(-ua / capacityRate)
+  return effectiveness * capacityRate * Math.max(0, saturationTemp - RecirculationPump_IntakeTemperature)
+}
+
+/**
+ * Calculates the condensation of steam in a limited heat exchanger at the saturation temperature of the condenser
+ * pressure. The cooling water takes at most Q = ε·ṁ·cp·(Tsat − Tin); first the heat the intake carries above saturated
+ * vapour, then the latent heat of the vapour it condenses. The condensate leaves at the saturation temperature.
  *
- * @param currentSteamMass kg, Current steam mass in the condenser
+ * @param currentSteamMass kg, Current steam mass in the condenser (vapour only)
  * @param currentLiquidMass kg, Current liquid mass in the hotwell
  * @param recirculationPumpValvePosition Valve position of the recirculation pump (0-1)
  * @param condenserPressure absolute pressure in the condenser (mbar)
  * @param hotwellRoom kg of water the hotwell can still take at its temperature, limits the condensation
- * @returns New steam and liquid masses (kg), and the outlet temperature (saturation temperature, °C)
+ * @param excessHeat kJ the intake carried above saturated vapour this tick, taken from the cooling water first
+ * @returns New steam and liquid masses (kg), the condensate temperature (saturation temperature, °C) and the cooling
+ * water outlet temperature (°C)
  */
 export function calculateCondensation(
   currentSteamMass: number,
@@ -142,10 +182,12 @@ export function calculateCondensation(
   recirculationPumpValvePosition: number,
   condenserPressure: number,
   hotwellRoom: number,
+  excessHeat = 0,
 ): {
   steamMassAfterCondensation: number
   waterMassAfterCondensation: number
   newOutletTemperature: number
+  coolingWaterOutletTemperature: number
 } {
   const {
     DeltaTime,
@@ -153,27 +195,28 @@ export function calculateCondensation(
   } = CstSimulation
 
   // 1. Condensate leaves at the saturation temperature of the condenser pressure
-  const saturationTemp = saturationTemperature(condenserPressure)
+  const saturationTemp: number = saturationTemperature(condenserPressure)
 
-  // 2. Mass flow rate of recirculating cold water
-  const massFlowRate = recirculationPumpValvePosition * RecirculationPump_MaxFlowRate
+  // 2. Cooling water flow and the heat the exchanger can give it this tick (kJ)
+  const coolingWaterFlow: number = recirculationPumpValvePosition * RecirculationPump_MaxFlowRate
+  const capacity: number = condenserHeatCapacity(coolingWaterFlow, saturationTemp) * DeltaTime
 
-  // 3. Temperature difference between the condensing steam and the cold recirculation water
-  const deltaTemp = Math.max(0, saturationTemp - RecirculationPump_IntakeTemperature)
+  // 3. The intake's extra heat first, the rest condenses vapour: never more than the steam there is or the hotwell room
+  const excessTaken: number = Math.min(capacity, excessHeat)
+  const massCondensed: number = (capacity - excessTaken) / latentHeatAt(condenserPressure)
+  const condensedMass: number = Math.min(currentSteamMass, massCondensed, hotwellRoom)
 
-  // 4. Energy absorbed by cold water (Q = m * cp * ΔT)
-  const energyAbsorbed = massFlowRate * CstPhysics.Water_SpecificHeat * deltaTemp * DeltaTime
-
-  // 5. Mass of steam condensed (m = Q / latentHeat)
-  const massCondensed = energyAbsorbed / getLatentHeat(saturationTemp)
-
-  // 6. The steam that condenses: the energy balance, never more than the steam there is or the room in the hotwell
-  const condensedMass = Math.min(currentSteamMass, massCondensed, hotwellRoom)
+  // 4. The cooling water carries the heat actually taken
+  const heatTaken: number = excessTaken + condensedMass * latentHeatAt(condenserPressure)
+  const capacityRate: number = coolingWaterFlow * CstPhysics.Water_SpecificHeat * DeltaTime
+  const coolingWaterOutletTemperature: number =
+    capacityRate > 0 ? RecirculationPump_IntakeTemperature + heatTaken / capacityRate : RecirculationPump_IntakeTemperature
 
   return {
     steamMassAfterCondensation: Math.max(currentSteamMass - condensedMass, 0),
     waterMassAfterCondensation: Math.max(currentLiquidMass + condensedMass, 0),
     newOutletTemperature: saturationTemp,
+    coolingWaterOutletTemperature,
   }
 }
 

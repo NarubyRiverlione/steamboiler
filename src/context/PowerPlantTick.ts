@@ -5,7 +5,8 @@ import BoilerTick, { BoilerBurnerTrip, BoilerRemoveSteam, BoilerVent } from "./B
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import { CstSimulation } from "./const"
 import { roomInKg } from "../utils/boilerCalculations"
-import { getExhaustQuality } from "../utils/steamTable"
+import { getExhaustEnthalpy, getSaturationEnthalpies } from "../utils/steamTable"
+import { shaftWorkFraction } from "../utils/turbineCalculations"
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
   // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
@@ -28,14 +29,21 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   const turbineResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
 
   // Condenser: receives the steam removed from the boiler in this same tick
-  const steamFromBypass = { flow: turbineResult.turbineState.bypassSteamFlowOut }
-  // Exhaust quality at the same pressures as the enthalpy drop in TurbineTick
+  const boilerPressure: number = bypassResult.boilerState.pressure
+  // Bypass steam is saturated vapour at the boiler pressure
+  const steamFromBypass = {
+    flow: turbineResult.turbineState.bypassSteamFlowOut,
+    enthalpy: getSaturationEnthalpies(boilerPressure).vapor,
+  }
+  // Exhaust enthalpy at the same pressures as the enthalpy drop in TurbineTick, less the work the shaft takes at its
+  // speed: at standstill the exhaust is the inlet steam
   const steamFromTurbine = {
     flow: turbineResult.turbineState.turbineSteamFlowOut,
-    quality: getExhaustQuality(
-      bypassResult.boilerState.pressure,
+    enthalpy: getExhaustEnthalpy(
+      boilerPressure,
       state.Condenser.pressure / 1000,
       CstSimulation.CstTurbine.IsentropicEfficiency,
+      shaftWorkFraction(state.Turbine.rpm),
     ),
   }
   // The return fills the boiler at most to its total volume (kg at the boiler temperature); steam and drain only lower

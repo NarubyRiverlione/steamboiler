@@ -24,7 +24,7 @@ export const CstSimulation = {
     HotwellStartVolume: 35e3, // liter (70%, the normal level)
     MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
     VacuumDecayRate: 5, // mbar per second when pump is off
-    OptimalPressure: 80, // mBar, centre of the band on the vacuum readout
+    OptimalPressure: 31, // mBar, centre of the band on the vacuum readout: the design vacuum (ADR 0032)
     OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
     VacuumLimit: 327, // mbar absolute, turbine trip above it (-0.7 kg/cm² gauge, see design-basis.md)
     CAR_MaxVacuum: 800, // mbar vacuum  (70-90 kPa vacuum = 11-31 kPa absolute pressure)
@@ -32,10 +32,10 @@ export const CstSimulation = {
     SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
     SJAE_MaxPressureDifference: 20, // mbar above AirExtractionPump.MaxVacuum
     SJAE_ValveStep: 5, // % per click open/close
-    RecirculationPump_MaxFlowRate: 3600, // l/s: full-gas exhaust with a 1.5x margin on the energy balance (design-basis.md); a full circuit is typically 9.000-12.000
+    RecirculationPump_MaxFlowRate: 7400, // l/s: single pass at the rated load with 10 °C water, rise 8.5 K (ADR 0032, design-basis.md)
     RecirculationPump_Step: 5,
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
-    HeatTransferCoefficient: 0.85, // Condensation rate per unit of recirculation flow
+    HeatExchangerUA: 27000, // kW/K at the full cooling water flow: terminal temperature difference 6 K at the rated load; scales with flow^0.5 (ADR 0032)
     CondensationPump_MaxFlowRate: 300, // l/s (typical 160 - 270 l/s)
     CondensationPump_Step: 5,
     PressureMultiplier: 0.8, // steam volume adds pressure
@@ -71,8 +71,8 @@ export const CstSimulation = {
     HoldEngageWindow: 5, // rpm: Hold engages within ± this of the selected run-up point (estimate, design-basis.md)
 
     // Speed model (ADR 0021, figures in docs/plant/design-basis.md): shaft power from steam, losses and inertia derived
-    RatedSteamFlow: 161, // kg/s, what full gas makes at 165 bar with the Return matching the steam (measured, #74, ADR 0030); S and the no-load loss are sized on it
-    RatedEnthalpyDrop: 917, // kJ/kg, isentropic drop at the rated state: 165 bar to 100 mbar (IF97, #14)
+    RatedSteamFlow: 158, // kg/s, what full gas makes at 165 bar with the Return matching the steam (measured: 157.7 kg/s at 130 MW in max-output, #82; was 161 before the condensate came back colder, #74, ADR 0030); S and the no-load loss are sized on it
+    RatedEnthalpyDrop: 1016, // kJ/kg, isentropic drop at the rated state: 165 bar to the 31 mbar design vacuum (IF97, ADR 0032)
     InertiaConstant: 4, // s, H of the whole shaft line (sourced range 2.5-6 s); J = 2·H·S / ω_s²
     NoLoadFlowFraction: 0.03, // of rated flow: holds sync speed unloaded; loss power ∝ ω³ is calibrated on it (sourced 1.5-3%)
 

@@ -57,10 +57,10 @@ describe("TurbineTick", () => {
         (drop(boiler, mbar) * 1000 * CstSimulation.CstTurbine.IsentropicEfficiency)
 
     it("carries 0 MW at the no-load flow and holds sync speed", () => {
-      const result: TurbineState = TurbineTick(synced, 165, 100)
+      const result: TurbineState = TurbineTick(synced, 165, 31) // the no-load flow is calibrated at the rated drop: 165 bar to the 31 mbar design vacuum
       expect(result.electricOutput).toBe(0)
       expect(result.generatorBreaker).toBe(true)
-      expect(result.rpm).toBeCloseTo(SyncRPM, 1) // the no-load flow is calibrated at the rated drop, not at this state's
+      expect(result.rpm).toBeCloseTo(SyncRPM, 1)
     })
 
     it("reports no output from steam alone: more steam than the no-load flow accelerates, it does not make MW", () => {
@@ -85,8 +85,8 @@ describe("TurbineTick", () => {
     })
 
     it("holds sync speed when the steam carries the load", () => {
-      const loaded: TurbineState = { ...synced, electricOutput: 50, loadSetpoint: 50, turbineSteamFlowOut: flowFor(50, 165, 100) }
-      const result: TurbineState = TurbineTick(loaded, 165, 100)
+      const loaded: TurbineState = { ...synced, electricOutput: 50, loadSetpoint: 50, turbineSteamFlowOut: flowFor(50, 165, 31) }
+      const result: TurbineState = TurbineTick(loaded, 165, 31)
       expect(result.rpm).toBeCloseTo(SyncRPM, 2)
       expect(result.electricOutput).toBe(50)
     })

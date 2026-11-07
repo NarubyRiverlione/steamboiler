@@ -244,21 +244,39 @@ export function getIsentropicEnthalpyDrop(boilerPressure: number, exhaustPressur
   return inlet.vaporEnthalpy - exhaustEnthalpy
 }
 
-// Exhaust quality: the share of the turbine exhaust that is still vapour, by mass (0-1). The real expansion takes only
-// isentropicEfficiency of the drop, so the exhaust enthalpy is the inlet enthalpy minus that part. It takes the same
-// pressures as the drop; with a zero or negative drop nothing expands and the steam stays vapour.
+// Saturated liquid and vapour enthalpy (kJ/kg) at a pressure (bar), the same rows as the isentropic drop
+export function getSaturationEnthalpies(pressure: number): { liquid: number; vapor: number } {
+  const row: SaturationEntropyRow = getSaturationEntropyRow(pressure)
+  return { liquid: row.liquidEnthalpy, vapor: row.vaporEnthalpy }
+}
+
+// Enthalpy (kJ/kg) of the turbine exhaust. The real expansion takes only isentropicEfficiency of the drop, and the shaft
+// takes only workFraction of that (1 at sync speed, less while the rotor runs up, 0 at standstill where the steam
+// passes through unchanged). Same pressures as the drop; with a zero or negative drop nothing expands.
+export function getExhaustEnthalpy(
+  boilerPressure: number,
+  exhaustPressure: number,
+  isentropicEfficiency: number,
+  workFraction = 1,
+): number {
+  const inletEnthalpy: number = getSaturationEnthalpies(boilerPressure).vapor
+  const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, exhaustPressure)
+  if (enthalpyDrop <= 0) return inletEnthalpy
+  return inletEnthalpy - workFraction * isentropicEfficiency * enthalpyDrop
+}
+
+// Exhaust quality: the share of the turbine exhaust that is still vapour, by mass (0-1), from the exhaust enthalpy.
+// With a zero or negative drop nothing expands and the steam stays vapour.
 export function getExhaustQuality(
   boilerPressure: number,
   exhaustPressure: number,
   isentropicEfficiency: number,
+  workFraction = 1,
 ): number {
-  const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, exhaustPressure)
-  if (enthalpyDrop <= 0) return 1
+  if (getIsentropicEnthalpyDrop(boilerPressure, exhaustPressure) <= 0) return 1
 
-  const inlet: SaturationEntropyRow = getSaturationEntropyRow(boilerPressure)
-  const exhaust: SaturationEntropyRow = getSaturationEntropyRow(exhaustPressure)
-  const exhaustEnthalpy: number = inlet.vaporEnthalpy - isentropicEfficiency * enthalpyDrop
-  const quality: number =
-    (exhaustEnthalpy - exhaust.liquidEnthalpy) / (exhaust.vaporEnthalpy - exhaust.liquidEnthalpy)
+  const exhaust: { liquid: number; vapor: number } = getSaturationEnthalpies(exhaustPressure)
+  const exhaustEnthalpy: number = getExhaustEnthalpy(boilerPressure, exhaustPressure, isentropicEfficiency, workFraction)
+  const quality: number = (exhaustEnthalpy - exhaust.liquid) / (exhaust.vapor - exhaust.liquid)
   return Math.max(0, Math.min(1, quality))
 }

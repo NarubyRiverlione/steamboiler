@@ -55,6 +55,7 @@ export const makeInitialState = (): PowerPlantState => ({
     returnRate: 0,
     condensationRate: 0,
     coolingRate: 1,
+    coolingWaterOutletTemperature: CstSimulation.CstCondenser.RecirculationPump_IntakeTemperature,
     isAirExtractionPumpEnabled: false,
     isSjaeEnabled: false,
     sjaeValvePosition: 0, // 0% open

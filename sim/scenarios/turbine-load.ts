@@ -1,5 +1,4 @@
 import PowerPlantAction from "../../src/context/PowerPlantActions"
-import { ratedOutputMW } from "../../src/utils/turbineCalculations"
 import { Scenario } from "../scenario"
 import { loadSnapshot } from "../snapshot"
 import { holdLoop } from "./loop-operator"
@@ -13,14 +12,16 @@ const bypassShut: PowerPlantAction = {
 }
 
 // From the settled sync (the `turbine-sync` snapshot: hold mode on, breaker closed at 3000 rpm): the operator sets the
-// load setpoint to the rated output and the generator takes it at the load rate (3% of rated per minute, so about
+// load setpoint to the load target and the generator takes it at the load rate (3% of rated per minute, so about
 // 2000 s). The load is a resisting torque on the shaft; Hold opens the valve to carry it (#71, ADR 0027). The loop
 // operator's holds keep running, with gas allowed up to full gas for the load; the bypass shuts as the load is set and nothing else is touched, so the plant must stay where it is over the last 600 s.
-export const LoadTarget: number = ratedOutputMW
+// 125 MW, a hair under the 130 MW the gas can carry (max-output measures it). Rated output (133.7 MW) is out of reach: the
+// no-load steam of the turbine (3% of rated flow) comes off the 158 kg/s that full gas makes (#82, design-basis.md).
+export const LoadTarget = 125
 
 export const turbineLoad: Scenario = {
   name: "turbine-load",
-  description: "From the turbine-sync snapshot: load set to rated output, speed, pressure and levels hold",
+  description: "From the turbine-sync snapshot: load set to 125 MW, speed, pressure and levels hold",
   duration: 3000,
   sampleEvery: 10,
   initial: loadSnapshot("turbine-sync"),

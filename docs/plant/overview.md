@@ -36,16 +36,18 @@ How the parts of the plant connect, what each one does, and where the energy com
 
 ## Where the energy comes from
 
-Measured at the end of `turbine-load` (#74): 123.0 MW, 165 bar, 150 kg/s of steam, the bypass shut, gas 11 240 L/s. Heat figures are calculated from that run.
+Measured at the end of `turbine-load` (#74, #82): 125.0 MW, 165 bar, 152 kg/s of steam, the bypass shut, gas 11 380 L/s. Heat figures are calculated from that run; the balance closes within 0.5% of the fuel heat (golden test).
 
 | In | MW | | Out | MW |
 |---|---|---|---|---|
-| Gas (fuel heat) | 393 | | Electricity | 123.0 |
+| Gas (fuel heat) | 398 | | Electricity | 125.0 |
 | | | | Stack | 24 |
 | | | | Boiler heat loss | 0.5 |
-| | | | Generator and turbine losses, cooling water | 246 |
-| **Total** | **393** | | **Total** | **393** |
+| | | | Generator and shaft losses | 6.6 |
+| | | | Cooling water (rise 7.8 K) | 241.5 |
+| | | | Not accounted (storage drift) | 0.7 |
+| **Total** | **398** | | **Total** | **398** |
 
-The Return pays for its heat: it enters the boiler at about 26 °C, is warmed to 118 °C by the flue gas in the economizer, and the boiler heats it the rest of the way to the steam. The plant efficiency is 31.3%, electricity over fuel heat, the baseline for #88. The earlier free-feedwater departure is gone ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
+The Return pays for its heat: it enters the boiler at about 26 °C, is warmed to 118 °C by the flue gas in the economizer, and the boiler heats it the rest of the way to the steam. The plant efficiency is 31.4%, electricity over fuel heat, the baseline for #88. The earlier free-feedwater departure is gone ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
 
 Not in the table: makeup, reject and drain carry a little heat when they run, and no pump uses power.
