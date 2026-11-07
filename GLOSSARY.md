@@ -102,7 +102,7 @@ _Avoid_: Idle flow, minimum flow
 
 **Turbine trip**:
 The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit, or when the main steam valve closes on low pressure with the turbine valve open. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
-_Avoid_: Trip (on its own), shutdown
+_Avoid_: Trip (on its own); for the operator's planned stop see Shutdown
 
 **Exhaust quality**:
 The share of the turbine exhaust that is still vapour, by mass. The rest is exhaust moisture, already liquid when it reaches the condenser.
@@ -187,5 +187,9 @@ The fastest the boiler water temperature may rise without over-stressing the dru
 _Avoid_: Ramp limit, max heat-up rate
 
 **Natural cooldown**:
-The plant left alone with gas off and all valves closed, cooling down on its own.
-_Avoid_: Shutdown, trip
+The plant left alone with gas off and all valves closed, cooling down on its own. It is the state a Shutdown ends in.
+_Avoid_: Shutdown (that is the operator procedure leading to it), trip
+
+**Shutdown**:
+The operator's planned stop, the way the plant is meant to be taken out of service: gas off, breaker open, speed mode to Free with the turbine valve closed, then the main steam valve and the bypass valve closed. Nothing trips; it ends in the Natural cooldown.
+_Avoid_: Trip, cooldown (that is the state that follows)

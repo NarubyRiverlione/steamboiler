@@ -10,7 +10,7 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down to cold | P3 | needs-triage |  |  |
+| 1 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P3 | ready-for-agent |  |  |
 | 2 | [#49](https://github.com/NarubyRiverlione/steamboiler/issues/49) CI: run lint and tests on GitHub Actions | P3 | needs-triage |  |  |
 | 3 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
 | 4 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage |  |  |
