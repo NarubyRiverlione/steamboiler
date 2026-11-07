@@ -11,6 +11,12 @@ One extraction heater takes steam from the turbine at about 5 bar and heats the 
 - **Heater drain:** pumped forward into the Return after the heater, so its heat stays in the water.
 - **Passive:** no operator controls, no drain level, no cut-in load, no thermal mass. The heater fades with load and stops when the turbine stops.
 
+## As built (#88)
+
+- **One tick of lag:** the condenser runs after the exhaust flow is known, so the extraction follows the Return and hotwell temperature of the last tick (0.1 s). The heater drain is the extraction steam actually taken, and the Return and drain together reach the economizer at the mixed enthalpy (never above the heater saturation), so heat and mass close exactly whatever the lag.
+- **Shaft power** takes the extraction of the last tick, as it takes the steam flow of the last tick. The no-load loss and the inertia still come from the rated flow and drop, with the rated output counting the extraction.
+- **Turbine trip:** the `turbine-trip` edge scenario shuts the turbine valve at 125 MW and dumps the steam through the bypass. The extraction stops at once and the Return turns cold; pressure falls to about 136 bar. Closing the main steam valve instead, with the gas left on, took the boiler to 209 bar through a numerical jump of the flash solver at about 355 °C and 177 bar (steam inventory condensed in one tick). The cause was not looked into; it is not caused by the heater, but by a plant state with the valve shut and the Return cold. It belongs to a ticket of its own.
+
 ## Considered options
 
 - **Drains to the condenser:** the ticket's first idea. Rejected: it throws away the condensed steam's heat, and above about 160 °C the plant ends up worse than with no heater.
@@ -21,8 +27,8 @@ One extraction heater takes steam from the turbine at about 5 bar and heats the 
 
 ## Consequences
 
-- Rated steam flow and output are re-derived the same way as [ADR 0030](0030-return-pays-real-enthalpy.md), expected at about 195 kg/s, still below the 200 MWe class. The economizer surface, the turbine valve and the relief valve sizing stay as they are; the condenser utilities gain spare capacity.
-- The stack rises to about 240 °C and boiler efficiency falls to about 89.5%. The heater pays for this, but only just over half its cycle gain survives.
+- Rated steam flow and output are re-derived the same way as [ADR 0030](0030-return-pays-real-enthalpy.md). Built in #88: measured 192 kg/s (the hand estimate was about 195), 141 MWe, still below the 200 MWe class. The rated output counts the extraction: the flow times the drop that does work, so it is less than the flow times the plain drop (162 MW); the tap pressure is proportional to the flow, so it moves with this figure (5 bar at 192 kg/s). The economizer surface, the turbine valve and the relief valve sizing stay as they are; the condenser utilities gain spare capacity.
+- The stack rises to about 240 °C and boiler efficiency falls to about 89.5%. The heater pays for this, but only just over half its cycle gain survives. Measured in #88 at 125 MW: stack 227 °C, boiler 90.1%, plant 33.2% against 31.4% before, a gain of 1.8 points.
 - On a turbine trip the Return turns cold at once.
 - A real plant has a separate feed pump and five to eight heaters, and a wet turbine has moisture separators. The exhaust stays about 34% wet against sourced limits of 10 to 15%. These are departures in [design-basis.md](../plant/design-basis.md).
 - No plant with saturated steam above about 70 bar was found. The closest sources are nuclear and coal units.

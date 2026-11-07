@@ -93,6 +93,27 @@ describe("turbine-load", () => {
     expect(Math.abs(residual)).toBeLessThan(BalanceTolerance * fuel)
   })
 
+  // Baseline recorded by #74/#82 in design-basis.md: 31.4% (125.0 MWe over 398 MW of fuel heat) with no extraction heater.
+  // The hand estimate for one heater was +1.9 points (#88); stop and report if the plant does not beat the baseline.
+  test("over the last 600 s the plant efficiency beats the 31.4% of the plant with no heater by about 1.9 points", () => {
+    const BaselineEfficiency = 0.314
+    const mean = (value: (s: (typeof steady)[number]) => number): number =>
+      steady.reduce((sum, s) => sum + value(s), 0) / steady.length
+    const fuel: number = mean((s) => (s.state.Boiler.gasFlow / 1000) * CstPhysics.GasEnergyDensity)
+    const electric: number = mean((s) => s.state.Turbine.electricOutput) * 1000
+    const gain: number = electric / fuel - BaselineEfficiency
+    expect(gain).toBeGreaterThan(0.01)
+    expect(gain).toBeLessThan(0.03)
+  })
+
+  test("at that load the heater takes steam at about 5 bar and the Return leaves it at about 150 °C", () => {
+    const last = steady.at(-1)?.state.Heater
+    expect(last?.tapPressure).toBeGreaterThan(4.5)
+    expect(last?.tapPressure).toBeLessThan(6)
+    expect(last?.returnTemperature).toBeGreaterThan(140)
+    expect(last?.returnTemperature).toBeLessThan(160)
+  })
+
   test("at that load the cooling water rise and the terminal temperature difference sit in the sourced bands", () => {
     const { CstCondenser } = CstSimulation
     const last = steady.at(-1)?.state.Condenser

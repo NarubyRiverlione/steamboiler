@@ -19,7 +19,7 @@ The plant as built: [overview.md](../plant/overview.md). This is the plant to be
 
 ![The plant to be: flue gas through the boiler surface and economizer to the stack; the Return through the extraction heater and economizer into the boiler, with the heater drain pumped forward into it; the parked air preheater dashed](0029-target-plant.svg)
 
-Until #88 lands, the Return runs from the hotwell straight to the economizer. After it, the water gets its heat from three places, in order: extraction steam, flue gas, and last the boiler itself. Heat the flue gas gives the Return is heat that would otherwise leave up the stack. A hotter Return leaves the flue gas hotter after the economizer, so an air preheater would take that last heat and give it to the combustion air.
+Before #88 the Return ran from the hotwell straight to the economizer. Since it, the water gets its heat from three places, in order: extraction steam, flue gas, and last the boiler itself. Heat the flue gas gives the Return is heat that would otherwise leave up the stack. A hotter Return leaves the flue gas hotter after the economizer, so an air preheater would take that last heat and give it to the combustion air.
 
 ## Fit with ADR 0019
 

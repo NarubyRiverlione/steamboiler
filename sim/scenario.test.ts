@@ -172,6 +172,7 @@ describe("scenario registry", () => {
       "low-pressure-close",
       "max-output",
       "return-stop",
+      "turbine-trip",
     ])
     for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })

@@ -1,5 +1,6 @@
 import { CstSimulation } from "../context/const"
 import { SpeedMode, TurbineState } from "../context/PowerPlantState"
+import { ratedExtractionShare, shaftDropWithExtraction } from "./extractionHeater"
 
 const { CstCondenser, CstTurbine } = CstSimulation
 
@@ -63,10 +64,16 @@ const JPerKJ = 1000 // kJ to J, so kg/s x kJ/kg gives W
 
 const syncSpeed: number = CstTurbine.SyncRPM * RadPerSecPerRpm // ω_s, rad/s
 
-// Rated electric output S in W: rated flow x rated drop x turbine and generator efficiency
+// Rated electric output S in W: rated flow x the drop that does work (the rated drop less what the extraction steam no
+// longer does after the tap, ADR 0031) x turbine and generator efficiency
 const ratedOutput: number =
   CstTurbine.RatedSteamFlow *
-  CstTurbine.RatedEnthalpyDrop *
+  shaftDropWithExtraction(
+    CstTurbine.ValveRatingPressure,
+    CstCondenser.OptimalPressure / 1000,
+    CstTurbine.RatedSteamFlow,
+    ratedExtractionShare * CstTurbine.RatedSteamFlow,
+  ) *
   JPerKJ *
   CstTurbine.IsentropicEfficiency *
   CstTurbine.GeneratorEfficiency

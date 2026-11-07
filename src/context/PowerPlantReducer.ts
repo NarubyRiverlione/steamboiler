@@ -68,6 +68,12 @@ export const makeInitialState = (): PowerPlantState => ({
     rejectTotal: 0,
     deltaWaterMass: 0,
   },
+  Heater: {
+    extractionFlow: 0, // kg/s
+    tapPressure: 0, // bar
+    heaterPressure: 0, // bar
+    returnTemperature: AmbientTemperature, // Celsius
+  },
   Turbine: {
     electricOutput: 0, // MW,
     loadSetpoint: 0, // MW

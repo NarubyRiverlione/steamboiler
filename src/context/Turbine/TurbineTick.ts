@@ -10,7 +10,7 @@ import {
   maxTurbineValvePosition,
   turbineTrippedAfter,
 } from "../../utils/turbineCalculations"
-import { getIsentropicEnthalpyDrop } from "../../utils/steamTable"
+import { shaftDropWithExtraction } from "../../utils/extractionHeater"
 import { SpeedMode, TurbineState } from "../PowerPlantState"
 
 const { CstTurbine } = CstSimulation
@@ -25,16 +25,23 @@ const SecondsPerMinute = 60
  * @param turbineState - The current turbine state.
  * @param boilerPressure - The current boiler pressure.
  * @param condenserPressure - The current condenser pressure (mbar absolute), checked against the vacuum limit.
+ * @param extractionFlow - The steam (kg/s) the heater took at the tap in the last tick, which no longer does work after the tap (ADR 0031).
  * @returns The updated turbine state.
  */
 function TurbineTick(
   turbineState: TurbineState,
   boilerPressure: number,
   condenserPressure: number,
+  extractionFlow = 0,
 ): TurbineState {
-  // The enthalpy drop gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed
+  // The enthalpy drop (less what the extraction steam no longer does after the tap) gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed
   // only) and is a resisting torque on the shaft, never derived from the steam flow (ADR 0027)
-  const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, condenserPressure / MbarPerBar)
+  const enthalpyDrop: number = shaftDropWithExtraction(
+    boilerPressure,
+    condenserPressure / MbarPerBar,
+    turbineState.turbineSteamFlowOut,
+    extractionFlow,
+  )
   const load: number = turbineState.generatorBreaker ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint) : 0
   const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
 

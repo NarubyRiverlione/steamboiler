@@ -46,6 +46,8 @@ describe("toReportHtml", () => {
       "Hotwell level",
       "Return to boiler",
       "Return after economizer",
+      "Return after heater",
+      "Extraction steam",
       "Cooling water temperature",
     ])
       expect(html).toContain(title)
@@ -55,9 +57,10 @@ describe("toReportHtml", () => {
     panels.filter((p) => p.group === group && p.row === row).map((p) => p.title)
 
   test("renders each declared row on its own line, in the layout of the tickets", () => {
-    expect(html.match(/<div class="grid-row"/g)).toHaveLength(6)
+    expect(html.match(/<div class="grid-row"/g)).toHaveLength(7)
     expect(rowTitles("Turbine", 1)).toEqual(["Bypass valve", "Turbine valve", "Steam flow"])
     expect(rowTitles("Turbine", 2)).toEqual(["RPM", "Frequency", "Electric output"])
+    expect(rowTitles("Turbine", 3)).toEqual(["Extraction steam", "Tap pressure"])
     expect(rowTitles("Condenser", 1).slice(0, 2)).toEqual(["SJAE valve", "Pressure"])
     expect(rowTitles("Condenser", 2)).toEqual(["Condensation pump valve", "Intake flow", "Return to boiler"])
     expect(rowTitles("Hotwell", 1)).toEqual([
@@ -72,7 +75,7 @@ describe("toReportHtml", () => {
   test("a chart alone in its row keeps the tile width of its group", () => {
     // Condenser: widest row has 3 charts, so the two charts of the last row keep the one-third tile width
     expect(rowTitles("Condenser", 3)).toEqual(["Condensation rate", "Cooling water temperature"])
-    expect(html.match(/style="--cols:3"/g)).toHaveLength(6)
+    expect(html.match(/style="--cols:3"/g)).toHaveLength(7)
     expect(html.match(/style="--cols:1"/g)).toBeNull()
   })
 
@@ -143,9 +146,9 @@ describe("toReportHtml", () => {
 
   test("every flow chart has its own colour, different from the volume blue", () => {
     const flows = panels.filter((p) => p.kind === "flow")
-    expect(flows).toHaveLength(5)
+    expect(flows).toHaveLength(6)
     const palettes = flows.map((p) => p.palette)
-    expect(new Set(palettes).size).toBe(5)
+    expect(new Set(palettes).size).toBe(6)
     expect(palettes).not.toContain(undefined)
     for (const palette of palettes) expect(html).toContain(`.kind-${String(palette)} {`)
     expect(html).toContain('<figure class="panel kind-flowIntake"')

@@ -49,7 +49,7 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow the plant is rated for, the full-gas steam flow: 158 kg/s, what full gas makes at 165 bar with the Return matching the steam, measured in a headless run (#82, was 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 134 MWe at the 31 mbar design vacuum.
+The steam flow the plant is rated for, the full-gas steam flow: 192 kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater, measured in a headless run (#88, was 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 141 MWe at the 31 mbar design vacuum.
 _Avoid_: Nominal flow
 
 **Valve capacity**:
@@ -177,7 +177,7 @@ Hotwell water sent out of the loop to storage when the hotwell is too full.
 _Avoid_: Dump, overflow
 
 **Return**:
-Hotwell water pumped through the economizer into the boiler by the condensation pump. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
+Hotwell water pumped through the extraction heater and the economizer into the boiler by the condensation pump. The extraction heater heats it with turbine steam first, and the heater drain joins it after the heater; the economizer then heats it with flue gas. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
 _Avoid_: Feedwater, refill
 
 **Hotwell level**:
