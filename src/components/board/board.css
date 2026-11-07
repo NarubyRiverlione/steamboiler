@@ -47,6 +47,9 @@
   --board-lcd-border: #808080;
   --board-lcd-text: #7dff7d;
   --board-lcd-alarm: #ff4d4d;
+  --board-led-off: #5a2a2a;
+  --board-button-bg: #c4c4c4;
+  --board-button-lit: #ffd84d;
 }
 
 .board-plate {
@@ -142,4 +145,177 @@
 
 .board-display-alarm {
   color: var(--board-lcd-alarm);
+}
+
+.board-led-bezel {
+  fill: var(--board-screw-bg);
+  stroke: var(--board-screw-edge);
+  stroke-width: 2;
+}
+
+.board-led {
+  fill: var(--board-led-off);
+}
+
+.board-led-lit {
+  fill: var(--board-lcd-alarm);
+  filter: drop-shadow(0 0 4px var(--board-lcd-alarm));
+}
+
+.board-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--board-plate-bg);
+  border: 2px solid var(--board-plate-border);
+  border-radius: 8px;
+  color: var(--board-text);
+  font-family: var(--board-font-label);
+}
+
+.board-header nav {
+  flex: 1;
+}
+
+.board-breadcrumb {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  font-family: var(--board-font-stencil);
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.board-breadcrumb li + li::before {
+  content: "›";
+  margin-right: 0.5rem;
+}
+
+.board-breadcrumb a {
+  color: inherit;
+}
+
+.board-button {
+  padding: 0.3rem 0.9rem;
+  background: var(--board-button-bg);
+  border: 2px solid var(--board-plate-border);
+  border-radius: 6px;
+  color: var(--board-text);
+  font-family: var(--board-font-label);
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.board-button-lit {
+  background: var(--board-button-lit);
+  box-shadow: 0 0 8px var(--board-button-lit);
+}
+
+.board-overview {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.board-overview .name {
+  fill: #fff;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.board-overview text {
+  font: 14px var(--board-font-label);
+}
+
+.board-overview .label {
+  fill: var(--board-text);
+  font-size: 13px;
+  paint-order: stroke;
+  stroke: var(--board-panel-bg);
+  stroke-width: 5px;
+}
+
+.board-overview .mid {
+  text-anchor: middle;
+}
+
+.board-overview .strong {
+  font-weight: 700;
+}
+
+.board-overview .line {
+  fill: none;
+  stroke-width: 3;
+}
+
+.board-overview .dash {
+  stroke-dasharray: 8 6;
+}
+
+.board-overview .planned {
+  fill: var(--board-panel-bg);
+  stroke-dasharray: 8 6;
+  stroke-width: 2;
+}
+
+.board-overview .planned-name {
+  fill: var(--board-text);
+}
+
+.board-overview .l-heat {
+  stroke: #d9480f;
+}
+.board-overview .n-heat {
+  fill: #d9480f;
+  stroke: #d9480f;
+}
+.board-overview .l-steam {
+  stroke: #9c36b5;
+}
+.board-overview .n-steam {
+  fill: #9c36b5;
+  stroke: #9c36b5;
+}
+.board-overview .l-water {
+  stroke: #1971c2;
+}
+.board-overview .n-water {
+  fill: #1971c2;
+  stroke: #1971c2;
+}
+.board-overview .l-cooling {
+  stroke: #0c8599;
+}
+.board-overview .n-cooling {
+  fill: #0c8599;
+  stroke: #0c8599;
+}
+.board-overview .l-power {
+  stroke: #b08900;
+}
+.board-overview .n-power {
+  fill: #b08900;
+  stroke: #b08900;
+}
+.board-overview .l-vacuum {
+  stroke: #6c757d;
+}
+.board-overview .n-vacuum {
+  fill: #6c757d;
+  stroke: #6c757d;
+}
+
+.board-node {
+  cursor: pointer;
+}
+
+.board-node:hover rect,
+.board-node:focus-visible rect {
+  stroke: var(--board-text);
+  stroke-width: 3;
 }
