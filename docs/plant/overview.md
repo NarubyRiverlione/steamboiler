@@ -1,6 +1,6 @@
 # Plant overview
 
-How the parts of the plant connect, what each one does, and where the energy comes from. This page shows the plant as built. The plant after the economizer and the extraction heaters: [ADR 0029](../adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md#where-it-sits-in-the-plant).
+How the parts of the plant connect, what each one does, and where the energy comes from. This page shows the plant as built. The plant to be, with the economizer, the extraction heaters and the air heater: [ADR 0029](../adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md#where-it-sits-in-the-plant).
 
 ## Schema
 
