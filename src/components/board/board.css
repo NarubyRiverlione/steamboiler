@@ -395,7 +395,7 @@
 .app.board-shell {
   max-width: none;
   margin: 0;
-  padding: 1rem;
+  padding: 0.5rem;
   background: var(--board-page-bg);
   border-radius: 0;
   box-shadow: none;
