@@ -21,3 +21,13 @@ The rows come from general plant knowledge, not from a research note, so their e
 | **Electrical** | Synchronising to a real grid, excitation, transformer | Operator task | Sync is planned as phase 5 in [turbine.md](turbine.md) |
 | | Plant's own power use: pumps and fans take about 5 to 10% of output | Small and cheap to add; turns gross output into net | No ticket |
 | **Cooling** | Cooling tower or river; the cooling water is always 10 °C | Seasonal effect on vacuum | No ticket |
+
+## The plant with a superheater and a deaerator
+
+The plant to be with the two biggest additions drawn in. A sketch, not a design: nothing dashed here is decided.
+
+![The plant to be with a superheater between the boiler and the main steam valve, and a deaerator and boiler feed pump on the Return](real-plant-schema.svg)
+
+- **Superheater:** drawn before the boiler surface, because flue gas after it is only about 100 K above the water ([ADR 0029](../adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md)), too cool to superheat. In a real boiler the furnace walls come first, which the one boiler surface here cannot show.
+- **Deaerator:** an open heater, so it needs a vessel with a level, a second pump and a change to [ADR 0002](../adr/0002-makeup-into-hotwell.md) ([ADR 0031](../adr/0031-one-extraction-heater.md)). That pump is the boiler feed pump. It takes the same extraction steam as the heater.
+- **Heater drain:** it runs to the deaerator here, the usual arrangement. With no deaerator it is pumped forward into the Return, as ADR 0031 decides.
