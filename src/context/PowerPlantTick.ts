@@ -31,13 +31,13 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // Condenser: receives the steam removed from the boiler in this same tick
   const boilerPressure: number = bypassResult.boilerState.pressure
   // Bypass steam is saturated vapour at the boiler pressure
-  const steamFromBypass = {
+  const steamFromBypass: { flow: number; enthalpy: number } = {
     flow: turbineResult.turbineState.bypassSteamFlowOut,
     enthalpy: getSaturationEnthalpies(boilerPressure).vapor,
   }
   // Exhaust enthalpy at the same pressures as the enthalpy drop in TurbineTick, less the work the shaft takes at its
   // speed: at standstill the exhaust is the inlet steam
-  const steamFromTurbine = {
+  const steamFromTurbine: { flow: number; enthalpy: number } = {
     flow: turbineResult.turbineState.turbineSteamFlowOut,
     enthalpy: getExhaustEnthalpy(
       boilerPressure,

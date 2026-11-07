@@ -203,11 +203,12 @@ export function calculateCondensation(
 
   // 3. The intake's extra heat first, the rest condenses vapour: never more than the steam there is or the hotwell room
   const excessTaken: number = Math.min(capacity, excessHeat)
-  const massCondensed: number = (capacity - excessTaken) / latentHeatAt(condenserPressure)
+  const latentHeat: number = latentHeatAt(condenserPressure)
+  const massCondensed: number = (capacity - excessTaken) / latentHeat
   const condensedMass: number = Math.min(currentSteamMass, massCondensed, hotwellRoom)
 
   // 4. The cooling water carries the heat actually taken
-  const heatTaken: number = excessTaken + condensedMass * latentHeatAt(condenserPressure)
+  const heatTaken: number = excessTaken + condensedMass * latentHeat
   const capacityRate: number = coolingWaterFlow * CstPhysics.Water_SpecificHeat * DeltaTime
   const coolingWaterOutletTemperature: number =
     capacityRate > 0 ? RecirculationPump_IntakeTemperature + heatTaken / capacityRate : RecirculationPump_IntakeTemperature

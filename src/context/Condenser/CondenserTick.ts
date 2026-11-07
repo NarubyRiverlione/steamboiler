@@ -54,8 +54,8 @@ export function CondenserTick(
 
   // Every stream enters at its real enthalpy: below saturated vapour it carries moisture, above it the extra heat loads
   // the cooling water (ADR 0032)
-  const bypass = splitStreamAtCondenser(steamFromBypass.enthalpy, newPressure)
-  const exhaust = splitStreamAtCondenser(steamFromTurbine.enthalpy, newPressure)
+  const bypass: { quality: number; excessHeat: number } = splitStreamAtCondenser(steamFromBypass.enthalpy, newPressure)
+  const exhaust: { quality: number; excessHeat: number } = splitStreamAtCondenser(steamFromTurbine.enthalpy, newPressure)
   const excessHeat: number =
     (steamFromBypass.flow * bypass.excessHeat + steamFromTurbine.flow * exhaust.excessHeat) * CstSimulation.DeltaTime
 
