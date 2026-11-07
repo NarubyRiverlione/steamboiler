@@ -15,11 +15,11 @@ Expected at full gas and 350 °C: about 93.4% with the design Return, about 79% 
 
 ## Where it sits in the plant
 
-The plant as built: [overview.md](../plant/overview.md). This is the plant to be: all its parts, with what this ADR and [ADR 0030](0030-return-pays-real-enthalpy.md) add. The dashed parts belong to #88 and are not decided yet: the extraction heaters, whose number and place can change, and the air heater.
+The plant as built: [overview.md](../plant/overview.md). This is the plant to be: all its parts, with what this ADR, [ADR 0030](0030-return-pays-real-enthalpy.md) and [ADR 0031](0031-one-extraction-heater.md) add. The dashed part is the air preheater, parked in #90: not decided, and it may never be built.
 
-![The plant to be: flue gas through the boiler surface, economizer and air heater to the stack; the Return through the extraction heater and economizer into the boiler; the undecided extraction heater and air heater dashed](0029-target-plant.svg)
+![The plant to be: flue gas through the boiler surface and economizer to the stack; the Return through the extraction heater and economizer into the boiler, with the heater drain pumped forward into it; the parked air preheater dashed](0029-target-plant.svg)
 
-Until #88 lands, the Return runs from the hotwell straight to the economizer. After it, the water gets its heat from three places, in order: extraction steam, flue gas, and last the boiler itself. Heat the flue gas gives the Return is heat that would otherwise leave up the stack. A hotter Return leaves the flue gas hotter after the economizer, so an air heater would take that last heat and give it to the combustion air.
+Until #88 lands, the Return runs from the hotwell straight to the economizer. After it, the water gets its heat from three places, in order: extraction steam, flue gas, and last the boiler itself. Heat the flue gas gives the Return is heat that would otherwise leave up the stack. A hotter Return leaves the flue gas hotter after the economizer, so an air preheater would take that last heat and give it to the combustion air.
 
 ## Fit with ADR 0019
 
