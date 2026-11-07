@@ -4,7 +4,7 @@ The presentation of the analog control-room board. Why: [ADR 0015](../adr/0015-u
 
 ## Tokens
 
-All in `src/components/board/board.css`, under a `--board-*` prefix so they don't clash with `simulator.css` and `App.css` while both exist. Groups: fonts (`--board-font-stencil`, `-lcd`, `-label`), page and text, plate and panel, screws, LCD (`--board-lcd-*`, with `-alarm` for a value in alarm), LED (`--board-led-off`; lit uses `--board-lcd-alarm`), button (`--board-button-bg`, `--board-button-lit`), mimic (`--board-mimic-*`, one per medium). Class names carry the same `board-` prefix. Fonts: [fonts.md](fonts.md).
+All in `src/components/board/board.css`, under a `--board-*` prefix so they don't clash with `simulator.css` and `App.css` while both exist. Groups: fonts (`--board-font-stencil`, `-lcd`, `-label`), page and text, plate and panel, screws, LCD (`--board-lcd-*`, with `-alarm` for a value in alarm), LED (`--board-led-off`; lit uses `--board-lcd-alarm`), lens button (`--board-lens-*`), mimic (`--board-mimic-*`, one per medium). Class names carry the same `board-` prefix. Fonts: [fonts.md](fonts.md).
 
 ## Primitives
 
@@ -14,11 +14,12 @@ In `src/components/board/`. Each file opens with a comment saying it is adapted 
 |---|---|
 | `PanelFrame` | Plate, inset panel, stencil title (`h1` or `h2`), four corner screws at fixed angles |
 | `Display` | LCD readout (an `<output>` named by its label); red while `alarm` is set |
+| `Screws` | The four corner screws at fixed angles; used by `PanelFrame` and `Header` |
 | `Led` | Round bezel LED for use inside an SVG (an `img` named "<label>: on/off"); red while `lit` |
 
 ## Shell and navigation
 
-In `src/navigation/`. `Layout` is the shell of every page: `Header` (breadcrumb, the Plant overview button lit on the overview, and empty slots `data-slot="annunciator" | "clock" | "speed"` for step 6 and #86) above the routed page. There is no tab strip. Pages not yet migrated render below the header with their old styling (`LegacyLayout.css`, removed in #98).
+In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate like the part pages: the `h1` "Powerplant Simulation", a lens button "Plant overview" lit on the overview, the breadcrumb, and empty slots `data-slot="clock" | "speed" | "annunciator"` for #86 and step 6) above the routed page. There is no tab strip. Pages not yet migrated render below the header with their old styling (`LegacyLayout.css`, removed in #98).
 
 - **Routes** (`AppRoutes`): `/` is `PlantOverview`; `/boiler`, `/condenser`, `/turbine` the detail pages.
 - **Keys** (`useBoardKeys`): Page Down or Right and Page Up or Left cycle Boiler, Condenser, Turbine (from the overview: first or last, ends wrap); Esc returns to the overview. A focused button or link keeps the arrows (not Esc); an unknown path redirects to the overview. Ignored with Alt, Ctrl or Meta, and while the focus is in an `input`, `textarea`, `select`, `contenteditable`, `slider` or `spinbutton`, so a knob keeps its arrow keys.

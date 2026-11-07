@@ -34,7 +34,7 @@ function PlantOverview() {
   const { state } = usePowerPlant()
   const alarms = partAlarms(state)
   return (
-    <PanelFrame title="Plant" heading="h1">
+    <PanelFrame title="Plant">
       <svg
         className="board-overview"
         viewBox={"0 0 " + String(DIAGRAM_WIDTH) + " " + String(DIAGRAM_HEIGHT)}

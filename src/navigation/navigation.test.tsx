@@ -189,7 +189,7 @@ describe("routes", () => {
 
   it("opens a detail page from a deep link under the header", () => {
     renderApp("/condenser")
-    expect(screen.getByRole("heading", { level: 1, name: "Condenser" })).toBeTruthy()
+    expect(screen.getByRole("heading", { level: 1, name: "Powerplant Simulation" })).toBeTruthy()
     expect(where()).toBe("/condenser")
   })
 
@@ -201,7 +201,7 @@ describe("routes", () => {
         </PowerPlantProvider>
       </MemoryRouter>,
     )
-    expect(screen.getByRole("heading", { level: 1, name: "Plant" })).toBeTruthy()
+    expect(screen.getByRole("heading", { level: 2, name: "Plant" })).toBeTruthy()
     expect(container.querySelectorAll(".board-header-slot")).toHaveLength(3)
   })
 
