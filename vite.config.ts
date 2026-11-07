@@ -1,5 +1,7 @@
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+
+const UI_TESTS: string[] = ['src/components/**/*.test.tsx', 'src/navigation/**/*.test.tsx']
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -16,8 +18,11 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['src/**/*.test.{ts,tsx}', 'sim/*.test.ts', 'scripts/**/*.test.ts'],
+          exclude: [...configDefaults.exclude, ...UI_TESTS],
         },
       },
+      // Behaviour of the board components (jsdom): an action is dispatched, a tile lights from a flag
+      { extends: true, test: { name: 'ui', environment: 'jsdom', globals: true, include: UI_TESTS } },
       { extends: true, test: { name: 'golden', include: ['sim/golden/**/*.test.ts'] } },
       { extends: true, test: { name: 'edge', include: ['sim/edge/**/*.test.ts'] } },
     ],
