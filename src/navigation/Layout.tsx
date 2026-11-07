@@ -1,12 +1,13 @@
 import { Outlet } from "react-router-dom"
-import TabNavigation from "./TabNavigation"
+import Header from "./Header"
+import { useBoardKeys } from "./useBoardKeys"
+import "./LegacyLayout.css"
 
 function Layout() {
+  useBoardKeys()
   return (
-    <div className="app">
-      <h1>Powerplant Simulation</h1>
-      <TabNavigation />
-
+    <div className="app board-shell">
+      <Header />
       <Outlet />
     </div>
   )
