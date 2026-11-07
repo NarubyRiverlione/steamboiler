@@ -1,5 +1,6 @@
 import { CstSimulation } from "../src/context/const"
 import PowerPlantState from "../src/context/PowerPlantState"
+import { saturationTemperature } from "../src/utils/condenserCalculation"
 import { generatorFrequency } from "../src/utils/turbineCalculations"
 import { loopWater } from "./invariants"
 import { Lift, Sample, Scenario } from "./scenario"
@@ -207,6 +208,18 @@ export const panels: Panel[] = [
     palette: "flowCondensation",
     unit: "kg/s",
     series: one("Condensation rate", (s) => s.Condenser.condensationRate),
+  },
+  // The gap between the two lines is the terminal temperature difference (ADR 0032)
+  {
+    group: "Condenser",
+    row: 3,
+    title: "Cooling water temperature",
+    kind: "temperature",
+    unit: "°C",
+    series: [
+      { label: "Outlet", value: (s) => s.Condenser.coolingWaterOutletTemperature },
+      { label: "Saturation", value: (s) => saturationTemperature(s.Condenser.pressure) },
+    ],
   },
   // Hotwell: level is hotwell volume over the condenser's TotalVolume, shown in %
   {

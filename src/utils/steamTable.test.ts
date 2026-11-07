@@ -3,12 +3,14 @@ import { CstSimulation } from "../context/const"
 import { steamTable } from "./steamData"
 import {
   getBoilingPoint,
+  getExhaustEnthalpy,
   getExhaustQuality,
   getIsentropicEnthalpyDrop,
   getLatentHeat,
   getLiquidEnthalpy,
   getLiquidTemperature,
   getSaturatedSteamDensity,
+  getSaturationEnthalpies,
   getSteamData,
   getWaterSpecificHeat,
   getWaterSpecificVolume,
@@ -225,6 +227,35 @@ describe("getExhaustQuality", () => {
         expect(quality).toBeLessThanOrEqual(1)
       }
     }
+  })
+})
+
+describe("exhaust follows the shaft work", () => {
+  const { IsentropicEfficiency } = CstSimulation.CstTurbine
+
+  test("saturation enthalpies at 10 bar match IF97 (hf 762.5, hg 2777.1 kJ/kg)", () => {
+    const { liquid, vapor } = getSaturationEnthalpies(10)
+    expect(liquid).toBeCloseTo(762.5, -1)
+    expect(vapor).toBeCloseTo(2777.1, -1)
+  })
+
+  test("full work gives today's exhaust quality", () => {
+    expect(getExhaustQuality(165, 0.1, IsentropicEfficiency, 1)).toBe(getExhaustQuality(165, 0.1, IsentropicEfficiency))
+  })
+
+  test("with no work the exhaust is the inlet steam, still saturated vapour at the boiler pressure", () => {
+    expect(getExhaustEnthalpy(165, 0.03, IsentropicEfficiency, 0)).toBe(getSaturationEnthalpies(165).vapor)
+    expect(getExhaustQuality(165, 0.03, IsentropicEfficiency, 0)).toBe(1)
+  })
+
+  test("the less work, the drier the exhaust", () => {
+    const half: number = getExhaustQuality(165, 0.03, IsentropicEfficiency, 0.5)
+    expect(half).toBeGreaterThan(getExhaustQuality(165, 0.03, IsentropicEfficiency, 1))
+    expect(half).toBeLessThanOrEqual(1)
+  })
+
+  test("without a drop the enthalpy is the inlet enthalpy", () => {
+    expect(getExhaustEnthalpy(10, 10, IsentropicEfficiency)).toBe(getSaturationEnthalpies(10).vapor)
   })
 })
 

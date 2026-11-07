@@ -17,10 +17,10 @@ All steam entering the condenser joined one steam pool and was charged the full 
 
 ## Consequences
 
-- At rated output (`turbine-load`, 130.6 MW before #74) the condenser settled at 39–40 mbar instead of 69 mbar, and the better vacuum took 162 kg/s of steam instead of 170. After #74 rated output is 123.0 MW, 150 kg/s and 33 mbar.
-- The bypass stays plain vapour on the latent heat: under 1% off at 165 bar, about 8% at 10 bar.
-- Quality ignores shaft speed: a turbine running up takes less work out of the steam than the full drop, so its exhaust quality is really higher than modelled.
+- At rated output (`turbine-load`, 130.6 MW before #74) the condenser settled at 39–40 mbar instead of 69 mbar, and the better vacuum took 162 kg/s of steam instead of 170. After #74 rated output was 123.0 MW, 150 kg/s and 33 mbar; after #82 `turbine-load` carries 125 MW at 152 kg/s and 29 mbar ([ADR 0032](0032-limited-condenser-and-stream-enthalpy.md)).
+- The bypass was plain vapour on the latent heat, under 1% off at 165 bar and about 8% at 10 bar. ADR 0032 (#82) puts every stream on its real enthalpy, so that departure is gone.
+- Quality used to ignore shaft speed. ADR 0032 (#82) takes the exhaust enthalpy from the work the shaft actually took, so a turbine running up has a drier exhaust and a standing one passes the inlet steam.
 - The exhaust holds far more moisture than a real last stage allows, a result of having no superheater. Moisture is not a turbine limit here.
-- The recirculation pump keeps its 3600 L/s; its sizing note now starts from the real heat load ([design-basis.md](../plant/design-basis.md#condenser-and-water-loop)).
+- The recirculation pump kept its 3600 L/s then, with a note starting from the real heat load; #82 re-sized it to 7400 L/s with a limited exchanger ([design-basis.md](../plant/design-basis.md#condenser-and-water-loop)).
 - Goal check: `sim/golden/exhaust-split.test.ts`, the same 25% through the bypass and the turbine valve from `bypass-loop` no longer gives the same condenser.
 - The fixed `steamOutflowTemperature` and `steamOutflowPressure` are gone, as are the unused `temp` and `pressure` condenser inputs.

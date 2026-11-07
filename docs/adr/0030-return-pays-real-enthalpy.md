@@ -1,6 +1,6 @@
 # The Return pays its real enthalpy, and rated steam flow follows what full gas makes
 
-The Return no longer arrives free. It enters the boiler at the saturated liquid enthalpy of its temperature after the economizer, and that heat goes into the boiler energy and the one lumped temperature. The rule works both ways, so Return hotter than a cold boiler warms it. Rated steam flow then becomes what full gas actually makes at 165 bar, 161 kg/s and about 123 MWe (hand calculation gave 164 kg/s and 125 MWe; measured in #74), and `MaxGasFlow` stays at 420 MW of fuel. Decided in #74.
+The Return no longer arrives free. It enters the boiler at the saturated liquid enthalpy of its temperature after the economizer, and that heat goes into the boiler energy and the one lumped temperature. The rule works both ways, so Return hotter than a cold boiler warms it. Rated steam flow then becomes what full gas actually makes at 165 bar, 161 kg/s and about 123 MWe (#82 re-measured it at 158 kg/s, the condensate coming back colder at the 31 mbar design vacuum) (hand calculation gave 164 kg/s and 125 MWe; measured in #74), and `MaxGasFlow` stays at 420 MW of fuel. Decided in #74.
 
 A burner sized for a 200 MWe class unit giving about 125 MWe is deliberate. A real unit of this size gets much of its feedwater heat from extraction steam, and this plant has no extraction heaters yet. The shortfall comes from them, not from the burner, so #88 is where the figure rises again.
 

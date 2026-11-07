@@ -46,6 +46,7 @@ describe("toReportHtml", () => {
       "Hotwell level",
       "Return to boiler",
       "Return after economizer",
+      "Cooling water temperature",
     ])
       expect(html).toContain(title)
   })
@@ -69,8 +70,8 @@ describe("toReportHtml", () => {
   })
 
   test("a chart alone in its row keeps the tile width of its group", () => {
-    // Condenser: widest row has 3 charts, so the lone Condensation rate chart is one third wide
-    expect(rowTitles("Condenser", 3)).toEqual(["Condensation rate"])
+    // Condenser: widest row has 3 charts, so the two charts of the last row keep the one-third tile width
+    expect(rowTitles("Condenser", 3)).toEqual(["Condensation rate", "Cooling water temperature"])
     expect(html.match(/style="--cols:3"/g)).toHaveLength(6)
     expect(html.match(/style="--cols:1"/g)).toBeNull()
   })
