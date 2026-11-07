@@ -7,7 +7,7 @@ import { OVERVIEW_PATH, PART_IDS, PARTS, type PartId } from "./plantParts"
 function Header() {
   const { pathname } = useLocation()
   const part: PartId | undefined = PART_IDS.find((id: PartId) => PARTS[id].path === pathname)
-  const onOverview: boolean = part === undefined
+  const onOverview: boolean = pathname === OVERVIEW_PATH
 
   return (
     <header className="board-header">
@@ -22,7 +22,9 @@ function Header() {
           </li>
           {part !== undefined && (
             <li>
-              <span aria-current="page">{PARTS[part].name}</span>
+              <h1 className="board-breadcrumb-current" aria-current="page">
+                {PARTS[part].name}
+              </h1>
             </li>
           )}
         </ol>

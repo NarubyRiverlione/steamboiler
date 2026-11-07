@@ -194,6 +194,11 @@
   margin-right: 0.5rem;
 }
 
+.board-breadcrumb-current {
+  margin: 0;
+  font: inherit;
+}
+
 .board-breadcrumb a {
   color: inherit;
 }

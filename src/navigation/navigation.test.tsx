@@ -8,6 +8,8 @@ import type PowerPlantState from "../context/PowerPlantState"
 import Layout from "./Layout"
 import { Route, Routes } from "react-router-dom"
 import PlantOverview from "./PlantOverview"
+import AppRoutes from "./AppRoutes"
+import PowerPlantProvider from "../context/PowerPlantProvider"
 import { neighbourPath, partAlarms } from "./plantParts"
 
 function Where() {
@@ -67,6 +69,14 @@ describe("keyboard", () => {
     expect(where()).toBe("/boiler")
   })
 
+  it("leaves the arrows to a focused button but not Esc", () => {
+    renderAt("/boiler", undefined, <button>Open</button>)
+    fireEvent.keyDown(screen.getByRole("button", { name: "Open" }), { key: "ArrowRight", bubbles: true })
+    expect(where()).toBe("/boiler")
+    fireEvent.keyDown(screen.getByRole("button", { name: "Open" }), { key: "Escape", bubbles: true })
+    expect(where()).toBe("/")
+  })
+
   it("ignores keys with a modifier", () => {
     renderAt("/boiler")
     fireEvent.keyDown(window, { key: "ArrowRight", ctrlKey: true })
@@ -104,6 +114,37 @@ describe("plant overview", () => {
     expect(screen.queryByRole("link", { name: /Air preheater/ })).toBeNull()
   })
 
+  it.each([
+    ["Boiler", "burnerTripped"],
+    ["Boiler", "heatingRateOverLimit"],
+    ["Condenser", "condensationPumpTripped"],
+  ])("lights the %s LED from %s", (part: string, flag: string) => {
+    const state: PowerPlantState = makeInitialState()
+    const owner = part === "Boiler" ? state.Boiler : state.Condenser
+    ;(owner as Record<string, unknown>)[flag] = true
+    renderAt("/", state)
+    expect(screen.getByRole("img", { name: part + " alarm: on" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Turbine alarm: off" })).toBeTruthy()
+  })
+
+  it.each([
+    ["Boiler", "/boiler"],
+    ["Burner", "/boiler"],
+    ["Drain", "/boiler"],
+    ["Main steam valve", "/turbine"],
+    ["Turbine valve", "/turbine"],
+    ["Bypass valve", "/turbine"],
+    ["Condenser", "/condenser"],
+    ["Condensation pump", "/condenser"],
+    ["Recirculation pump", "/condenser"],
+    ["Air extraction pump", "/condenser"],
+    ["SJAE", "/condenser"],
+  ])("the %s node opens %s", (label: string, path: string) => {
+    renderAt("/")
+    fireEvent.click(screen.getByRole("link", { name: new RegExp("^" + label + ", opens ") }))
+    expect(where()).toBe(path)
+  })
+
   it("lights a part's LED from its alarm flags", () => {
     const state: PowerPlantState = makeInitialState()
     state.Turbine.turbineTripped = true
@@ -130,5 +171,41 @@ describe("neighbourPath", () => {
   it("steps into the ends from an unknown path", () => {
     expect(neighbourPath("/", 1)).toBe("/boiler")
     expect(neighbourPath("/", -1)).toBe("/turbine")
+  })
+})
+
+describe("routes", () => {
+  const renderApp = (path: string): void => {
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <PowerPlantProvider>
+          <AppRoutes />
+          <Where />
+        </PowerPlantProvider>
+      </MemoryRouter>,
+    )
+  }
+
+  it("opens a detail page from a deep link under the header", () => {
+    renderApp("/condenser")
+    expect(screen.getByRole("heading", { level: 1, name: "Condenser" })).toBeTruthy()
+    expect(where()).toBe("/condenser")
+  })
+
+  it("shows the overview at the root, with the three header slots", () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <PowerPlantProvider>
+          <AppRoutes />
+        </PowerPlantProvider>
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole("heading", { level: 1, name: "Plant overview" })).toBeTruthy()
+    expect(container.querySelectorAll(".board-header-slot")).toHaveLength(3)
+  })
+
+  it("sends an unknown path to the overview", () => {
+    renderApp("/nonsense")
+    expect(where()).toBe("/")
   })
 })

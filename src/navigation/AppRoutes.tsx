@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, Navigate } from "react-router-dom"
 import Layout from "./Layout"
 import Boiler from "../components/Boiler/Boiler"
 import Condenser from "../components/Condenser/Condenser"
@@ -28,6 +28,7 @@ function AppRoutes() {
             </ComponentView>
           }
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   )
