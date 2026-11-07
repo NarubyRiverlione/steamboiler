@@ -5,8 +5,41 @@
 _Updated 2026-11-06 · 23 open tickets_
 
 Order: a ticket comes after every open ticket blocking it, otherwise by priority (`P1` first).
-A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`.
+A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`, and sits in that priority's section.
 Next: the first ticket with nothing under Waiting on.
+
+## P2: realism in scope
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 1 | [#87](https://github.com/NarubyRiverlione/steamboiler/issues/87) Economizer: flue gas heats the Return, efficiency follows from the heat balance | P2 | needs-triage |  | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) [#88](https://github.com/NarubyRiverlione/steamboiler/issues/88) |
+| 2 | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) Feedwater heating: returned water costs the boiler no heat | P2 | needs-triage | [#87](https://github.com/NarubyRiverlione/steamboiler/issues/87) | [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) [#82](https://github.com/NarubyRiverlione/steamboiler/issues/82) [#88](https://github.com/NarubyRiverlione/steamboiler/issues/88) |
+| 3 | [#82](https://github.com/NarubyRiverlione/steamboiler/issues/82) Condenser heat model: real enthalpy per stream and a limited heat exchanger | P2 | needs-triage | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) |  |
+| 4 | [#88](https://github.com/NarubyRiverlione/steamboiler/issues/88) Extraction heaters: turbine steam heats the Return | P2 | needs-triage | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) [#87](https://github.com/NarubyRiverlione/steamboiler/issues/87) |  |
+
+## P3: experience and project health
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 5 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P3 | ready-for-agent |  |  |
+| 6 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 7 | [#58](https://github.com/NarubyRiverlione/steamboiler/issues/58) Invariant 'natural cooldown stops steam generation' has the wrong premise | P3 | needs-triage |  |  |
+| 8 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P3 | needs-triage |  |  |
+| 9 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | needs-triage |  |  |
+| 10 | [#64](https://github.com/NarubyRiverlione/steamboiler/issues/64) Hot-start scenario: startup-hot from a hot-standby snapshot | P3 | needs-triage |  |  |
+| 11 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | needs-triage |  |  |
+| 12 | [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) Simulation time control: real start-up durations, played faster than real time | P3 | needs-triage | [#74](https://github.com/NarubyRiverlione/steamboiler/issues/74) | [#86](https://github.com/NarubyRiverlione/steamboiler/issues/86) |
+| 13 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
+
+## P4: parked
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 14 | [#39](https://github.com/NarubyRiverlione/steamboiler/issues/39) Report overlay: compare two runs on the same axes | P4 | needs-triage |  |  |
+| 15 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
+| 16 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
+
+## P5: UI and UX
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |

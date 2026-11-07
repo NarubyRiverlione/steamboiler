@@ -62,14 +62,14 @@ _Avoid_: Power, electricity, MW readout
 
 **Load**:
 The electric power the generator carries, a resisting torque on the shaft. More load slows the shaft, so the Hold mode opens the valve and takes more steam.
-_Avoid_: Demand, consumption
+_Avoid_: Demand, consumption, shaft load, generator torque
 
 **Load setpoint**:
-The load the operator asks for, in MW, from 0 up to the rated output. Only settable with the breaker closed. The load moves toward it at the load rate.
-_Avoid_: Demand, target load
+The load the operator asks for, in MW, from 0 up to the load setpoint limit, above the rated output. Only settable with the breaker closed. The load moves toward it at the load rate.
+_Avoid_: Net demand, demand, target load
 
 **Load rate**:
-The rate at which the load moves toward the load setpoint: 3% of the rated output per minute, up and down.
+The rate at which the load moves toward the load setpoint: 3% of the rated output per minute, up and down. When the breaker opens the load is lost at once, whatever the load rate.
 _Avoid_: Ramp rate (that is the run-up rate), load ramp
 
 **Vacuum limit**:

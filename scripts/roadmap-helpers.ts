@@ -1,6 +1,6 @@
 /**
  * Pure logic behind `pnpm roadmap`: orders open GitHub issues by their blocked-by links and
- * P1–P4 labels, and renders ROADMAP.md.
+ * P1–P5 labels, and renders ROADMAP.md.
  */
 
 export type Ticket = { number: number; title: string; labels: string[]; blockedBy: number[] }
@@ -90,14 +90,36 @@ const priorityLabel = (t: PlannedTicket) => {
   return t.effectivePriority < t.priority ? `${own} (↑P${String(t.effectivePriority)})` : own
 }
 
+// What each P label means: ADR 0024.
+const SECTION_TITLES = new Map([
+  [1, "P1: broken"],
+  [2, "P2: realism in scope"],
+  [3, "P3: experience and project health"],
+  [4, "P4: parked"],
+  [5, "P5: UI and UX"],
+  [UNPRIORITISED, "No priority"],
+])
+
+const sectionTitle = (priority: number) => SECTION_TITLES.get(priority) ?? `P${String(priority)}`
+
 export function renderRoadmap(tickets: Ticket[], repoUrl: string, date: string): string {
-  const planned = planTickets(tickets)
+  // The plan already runs by effective priority; only a dependency cycle can break that, and the sort restores it.
+  const planned = planTickets(tickets).sort((a, b) => a.effectivePriority - b.effectivePriority)
   const link = (n: number) => `[#${String(n)}](${repoUrl}/issues/${String(n)})`
   const links = (ns: number[]) => ns.map(link).join(" ")
   const title = (t: Ticket) => t.title.replaceAll("|", "\\|")
 
-  const row = (t: PlannedTicket, i: number) =>
-    `| ${String(i + 1)} | ${link(t.number)} ${title(t)} | ${priorityLabel(t)} | ${t.status} | ${links(t.waitingOn)} | ${links(t.unblocks)} |`
+  const row = (t: PlannedTicket) =>
+    `| ${String(planned.indexOf(t) + 1)} | ${link(t.number)} ${title(t)} | ${priorityLabel(t)} | ${t.status} | ${links(t.waitingOn)} | ${links(t.unblocks)} |`
+
+  const section = (priority: number) => [
+    `## ${sectionTitle(priority)}`,
+    "",
+    "| # | Ticket | Priority | Status | Waiting on | Unblocks |",
+    "| - | ------ | -------- | ------ | ---------- | -------- |",
+    ...planned.filter((t) => t.effectivePriority === priority).map(row),
+    "",
+  ]
 
   return [
     "# Roadmap",
@@ -107,12 +129,9 @@ export function renderRoadmap(tickets: Ticket[], repoUrl: string, date: string):
     `_Updated ${date} · ${String(planned.length)} open tickets_`,
     "",
     "Order: a ticket comes after every open ticket blocking it, otherwise by priority (`P1` first).",
-    "A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`.",
+    "A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`, and sits in that priority's section.",
     "Next: the first ticket with nothing under Waiting on.",
     "",
-    "| # | Ticket | Priority | Status | Waiting on | Unblocks |",
-    "| - | ------ | -------- | ------ | ---------- | -------- |",
-    ...planned.map(row),
-    "",
+    ...[...new Set(planned.map((t) => t.effectivePriority))].flatMap(section),
   ].join("\n")
 }
