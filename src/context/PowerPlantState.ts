@@ -32,6 +32,7 @@ export type CondenserState = {
   returnRate: number // kg returned to the boiler over the last tick
   condensationRate: number // kg/s into the hotwell: steam condensed from the pool plus exhaust moisture
   coolingRate: number
+  coolingWaterOutletTemperature: number // Celsius, the cooling water after the condenser (the intake temperature with no flow)
   isAirExtractionPumpEnabled: boolean
   isSjaeEnabled: boolean
   sjaeValvePosition: number // 0-1 (0-100%) open

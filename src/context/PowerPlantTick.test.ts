@@ -124,17 +124,35 @@ describe("PowerPlantTick turbine exhaust", () => {
     expect(next.Condenser.intakeFlowRate).toBeCloseTo(10, 9)
   })
 
+  // 1 kg as above; at sync speed 165 bar to 100 mbar leaves about two-thirds vapour, the moisture goes to the hotwell
+  const exhaustAt = (rpm: number): PowerPlantState => ({
+    ...cold,
+    Boiler: { ...cold.Boiler, steamMass: 1_000, pressure: 165 },
+    Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.05, turbineSteamFlowOut: 0, rpm },
+    Condenser: { ...cold.Condenser, steamMass: 0, pressure: 100, recirculationPumpValvePosition: 0 },
+  })
+
   test("the exhaust splits by its quality at the boiler pressure and the live condenser pressure", () => {
-    // 1 kg as above; 165 bar to 100 mbar leaves about two-thirds vapour, the moisture goes to the hotwell
-    const atLoad: PowerPlantState = {
-      ...cold,
-      Boiler: { ...cold.Boiler, steamMass: 1_000, pressure: 165 },
-      Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.05, turbineSteamFlowOut: 0 },
-      Condenser: { ...cold.Condenser, steamMass: 0, pressure: 100, recirculationPumpValvePosition: 0 },
-    }
-    const next = PowerPlantTick(atLoad)
+    const next = PowerPlantTick(exhaustAt(CstSimulation.CstTurbine.SyncRPM))
     expect(next.Condenser.intakeFlowRate).toBeCloseTo(10, 9)
     expect(next.Condenser.steamMass).toBeCloseTo(0.667, 2)
+  })
+
+  test("during run-up the exhaust is drier than at sync speed", () => {
+    const runUp = PowerPlantTick(exhaustAt(1500)).Condenser.steamMass
+    expect(runUp).toBeGreaterThan(PowerPlantTick(exhaustAt(CstSimulation.CstTurbine.SyncRPM)).Condenser.steamMass)
+    expect(runUp).toBeLessThanOrEqual(1)
+  })
+
+  test("at standstill the exhaust behaves like bypass steam: same enthalpy, hardly any moisture", () => {
+    // The shaft takes no work: 165 bar saturated vapour comes out at its own enthalpy, a hair below saturated vapour at 100 mbar
+    const standstill = PowerPlantTick(exhaustAt(0))
+    const bypass = PowerPlantTick({
+      ...exhaustAt(0),
+      Turbine: { ...exhaustAt(0).Turbine, turbineValvePosition: 0, bypassValvePosition: 0.05 },
+    })
+    expect(standstill.Condenser.steamMass).toBeGreaterThan(0.98)
+    expect(standstill.Condenser.steamMass).toBeCloseTo(bypass.Condenser.steamMass, 6)
   })
 })
 

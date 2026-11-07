@@ -71,6 +71,15 @@ const ratedOutput: number =
   CstTurbine.IsentropicEfficiency *
   CstTurbine.GeneratorEfficiency
 
+/**
+ * Share of the full-speed shaft work the steam gives per kg at this speed (0-1): the torque of calculateRPM times the
+ * speed, x(2 - x) with x = rpm / sync rpm. Zero at standstill, 1 at sync speed.
+ */
+export function shaftWorkFraction(rpm: number): number {
+  const speedRatio: number = rpm / CstTurbine.SyncRPM
+  return Math.max(0, Math.min(1, speedRatio * (2 - speedRatio)))
+}
+
 /** Rated electric output in MW (123.0): it sizes the shaft and is the base of the load rate. */
 export const ratedOutputMW: number = ratedOutput / 1e6
 

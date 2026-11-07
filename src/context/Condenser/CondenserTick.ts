@@ -7,6 +7,7 @@ import {
   saturationTemperature,
   mixTemperature,
   hotwellLevel,
+  splitStreamAtCondenser,
 } from "../../utils/condenserCalculation"
 import { roomInKg, waterVolumeOf } from "../../utils/boilerCalculations"
 import { CstPhysics, CstSimulation } from "../const"
@@ -16,16 +17,16 @@ import { CstPhysics, CstSimulation } from "../const"
  *
  * @param condenserState Current condenser state
  * @param boilerPressure Boiler pressure (bar), the motive steam of the SJAE
- * @param steamFromBypass Bypass steam flow (kg/s), all vapour
- * @param steamFromTurbine Turbine exhaust flow (kg/s) and its exhaust quality (vapour share by mass, 0-1)
+ * @param steamFromBypass Bypass steam flow (kg/s) and its enthalpy (kJ/kg)
+ * @param steamFromTurbine Turbine exhaust flow (kg/s) and its enthalpy (kJ/kg), what the shaft left in it
  * @param boilerRoom kg of liquid the boiler can still take, limits the return
  * @returns Action to update the condenser state
  */
 export function CondenserTick(
   condenserState: CondenserState,
   boilerPressure: number,
-  steamFromBypass: { flow: number },
-  steamFromTurbine: { flow: number; quality: number },
+  steamFromBypass: { flow: number; enthalpy: number },
+  steamFromTurbine: { flow: number; enthalpy: number },
   boilerRoom: number,
 ): CondenserState {
   // console.log("1")
@@ -51,20 +52,30 @@ export function CondenserTick(
     Math.max(condenserState.hotwellTemperature, saturationTemperature(newPressure)),
   )
 
-  // Exhaust moisture is already liquid: it goes straight to the hotwell, only what does not fit joins the steam pool
-  const moisture: number = steamFromTurbine.flow * (1 - steamFromTurbine.quality) * CstSimulation.DeltaTime
+  // Every stream enters at its real enthalpy: below saturated vapour it carries moisture, above it the extra heat loads
+  // the cooling water (ADR 0032)
+  const bypass: { quality: number; excessHeat: number } = splitStreamAtCondenser(steamFromBypass.enthalpy, newPressure)
+  const exhaust: { quality: number; excessHeat: number } = splitStreamAtCondenser(steamFromTurbine.enthalpy, newPressure)
+  const excessHeat: number =
+    (steamFromBypass.flow * bypass.excessHeat + steamFromTurbine.flow * exhaust.excessHeat) * CstSimulation.DeltaTime
+
+  // Moisture, of either stream, is already liquid: it goes straight to the hotwell, only what does not fit joins the steam pool
+  const moisture: number =
+    (steamFromTurbine.flow * (1 - exhaust.quality) + steamFromBypass.flow * (1 - bypass.quality)) * CstSimulation.DeltaTime
   const moistureToHotwell: number = Math.min(moisture, hotwellRoom)
   const newSteamMass: number =
     condenserState.steamMass + totalIntakeRate * CstSimulation.DeltaTime - moistureToHotwell
 
   // Calculate water level based on recirculation pump flow rate and update the temperature
   // of the condensed water returning to the boiler.
-  const { steamMassAfterCondensation, waterMassAfterCondensation, newOutletTemperature } = calculateCondensation(
+  const { steamMassAfterCondensation, waterMassAfterCondensation, newOutletTemperature, coolingWaterOutletTemperature } =
+    calculateCondensation(
     newSteamMass,
     condenserState.hotwellWaterMass + moistureToHotwell,
     condenserState.recirculationPumpValvePosition,
     newPressure,
     hotwellRoom - moistureToHotwell,
+    excessHeat,
   )
   // Everything that entered the hotwell this tick: the moisture and what condensed from the pool
   const condensed: number = waterMassAfterCondensation - condenserState.hotwellWaterMass
@@ -110,6 +121,7 @@ export function CondenserTick(
     condensationPumpValvePosition: pumpValvePosition,
     condensationPumpTripped: pumpTripped,
     intakeFlowRate: totalIntakeRate,
+    coolingWaterOutletTemperature,
     // recirculationPumpFlowRate: newRecirculationPumpFlowRate,
     steamMass: steamMassAfterCondensation,
     hotwellWaterMass: newHotwellWaterMass,
