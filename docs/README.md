@@ -15,6 +15,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Topic | File |
 |---|---|
 | Schema of all parts, what each does, where the energy comes from | [plant/overview.md](plant/overview.md) |
+| What a real plant has that this one does not | [plant/real-plant-gaps.md](plant/real-plant-gaps.md) |
 | Size, limits and deliberate departures from a real plant (the register) | [plant/design-basis.md](plant/design-basis.md) |
 | Boiler physics and constants | [plant/boiler.md](plant/boiler.md) |
 | Turbine and generator, phases 1–5 | [plant/turbine.md](plant/turbine.md) |
