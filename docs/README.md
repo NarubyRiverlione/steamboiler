@@ -61,6 +61,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0026](adr/0026-valve-flow-follows-pressure.md) | Valve flow follows boiler pressure; the main steam valve closes at low pressure |
 | [0027](adr/0027-generator-load-is-a-resisting-torque.md) | The generator load is a resisting torque on a free-running shaft; electric output is the load carried |
 | [0028](adr/0028-exhaust-splits-by-quality-at-condenser-intake.md) | The turbine exhaust splits by its quality at the condenser intake |
+| [0029](adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md) | Boiler efficiency follows from a two-stage flue gas heat balance |
 
 ## Research (dated, frozen)
 
@@ -70,6 +71,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Oct 2026 | [How real plants run the feedwater loop (sourced)](research/2026-10-feedwater-loop.md) |
 | Oct 2026 | [Sizing check: steam flow at full gas](research/2026-10-sizing-check.md) |
 | Oct 2026 | [Cold startup: how real plants do it (sourced)](research/2026-10-startup-procedure.md) |
+| Nov 2026 | [Economizer and flue gas: figures for the two-stage model (sourced)](research/2026-11-economizer-flue-gas.md) |
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
 | Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
 | Nov 2026 | [SJAE motive steam: where it comes from on a cold start (sourced)](research/2026-11-sjae-motive-steam.md) |
