@@ -139,6 +139,7 @@ describe("plant overview", () => {
     ["Recirculation pump", "/condenser"],
     ["Air extraction pump", "/condenser"],
     ["SJAE", "/condenser"],
+    ["Hotwell", "/condenser"],
   ])("the %s node opens %s", (label: string, path: string) => {
     renderAt("/")
     fireEvent.click(screen.getByRole("link", { name: new RegExp("^" + label + ", opens ") }))
@@ -200,7 +201,7 @@ describe("routes", () => {
         </PowerPlantProvider>
       </MemoryRouter>,
     )
-    expect(screen.getByRole("heading", { level: 1, name: "Plant overview" })).toBeTruthy()
+    expect(screen.getByRole("heading", { level: 1, name: "Plant" })).toBeTruthy()
     expect(container.querySelectorAll(".board-header-slot")).toHaveLength(3)
   })
 

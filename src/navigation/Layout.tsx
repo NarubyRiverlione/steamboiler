@@ -6,7 +6,7 @@ import "./LegacyLayout.css"
 function Layout() {
   useBoardKeys()
   return (
-    <div className="app">
+    <div className="app board-shell">
       <Header />
       <Outlet />
     </div>

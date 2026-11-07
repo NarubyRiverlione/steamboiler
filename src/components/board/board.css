@@ -48,6 +48,15 @@
   --board-lcd-text: #7dff7d;
   --board-lcd-alarm: #ff4d4d;
   --board-led-off: #5a2a2a;
+  --board-gauge-face: #f4f2ea;
+  --board-focus-ring: #1f5fbf;
+  --board-mimic-bg: #c9c9c3;
+  --board-mimic-heat: #d9480f;
+  --board-mimic-steam: #9c36b5;
+  --board-mimic-water: #1971c2;
+  --board-mimic-cooling: #0c8599;
+  --board-mimic-power: #b08900;
+  --board-mimic-vacuum: #6c757d;
   --board-button-bg: #c4c4c4;
   --board-button-lit: #ffd84d;
 }
@@ -73,6 +82,11 @@
 
 .board-title {
   margin: 0 0 0.25rem;
+  padding: 0;
+  background: none;
+  color: inherit;
+  line-height: normal;
+  letter-spacing: 0.5em;
   font-family: var(--board-font-stencil);
   font-size: 1.1rem;
   font-weight: 700;
@@ -196,7 +210,11 @@
 
 .board-breadcrumb-current {
   margin: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
   font: inherit;
+  line-height: normal;
 }
 
 .board-breadcrumb a {
@@ -226,101 +244,127 @@
   height: auto;
 }
 
-.board-overview .name {
-  fill: #fff;
-  font-weight: 600;
-  text-anchor: middle;
-  dominant-baseline: central;
+.board-overview-bg {
+  fill: var(--board-mimic-bg);
 }
 
 .board-overview text {
-  font: 14px var(--board-font-label);
+  font-family: var(--board-font-label);
 }
 
-.board-overview .label {
-  fill: var(--board-text);
-  font-size: 13px;
-  paint-order: stroke;
-  stroke: var(--board-panel-bg);
-  stroke-width: 5px;
-}
-
-.board-overview .mid {
-  text-anchor: middle;
-}
-
-.board-overview .strong {
-  font-weight: 700;
-}
-
-.board-overview .line {
-  fill: none;
+.board-node-box {
+  fill: var(--board-mimic-bg);
   stroke-width: 3;
 }
 
-.board-overview .dash {
-  stroke-dasharray: 8 6;
-}
-
-.board-overview .planned {
-  fill: var(--board-panel-bg);
-  stroke-dasharray: 8 6;
-  stroke-width: 2;
-}
-
-.board-overview .planned-name {
+.board-node-name {
   fill: var(--board-text);
+  font-size: 16px;
+  font-weight: 600;
+  text-anchor: middle;
 }
 
-.board-overview .l-heat {
-  stroke: #d9480f;
+.board-node-parked {
+  opacity: 0.7;
 }
-.board-overview .n-heat {
-  fill: #d9480f;
-  stroke: #d9480f;
+
+.board-pipe {
+  fill: none;
+  stroke-width: 3.5;
 }
-.board-overview .l-steam {
-  stroke: #9c36b5;
+
+.board-pipe-label {
+  fill: var(--board-text);
+  font-size: 15px;
+  paint-order: stroke;
+  stroke: var(--board-mimic-bg);
+  stroke-width: 5px;
 }
-.board-overview .n-steam {
-  fill: #9c36b5;
-  stroke: #9c36b5;
+
+.board-pipe-label-bold {
+  font-weight: 700;
 }
-.board-overview .l-water {
-  stroke: #1971c2;
+
+.board-medium-heat {
+  stroke: var(--board-mimic-heat);
 }
-.board-overview .n-water {
-  fill: #1971c2;
-  stroke: #1971c2;
+.board-medium-steam {
+  stroke: var(--board-mimic-steam);
 }
-.board-overview .l-cooling {
-  stroke: #0c8599;
+.board-medium-water {
+  stroke: var(--board-mimic-water);
 }
-.board-overview .n-cooling {
-  fill: #0c8599;
-  stroke: #0c8599;
+.board-medium-cooling {
+  stroke: var(--board-mimic-cooling);
 }
-.board-overview .l-power {
-  stroke: #b08900;
+.board-medium-power {
+  stroke: var(--board-mimic-power);
 }
-.board-overview .n-power {
-  fill: #b08900;
-  stroke: #b08900;
+.board-medium-vacuum {
+  stroke: var(--board-mimic-vacuum);
 }
-.board-overview .l-vacuum {
-  stroke: #6c757d;
+.board-medium-line-heat {
+  stroke: var(--board-mimic-heat);
 }
-.board-overview .n-vacuum {
-  fill: #6c757d;
-  stroke: #6c757d;
+.board-medium-line-steam {
+  stroke: var(--board-mimic-steam);
+}
+.board-medium-line-water {
+  stroke: var(--board-mimic-water);
+}
+.board-medium-line-cooling {
+  stroke: var(--board-mimic-cooling);
+}
+.board-medium-line-power {
+  stroke: var(--board-mimic-power);
+}
+.board-medium-line-vacuum {
+  stroke: var(--board-mimic-vacuum);
+}
+.board-medium-fill-heat {
+  fill: var(--board-mimic-heat);
+}
+.board-medium-fill-steam {
+  fill: var(--board-mimic-steam);
+}
+.board-medium-fill-water {
+  fill: var(--board-mimic-water);
+}
+.board-medium-fill-cooling {
+  fill: var(--board-mimic-cooling);
+}
+.board-medium-fill-power {
+  fill: var(--board-mimic-power);
+}
+.board-medium-fill-vacuum {
+  fill: var(--board-mimic-vacuum);
 }
 
 .board-node {
   cursor: pointer;
+  outline: none;
 }
 
-.board-node:hover rect,
-.board-node:focus-visible rect {
-  stroke: var(--board-text);
-  stroke-width: 3;
+.board-node .board-node-box {
+  fill: var(--board-gauge-face);
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4));
+}
+
+.board-node:hover .board-node-box {
+  fill: var(--board-panel-edge);
+}
+
+.board-node:focus-visible .board-node-box {
+  stroke: var(--board-focus-ring);
+  stroke-width: 5px;
+}
+
+/* The shell sits on the board floor, not on the legacy white card */
+.app.board-shell {
+  max-width: none;
+  margin: 0;
+  padding: 1rem;
+  background: var(--board-page-bg);
+  border-radius: 0;
+  box-shadow: none;
 }
