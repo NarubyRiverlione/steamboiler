@@ -19,3 +19,4 @@ A burner sized for a 200 MWe class unit giving about 125 MWe is deliberate. A re
 - Stopping the Return at full gas now frees about 185 MW for steaming, so pressure rises. Starting full flow at once cools the boiler by roughly 0.5 K/s. If pressure leaves its band, the scenario operator feeds more smoothly; the plant does not change.
 - In `max-output` the gas becomes the limit, not the turbine valve.
 - Pump work is ignored, about 16 kJ/kg or 1% of the Return's cost.
+- The 125 MWe still uses the 100 mbar rated enthalpy drop. [ADR 0032](0032-limited-condenser-and-stream-enthalpy.md) moves it to the design vacuum, about 139 MWe.

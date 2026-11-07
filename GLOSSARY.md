@@ -138,6 +138,18 @@ _Avoid_: Feedwater heater, preheater
 The condensed extraction steam, pumped forward into the Return after the extraction heater.
 _Avoid_: Drain (that is the boiler's)
 
+**Cooling water**:
+The water that takes the condenser's heat, drawn in by the recirculation pump.
+_Avoid_: Recirculation water, circulating water
+
+**Cooling water rise**:
+How much the cooling water warms up across the condenser.
+_Avoid_: Temperature rise, delta T
+
+**Terminal temperature difference**:
+How far the cooling water leaves below the saturation temperature of the condenser.
+_Avoid_: TTD, approach
+
 ### Operation
 
 **Ambient temperature**:

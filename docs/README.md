@@ -66,6 +66,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0029](adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md) | Boiler efficiency follows from a two-stage flue gas heat balance |
 | [0030](adr/0030-return-pays-real-enthalpy.md) | The Return pays its real enthalpy, and rated steam flow follows what full gas makes |
 | [0031](adr/0031-one-extraction-heater.md) | One passive extraction heater heats the Return, with its drain pumped forward |
+| [0032](adr/0032-limited-condenser-and-stream-enthalpy.md) | The condenser is a limited exchanger, and every stream enters at its real enthalpy |
 
 ## Research (dated, frozen)
 
@@ -75,6 +76,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Oct 2026 | [How real plants run the feedwater loop (sourced)](research/2026-10-feedwater-loop.md) |
 | Oct 2026 | [Sizing check: steam flow at full gas](research/2026-10-sizing-check.md) |
 | Oct 2026 | [Cold startup: how real plants do it (sourced)](research/2026-10-startup-procedure.md) |
+| Nov 2026 | [Condenser heat transfer: figures for a limited exchanger (sourced)](research/2026-11-condenser-heat-transfer.md) |
 | Nov 2026 | [Economizer and flue gas: figures for the two-stage model (sourced)](research/2026-11-economizer-flue-gas.md) |
 | Nov 2026 | [Extraction heaters: figures for regenerative feedwater heating (sourced)](research/2026-11-extraction-heaters.md) |
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
