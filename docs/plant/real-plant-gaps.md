@@ -14,13 +14,15 @@ The rows come from general plant knowledge, not from a research note, so their e
 | **Flue gas** | Air preheater | Efficiency | #90, parked |
 | **Firing** | Air and flue gas fans, furnace purge, flame detection | Mainly a start-up sequence | No ticket |
 | **Water quality** | Polishing, chemical dosing, continuous blowdown, the demineralising plant behind makeup | Almost no effect on the physics | No ticket |
-| **Boiler** | Real drum, circulation, swell and shrink | Large for level control | Deliberately left out ([ADR 0019](../adr/0019-boiler-is-one-lumped-vessel.md)) |
+| **Boiler** | Real drum and tubes: circulation, swell and shrink, a drum level in mm, a separate metal temperature | Almost none on output and efficiency. Very large on behaviour: harder level control, level trips with real meaning, real thermal stress | Deliberately left out ([ADR 0019](../adr/0019-boiler-is-one-lumped-vessel.md)); changing it needs a new ADR and a ticket |
 | **Turbine** | Separate HP, IP and LP casings; moisture separators | Partly follows from the superheater | Separators are a departure in [ADR 0031](../adr/0031-one-extraction-heater.md) |
 | | Gland seal steam, lube oil, turning gear | Start-up and shutdown steps | No ticket |
 | | Overspeed trip | Protection | #72 |
 | **Electrical** | Synchronising to a real grid, excitation, transformer | Operator task | Sync is planned as phase 5 in [turbine.md](turbine.md) |
 | | Plant's own power use: pumps and fans take about 5 to 10% of output | Small and cheap to add; turns gross output into net | No ticket |
 | **Cooling** | Cooling tower or river; the cooling water is always 10 °C | Seasonal effect on vacuum | No ticket |
+
+**A middle route for the boiler:** swell and shrink may not need every tube modelled. A low-order drum model with about four states, as published by Åström and Bell (UNVERIFIED: from memory, needs a research note), could give the level behaviour without the full set of risers and downcomers.
 
 ## The plant with a superheater and a deaerator
 
