@@ -49,7 +49,7 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow the plant is rated for, the full-gas steam flow: 192 kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater, measured in a headless run (#88, was 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 134 MWe at the 31 mbar design vacuum.
+The steam flow the plant is rated for, the full-gas steam flow: 192 kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater, measured in a headless run (#88, was 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 141 MWe at the 31 mbar design vacuum.
 _Avoid_: Nominal flow
 
 **Valve capacity**:

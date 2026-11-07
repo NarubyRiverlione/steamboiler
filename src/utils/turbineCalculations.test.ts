@@ -67,6 +67,11 @@ describe("ratedOutputMW", () => {
     expect(ratedOutputMW).toBeCloseTo(141.3, 1)
   })
 
+  test("RatedSteamFlow is the measured 192 kg/s: re-derive it from max-output if the plant changes (ADR 0031)", () => {
+    expect(CstTurbine.RatedSteamFlow).toBe(192)
+    expect(CstTurbine.RatedSteamFlow).toBeLessThan(CstTurbine.MaxSteamRemovalRate)
+  })
+
   test("is less than the same flow would give with no extraction", () => {
     const noExtraction: number =
       (CstTurbine.RatedSteamFlow * CstTurbine.RatedEnthalpyDrop * 1000 * CstTurbine.IsentropicEfficiency * CstTurbine.GeneratorEfficiency) / 1e6
