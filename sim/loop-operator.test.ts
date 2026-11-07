@@ -49,18 +49,33 @@ describe("loopOperator", () => {
   const hotwellAt = (fraction: number) => fraction * CstCondenser.TotalVolume
   const boilerAt = (fraction: number) => fraction * CstBoiler.TotalVolume
 
-  const steaming = (patch: Partial<PowerPlantState["Boiler"]>, turbine: Partial<PowerPlantState["Turbine"]> = {}) => {
+  const steaming = (
+    patch: Partial<PowerPlantState["Boiler"]>,
+    turbine: Partial<PowerPlantState["Turbine"]> = {},
+  ) => {
     const state = withBoiler(patch)
-    return { ...state, Turbine: { ...state.Turbine, mainSteamValve: true, bypassValvePosition: LoopSettings.BypassLoadOpening, ...turbine } }
+    return {
+      ...state,
+      Turbine: {
+        ...state.Turbine,
+        mainSteamValve: true,
+        bypassValvePosition: LoopSettings.BypassLoadOpening,
+        ...turbine,
+      },
+    }
   }
-  const find = (state: PowerPlantState, type: PowerPlantAction["type"]) => loopOperator(state, 0).find((a) => a.type === type)
+  const find = (state: PowerPlantState, type: PowerPlantAction["type"]) =>
+    loopOperator(state, 0).find((a) => a.type === type)
 
   test("does nothing to a cold plant at target levels", () => {
     expect(loopOperator(withCondenser({ hotwellWaterVolume: hotwellAt(0.7) }), 0)).toEqual([])
   })
 
   test("between main-steam-valve pressure and working pressure: the main steam valve stays shut, only the SJAE restarts", () => {
-    const heating = withBoiler({ pressure: CstTurbine.MainSteamValveMinimumPressure + 1, gasFlow: CstBoiler.MaxGasFlow })
+    const heating = withBoiler({
+      pressure: CstTurbine.MainSteamValveMinimumPressure + 1,
+      gasFlow: CstBoiler.MaxGasFlow,
+    })
     const state = { ...heating, Condenser: { ...heating.Condenser, hotwellWaterVolume: hotwellAt(0.7) } }
     expect(loopOperator(state, 0.5)).toEqual([
       { type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } },
@@ -69,8 +84,14 @@ describe("loopOperator", () => {
   })
 
   test("at working pressure: gas down, main steam valve open, bypass, SJAE and pump to their start positions", () => {
-    const atPressure = withBoiler({ pressure: PressureHoldSettings.Target - PressureHoldSettings.Band, gasFlow: CstBoiler.MaxGasFlow })
-    const state = { ...atPressure, Condenser: { ...atPressure.Condenser, hotwellWaterVolume: hotwellAt(0.7) } }
+    const atPressure = withBoiler({
+      pressure: PressureHoldSettings.Target - PressureHoldSettings.Band,
+      gasFlow: CstBoiler.MaxGasFlow,
+    })
+    const state = {
+      ...atPressure,
+      Condenser: { ...atPressure.Condenser, hotwellWaterVolume: hotwellAt(0.7) },
+    }
     expect(loopOperator(state, 0.5)).toEqual([
       { type: "DECREASE_GAS_FLOW", amount: CstBoiler.MaxGasFlow - StartGas },
       { type: "TOGGLE_MAIN_STEAM_VALVE" },
@@ -88,7 +109,9 @@ describe("loopOperator", () => {
     const { Target, Band, GasStep } = PressureHoldSettings
     const gas = (pressure: number, gasFlow: number, heatingRate = 0) => {
       const state = steaming({ pressure, gasFlow, heatingRate })
-      const action = loopOperator(state, 0).find((a) => a.type === "INCREASE_GAS_FLOW" || a.type === "DECREASE_GAS_FLOW")
+      const action = loopOperator(state, 0).find(
+        (a) => a.type === "INCREASE_GAS_FLOW" || a.type === "DECREASE_GAS_FLOW",
+      )
       if (action === undefined) return 0
       return action.type === "INCREASE_GAS_FLOW" ? action.amount : -action.amount
     }
@@ -102,7 +125,10 @@ describe("loopOperator", () => {
   })
 
   test("never moves the bypass after the main steam valve opens", () => {
-    const state = steaming({ pressure: PressureHoldSettings.Target + 10 }, { bypassValvePosition: LoopSettings.BypassLoadOpening })
+    const state = steaming(
+      { pressure: PressureHoldSettings.Target + 10 },
+      { bypassValvePosition: LoopSettings.BypassLoadOpening },
+    )
     expect(types(state)).not.toContain("ADJUST_STEAM_BYPASS_VALVE")
   })
 
@@ -113,29 +139,48 @@ describe("loopOperator", () => {
     expect(types(cold)).not.toContain("ADJUST_STEAM_BYPASS_VALVE")
   })
 
-  test("opens the condensation pump below the level band and closes it above", () => {
-    const pump = (state: PowerPlantState) =>
-      (find(state, "SET_CONDENSATION_PUMP_VALVE_POSITION") as
-        | { payload: { condensationPumpValvePosition: number } }
-        | undefined)?.payload.condensationPumpValvePosition
+  describe("feedforward feedwater control (#74)", () => {
+    const pump = (state: PowerPlantState): number | undefined =>
+      (
+        find(state, "SET_CONDENSATION_PUMP_VALVE_POSITION") as
+          { payload: { condensationPumpValvePosition: number } } | undefined
+      )?.payload.condensationPumpValvePosition
     const target = { pressure: PressureHoldSettings.Target }
-    expect(pump(steaming({ ...target, waterVolume: boilerAt(0.4) }))).toBeCloseTo(LoopSettings.ValveNudge)
-    const high = steaming({ ...target, waterVolume: boilerAt(0.6) })
-    const running = { ...high, Condenser: { ...high.Condenser, condensationPumpValvePosition: 0.5 } }
-    expect(pump(running)).toBeCloseTo(-LoopSettings.ValveNudge)
-  })
+    const atPump = (state: PowerPlantState, position: number): PowerPlantState => ({
+      ...state,
+      Condenser: { ...state.Condenser, condensationPumpValvePosition: position },
+    })
 
-  test("inside the band leans against the level trend", () => {
-    const pump = (deltaWaterMass: number, level: number) =>
-      types(steaming({ pressure: PressureHoldSettings.Target, waterVolume: boilerAt(level), deltaWaterMass })).includes(
-        "SET_CONDENSATION_PUMP_VALVE_POSITION",
+    test("a low level trims the pump open by the level gain", () => {
+      expect(pump(steaming({ ...target, waterVolume: boilerAt(0.4) }))).toBeCloseTo(
+        LoopSettings.LevelGain * 0.1,
       )
-    expect(pump(-1, 0.49)).toBe(true)
-    expect(pump(1, 0.49)).toBe(false)
+    })
+
+    test("a high level trims the pump shut, never below closed", () => {
+      expect(pump(atPump(steaming({ ...target, waterVolume: boilerAt(0.6) }), 0.5))).toBeCloseTo(-0.5)
+    })
+
+    test("at target level the pump follows the steam leaving the boiler", () => {
+      const flowing = steaming(
+        { ...target, waterVolume: boilerAt(LoopSettings.BoilerLevelTarget) },
+        { turbineSteamFlowOut: 120, bypassSteamFlowOut: 30 },
+      )
+      expect(pump(flowing)).toBeCloseTo(150 / CstCondenser.CondensationPump_MaxFlowRate)
+    })
+
+    test("asks for nothing once the pump is where the control wants it", () => {
+      const state = steaming({ ...target, waterVolume: boilerAt(LoopSettings.BoilerLevelTarget) })
+      expect(pump(state)).toBeUndefined()
+    })
   })
 
   test("adjusts gas and pumps only on whole seconds", () => {
-    const low = steaming({ pressure: PressureHoldSettings.Target + 10, gasFlow: StartGas, waterVolume: boilerAt(0.4) })
+    const low = steaming({
+      pressure: PressureHoldSettings.Target + 10,
+      gasFlow: StartGas,
+      waterVolume: boilerAt(0.4),
+    })
     expect(types(low, 0.5)).not.toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
     expect(types(low, 0.5)).not.toContain("DECREASE_GAS_FLOW")
     expect(types(low, 1)).toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
@@ -155,7 +200,11 @@ describe("loopOperator", () => {
   test("makeup and reject ramp with the distance outside the band and shut inside it", () => {
     const valves = (fraction: number, makeup = 0, reject = 0) =>
       loopOperator(
-        withCondenser({ hotwellWaterVolume: hotwellAt(fraction), makeupValvePosition: makeup, rejectValvePosition: reject }),
+        withCondenser({
+          hotwellWaterVolume: hotwellAt(fraction),
+          makeupValvePosition: makeup,
+          rejectValvePosition: reject,
+        }),
         0,
       )
     const payloads = (fraction: number, makeup = 0, reject = 0): number[] =>

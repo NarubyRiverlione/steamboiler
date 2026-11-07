@@ -10,8 +10,8 @@ import {
   CriticalTemperature,
   getBoilingPoint,
   getLatentHeat,
+  getLiquidEnthalpy,
   getWaterSpecificHeat,
-  getWaterSpecificVolume,
 } from "../../utils/steamTable"
 import { CstSimulation, CstPhysics } from "../const"
 import { BoilerState, TurbineState } from "../PowerPlantState"
@@ -63,6 +63,12 @@ export function smoothHeatingRate(previous: number, temperatureChange: number): 
   return previous + (instant - previous) * (CstSimulation.DeltaTime / CstBoiler.HeatingRateWindow)
 }
 
+// Heat (kJ) a Return mass (kg) at this temperature brings, against the same mass at the boiler temperature: negative
+// when it is colder, positive when it is hotter. Saturated liquid enthalpy, so the rise of cp near the critical point counts.
+export function returnHeatOf(mass: number, returnTemperature: number, boilerTemperature: number): number {
+  return mass * (getLiquidEnthalpy(returnTemperature) - getLiquidEnthalpy(boilerTemperature))
+}
+
 // The Return as the economizer sees it: kg/s and the hotwell temperature it leaves at
 export type ReturnFeed = { flow: number; temperature: number }
 
@@ -81,7 +87,16 @@ function BoilerTick(boilerState: BoilerState, returnFeed: ReturnFeed = NoReturn)
     returnFeed.flow,
     returnFeed.temperature,
   )
-  const gasEnergy = balance.heatIntoWater * CstSimulation.DeltaTime
+  // The boiler-stage share of that heat: the economizer heat is already in the Return's own enthalpy below
+  const gasEnergy = (balance.heatIntoWater - balance.economizerHeat) * CstSimulation.DeltaTime
+
+  // The Return pays its real enthalpy (ADR 0030): this tick's Return mass joined at the boiler temperature, and entered
+  // at its temperature after the economizer. Enthalpy, not cp x dT: cp near 350 °C is more than double the cold value.
+  const returnEnergy = returnHeatOf(
+    returnFeed.flow * CstSimulation.DeltaTime,
+    balance.returnTemperatureOut,
+    boilerState.temperature,
+  )
 
   // Heat lost to the surroundings this tick
   const heatLoss = heatLossOf(boilerState.temperature)
@@ -91,14 +106,14 @@ function BoilerTick(boilerState: BoilerState, returnFeed: ReturnFeed = NoReturn)
   // (a boiler run dry would otherwise run away)
   const heatedTemperature = Math.min(
     CriticalTemperature,
-    warmBy(boilerState.temperature, gasEnergy - heatLossEnergy, heatCapacity),
+    warmBy(boilerState.temperature, gasEnergy + returnEnergy - heatLossEnergy, heatCapacity),
   )
 
   // The steam space holds saturated steam; water flashes to steam (or steam condenses) to restore that inventory,
   // and the latent heat comes from, or returns to, the water. A steam draw leaves a deficit, so it cools the water.
   const flashedMass = calculateFlashedMass(heatedTemperature, waterMass, boilerState.steamMass)
   const flashEnergy = flashedMass * getLatentHeat(heatedTemperature)
-  const energyChange = gasEnergy - drain.energyLoss - heatLossEnergy - flashEnergy
+  const energyChange = gasEnergy + returnEnergy - drain.energyLoss - heatLossEnergy - flashEnergy
 
   // The liquid lost to steam is exactly the steam made: mass is conserved, and a full drum is not clamped
   const newWaterMass = Math.max(0, waterMass - flashedMass)
@@ -132,16 +147,14 @@ function BoilerTick(boilerState: BoilerState, returnFeed: ReturnFeed = NoReturn)
   }
 }
 
-const coldestLoopWater: number = CstSimulation.CstCondenser.RecirculationPump_IntakeTemperature
-
-// Worst case for the relief valve (ADR 0005, ADR 0029): full gas at the opening pressure with the Return at the
-// condensation pump's maximum flow and the coldest water in the loop (the cooling water intake temperature), which is
-// the highest efficiency
+// Worst case for the relief valve (ADR 0005, ADR 0030): full gas at the opening pressure with no Return. The Return
+// costs heat now, so stopping it frees the most heat for steaming, and the economizer recovers nothing: the stack is
+// hottest and the heat into the water is least, but all of it goes into latent heat.
 const ReliefWorstCaseHeat: number = calculateGasEnergy(
   CstBoiler.MaxGasFlow,
   getBoilingPoint(CstBoiler.ReliefOpenPressure),
-  CstSimulation.CstCondenser.CondensationPump_MaxFlowRate / getWaterSpecificVolume(coldestLoopWater),
-  coldestLoopWater,
+  0,
+  CstPhysics.AmbientTemperature,
 )
 
 // Relief capacity (kg/s): the steam the worst-case heat makes at the opening pressure, with the capacity margin on top

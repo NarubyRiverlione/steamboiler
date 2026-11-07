@@ -1,6 +1,6 @@
-# The relief valve vents to the atmosphere and is sized at 110% of full-gas steam
+# The relief valve vents to the atmosphere and is sized at 110% of full-gas steam with no Return
 
-The boiler has one automatic relief valve on the drum. It opens fully at 178 bar and closes at 171 bar (7 bar blowdown), decides on the pressure at the start of each tick, and vents to the atmosphere. Its capacity is 110% of the steam the worst case makes at 178 bar, derived from the constants (about 551 kg/s). The worst case is full gas with the Return at the condensation pump's maximum flow and the coldest water in the loop, the highest efficiency the flue gas heat balance gives ([ADR 0029](0029-boiler-efficiency-from-flue-gas-heat-balance.md), #87); a fixed gas efficiency no longer gives one figure. It runs first in the tick, upstream of the main steam valve. Decided in #9.
+The boiler has one automatic relief valve on the drum. It opens fully at 178 bar and closes at 171 bar (7 bar blowdown), decides on the pressure at the start of each tick, and vents to the atmosphere. Its capacity is 110% of the steam the worst case makes at 178 bar, derived from the constants (about 457 kg/s). The worst case is full gas with no Return: the Return costs heat ([ADR 0030](0030-return-pays-real-enthalpy.md), #74), so stopping it frees the most heat for steaming, and the economizer then recovers nothing ([ADR 0029](0029-boiler-efficiency-from-flue-gas-heat-balance.md)). The valve still beats whatever the burner can make, with a Return or without. It runs first in the tick, upstream of the main steam valve. Decided in #9.
 
 ## Considered options
 

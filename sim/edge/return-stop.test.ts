@@ -42,8 +42,11 @@ describe("return-stop", () => {
     expect(before.length).toBeGreaterThan(0)
   })
 
-  test("the pressure does not oscillate after the stop: the relief valve stays within its band", () => {
-    for (const { state } of firingAfter)
-      expect(state.Boiler.pressure).toBeGreaterThan(CstBoiler.ReliefClosePressure - 10)
+  test("the pressure rises after the stop, because the Return no longer costs heat, and stays under design", () => {
+    // A Return of cold water held the pressure down; without it all the heat goes into steam (ADR 0030)
+    const justBefore = before[before.length - 1].state.Boiler.pressure
+    expect(peak(firingAfter)).toBeGreaterThan(justBefore + 10)
+    expect(peak(firingAfter)).toBeLessThan(CstBoiler.DesignPressure)
+    expect(firingAfter.some((s) => s.state.Boiler.reliefValveOpen)).toBe(true)
   })
 })
