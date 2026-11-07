@@ -29,7 +29,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | State management, simulation loop, source layout, conventions | [dev/architecture.md](dev/architecture.md) |
 | Headless scenario runner: scenarios, report, invariants, snapshots | [dev/headless-runner.md](dev/headless-runner.md) |
 | Test layers, scenario definition, definition of done | [dev/testing.md](dev/testing.md) |
-| Branches (`dev` for work, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
+| Branches (`dev` for work, `ui` for the UI redo, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
 
 ## Decisions
 
@@ -48,7 +48,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
 | [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
 | [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
-| [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
+| [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates; UI tickets go through a temporary `ui` branch |
 | [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style: the analog control-room board (with a [boiler mockup](adr/0015-boiler-panel-mockup.html) and a [full board mockup](adr/0015-full-board-mockup.html)) |
 | [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
 | [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |

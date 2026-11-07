@@ -6,19 +6,26 @@
 |---|---|
 | Every commit | lint and unit tests (known failures are `test.fails` naming a ticket) |
 | Ticket branch → `dev` | the above, golden-path scenarios, crap report on the changed files |
+| UI ticket branch → `ui` | lint, unit tests, golden-path scenarios with the snapshots unchanged, crap report on the changed files |
+| `ui` → `dev` (once, when #85 is done) | the above and the edge scenarios |
 | `dev` → `main` | the above and the edge scenarios |
+
+The UI redo (#85, [ADR 0015](0015-ui-redo-analog-board-preferred.md)) takes a temporary third branch, `ui`: UI tickets branch from `ui` and merge back into it, `dev` is merged into `ui` regularly, and `ui` merges into `dev` once when the redo is done, after which `ui` is deleted. This keeps backend work on `dev` free of a half-finished UI.
 
 ## Considered options
 
 - **Keep committing on `dev`, gate at ticket close and by CI after the push:** rejected. The check comes after the work is already on the integration branch, and it relies on discipline.
 - **Pull request into `dev`, with CI as a required check:** rejected. Too much admin overhead for a sole developer. Pull requests stay for `main` (ADR 0013), where the release record is worth it.
+- **UI tickets on `dev` like all others:** rejected. The redo is seven steps with the tab strip gone after the second; `dev` would carry a half-migrated UI while backend tickets keep changing the same components.
+- **A `ui` branch that stays after #85:** rejected. After the redo the board is the only UI; a permanent fork would have no remaining reason.
 - **Run every layer at every gate:** rejected. The scenarios take most of the ~55 s suite; unit tests run in under a second and are the only layer cheap enough for every commit.
 - **Edge scenarios only at the `main` gate:** run earlier as well. They are cheap from a snapshot, and a regression shows up near the commit that caused it; passing them is only required for `main`.
 
 ## Consequences
 
-- A ticket is a branch (`<slug>-<ticket>`), merged into `dev` locally once its gate passes locally; agents never commit ticket work on `dev` directly.
-- GitHub cannot block a merge into `dev`; the gate is run locally, and CI on push to `dev` reports afterwards.
+- A ticket is a branch (`<slug>-<ticket>`), merged into `dev` (a UI ticket: `ui`) locally once its gate passes locally; agents never commit ticket work on `dev` directly.
+- GitHub cannot block a merge into `dev`; the gate is run locally, and CI on push to `dev` or `ui` reports afterwards.
+- A backend ticket makes only the minimal change to the old UI; the board version is a UI ticket on `ui`.
 - `ROADMAP.md` updates after creating or closing a ticket travel with that ticket's branch.
 - The crap report flags methods over the threshold but does not fail the gate, until it is decided whether coverage should count unit tests only.
 - The hooks and CI jobs that enforce this are built in #61, after the test layers exist (#60).
