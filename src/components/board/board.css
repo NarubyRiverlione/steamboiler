@@ -40,6 +40,9 @@
   --board-plate-bg: #d4d4d4;
   --board-plate-border: #8a8a8a;
   --board-panel-bg: #dcdcdc;
+  --board-knob-cap: #0c0c0c;
+  --board-knob-grip: #3a3a3a;
+  --board-knob-pointer: #cfd2d6;
   --board-panel-edge: #ffffff;
   --board-screw-bg: #c4c4c4;
   --board-screw-edge: #8f8f8f;
@@ -586,6 +589,11 @@ path.board-zone {
   margin-top: 0.75rem;
 }
 
+.board-group-title.board-section {
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
 .board-group-title {
   margin: 0 0 0.35rem;
   padding: 0;
@@ -790,4 +798,31 @@ path.board-zone {
   .board-tile-flash {
     animation-duration: 2s;
   }
+}
+
+.board-knob-bezel {
+  fill: var(--board-gauge-bezel-hi);
+  stroke: var(--board-gauge-bezel-lo);
+}
+
+.board-knob-well,
+.board-knob-cap {
+  fill: var(--board-knob-cap);
+}
+
+.board-knob-grip {
+  stroke: var(--board-knob-grip);
+  stroke-width: 2;
+}
+
+.board-knob-pointer {
+  fill: var(--board-knob-pointer);
+  stroke: var(--board-gauge-bezel-lo);
+}
+
+.board-knob-end {
+  fill: var(--board-text);
+  font-family: var(--board-font-stencil);
+  font-size: 13px;
+  font-weight: 700;
 }

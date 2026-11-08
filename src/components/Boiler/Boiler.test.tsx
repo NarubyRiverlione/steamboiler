@@ -32,6 +32,11 @@ describe("Boiler page", () => {
     expect(fns.decreaseGasFlow.mock.calls).toEqual([[250], [500]])
   })
 
+  it("shows the gas flow on the knob", () => {
+    renderBoiler({ gasFlow: 6000 })
+    expect(screen.getByRole("meter", { name: "Gas knob" }).getAttribute("aria-valuenow")).toBe("6000")
+  })
+
   it("toggles the drain valve and shows its state", () => {
     const fns = renderBoiler({ drainValveOpen: true })
     const button: HTMLElement = screen.getByRole("button", { name: "Open" })

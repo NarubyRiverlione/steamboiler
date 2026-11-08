@@ -88,8 +88,16 @@ function Condenser() {
           />
           <Display label="Pressure" text={`${pressure.toFixed(0)} mBar`} />
           <span className="board-readout-values">
-            <Lamp lit={pressure > HIGH_PRESSURE} label="High" title={`Pressure above ${HIGH_PRESSURE.toFixed(0)} mBar`} />
-            <Lamp lit={pressure < LOW_PRESSURE} label="Low" title={`Pressure below ${LOW_PRESSURE.toFixed(0)} mBar`} />
+            <Lamp
+              lit={pressure > HIGH_PRESSURE}
+              label="High"
+              title={`Pressure above ${HIGH_PRESSURE.toFixed(0)} mBar`}
+            />
+            <Lamp
+              lit={pressure < LOW_PRESSURE}
+              label="Low"
+              title={`Pressure below ${LOW_PRESSURE.toFixed(0)} mBar`}
+            />
           </span>
         </div>
 

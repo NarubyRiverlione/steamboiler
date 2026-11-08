@@ -31,7 +31,8 @@ function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPr
 }
 
 function clickValve(label: string, direction: "Open" | "Close"): void {
-  const valve: HTMLElement = screen.getByRole("meter", { name: `${label} bar` }).closest(".board-valve") ?? document.body
+  const valve: HTMLElement =
+    screen.getByRole("meter", { name: `${label} bar` }).closest(".board-valve") ?? document.body
   fireEvent.click(within(valve).getByRole("button", { name: direction }))
 }
 

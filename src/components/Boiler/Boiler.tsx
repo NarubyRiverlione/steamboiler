@@ -7,6 +7,7 @@ import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { LensButton } from "../board/LensButton"
+import { Knob } from "../board/Knob"
 import { LevelGauge } from "../board/LevelGauge"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
@@ -14,6 +15,7 @@ import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 const {
   CstBoiler: {
     TotalVolume,
+    MaxGasFlow,
     ReliefOpenPressure,
     ReliefClosePressure,
     HeatingRateLimit,
@@ -86,6 +88,7 @@ function Boiler() {
 
         <div className="board-instrument board-group">
           <h3 className="board-group-title">Gas Flow Control</h3>
+          <Knob label="Gas knob" value={gasFlow} min={0} max={MaxGasFlow} ends={["OFF", "MAX"]} />
           <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} />
           <div className="board-lens-row">
             <LensButton
