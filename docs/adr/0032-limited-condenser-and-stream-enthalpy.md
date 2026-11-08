@@ -24,5 +24,5 @@ The cooling water no longer leaves at the saturation temperature. The condenser 
 - Vacuum, hotwell temperature and output move in every scenario.
 - #88 lowers the load: measured at 125 MW with the extraction heater, about 207 MW of heat goes to the cooling water, a rise of 6.7 K, and the condenser keeps spare capacity.
 - With every stream on real enthalpy, a whole-plant energy balance can close: fuel heat = stack + electric output + cooling water + heat loss.
-- Condenser pressure keeps its steam-mass term, which is not physically derived. #91 owns that.
+- Condenser pressure is shell vapour pressure plus air pressure, replacing the steam-mass term ([ADR 0035](0035-condenser-pressure-is-vapour-plus-air.md), built in #91).
 - Left out on purpose: subcooling, bypass spray (it only recirculates water, so the heat load is the same), fouling and air blanketing. The 200 kg/s bypass capacity stays.
