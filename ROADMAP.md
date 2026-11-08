@@ -35,9 +35,9 @@ Next: the first ticket with nothing under Waiting on.
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 13 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P5 | ready-for-agent |  | [#86](https://github.com/NarubyRiverlione/steamboiler/issues/86) [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
-| 14 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P5 | needs-triage |  |  |
+| 14 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Working valve knobs | P5 | ready-for-agent |  |  |
 | 15 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P5 | needs-triage |  |  |
-| 16 | [#86](https://github.com/NarubyRiverlione/steamboiler/issues/86) Simulation speed control and clock in the analog board style | P5 | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
+| 16 | [#86](https://github.com/NarubyRiverlione/steamboiler/issues/86) Simulated clock in the analog board style | P5 | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
 | 17 | [#99](https://github.com/NarubyRiverlione/steamboiler/issues/99) Mimic strip: live piping diagram on the analog board | P5 | needs-triage |  |  |
 | 18 | [#101](https://github.com/NarubyRiverlione/steamboiler/issues/101) Key plant values always visible in the header | P5 | needs-triage |  |  |
 | 19 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | P5 | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
