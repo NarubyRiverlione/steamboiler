@@ -629,3 +629,9 @@ path.board-zone {
   font-family: var(--board-font-stencil);
   font-weight: 700;
 }
+
+.board-valves {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.25rem 1.5rem;
+}
