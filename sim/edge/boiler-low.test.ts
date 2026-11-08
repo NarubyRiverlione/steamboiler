@@ -18,6 +18,9 @@ describe("boiler-low", () => {
     const tripped = samples.find((s) => s.state.Boiler.burnerTripped)
     expect(tripped).toBeDefined()
     expect(samples[samples.length - 1].state.Boiler.gasFlow).toBe(0)
+    // the trip centres the knob that was left fully up, and the burner stays off until the operator turns it up again
+    expect(samples[0].state.Boiler.gasRateCommand).toBe(1)
+    expect(samples[samples.length - 1].state.Boiler.gasRateCommand).toBe(0)
     expect(Math.min(...samples.map((s) => s.state.Boiler.waterVolume))).toBeGreaterThan(
       CstSimulation.CstBoiler.TotalVolume * CstSimulation.CstBoiler.BurnerLowLowLevel * 0.75,
     )

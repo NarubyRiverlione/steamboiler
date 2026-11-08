@@ -70,7 +70,9 @@ describe("turbine-runup", () => {
     test.each([500, 1500, 2500, 3000])("passes through Hold at %i rpm within the engage window", (point) => {
       const held = seenInHold.find((turbine) => turbine.runUpPoint === point)
       expect(held).toBeDefined()
-      expect(Math.abs((held?.rpm ?? 0) - point)).toBeLessThanOrEqual(CstSimulation.CstTurbine.HoldEngageWindow)
+      expect(Math.abs((held?.rpm ?? 0) - point)).toBeLessThanOrEqual(
+        CstSimulation.CstTurbine.HoldEngageWindow,
+      )
     })
 
     test("Ramp up never exceeds the run-up rate and the turbine stays below MaxRPM throughout", () => {
@@ -84,7 +86,9 @@ describe("turbine-runup", () => {
 
     test("the run-up from working pressure to Hold at 3000 rpm takes about 60 min", () => {
       const start = firstTimeWhere(ticks, (s) => s.Turbine.speedMode === "rampUp") ?? Infinity
-      const end = firstTimeWhere(ticks, (s) => s.Turbine.speedMode === "hold" && s.Turbine.runUpPoint === 3000) ?? Infinity
+      const end =
+        firstTimeWhere(ticks, (s) => s.Turbine.speedMode === "hold" && s.Turbine.runUpPoint === 3000) ??
+        Infinity
       expect((end - start) / 60).toBeGreaterThan(55)
       expect((end - start) / 60).toBeLessThan(65)
     })
@@ -92,7 +96,7 @@ describe("turbine-runup", () => {
 
   test("gas never goes above the heat-up gas once the pressure hold starts", () => {
     for (const { state } of samples.filter((s) => s.time >= inBandAt))
-      expect(state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas)
+      expect(state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas + 1e-6)
   })
 
   test("over the settling time boiler pressure stays within the band", () => {

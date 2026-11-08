@@ -5,8 +5,8 @@ export const CstSimulation = {
     TotalVolume: 100e3, // liters (typical  20-100m3)
     MaxGasFlow: 12000, // liters/second, about 420 MW of fuel for a 200 MWe unit (docs/research/2026-10-sizing-check.md)
     DrainingRate: 0.005, // 0.5% per second
-    GasChangeRateFast: 500, // °C per second
-    GasChangeRateSlow: 250, // °C per second,
+    GasRateMax: 300, // L/s per second of gas change at full knob deflection, 0 to full in 40 s (#15, UNVERIFIED, tune with the headless runner)
+    GasRateDeadZone: 0.05, // share of the knob travel either side of the centre that holds the gas
     DesignPressure: 180, // bar, the boiler must never exceed it (see GLOSSARY.md)
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
     ReliefOpenPressure: 178, // bar, the relief valve lifts fully (2 bar margin for one tick's rise)

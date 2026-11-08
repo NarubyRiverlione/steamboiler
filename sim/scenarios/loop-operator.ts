@@ -3,6 +3,7 @@ import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { atWorkingPressure, holdPressureWithGas, PressureHoldSettings } from "./pressure-hold"
+import { steerGas } from "./gas"
 import { isAdjustTime, StartGas } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
@@ -22,6 +23,7 @@ export const LoopSettings = {
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
   CondenserSteamHigh: 100, // kg in the condenser: more cooling water
   CondenserSteamLow: 10, // kg: less cooling water
+  GasBackOffPressure: 120, // bar: from here the knob goes down towards the heat-up gas, since the gas takes about 30 s to come back from full and the pressure rises 1 bar/s (#15)
   ValveNudge: 0.02, // position change per adjustment
   AdjustEvery: 1, // sim-seconds between gas, pump and cooling adjustments
 }
@@ -45,12 +47,10 @@ const toPosition = (
   make: (delta: number) => PowerPlantAction,
 ): PowerPlantAction[] => (current === wanted ? [] : [make(wanted - current)])
 
-// At pressure: gas down to the heat-up gas, main steam valve open, bypass and condensation pump to their start positions
-function openMainSteam({ Boiler, Turbine, Condenser }: PowerPlantState): PowerPlantAction[] {
+// At pressure: main steam valve open, bypass and condensation pump to their start positions
+function openMainSteam({ Turbine, Condenser }: PowerPlantState): PowerPlantAction[] {
   if (Turbine.mainSteamValve) return []
-  const gasDown = Boiler.gasFlow - StartGas
   return [
-    ...(gasDown > 0 ? [{ type: "DECREASE_GAS_FLOW", amount: gasDown } as const] : []),
     { type: "TOGGLE_MAIN_STEAM_VALVE" },
     ...toPosition(Turbine.bypassValvePosition, S.BypassLoadOpening, (bypassValvePosition) => ({
       type: "ADJUST_STEAM_BYPASS_VALVE",
@@ -65,6 +65,14 @@ function openMainSteam({ Boiler, Turbine, Condenser }: PowerPlantState): PowerPl
       }),
     ),
   ]
+}
+
+// Before the main steam valve opens the operator already brings the gas back from full to the heat-up gas: the gas
+// cannot jump, so the knob goes down early enough that working pressure is not overshot
+function backOffGas({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
+  if (Turbine.mainSteamValve || Boiler.pressure < S.GasBackOffPressure || Boiler.gasFlow <= StartGas)
+    return []
+  return steerGas(Boiler, StartGas, S.AdjustEvery)
 }
 
 // The SJAE trips below main-steam-valve pressure; restart it at its opening once there is steam
@@ -84,7 +92,11 @@ function restartSjae({ Condenser }: PowerPlantState): PowerPlantAction[] {
 // until working pressure, so the expanding water is not fed back up during heat-up (ADR 0018)
 function startSteam(state: PowerPlantState): PowerPlantAction[] {
   if (state.Boiler.pressure <= CstTurbine.MainSteamValveMinimumPressure) return []
-  return [...(atWorkingPressure(state.Boiler.pressure) ? openMainSteam(state) : []), ...restartSjae(state)]
+  return [
+    ...backOffGas(state),
+    ...(atWorkingPressure(state.Boiler.pressure) ? openMainSteam(state) : []),
+    ...restartSjae(state),
+  ]
 }
 
 // Feedforward feedwater control (#74): the Return costs heat, so the pump follows the steam leaving the boiler and the

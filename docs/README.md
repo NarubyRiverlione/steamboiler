@@ -69,6 +69,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0030](adr/0030-return-pays-real-enthalpy.md) | The Return pays its real enthalpy, and rated steam flow follows what full gas makes |
 | [0031](adr/0031-one-extraction-heater.md) | One passive extraction heater heats the Return, with its drain pumped forward |
 | [0032](adr/0032-limited-condenser-and-stream-enthalpy.md) | The condenser is a limited exchanger, and every stream enters at its real enthalpy |
+| [0033](adr/0033-gas-is-a-rate-knob.md) | The gas is set by a latching rate knob, and the gas never jumps |
 
 ## Research (dated, frozen)
 

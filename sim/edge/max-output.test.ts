@@ -30,10 +30,11 @@ describe("max-output", () => {
     expect(fullGas).toBeGreaterThan(0)
     expect(fullGas).toBeLessThan(fullValve)
     expect(carrying[fullGas].state.Turbine.electricOutput).toBeCloseTo(GasLimitMW, -1)
-    // RatedSteamFlow is measured, so the test fails if the plant drifts from it (ADR 0030)
+    // RatedSteamFlow is measured, so the test fails if the plant drifts from it (ADR 0030). The gas reaches full a few
+    // seconds later than when it jumped (#15), with the load still climbing, so the flow is read about 1 kg/s higher
     expect(
       Math.abs(carrying[fullGas].state.Turbine.turbineSteamFlowOut - CstTurbine.RatedSteamFlow),
-    ).toBeLessThan(2)
+    ).toBeLessThan(3)
     expect(
       Math.abs(carrying[fullGas].state.Boiler.pressure - PressureHoldSettings.Target),
     ).toBeLessThanOrEqual(PressureHoldSettings.Band)

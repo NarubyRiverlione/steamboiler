@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
+import { CstSimulation } from "../../src/context/const"
 import { runScenarioWithLifts } from "../scenario"
 import { GasOffAt, reliefLift } from "../scenarios/relief-lift"
+
+const { CstBoiler } = CstSimulation
 
 describe("relief-lift", () => {
   const { samples, lifts } = runScenarioWithLifts(reliefLift)
@@ -8,11 +11,12 @@ describe("relief-lift", () => {
   test("records the one lift with its open and close time, though it is shorter than a sample", () => {
     expect(lifts).toHaveLength(1)
     const [lift] = lifts
-    // full gas reaches 178 bar after about 3¾ minutes (229 s from the 35% cold fill); with the gas off the 7 bar blowdown takes seconds
+    // Full gas reaches 178 bar after about 4 minutes (the knob takes 40 s to bring the gas up, #15). The knob goes down
+    // before that and the gas takes 40 s to come off, so the pressure still peaks on the heat in the water and lifts once
     expect(lift.open).toBeGreaterThan(200)
-    expect(lift.open).toBeLessThan(GasOffAt)
-    expect(lift.close).toBeGreaterThan(GasOffAt)
-    expect(lift.close).toBeLessThan(GasOffAt + 30)
+    expect(lift.open).toBeGreaterThan(GasOffAt)
+    expect(lift.close).toBeGreaterThan(lift.open)
+    expect(lift.close).toBeLessThan(GasOffAt + CstBoiler.MaxGasFlow / CstBoiler.GasRateMax)
   })
 
   test("the lift vents what the totalizer counts", () => {

@@ -11,7 +11,7 @@ type Ctx = ContextType<typeof PowerPlantContext>
 function renderBoiler(patch: Partial<PowerPlantState["Boiler"]> = {}) {
   const state: PowerPlantState = makeInitialState()
   state.Boiler = { ...state.Boiler, ...patch }
-  const fns = { increaseGasFlow: vi.fn(), decreaseGasFlow: vi.fn(), toggleDrainValve: vi.fn() }
+  const fns = { setGasRate: vi.fn(), toggleDrainValve: vi.fn() }
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
@@ -22,19 +22,31 @@ function renderBoiler(patch: Partial<PowerPlantState["Boiler"]> = {}) {
 }
 
 describe("Boiler page", () => {
-  it("steps the gas with the four buttons", () => {
-    const fns = renderBoiler()
-    fireEvent.click(screen.getByRole("button", { name: "+ 500 L/s" }))
-    fireEvent.click(screen.getByRole("button", { name: "+ 250 L/s" }))
-    fireEvent.click(screen.getByRole("button", { name: "- 250 L/s" }))
-    fireEvent.click(screen.getByRole("button", { name: "- 500 L/s" }))
-    expect(fns.increaseGasFlow.mock.calls).toEqual([[500], [250]])
-    expect(fns.decreaseGasFlow.mock.calls).toEqual([[250], [500]])
+  it("turns the gas knob with the keyboard and passes the command on", () => {
+    const fns = renderBoiler({ gasRateCommand: 0.5 })
+    fireEvent.keyDown(screen.getByRole("slider", { name: "Gas knob" }), { key: "ArrowRight" })
+    expect(fns.setGasRate).toHaveBeenCalledWith(0.6)
   })
 
-  it("shows the gas flow on the knob", () => {
-    renderBoiler({ gasFlow: 6000 })
-    expect(screen.getByRole("meter", { name: "Gas knob" }).getAttribute("aria-valuenow")).toBe("6000")
+  it("shows the actual gas flow on the LCD, not the knob position", () => {
+    renderBoiler({ gasFlow: 6000, gasRateCommand: -0.5 })
+    expect(screen.getByLabelText("Gas flow").textContent).toBe("6000 l/s")
+    expect(screen.getByRole("slider", { name: "Gas knob" }).getAttribute("aria-valuenow")).toBe("-0.5")
+  })
+
+  it("shows a forgotten knob: rising, falling or holding", () => {
+    renderBoiler({ gasRateCommand: 0.5 })
+    expect(screen.getByRole("status", { name: "Gas trend" }).textContent).toBe("▲ RISING")
+  })
+
+  it("shows falling for a knob turned left and holding in the dead zone", () => {
+    renderBoiler({ gasRateCommand: -0.5 })
+    expect(screen.getByRole("status", { name: "Gas trend" }).textContent).toBe("▼ FALLING")
+  })
+
+  it("holds in the dead zone", () => {
+    renderBoiler({ gasRateCommand: 0.02 })
+    expect(screen.getByRole("status", { name: "Gas trend" }).textContent).toBe("HOLDING")
   })
 
   it("toggles the drain valve and shows its state", () => {

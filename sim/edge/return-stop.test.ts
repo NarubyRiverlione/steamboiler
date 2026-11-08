@@ -14,8 +14,8 @@ describe("return-stop", () => {
   const peak = (list: typeof samples): number => Math.max(...list.map((s) => s.state.Boiler.pressure))
 
   test("runs at full gas, with the economizer heating the Return before the stop", () => {
-    expect(before.every((s) => s.state.Boiler.gasFlow === CstBoiler.MaxGasFlow)).toBe(true)
     const flowing = before[before.length - 1].state
+    expect(flowing.Boiler.gasFlow).toBe(CstBoiler.MaxGasFlow)
     expect(flowing.Condenser.returnRate).toBeGreaterThan(0)
     expect(flowing.Boiler.returnTemperatureOut).toBeGreaterThan(flowing.Condenser.hotwellTemperature + 30)
   })
