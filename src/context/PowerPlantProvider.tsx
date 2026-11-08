@@ -20,11 +20,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   }, [state, dispatch])
 
   //#region  Boiler action creators
-  const increaseGasFlow = (amount: number) => {
-    dispatch({ type: "INCREASE_GAS_FLOW", amount })
-  }
-  const decreaseGasFlow = (amount: number) => {
-    dispatch({ type: "DECREASE_GAS_FLOW", amount })
+  const setGasRate = (gasRateCommand: number) => {
+    dispatch({ type: "SET_GAS_RATE", payload: { gasRateCommand } })
   }
   const toggleDrainValve = () => {
     dispatch({ type: "TOGGLE_DRAIN_VALVE" })
@@ -101,8 +98,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         state,
         dispatch,
         // boiler actions
-        increaseGasFlow,
-        decreaseGasFlow,
+        setGasRate,
         toggleDrainValve,
         // turbine rpm control actions
         adjustBypassValve,

@@ -9,7 +9,7 @@ describe("toCsv", () => {
       description: "Gas on, nothing else",
       duration: 60,
       sampleEvery: 10,
-      actions: [{ at: 0, action: { type: "INCREASE_GAS_FLOW", amount: 5000 } }],
+      actions: [{ at: 0, action: { type: "SET_GAS_RATE", payload: { gasRateCommand: 1 } } }],
     })
     const csv = toCsv(samples).trim().split("\n")
     expect(csv).toHaveLength(1 + 6)

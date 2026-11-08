@@ -6,6 +6,7 @@ import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { bandDirection } from "./band"
 import { CstSimulation } from "../../src/context/const"
+import { steerGas } from "./gas"
 import { StartGas } from "./steps"
 
 export const PressureHoldSettings = {
@@ -14,6 +15,7 @@ export const PressureHoldSettings = {
   GasStep: 20, // liters/second per adjustment
   GasCeiling: StartGas, // liters/second: gas never goes above the heat-up gas
   LoadGasCeiling: CstSimulation.CstBoiler.MaxGasFlow, // liters/second: the ceiling once the generator carries load, the plant's full gas (#71)
+  AdjustEvery: 1, // sim-seconds: the knob is turned to reach the new gas in this time
   GasFloor: 100, // liters/second: the burner's minimum firing rate, the hold never puts the flame out
 }
 
@@ -24,10 +26,11 @@ export const atWorkingPressure = (pressure: number): boolean => pressure >= S.Ta
 
 // Pressure follows the saturation of the water, so `heatingRate` is the pressure trend
 // Below the band gas goes up to the ceiling (the heat-up gas, or the one given) (a no-op while the build phase runs at the ceiling), above it down to the floor
-export function holdPressureWithGas({ Boiler }: PowerPlantState, gasCeiling: number = S.GasCeiling): PowerPlantAction[] {
+export function holdPressureWithGas(
+  { Boiler }: PowerPlantState,
+  gasCeiling: number = S.GasCeiling,
+): PowerPlantAction[] {
   const direction = bandDirection(Boiler.pressure - S.Target, S.Band, Boiler.heatingRate)
   const gas = Math.max(S.GasFloor, Math.min(gasCeiling, Boiler.gasFlow + direction * S.GasStep))
-  const delta = gas - Boiler.gasFlow
-  if (delta === 0) return []
-  return [{ type: delta > 0 ? "INCREASE_GAS_FLOW" : "DECREASE_GAS_FLOW", amount: Math.abs(delta) }]
+  return steerGas(Boiler, gas, S.AdjustEvery)
 }

@@ -27,6 +27,7 @@ export const makeInitialState = (): PowerPlantState => ({
     temperature: AmbientTemperature, // Celsius
     pressure: CstPhysics.AtmosphericPressure_mBar / 1e3, // bar
     gasFlow: 0, // liters/second
+    gasRateCommand: 0, // knob centred
     drainValveOpen: false,
     drainedTotal: 0,
     reliefValveOpen: false,
@@ -120,16 +121,17 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   LOAD_STATE: (_state, { payload: { state } }) => state,
 
   //#region Boiler
-  // Refused while the water is below the burner low-low level; the next successful raise clears the trip
-  INCREASE_GAS_FLOW: (state, { amount }) =>
-    isBelowBurnerLowLow(state.Boiler)
-      ? state
-      : withBoiler(state, {
-          gasFlow: Math.min(CstBoiler.MaxGasFlow, state.Boiler.gasFlow + amount),
-          burnerTripped: false,
-        }),
-  DECREASE_GAS_FLOW: (state, { amount }) =>
-    withBoiler(state, { gasFlow: Math.max(0, state.Boiler.gasFlow - amount) }),
+  // Sets the knob. Turning it up is refused (knob stays centred) while the water is below the burner low-low level; a
+  // raise past the dead zone above that level clears the trip and the gas ramps up from 0 (ADR 0017)
+  SET_GAS_RATE: (state, { payload }) => {
+    const command: number = clamp(payload.gasRateCommand, -1, 1)
+    const raising: boolean = command > CstBoiler.GasRateDeadZone
+    if (raising && isBelowBurnerLowLow(state.Boiler)) return state
+    return withBoiler(state, {
+      gasRateCommand: command,
+      burnerTripped: state.Boiler.burnerTripped && !raising,
+    })
+  },
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
   //#endregion
 

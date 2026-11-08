@@ -100,9 +100,24 @@ The vented steam goes to the atmosphere, not the condenser: it leaves the loop a
 
 A boiler that runs dry with gas on keeps heating its metal: with no water left to flash, the gas heats the 50 MJ/K of steel by about 7 K/s up to the critical-point clamp (373.9 °C, 220.6 bar). This starts in the last litre or so, which cannot absorb the gas heat. The relief valve cannot prevent it; the burner trip does (below).
 
+## Gas rate knob
+
+The operator does not set a gas value; the gas knob sets a **gas rate** ([ADR 0033](../adr/0033-gas-is-a-rate-knob.md)). `gasRateCommand` (-1 to 1) is the knob position in `BoilerState`: centre holds, right raises, left lowers. The reducer's `SET_GAS_RATE` sets it (clamped to the travel) and nothing else; `gasFlow` is the integral of the command, stepped in `BoilerTick` in simulated seconds (so pause and the 1x, 10x and 60x speeds behave correctly), and clamped to 0 to `MaxGasFlow`. At the ends the knob stays where it is.
+
+In the UI the knob is dragged sideways only (right raises, left lowers, 120 px for the full sweep; up and down do nothing), or turned with the scroll wheel or the arrow keys. A drag moves the knob relative to where it was grabbed, so grabbing it never jumps the command.
+
+```
+rate (L/s per second) = sign × ((|command| − GasRateDeadZone) / (1 − GasRateDeadZone))² × GasRateMax     (0 inside the dead zone)
+gasFlow               = clamp(gasFlow + rate × DeltaTime, 0, MaxGasFlow)
+```
+
+`GasRateMax` is 300 L/s per second: 0 to full gas in 40 s, one turn and one wait. `GasRateDeadZone` is 0.05 of the travel. The quadratic taper makes a small turn a trim: a quarter turn raises 13 L/s per second, half the travel about 90. There is no separate burner slew limit: the rate at full deflection is the limit. The gas never jumps within a tick (30 L/s at the most). A deflection in `BoilerTick` costs one tick: the gas of a tick is the gas after that tick's step.
+
+The startup pace still comes from the operator ramping the gas against the heating-rate limit; the knob changes the control, not the pace. The operators of the headless scenarios turn the same knob (`sim/scenarios/gas.ts`, [headless-runner.md](../dev/headless-runner.md)). `GasRateMax` and the dead zone are UNVERIFIED playability numbers, see [design-basis.md](design-basis.md).
+
 ## Burner trip
 
-The burner trips when the water volume falls below the burner low-low level, 20% of the boiler volume (`CstBoiler.BurnerLowLowLevel`, UNVERIFIED, see [design-basis.md](design-basis.md)) ([ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)). `BoilerBurnerTrip` runs first in `PowerPlantTick`, upstream of the relief valve, on the volume at the start of the tick: the gas is forced to 0 and `burnerTripped` is set, whatever the operator or a scenario does. `INCREASE_GAS_FLOW` is refused while the volume is below the level; the next successful raise clears the flag. There is no pressure or temperature trip: pressure follows saturation, and the relief valve holds it while water remains. A drained boiler trips the burner as well. The boiler panel shows the trip and the sim report notes its time; the CSV has `boiler_burnerTripped`.
+The burner trips when the water volume falls below the burner low-low level, 20% of the boiler volume (`CstBoiler.BurnerLowLowLevel`, UNVERIFIED, see [design-basis.md](design-basis.md)) ([ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)). `BoilerBurnerTrip` runs first in `PowerPlantTick`, upstream of the relief valve, on the volume at the start of the tick: the gas is forced to 0 and `burnerTripped` is set, whatever the operator or a scenario does. The trip also centres the gas knob (`gasRateCommand` 0). `SET_GAS_RATE` is refused when it turns the knob up past the dead zone while the volume is below the level; above it, a deflection past the dead zone to the raise side clears the flag and the gas ramps up from 0 (lowering or centring the knob never clears it). There is no pressure or temperature trip: pressure follows saturation, and the relief valve holds it while water remains. A drained boiler trips the burner as well. The boiler panel shows the trip and the sim report notes its time; the CSV has `boiler_burnerTripped`.
 
 In `boiler-low` (full gas, everything closed) the burner trips at about 271 s with about 19 m³ left, and the peak is 178.0 bar and 356.1 °C, inside design.
 

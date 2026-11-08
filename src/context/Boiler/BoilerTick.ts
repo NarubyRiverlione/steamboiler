@@ -27,6 +27,23 @@ export function metalEnergyOf(temperature: number): number {
   return MetalHeatCapacity * temperature
 }
 
+// Gas rate (L/s per second) for a knob command from -1 to 1: nothing inside the dead zone, then a quadratic taper to
+// GasRateMax at full deflection, so small turns trim and large turns ramp (#15)
+export function gasRateOf(command: number): number {
+  const deflection: number = Math.abs(command)
+  if (deflection <= CstBoiler.GasRateDeadZone) return 0
+  const live: number = Math.min(1, (deflection - CstBoiler.GasRateDeadZone) / (1 - CstBoiler.GasRateDeadZone))
+  return Math.sign(command) * live * live * CstBoiler.GasRateMax
+}
+
+// The gas follows the knob: its flow is the integral of the rate, clamped to 0 to MaxGasFlow (the knob stays put)
+function gasFlowAfter({ gasFlow, gasRateCommand }: BoilerState): number {
+  return Math.min(
+    CstBoiler.MaxGasFlow,
+    Math.max(0, gasFlow + gasRateOf(gasRateCommand) * CstSimulation.DeltaTime),
+  )
+}
+
 type Drain = { waterMass: number; drained: number; energyLoss: number }
 
 // The open drain removes a fixed share of the total volume per tick, in kg at the boiler temperature, with the same
@@ -74,7 +91,9 @@ export type ReturnFeed = { flow: number; temperature: number }
 
 const NoReturn: ReturnFeed = { flow: 0, temperature: CstPhysics.AmbientTemperature }
 
-function BoilerTick(boilerState: BoilerState, returnFeed: ReturnFeed = NoReturn): BoilerState {
+function BoilerTick(previousState: BoilerState, returnFeed: ReturnFeed = NoReturn): BoilerState {
+  // The gas of this tick is the gas after this tick's step of the knob
+  const boilerState: BoilerState = { ...previousState, gasFlow: gasFlowAfter(previousState) }
   const drain = drainBoiler(boilerState)
   const waterMass = drain.waterMass
   // kJ/K, the water and the metal at one temperature
@@ -185,10 +204,10 @@ export function isBelowBurnerLowLow(boilerState: BoilerState): boolean {
 }
 
 // The burner trip: below the burner low-low level at the start of the tick the gas is forced to 0, whatever the
-// operator did. It stays 0 until the operator raises it (ADR 0017).
+// operator did. The knob is centred too; it stays 0 until the operator turns it up (ADR 0017).
 export function BoilerBurnerTrip(boilerState: BoilerState): BoilerState {
   if (!isBelowBurnerLowLow(boilerState)) return boilerState
-  return { ...boilerState, gasFlow: 0, burnerTripped: true }
+  return { ...boilerState, gasFlow: 0, gasRateCommand: 0, burnerTripped: true }
 }
 
 type SteamOutlet = "BYPASS" | "TURBINE"

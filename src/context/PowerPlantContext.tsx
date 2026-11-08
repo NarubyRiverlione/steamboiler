@@ -6,8 +6,7 @@ type PowerPlantContextType = {
   state: PowerPlantState
   dispatch: Dispatch<PowerPlantAction>
   // Action creators
-  increaseGasFlow: (amount: number) => void
-  decreaseGasFlow: (amount: number) => void
+  setGasRate: (gasRateCommand: number) => void // the gas knob, -1 to 1
   toggleDrainValve: () => void
   // Turbine RPM Control
   adjustBypassValve: (amount: number) => void

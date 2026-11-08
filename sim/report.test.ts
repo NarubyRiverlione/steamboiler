@@ -8,7 +8,7 @@ const scenario: Scenario = {
   description: "Gas on, nothing else",
   duration: 60,
   sampleEvery: 10,
-  actions: [{ at: 0, action: { type: "INCREASE_GAS_FLOW", amount: 5000 } }],
+  actions: [{ at: 0, action: { type: "SET_GAS_RATE", payload: { gasRateCommand: 1 } } }],
 }
 
 const embedded = (html: string) => {
@@ -201,7 +201,10 @@ describe("toReportHtml heating rate", () => {
   })
 
   test("keeps the limit inside the plot even when the rate stays far below it", () => {
-    const calm = { ...scenario, actions: [{ at: 0, action: { type: "INCREASE_GAS_FLOW", amount: 100 } as const }] }
+    const calm = {
+      ...scenario,
+      actions: [{ at: 0, action: { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.1 } } as const }],
+    }
     const y = /<line class="limit"[^>]* y1="([\d.]+)"/.exec(toReportHtml(calm, runScenario(calm)))?.[1]
     expect(Number(y)).toBeGreaterThanOrEqual(10)
     expect(Number(y)).toBeLessThanOrEqual(156)

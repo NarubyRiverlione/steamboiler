@@ -1,4 +1,5 @@
 import { ScenarioAction } from "../scenario"
+import { rampGas } from "./gas"
 
 // Operator steps shared by scenarios; a scenario that continues from a settled plant loads a snapshot instead (sim/snapshot-sources.ts).
 
@@ -7,14 +8,14 @@ export const StartGas = 2000 // liters/second during heat-up
 // Main steam valve time: ~34 bar by now (saturation pressure of the heated water, #12; the cold fill is 35%, ADR 0018); the reducer refuses below 10 bar
 export const AtPressure = 780
 
-// t=0: gas on, air extraction pump on. The SJAE waits for main-steam-valve pressure (below it, it switches itself off).
-export const heatUp: ScenarioAction[] = [
-  { at: 0, action: { type: "INCREASE_GAS_FLOW", amount: StartGas } },
-  {
-    at: 0,
-    action: { type: "SET_AIR_EXTRACTION_PUMP_ENABLED", payload: { isAirExtractionPumpEnabled: true } },
-  },
-]
+// t=0: air extraction pump on. The SJAE waits for main-steam-valve pressure (below it, it switches itself off).
+export const airPumpOn: ScenarioAction = {
+  at: 0,
+  action: { type: "SET_AIR_EXTRACTION_PUMP_ENABLED", payload: { isAirExtractionPumpEnabled: true } },
+}
+
+// t=0: gas up to the heat-up gas with one turn of the knob (about 7 s at full deflection), air extraction pump on.
+export const heatUp: ScenarioAction[] = [...rampGas(0, 0, StartGas), airPumpOn]
 
 // At pressure: open the main steam valve and hold the vacuum (SJAE on and open, recirculation pump
 // open so the exhaust condenses, condensation pump open so the condensate returns to the boiler),
