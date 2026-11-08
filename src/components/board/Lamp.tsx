@@ -7,13 +7,14 @@ type LampProps = {
   readonly lit: boolean
   readonly label: string
   readonly title?: string
+  readonly tone?: "alarm" | "ok"
 }
 
-export function Lamp({ lit, label, title }: LampProps) {
+export function Lamp({ lit, label, title, tone }: LampProps) {
   return (
     <span className="board-lamp" title={title}>
       <svg width={26} height={26} viewBox="-13 -13 26 26">
-        <Led lit={lit} label={label} />
+        <Led lit={lit} label={label} tone={tone} />
       </svg>
       <span className="board-lamp-label">{label}</span>
     </span>

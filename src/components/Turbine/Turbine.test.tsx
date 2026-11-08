@@ -32,7 +32,7 @@ function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPr
 
 function clickValve(label: string, direction: "Open" | "Close"): void {
   const valve: HTMLElement =
-    screen.getByRole("meter", { name: `${label} bar` }).closest(".board-valve") ?? document.body
+    screen.getByRole("meter", { name: `${label} knob` }).closest(".board-valve") ?? document.body
   fireEvent.click(within(valve).getByRole("button", { name: direction }))
 }
 
@@ -52,7 +52,10 @@ describe("Turbine page", () => {
 
   it("toggles the main steam valve, lit while open", () => {
     const fns = renderTurbine({ mainSteamValve: true })
-    const msv: HTMLElement = screen.getByRole("button", { name: "MSV OPEN" })
+    const msv: HTMLElement = within(screen.getByRole("group", { name: "Main steam valve" })).getByRole(
+      "button",
+    )
+    expect(msv.textContent).toBe("Open")
     expect(msv.getAttribute("aria-pressed")).toBe("true")
     fireEvent.click(msv)
     expect(fns.toggleMainSteamValve).toHaveBeenCalledTimes(1)
@@ -98,10 +101,17 @@ describe("Turbine page", () => {
     expect(screen.getByLabelText("Turbine speed").textContent).toBe("1234 RPM")
   })
 
+  it("has display-only knobs for the load setpoint and the two valves", () => {
+    renderTurbine({ loadSetpoint: 80, bypassValvePosition: 0.2 })
+    expect(screen.getByRole("meter", { name: "Load setpoint knob" }).getAttribute("aria-valuenow")).toBe("80")
+    expect(screen.getByRole("meter", { name: "Bypass valve knob" }).getAttribute("aria-valuenow")).toBe("20")
+    expect(screen.getByRole("meter", { name: "Turbine valve knob" })).toBeTruthy()
+  })
+
   it("lights the sync LED and lets the breaker close within the band", () => {
     const fns = renderTurbine({ rpm: 3001, generatorBreaker: false })
-    expect(screen.getByRole("img", { name: "In sync band: on" })).toBeTruthy()
-    const breaker: HTMLButtonElement = screen.getByRole("button", { name: "BREAKER OPEN" })
+    expect(screen.getByRole("img", { name: "Ready to close: on" })).toBeTruthy()
+    const breaker: HTMLButtonElement = screen.getByRole("button", { name: "Breaker Open" })
     expect(breaker.disabled).toBe(false)
     fireEvent.click(breaker)
     expect(fns.toggleGeneratorBreaker).toHaveBeenCalledTimes(1)
@@ -110,15 +120,15 @@ describe("Turbine page", () => {
 
   it("blocks the breaker outside the band and says why", () => {
     renderTurbine({ rpm: 2500, generatorBreaker: false })
-    expect(screen.getByRole("img", { name: "In sync band: off" })).toBeTruthy()
-    const blocked: HTMLButtonElement = screen.getByRole("button", { name: "BREAKER OPEN" })
+    expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
+    const blocked: HTMLButtonElement = screen.getByRole("button", { name: "Breaker Open" })
     expect(blocked.disabled).toBe(true)
     expect(screen.getByText(/between 2998 and 3002/).textContent).toContain("Current RPM: 2500")
   })
 
   it("can always open a closed breaker", () => {
     const fns = renderTurbine({ rpm: 2500, generatorBreaker: true })
-    const breaker: HTMLButtonElement = screen.getByRole("button", { name: "BREAKER CLOSED" })
+    const breaker: HTMLButtonElement = screen.getByRole("button", { name: "Breaker Closed" })
     expect(breaker.disabled).toBe(false)
     expect(breaker.getAttribute("aria-pressed")).toBe("true")
     fireEvent.click(breaker)

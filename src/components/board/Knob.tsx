@@ -9,6 +9,7 @@ type KnobProps = {
   readonly max: number
   readonly ends: readonly [string, string]
   readonly note?: string
+  readonly size?: number
 }
 
 const CX = 85
@@ -23,7 +24,7 @@ function polar(radius: number, deg: number): [number, number] {
   return [CX + radius * Math.cos(rad), CY + radius * Math.sin(rad)]
 }
 
-export function Knob({ label, value, min, max, ends, note }: KnobProps) {
+export function Knob({ label, value, min, max, ends, note, size = 150 }: KnobProps) {
   const clamped: number = Math.min(max, Math.max(min, value))
   const angle: number = SWEEP_START + ((SWEEP_END - SWEEP_START) * (clamped - min)) / (max - min)
   const ticks: number[] = Array.from({ length: TICK_COUNT + 1 }, (_: unknown, i: number) => i)
@@ -32,8 +33,8 @@ export function Knob({ label, value, min, max, ends, note }: KnobProps) {
     <svg
       className="board-knob"
       viewBox="0 0 170 170"
-      width={150}
-      height={150}
+      width={size}
+      height={size}
       role="meter"
       aria-label={label}
       aria-valuemin={min}
