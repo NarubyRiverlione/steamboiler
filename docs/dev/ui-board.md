@@ -24,7 +24,7 @@ In `src/components/board/`. Each file opens with a comment saying it is adapted 
 
 ## Shell and navigation
 
-In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate like the part pages: the `h1` "Powerplant Simulation", a lens button "Plant overview" lit on the overview, the breadcrumb, the annunciator in `data-slot="annunciator"`, and empty slots `data-slot="clock" | "speed"` for #86) above the routed page. There is no tab strip. The shell is the board floor (`--board-page-bg`, #2b2e31) with the plates on it. Every page is a board page; no old UI code or CSS is left (#98).
+In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate like the part pages: the `h1` "Powerplant Simulation", a lens button "Plant overview" lit on the overview, the breadcrumb (the name of the open page, centred; the button is the way back to the overview), the annunciator in `data-slot="annunciator"`, and empty slots `data-slot="clock" | "speed"` for #86) above the routed page. There is no tab strip. The shell is the board floor (`--board-page-bg`, #2b2e31) with the plates on it. Every page is a board page; no old UI code or CSS is left (#98).
 
 - **Routes** (`AppRoutes`): `/` is `PlantOverview`; `/boiler`, `/condenser`, `/turbine` the detail pages.
 - **Keys** (`useBoardKeys`): Page Down or Right and Page Up or Left cycle Boiler, Condenser, Turbine (from the overview: first or last, ends wrap); Esc returns to the overview. A focused button or link keeps the arrows (not Esc); an unknown path redirects to the overview. Ignored with Alt, Ctrl or Meta, and while the focus is in an `input`, `textarea`, `select`, `contenteditable`, `slider` or `spinbutton`, so a knob keeps its arrow keys.
@@ -34,11 +34,11 @@ In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate lik
 
 ## Boiler page
 
-`src/components/Boiler/Boiler.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 200 bar; green to `ValveRatingPressure`, orange to `ReliefOpenPressure`, red above), the gas controls (four `LensButton` steps of `GasChangeRateFast` and `-Slow`; the knob is #15), the drum `LevelGauge` (one red zone below `BurnerLowLowLevel`) with the drain valve button, then the status readouts as `Display`s with `Lamp`s for heating rate over limit, relief valve open and burner tripped, and an Advanced `<details>`. The pressure and the energy change are smoothed with `useEMA`, as before.
+`src/components/Boiler/Boiler.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 200 bar; green to `ValveRatingPressure`, orange to `ReliefOpenPressure`, red above), the gas controls (four `LensButton` steps of `GasChangeRateFast` and `-Slow`; the knob is #15), the drum `LevelGauge` (one red zone below `BurnerLowLowLevel`) with the drain valve button, then the status readouts as `Display`s with `Lamp`s for heating rate over limit, relief valve open and burner tripped, then the stack temperature and boiler efficiency (#89), and an Advanced `<details>`. The pressure and the energy change are smoothed with `useEMA`, as before.
 
 ## Condenser page
 
-`src/components/Condenser/Condenser.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 400 mbar; green within `OptimalPressureBellWidth` of `OptimalPressure`, orange outside the band up to `VacuumLimit`, red above, where the turbine trips) with High and Low `Lamp`s, the pressure controls (air extraction pump and SJAE `LensButton`s, SJAE `ValveControl`), the hotwell `LevelGauge` (no zones yet, #54), a `ValveControl` each for the recirculation pump, condensation pump, makeup and reject (flow rates as before), then the status readouts as `Display`s (steam volume, hotwell temperature, intake and return flow). Smoothed with `useEMA`, as before.
+`src/components/Condenser/Condenser.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 1100 mbar, so atmospheric is on the dial; green within `OptimalPressureBellWidth` of `OptimalPressure`, orange outside the band up to `VacuumLimit`, red above, where the turbine trips) with High and Low `Lamp`s, the pressure controls (air extraction pump and SJAE `LensButton`s, SJAE `ValveControl`), the hotwell `LevelGauge` (no zones yet, #54), a `ValveControl` each for the recirculation pump, condensation pump, makeup and reject (flow rates as before), then the status readouts as `Display`s (steam volume, hotwell temperature, intake and return flow). Smoothed with `useEMA`, as before.
 
 ## Turbine page
 

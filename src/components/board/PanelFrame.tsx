@@ -8,14 +8,16 @@ type PanelFrameProps = {
   readonly title: string
   readonly heading?: "h1" | "h2"
   readonly children?: ReactNode
+  readonly status?: ReactNode // a second inset panel below the first, for the status readouts
 }
 
-export function PanelFrame({ title, heading: Heading = "h2", children }: PanelFrameProps) {
+export function PanelFrame({ title, heading: Heading = "h2", children, status }: PanelFrameProps) {
   return (
     <section className="board-plate" aria-label={title}>
       <Screws />
       <Heading className="board-title">{title}</Heading>
       <div className="board-panel">{children}</div>
+      {status !== undefined && <div className="board-panel board-panel-status">{status}</div>}
     </section>
   )
 }

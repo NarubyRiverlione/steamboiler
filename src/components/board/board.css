@@ -40,6 +40,9 @@
   --board-plate-bg: #d4d4d4;
   --board-plate-border: #8a8a8a;
   --board-panel-bg: #dcdcdc;
+  --board-knob-cap: #0c0c0c;
+  --board-knob-grip: #3a3a3a;
+  --board-knob-pointer: #cfd2d6;
   --board-panel-edge: #ffffff;
   --board-screw-bg: #c4c4c4;
   --board-screw-edge: #8f8f8f;
@@ -92,19 +95,24 @@
   border-radius: 36px;
 }
 
+.board-panel-status {
+  flex: none;
+  margin-top: 0.75rem;
+}
+
+.board-panel .board-group-title.board-section {
+  margin-top: 0;
+}
+
 .board-title {
-  margin: 0 0 0.25rem;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
   padding: 0;
-  background: none;
-  color: inherit;
-  line-height: normal;
-  letter-spacing: 0.5em;
-  font-family: var(--board-font-stencil);
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-align: center;
-  text-shadow: 1px 1px 1px var(--board-text-glow);
-  text-transform: uppercase;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .board-screw {
@@ -214,9 +222,9 @@
 }
 
 .board-header-nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 2px solid var(--board-panel-edge);
@@ -248,12 +256,21 @@
   box-shadow: 0 0 8px var(--board-lens-lit-glow);
 }
 
+.board-header-nav .board-lens {
+  justify-self: start;
+}
+
+.board-header-nav nav {
+  grid-column: 2;
+}
+
 .board-breadcrumb {
   display: flex;
+  justify-content: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.35em;
   margin: 0;
   padding: 0;
   font-family: var(--board-font-stencil);
@@ -531,7 +548,12 @@ path.board-zone {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-family: var(--board-font-label);
+  font-family: var(--board-font-stencil);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .board-valve {
@@ -581,6 +603,11 @@ path.board-zone {
   margin-top: 0.75rem;
 }
 
+.board-group-title.board-section {
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
 .board-group-title {
   margin: 0 0 0.35rem;
   padding: 0;
@@ -590,6 +617,7 @@ path.board-zone {
   font-size: 0.95rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .board-boiler-main {
@@ -608,8 +636,40 @@ path.board-zone {
 
 .board-instrument-label,
 .board-readout-label {
-  font-family: var(--board-font-label);
+  font-family: var(--board-font-stencil);
+  font-size: 0.95rem;
   font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.board-readout-label {
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+}
+
+.board-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+
+.board-group {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--board-plate-border);
+  border-radius: 6px;
+}
+
+.board-group .board-group-title {
+  margin: 0;
 }
 
 .board-lens-row {
@@ -620,7 +680,7 @@ path.board-zone {
 
 .board-readouts {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 0.35rem 1.5rem;
 }
 
@@ -629,7 +689,15 @@ path.board-zone {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  min-height: 2.25rem;
   font-family: var(--board-font-label);
+}
+
+.board-readout > span:first-child {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .board-readout-values {
@@ -744,4 +812,162 @@ path.board-zone {
   .board-tile-flash {
     animation-duration: 2s;
   }
+}
+
+.board-knob-bezel {
+  fill: var(--board-gauge-bezel-hi);
+  stroke: var(--board-gauge-bezel-lo);
+}
+
+.board-knob-well,
+.board-knob-cap {
+  fill: var(--board-knob-cap);
+}
+
+.board-knob-grip {
+  stroke: var(--board-knob-grip);
+  stroke-width: 2;
+}
+
+.board-knob-pointer {
+  fill: var(--board-knob-pointer);
+  stroke: var(--board-gauge-bezel-lo);
+}
+
+.board-knob-end {
+  fill: var(--board-text);
+  font-family: var(--board-font-stencil);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.board-knob-note {
+  fill: var(--board-zone-alarm);
+  font-family: var(--board-font-stencil);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.board-led-ok {
+  fill: var(--board-zone-ok);
+  filter: drop-shadow(0 0 4px var(--board-zone-ok));
+}
+
+.board-valve-knob {
+  justify-items: center;
+}
+
+.board-valve-knob .board-valve-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.board-valve-knob .board-valve-values {
+  justify-content: center;
+}
+
+.board-turbine-main {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.board-stack {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.board-group-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.board-group-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.board-group-left {
+  justify-items: stretch;
+}
+
+.board-lcd-msg {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  justify-self: stretch;
+  background: var(--board-lcd-bg);
+  border: 2px solid var(--board-lcd-border);
+  color: var(--board-lcd-text);
+  font-family: var(--board-font-lcd);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.board-hazard {
+  justify-self: stretch;
+  padding: 0.9rem;
+  border-radius: 6px;
+  background: repeating-linear-gradient(-45deg, #f2c200 0 12px, #141414 12px 24px);
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.45);
+}
+
+.board-guard {
+  display: block;
+  width: 100%;
+  height: 58px;
+  border: 5px solid #bbb;
+  border-radius: 10px;
+  background: #2f3b4a;
+  color: #ff8a7a;
+  font-family: var(--board-font-stencil);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+.board-guard:active {
+  transform: translateY(2px);
+}
+
+.board-guard:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.board-guard-closed {
+  background: var(--board-lens-lit-bg);
+  color: var(--board-text);
+}
+
+.board-condenser-top {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.board-condenser-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 1rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.board-group .board-group-cols {
+  justify-self: stretch;
+  align-items: start;
+}
+
+.board-group-cols .board-lens-button:not(.board-lens-small) {
+  min-width: 120px;
 }

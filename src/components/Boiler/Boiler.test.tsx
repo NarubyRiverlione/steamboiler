@@ -32,6 +32,11 @@ describe("Boiler page", () => {
     expect(fns.decreaseGasFlow.mock.calls).toEqual([[250], [500]])
   })
 
+  it("shows the gas flow on the knob", () => {
+    renderBoiler({ gasFlow: 6000 })
+    expect(screen.getByRole("meter", { name: "Gas knob" }).getAttribute("aria-valuenow")).toBe("6000")
+  })
+
   it("toggles the drain valve and shows its state", () => {
     const fns = renderBoiler({ drainValveOpen: true })
     const button: HTMLElement = screen.getByRole("button", { name: "Open" })
@@ -53,6 +58,12 @@ describe("Boiler page", () => {
     expect(screen.getByRole("img", { name: "Over limit: on" })).toBeTruthy()
     expect(screen.getByRole("img", { name: "Open: off" })).toBeTruthy()
     expect(screen.getByLabelText("Heating rate").classList.contains("board-display-alarm")).toBe(true)
+  })
+
+  it("shows the stack temperature and the boiler efficiency", () => {
+    renderBoiler({ stackTemperature: 187.3, boilerEfficiency: 0.916 })
+    expect(screen.getByLabelText("Stack temperature").textContent).toBe("187 °C")
+    expect(screen.getByLabelText("Boiler efficiency").textContent).toBe("91.6 %")
   })
 
   it("shows the readouts and the advanced section", () => {
