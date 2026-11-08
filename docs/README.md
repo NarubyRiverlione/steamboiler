@@ -71,6 +71,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0032](adr/0032-limited-condenser-and-stream-enthalpy.md) | The condenser is a limited exchanger, and every stream enters at its real enthalpy |
 | [0033](adr/0033-gas-is-a-rate-knob.md) | The gas is set by a latching rate knob, and the gas never jumps |
 | [0034](adr/0034-playback-speed-is-ticks-per-second.md) | Playback speed is ticks per wall-clock second, never `DeltaTime` |
+| [0035](adr/0035-condenser-pressure-is-vapour-plus-air.md) | The condenser pressure is shell vapour pressure plus air pressure; the vacuum system removes volume, not pressure |
 
 ## Research (dated, frozen)
 
