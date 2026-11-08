@@ -8,7 +8,7 @@
  *   cap tint.
  */
 
-import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from "react"
+import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject, type SVGProps } from "react"
 import { clampTravel, knobValueFromDrag, SWEEP_END } from "./knobTravel"
 import "./board.css"
 
@@ -185,10 +185,103 @@ export function Knob(props: KnobProps) {
 
 const DEFAULT_STEP = 5
 
+const clampTo = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v))
+
 // Value after a horizontal drag, on the same travel maths as the centre-zero knob (right raises, left lowers)
 function valueFromDrag(start: number, dx: number, min: number, max: number): number {
   const travel: number = knobValueFromDrag(((start - min) / (max - min)) * 2 - 1, dx)
   return min + ((travel + 1) / 2) * (max - min)
+}
+
+type Range = { readonly min: number; readonly max: number }
+
+const angleOf = (v: number, { min, max }: Range): number =>
+  SWEEP_START + ((SWEEP_END - SWEEP_START) * (clampTo(v, min, max) - min)) / (max - min)
+
+// Target value of a key, or undefined when the key does nothing
+function keyTarget(key: string, value: number, step: number, { min, max }: Range): number | undefined {
+  const targets: Record<string, number | undefined> = {
+    ArrowRight: value + step,
+    ArrowUp: value + step,
+    ArrowLeft: value - step,
+    ArrowDown: value - step,
+    Home: min,
+    End: max,
+  }
+  const target: number | undefined = targets[key]
+  return target === undefined ? undefined : clampTo(target, min, max)
+}
+
+// Wheel, key and drag input of a turnable absolute knob; a display-only knob gets the plain meter props
+function useAbsoluteInput(
+  value: number,
+  range: Range,
+  step: number,
+  onChange: ((value: number) => void) | undefined,
+): SVGProps<SVGSVGElement> & { ref: RefObject<SVGSVGElement | null> } {
+  const ref = useRef<SVGSVGElement>(null)
+  const drag = useRef<{ startX: number; startValue: number } | null>(null)
+  const { min, max }: Range = range
+
+  // The wheel listener is not passive, so the page does not scroll while the knob turns
+  useEffect(() => {
+    const node: SVGSVGElement | null = ref.current
+    if (node === null || onChange === undefined) return
+    const onWheel = (e: WheelEvent): void => {
+      e.preventDefault()
+      onChange(clampTo(value + (e.deltaY < 0 ? step : -step), min, max))
+    }
+    node.addEventListener("wheel", onWheel, { passive: false })
+    return () => {
+      node.removeEventListener("wheel", onWheel)
+    }
+  }, [value, onChange, min, max, step])
+
+  if (onChange === undefined) return { ref, className: "board-knob", role: "meter" }
+  const release = (): void => {
+    drag.current = null
+  }
+  return {
+    ref,
+    className: "board-knob board-knob-turn",
+    role: "slider",
+    tabIndex: 0,
+    onKeyDown: (e: KeyboardEvent<SVGSVGElement>): void => {
+      const target: number | undefined = keyTarget(e.key, value, step, range)
+      if (target === undefined) return
+      e.preventDefault()
+      onChange(target)
+    },
+    onPointerDown: (e: PointerEvent<SVGSVGElement>): void => {
+      drag.current = { startX: e.clientX, startValue: value }
+      e.currentTarget.setPointerCapture(e.pointerId)
+    },
+    onPointerMove: (e: PointerEvent<SVGSVGElement>): void => {
+      if (drag.current === null) return
+      onChange(valueFromDrag(drag.current.startValue, e.clientX - drag.current.startX, min, max))
+    },
+    onPointerUp: release,
+    onPointerCancel: release,
+  }
+}
+
+function AbsoluteTicks() {
+  const ticks: number[] = Array.from({ length: TICK_COUNT + 1 }, (_: unknown, i: number) => i)
+  return ticks.map((i: number) => {
+    const deg: number = SWEEP_START + ((SWEEP_END - SWEEP_START) * i) / TICK_COUNT
+    const [x1, y1]: [number, number] = polar(70, deg)
+    const [x2, y2]: [number, number] = polar(78, deg)
+    return (
+      <line
+        key={i}
+        className={i % 5 === 0 ? "board-tick board-tick-major" : "board-tick"}
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+      />
+    )
+  })
 }
 
 function AbsoluteKnob({
@@ -203,105 +296,22 @@ function AbsoluteKnob({
   step = DEFAULT_STEP,
   actual,
 }: AbsoluteKnobProps) {
-  const ref = useRef<SVGSVGElement>(null)
-  const drag = useRef<{ startX: number; startValue: number } | null>(null)
-  const clamped: number = Math.min(max, Math.max(min, value))
-  const angleOf = (v: number): number =>
-    SWEEP_START + ((SWEEP_END - SWEEP_START) * (Math.min(max, Math.max(min, v)) - min)) / (max - min)
-  const angle: number = angleOf(value)
-  const interactive: boolean = onChange !== undefined
-
-  // The wheel listener is not passive, so the page does not scroll while the knob turns
-  useEffect(() => {
-    const node: SVGSVGElement | null = ref.current
-    if (node === null || onChange === undefined) return
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault()
-      onChange(Math.min(max, Math.max(min, clamped + (e.deltaY < 0 ? step : -step))))
-    }
-    node.addEventListener("wheel", onWheel, { passive: false })
-    return () => {
-      node.removeEventListener("wheel", onWheel)
-    }
-  }, [clamped, onChange, min, max, step])
-
-  const onKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
-    const steps: Record<string, number | undefined> = {
-      ArrowRight: clamped + step,
-      ArrowUp: clamped + step,
-      ArrowLeft: clamped - step,
-      ArrowDown: clamped - step,
-      Home: min,
-      End: max,
-    }
-    const next: number | undefined = steps[e.key]
-    if (next === undefined || onChange === undefined) return
-    e.preventDefault()
-    onChange(Math.min(max, Math.max(min, next)))
-  }
-
-  const ticks: number[] = Array.from({ length: TICK_COUNT + 1 }, (_: unknown, i: number) => i)
+  const range: Range = { min, max }
+  const clamped: number = clampTo(value, min, max)
+  const input = useAbsoluteInput(clamped, range, step, onChange)
   const grips: number[] = Array.from({ length: GRIP_COUNT }, (_: unknown, i: number) => i)
   return (
     <svg
-      ref={ref}
-      className={interactive ? "board-knob board-knob-turn" : "board-knob"}
+      {...input}
       viewBox="0 0 170 170"
       width={size}
       height={size}
-      role={interactive ? "slider" : "meter"}
-      tabIndex={interactive ? 0 : undefined}
       aria-label={label}
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={clamped}
-      onKeyDown={interactive ? onKeyDown : undefined}
-      onPointerDown={
-        interactive
-          ? (e: PointerEvent<SVGSVGElement>) => {
-              drag.current = { startX: e.clientX, startValue: clamped }
-              e.currentTarget.setPointerCapture(e.pointerId)
-            }
-          : undefined
-      }
-      onPointerMove={
-        interactive
-          ? (e: PointerEvent<SVGSVGElement>) => {
-              if (drag.current === null || onChange === undefined) return
-              onChange(valueFromDrag(drag.current.startValue, e.clientX - drag.current.startX, min, max))
-            }
-          : undefined
-      }
-      onPointerUp={
-        interactive
-          ? () => {
-              drag.current = null
-            }
-          : undefined
-      }
-      onPointerCancel={
-        interactive
-          ? () => {
-              drag.current = null
-            }
-          : undefined
-      }
     >
-      {ticks.map((i: number) => {
-        const deg: number = SWEEP_START + ((SWEEP_END - SWEEP_START) * i) / TICK_COUNT
-        const [x1, y1]: [number, number] = polar(70, deg)
-        const [x2, y2]: [number, number] = polar(78, deg)
-        return (
-          <line
-            key={i}
-            className={i % 5 === 0 ? "board-tick board-tick-major" : "board-tick"}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-          />
-        )
-      })}
+      <AbsoluteTicks />
       <text className="board-knob-end" x={34} y={158} textAnchor="middle">
         {ends[0]}
       </text>
@@ -321,12 +331,12 @@ function AbsoluteKnob({
           y1={CY - 57}
           x2={CX}
           y2={CY - 67}
-          transform={`rotate(${angleOf(actual).toFixed(2)} ${String(CX)} ${String(CY)})`}
+          transform={`rotate(${angleOf(actual, range).toFixed(2)} ${String(CX)} ${String(CY)})`}
         />
       )}
       <circle className="board-knob-bezel" cx={CX} cy={CY} r={54} />
       <circle className="board-knob-well" cx={CX} cy={CY} r={46} />
-      <g transform={`rotate(${angle.toFixed(2)} ${String(CX)} ${String(CY)})`}>
+      <g transform={`rotate(${angleOf(value, range).toFixed(2)} ${String(CX)} ${String(CY)})`}>
         <circle className="board-knob-cap" cx={CX} cy={CY} r={44} />
         {grips.map((i: number) => {
           const [x1, y1]: [number, number] = polar(40, i * 15)
