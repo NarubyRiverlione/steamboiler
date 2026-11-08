@@ -438,12 +438,23 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* The header stays; only the page below it scrolls */
+.board-main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.board-shell > .board-header {
+  flex-shrink: 0;
+}
+
 /* The shell is the board floor: dark, with the plates on it */
 .board-shell {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   padding: 0.5rem;
   background: var(--board-page-bg);
 }
@@ -794,7 +805,16 @@ path.board-zone {
 
 .board-annunciator {
   display: grid;
+  grid-template-columns: 1fr auto;
   gap: 0.4rem;
+  align-items: stretch;
+}
+
+/* ACK above TEST, beside the tiles */
+.board-annun-buttons {
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 0.75rem;
 }
 
 .board-annun-grid {

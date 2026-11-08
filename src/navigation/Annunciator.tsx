@@ -25,7 +25,7 @@ function Annunciator() {
           </button>
         ))}
       </div>
-      <div className="board-lens-row">
+      <div className="board-lens-row board-annun-buttons">
         <LensButton small onClick={acknowledge}>
           ACK
         </LensButton>
