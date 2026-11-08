@@ -14,4 +14,16 @@ describe("Display", () => {
     rerender(<Display label="Pressure" text="12.5" alarm />)
     expect(screen.getByLabelText("Pressure").classList.contains("board-display-alarm")).toBe(true)
   })
+
+  it("keeps the width of its widest text, whatever it shows now", () => {
+    render(<Display label="Position" text="0 % Open" widest="100 % Open" />)
+    const lcd: HTMLElement = screen.getByLabelText("Position")
+    expect(lcd.classList.contains("board-display-fixed")).toBe(true)
+    expect(lcd.style.getPropertyValue("--board-display-chars")).toBe("10")
+  })
+
+  it("sizes to its text when no widest text is given", () => {
+    render(<Display label="Position" text="0 % Open" />)
+    expect(screen.getByLabelText("Position").classList.contains("board-display-fixed")).toBe(false)
+  })
 })

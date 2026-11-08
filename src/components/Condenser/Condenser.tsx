@@ -79,19 +79,23 @@ function Condenser() {
           <div className="board-readouts">
             <div className="board-readout">
               <span>Steam volume</span>
-              <Display label="Steam volume" text={`${steamMass.toFixed(0)} l`} />
+              <Display label="Steam volume" text={`${steamMass.toFixed(0)} l`} widest="99999 l" />
             </div>
             <div className="board-readout">
               <span>Hotwell temperature</span>
-              <Display label="Hotwell temperature" text={`${hotwellTemperature.toFixed(1)} °C`} />
+              <Display
+                label="Hotwell temperature"
+                text={`${hotwellTemperature.toFixed(1)} °C`}
+                widest="100.0 °C"
+              />
             </div>
             <div className="board-readout">
               <span>Intake flow</span>
-              <Display label="Intake flow" text={`${smoothIntake.toFixed(0)} kg/s`} />
+              <Display label="Intake flow" text={`${smoothIntake.toFixed(0)} kg/s`} widest="999 kg/s" />
             </div>
             <div className="board-readout">
               <span>Return flow</span>
-              <Display label="Return flow" text={`${returnRate.toFixed(1)} kg`} />
+              <Display label="Return flow" text={`${returnRate.toFixed(1)} kg`} widest="999.9 kg" />
             </div>
           </div>
         </>
@@ -112,7 +116,7 @@ function Condenser() {
               minor={100}
               zones={PRESSURE_ZONES}
             />
-            <Display label="Pressure" text={`${pressure.toFixed(0)} mBar`} />
+            <Display label="Pressure" text={`${pressure.toFixed(0)} mBar`} widest="1100 mBar" />
             <span className="board-readout-values">
               <Lamp
                 lit={pressure > HIGH_PRESSURE}
@@ -130,8 +134,8 @@ function Condenser() {
           <div className="board-instrument">
             <span className="board-instrument-label">Hotwell level</span>
             <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
-            <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} />
-            <Display label="Hotwell level change" text={`Δ ${smoothDelta.toFixed(1)}`} />
+            <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} widest="100.0" />
+            <Display label="Hotwell level change" text={`Δ ${smoothDelta.toFixed(1)}`} widest="Δ -99.9" />
           </div>
         </div>
 
@@ -140,13 +144,17 @@ function Condenser() {
           <div className="board-group-cols">
             <div className="board-instrument">
               <span className="board-readout-label">Air Extraction Pump (CAR)</span>
-              <LensButton pressed={isAirExtractionPumpEnabled} onClick={toggleAirExtractionPump}>
+              <LensButton
+                pressed={isAirExtractionPumpEnabled}
+                onClick={toggleAirExtractionPump}
+                widest="START"
+              >
                 {isAirExtractionPumpEnabled ? "STOP" : "START"}
               </LensButton>
             </div>
             <div className="board-instrument">
               <span className="board-readout-label">Steam Jet Air Extraction (SJAE)</span>
-              <LensButton pressed={isSjaeEnabled} onClick={toggleSjae}>
+              <LensButton pressed={isSjaeEnabled} onClick={toggleSjae} widest="DISABLE">
                 {isSjaeEnabled ? "DISABLE" : "ENABLE"}
               </LensButton>
               <ValveControl
@@ -171,6 +179,7 @@ function Condenser() {
             Caption="Flow rate:"
             Position={recirculationPumpValvePosition}
             Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
+            ValueWidest="9999.9 l/s"
             Step={RecirculationPump_Step}
             cbAdjust={adjustRecirculationPumpValvePosition}
           />
@@ -195,6 +204,7 @@ function Condenser() {
               Caption="Makeup:"
               Position={makeupValvePosition}
               Value={`${(makeupValvePosition * Makeup_MaxFlowRate).toFixed(1)} l/s`}
+              ValueWidest="9999.9 l/s"
               Step={Makeup_Step}
               cbAdjust={adjustMakeupValvePosition}
             />
@@ -204,6 +214,7 @@ function Condenser() {
               Caption="Reject:"
               Position={rejectValvePosition}
               Value={`${(rejectValvePosition * Reject_MaxFlowRate).toFixed(1)} l/s`}
+              ValueWidest="9999.9 l/s"
               Step={Reject_Step}
               cbAdjust={adjustRejectValvePosition}
             />

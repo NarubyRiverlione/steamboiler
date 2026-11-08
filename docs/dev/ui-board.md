@@ -13,11 +13,11 @@ In `src/components/board/`. Each file opens with a comment saying it is adapted 
 | Primitive | What |
 |---|---|
 | `PanelFrame` | Plate, inset panel, stencil title (`h1` or `h2`), four corner screws at fixed angles |
-| `Display` | LCD readout (an `<output>` named by its label); red while `alarm` is set |
+| `Display` | LCD readout (an `<output>` named by its label); red while `alarm` is set; `widest` is the longest text it can show, and the box keeps that width (right-aligned) so it does not resize as the value changes. Every LCD on the pages has one, sized from the peaks of the headless runs plus headroom |
 | `Screws` | The four corner screws at fixed angles; used by `PanelFrame` and `Header` |
 | `Led` | Round bezel LED for use inside an SVG (an `img` named "<label>: on/off"); red while `lit` |
 | `Lamp` | `Led` in its own SVG with a text label, for use in HTML |
-| `LensButton` | Illuminated button; lit while `pressed` (`aria-pressed`); `disabled` dims it, `title` carries the reason |
+| `LensButton` | Illuminated button; lit while `pressed` (`aria-pressed`); `disabled` dims it, `title` carries the reason; `widest` is the longest label it can show, so a button that flips (Open and Closed) does not resize |
 | `RoundGauge` | Round dial (`role="meter"`) with a needle and zones (`ok`, `warn`, `alarm`) |
 | `LevelGauge` | Vertical level gauge in percent (`role="meter"`) with a zone strip and a pointer |
 | `ValveControl` | Close and Open lens buttons around a bar (`role="meter"`), position on an LCD; props `cbAdjust(±Step/100)`. Used by the Condenser and Turbine pages; #41 adds the knob |
@@ -47,3 +47,7 @@ In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate lik
 ## Building a part page
 
 A part page is a `PanelFrame` holding its readouts and controls, each a board primitive fed from the plant state; an action is dispatched through the existing reducer. Copy a primitive from MC-v2 into `src/components/board/` when a page needs it, with its tokens in `board.css`, and a test in the `ui` project ([testing.md](testing.md)) that checks behaviour. Each page is checked by eye against the full-board mockup in the ADR; there is no visual-regression tooling.
+
+The status panel is a grid of rows (`.board-readouts` > `.board-readout`): a label in a fixed-width column (10.5 rem) and the value right after it, so a value never sits closer to the next column's label than to its own. Give every LCD and every button whose text changes a `widest`, so nothing resizes while the plant runs.
+
+The Boiler status panel uses three fixed columns (`.board-readouts-cols` > `.board-readout-col`): temperature and energy change; stack temperature, boiler efficiency and burner trip; heating rate and relief valve. The last two put the label above, with the lamp and the LCD side by side below it (`.board-readout-stacked`).

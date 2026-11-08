@@ -8,6 +8,7 @@ import "./board.css"
 type ValveControlProps = {
   readonly Label: string
   readonly Value?: string // flow rate
+  readonly ValueWidest?: string // widest text of Value, so its LCD keeps its width
   readonly Position: number // 0..1, how much the valve is open
   readonly Step: number // percent per click
   readonly cbAdjust: (step: number) => void
@@ -18,6 +19,7 @@ type ValveControlProps = {
 export function ValveControl({
   Label,
   Value,
+  ValueWidest,
   Position,
   Step,
   cbAdjust,
@@ -57,8 +59,8 @@ export function ValveControl({
           </LensButton>
         </div>
         <div className="board-valve-values">
-          {Value !== undefined && <Display label={`${Label} flow`} text={Value} />}
-          <Display label={`${Label} position`} text={`${String(percent)} % Open`} />
+          {Value !== undefined && <Display label={`${Label} flow`} text={Value} widest={ValueWidest} />}
+          <Display label={`${Label} position`} text={`${String(percent)} % Open`} widest="100 % Open" />
         </div>
       </div>
     )
@@ -68,8 +70,8 @@ export function ValveControl({
       <div className="board-valve-head">
         <span className="board-valve-label">{Label}</span>
         <div className="board-valve-values">
-          {Value !== undefined && <Display label={`${Label} flow`} text={Value} />}
-          <Display label={`${Label} position`} text={`${String(percent)} % Open`} />
+          {Value !== undefined && <Display label={`${Label} flow`} text={Value} widest={ValueWidest} />}
+          <Display label={`${Label} position`} text={`${String(percent)} % Open`} widest="100 % Open" />
         </div>
       </div>
       <div className="board-valve-row">

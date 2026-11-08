@@ -177,6 +177,12 @@
   font-size: 1.4rem;
 }
 
+/* Fixed width: the widest text in ch of the LCD font, plus the padding and border */
+.board-display-fixed {
+  min-width: calc(var(--board-display-chars) * 1ch + 1rem + 4px);
+  text-align: right;
+}
+
 .board-display-alarm {
   color: var(--board-lcd-alarm);
 }
@@ -455,6 +461,11 @@ body {
   transform: translateY(2px);
 }
 
+/* Fixed width: the widest label in ch, plus the padding (the label font is not monospace, so ch is an average) */
+.board-lens-fixed {
+  min-width: calc(var(--board-lens-chars) * 1ch + 1.5rem);
+}
+
 .board-lens-small {
   font-size: 0.85rem;
 }
@@ -680,14 +691,16 @@ path.board-zone {
 
 .board-readouts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
   gap: 0.35rem 1.5rem;
 }
 
+/* A fixed label column, so the value follows its label and the free space falls between the columns */
 .board-readout {
-  display: flex;
+  display: grid;
+  grid-template-columns: 10.5rem auto;
+  justify-content: start;
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem;
   min-height: 2.25rem;
   font-family: var(--board-font-label);
@@ -704,6 +717,33 @@ path.board-zone {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* The Boiler status panel: three fixed columns, so a row keeps its column at any width */
+.board-readouts-cols {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+.board-readout-col {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+/* The label above, the lamp and its LCD side by side below it */
+.board-readout-stacked {
+  grid-template-columns: auto;
+  gap: 0.25rem;
+}
+
+.board-readout-stacked .board-readout-values {
+  padding-left: 1.5rem;
+}
+
+/* One lamp width for the stacked rows ("Over limit" is the longest label), so their LCDs start and end at the same place */
+.board-readout-stacked .board-lamp {
+  min-width: 8.5rem;
 }
 
 .board-advanced summary {
