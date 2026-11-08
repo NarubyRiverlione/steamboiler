@@ -118,6 +118,7 @@ type Handler<T extends ActionType> = (
 // One handler per action type; the mapped type makes a missing handler a compile error.
 const handlers: { [T in ActionType]: Handler<T> } = {
   SIMULATE_TICK: (state) => PowerPlantTick(state),
+  LOAD_STATE: (_state, { payload: { state } }) => state,
 
   //#region Boiler
   // Sets the knob. Turning it up is refused (knob stays centred) while the water is below the burner low-low level; a

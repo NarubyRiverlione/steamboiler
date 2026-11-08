@@ -1,9 +1,10 @@
-/** Header on every page, a plate like the part pages: title, the Plant overview button and the breadcrumb. The annunciator sits in its slot; the clock and speed slots stay empty until #86. */
+/** Header on every page, a plate like the part pages: title, the Plant overview button, the breadcrumb and the Presets button. The annunciator sits in its slot; the clock and speed slots stay empty until #86. */
 
 import { Link, useLocation } from "react-router-dom"
 import { Screws } from "../components/board/Screws"
 import "../components/board/board.css"
 import Annunciator from "./Annunciator"
+import PresetsButton from "./PresetsButton"
 import { OVERVIEW_PATH, PART_IDS, PARTS, type PartId } from "./plantParts"
 
 function Header() {
@@ -47,6 +48,9 @@ function Header() {
               )}
             </ol>
           </nav>
+          <div className="board-header-presets">
+            <PresetsButton />
+          </div>
         </div>
       </div>
     </header>

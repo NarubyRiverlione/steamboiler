@@ -1069,6 +1069,91 @@ path.board-zone {
   min-width: 120px;
 }
 
+/* Presets button in the header and its modal popup (#24) */
+.board-header-presets {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.board-presets-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.board-presets {
+  gap: 0.5rem;
+  width: min(32rem, 92vw);
+  font-family: var(--board-font-stencil);
+}
+
+.board-presets-title {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+}
+
+.board-presets-hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.board-presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-presets-choice,
+.board-presets-close {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 3px solid var(--board-lens-bezel);
+  border-top-color: var(--board-lens-bezel-light);
+  border-radius: 4px;
+  background: var(--board-lens-bg);
+  color: #000;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.board-presets-choice:hover,
+.board-presets-choice:focus-visible {
+  background: var(--board-lens-lit-bg);
+  box-shadow: 0 0 8px var(--board-lens-lit-glow);
+}
+
+.board-presets-choice:focus-visible,
+.board-presets-close:focus-visible {
+  outline: 3px solid var(--board-focus-ring);
+  outline-offset: 3px;
+}
+
+.board-presets-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.board-presets-desc {
+  font-size: 0.85rem;
+}
+
+.board-presets-close {
+  align-items: center;
+  font-weight: 700;
+}
+
 .board-rate-indicator {
   font-family: var(--board-font-stencil);
   font-size: 12px;

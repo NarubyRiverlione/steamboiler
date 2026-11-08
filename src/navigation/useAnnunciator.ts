@@ -16,6 +16,8 @@ export type AnnunciatorValue = {
   readonly tiles: readonly Tile[]
   readonly testing: boolean
   readonly acknowledge: () => void
+  // Forgets every acknowledgement (a loaded preset is a fresh plant)
+  readonly clearAcknowledgements: () => void
   readonly setTesting: (on: boolean) => void
 }
 

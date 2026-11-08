@@ -1,7 +1,9 @@
-import { SpeedMode } from "./PowerPlantState"
+import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 
 type PowerPlantAction =
   | { type: "SIMULATE_TICK" } //  payload: { previousSteamMass: number }
+  // Replaces the whole plant state (a UI preset)
+  | { type: "LOAD_STATE"; payload: { state: PowerPlantState } }
   // Boiler Actions
   | { type: "SET_GAS_RATE"; payload: { gasRateCommand: number } } // the gas knob, -1 to 1 (#15)
   | { type: "TOGGLE_DRAIN_VALVE" }
