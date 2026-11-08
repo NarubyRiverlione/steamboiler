@@ -89,7 +89,52 @@ function Turbine() {
   }
 
   return (
-    <PanelFrame title="Turbine">
+    <PanelFrame
+      status={
+        <>
+          <h3 className="board-group-title board-section">Turbine Status</h3>
+          <div className="board-readouts">
+            <div className="board-readout">
+              <span>Steam flow</span>
+              <Display label="Steam flow" text={`${smoothFlow.toFixed(1)} kg/s`} />
+            </div>
+            <div className="board-readout">
+              <span>Generator load</span>
+              <Display label="Generator load" text={`${electricOutput.toFixed(1)} MW`} />
+            </div>
+            <div className="board-readout">
+              <span>Turbine speed</span>
+              <Display label="Turbine speed" text={`${rpm.toFixed(0)} RPM`} />
+            </div>
+            <div className="board-readout">
+              <span>Load setpoint</span>
+              <Display label="Load setpoint" text={`${loadSetpoint.toFixed(1)} MW`} />
+            </div>
+            <div className="board-readout">
+              <span>Run-up point</span>
+              <Display label="Run-up point" text={`${runUpPoint.toFixed(0)} RPM`} />
+            </div>
+            <div className="board-readout">
+              <span>Mode</span>
+              <Display label="Speed mode" text={MODE_LABELS[speedMode]} />
+            </div>
+            <div className="board-readout">
+              <span>Breaker</span>
+              <Display label="Breaker" text={generatorBreaker ? "CLOSED" : "OPEN"} />
+            </div>
+            <div className="board-readout">
+              <span>Turbine trip</span>
+              <Lamp
+                lit={turbineTripped}
+                label="Turbine trip"
+                title="Turbine tripped: condenser pressure rose above the vacuum limit, or the main steam valve closed on low boiler pressure"
+              />
+            </div>
+          </div>
+        </>
+      }
+      title="Turbine"
+    >
       <div className="board-turbine-main">
         <div className="board-group board-group-left">
           <h3 className="board-group-title">Steam Flow</h3>
@@ -238,46 +283,6 @@ function Turbine() {
             major={500}
             minor={100}
             zones={RPM_ZONES}
-          />
-        </div>
-      </div>
-
-      <h3 className="board-group-title board-section">Turbine Status</h3>
-      <div className="board-readouts">
-        <div className="board-readout">
-          <span>Steam flow</span>
-          <Display label="Steam flow" text={`${smoothFlow.toFixed(1)} kg/s`} />
-        </div>
-        <div className="board-readout">
-          <span>Generator load</span>
-          <Display label="Generator load" text={`${electricOutput.toFixed(1)} MW`} />
-        </div>
-        <div className="board-readout">
-          <span>Turbine speed</span>
-          <Display label="Turbine speed" text={`${rpm.toFixed(0)} RPM`} />
-        </div>
-        <div className="board-readout">
-          <span>Load setpoint</span>
-          <Display label="Load setpoint" text={`${loadSetpoint.toFixed(1)} MW`} />
-        </div>
-        <div className="board-readout">
-          <span>Run-up point</span>
-          <Display label="Run-up point" text={`${runUpPoint.toFixed(0)} RPM`} />
-        </div>
-        <div className="board-readout">
-          <span>Mode</span>
-          <Display label="Speed mode" text={MODE_LABELS[speedMode]} />
-        </div>
-        <div className="board-readout">
-          <span>Breaker</span>
-          <Display label="Breaker" text={generatorBreaker ? "CLOSED" : "OPEN"} />
-        </div>
-        <div className="board-readout">
-          <span>Turbine trip</span>
-          <Lamp
-            lit={turbineTripped}
-            label="Turbine trip"
-            title="Turbine tripped: condenser pressure rose above the vacuum limit, or the main steam valve closed on low boiler pressure"
           />
         </div>
       </div>

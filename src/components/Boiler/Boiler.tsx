@@ -69,7 +69,96 @@ function Boiler() {
   const energyText = `${smoothEnergyDelta > 0 ? "+" : ""}${smoothEnergyDelta.toFixed(0)} MJ/s`
 
   return (
-    <PanelFrame title="Boiler">
+    <PanelFrame
+      status={
+        <>
+          <h3 className="board-group-title board-section">Boiler Status</h3>
+          <div className="board-readouts">
+            <div className="board-readout">
+              <span>Temperature</span>
+              <Display label="Temperature" text={`${temperature.toFixed(1)} °C`} />
+            </div>
+            <div className="board-readout">
+              <span>Energy Change</span>
+              <Display label="Energy change" text={energyText} />
+            </div>
+            <div className="board-readout">
+              <span>Heating rate</span>
+              <span className="board-readout-values">
+                <Lamp
+                  lit={heatingRateOverLimit}
+                  label="Over limit"
+                  title={`Alarm above ${String(HeatingRateLimit * 60)} K/min`}
+                />
+                <Display
+                  label="Heating rate"
+                  text={`${(heatingRate * 60).toFixed(1)} K/min`}
+                  alarm={heatingRateOverLimit}
+                />
+              </span>
+            </div>
+            <div className="board-readout">
+              <span>Relief valve</span>
+              <span className="board-readout-values">
+                <Lamp
+                  lit={reliefValveOpen}
+                  label="Open"
+                  title={`Opens at ${String(ReliefOpenPressure)} bar, closes at ${String(ReliefClosePressure)} bar`}
+                />
+                <Display label="Vented" text={`${(ventedTotal / 1e3).toFixed(1)} t vented`} />
+              </span>
+            </div>
+            <div className="board-readout">
+              <span>Burner trip</span>
+              <Lamp
+                lit={burnerTripped}
+                label="Tripped"
+                title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, raise the gas to restart`}
+              />
+            </div>
+            <div className="board-readout">
+              <span>Stack temperature</span>
+              <Display label="Stack temperature" text={`${stackTemperature.toFixed(0)} °C`} />
+            </div>
+            <div className="board-readout">
+              <span>Boiler efficiency</span>
+              <Display label="Boiler efficiency" text={`${(boilerEfficiency * 100).toFixed(1)} %`} />
+            </div>
+          </div>
+
+          <details
+            className="board-advanced board-section"
+            open={advanced}
+            onToggle={(e: SyntheticEvent<HTMLDetailsElement>) => {
+              setAdvanced(e.currentTarget.open)
+            }}
+          >
+            <summary>Advanced</summary>
+            <div className="board-readouts">
+              <div className="board-readout">
+                <span>Steam Mass</span>
+                <span className="board-readout-values">
+                  <Display label="Steam mass" text={`${steamMass.toFixed(1)} kg`} />
+                  <Display label="Steam mass change" text={`Δ ${deltaSteamMass.toFixed(2)} kg`} />
+                </span>
+              </div>
+              <div className="board-readout">
+                <span>Energy</span>
+                <Display label="Energy" text={`${(energy / 1e3).toFixed(1)} MJ`} />
+              </div>
+              <div className="board-readout">
+                <span>Steam Removal</span>
+                <Display
+                  label="Steam removal"
+                  text={`${(bypassSteamFlowOut + turbineSteamFlowOut).toFixed(1)} kg/s`}
+                />
+              </div>
+            </div>
+          </details>
+        </>
+      }
+      title="Boiler"
+    >
       <div className="board-boiler-main">
         <div className="board-instrument">
           <span className="board-instrument-label">Pressure</span>
@@ -156,90 +245,6 @@ function Boiler() {
           </div>
         </div>
       </div>
-
-      <h3 className="board-group-title board-section">Boiler Status</h3>
-      <div className="board-readouts">
-        <div className="board-readout">
-          <span>Temperature</span>
-          <Display label="Temperature" text={`${temperature.toFixed(1)} °C`} />
-        </div>
-        <div className="board-readout">
-          <span>Energy Change</span>
-          <Display label="Energy change" text={energyText} />
-        </div>
-        <div className="board-readout">
-          <span>Heating rate</span>
-          <span className="board-readout-values">
-            <Lamp
-              lit={heatingRateOverLimit}
-              label="Over limit"
-              title={`Alarm above ${String(HeatingRateLimit * 60)} K/min`}
-            />
-            <Display
-              label="Heating rate"
-              text={`${(heatingRate * 60).toFixed(1)} K/min`}
-              alarm={heatingRateOverLimit}
-            />
-          </span>
-        </div>
-        <div className="board-readout">
-          <span>Relief valve</span>
-          <span className="board-readout-values">
-            <Lamp
-              lit={reliefValveOpen}
-              label="Open"
-              title={`Opens at ${String(ReliefOpenPressure)} bar, closes at ${String(ReliefClosePressure)} bar`}
-            />
-            <Display label="Vented" text={`${(ventedTotal / 1e3).toFixed(1)} t vented`} />
-          </span>
-        </div>
-        <div className="board-readout">
-          <span>Burner trip</span>
-          <Lamp
-            lit={burnerTripped}
-            label="Tripped"
-            title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, raise the gas to restart`}
-          />
-        </div>
-        <div className="board-readout">
-          <span>Stack temperature</span>
-          <Display label="Stack temperature" text={`${stackTemperature.toFixed(0)} °C`} />
-        </div>
-        <div className="board-readout">
-          <span>Boiler efficiency</span>
-          <Display label="Boiler efficiency" text={`${(boilerEfficiency * 100).toFixed(1)} %`} />
-        </div>
-      </div>
-
-      <details
-        className="board-advanced board-section"
-        open={advanced}
-        onToggle={(e: SyntheticEvent<HTMLDetailsElement>) => {
-          setAdvanced(e.currentTarget.open)
-        }}
-      >
-        <summary>Advanced</summary>
-        <div className="board-readouts">
-          <div className="board-readout">
-            <span>Steam Mass</span>
-            <span className="board-readout-values">
-              <Display label="Steam mass" text={`${steamMass.toFixed(1)} kg`} />
-              <Display label="Steam mass change" text={`Δ ${deltaSteamMass.toFixed(2)} kg`} />
-            </span>
-          </div>
-          <div className="board-readout">
-            <span>Energy</span>
-            <Display label="Energy" text={`${(energy / 1e3).toFixed(1)} MJ`} />
-          </div>
-          <div className="board-readout">
-            <span>Steam Removal</span>
-            <Display
-              label="Steam removal"
-              text={`${(bypassSteamFlowOut + turbineSteamFlowOut).toFixed(1)} kg/s`}
-            />
-          </div>
-        </div>
-      </details>
     </PanelFrame>
   )
 }

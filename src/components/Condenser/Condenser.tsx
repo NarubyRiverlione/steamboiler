@@ -72,7 +72,32 @@ function Condenser() {
   const smoothDelta: number = useEMA(deltaWaterMass, 0.5)
 
   return (
-    <PanelFrame title="Condenser">
+    <PanelFrame
+      status={
+        <>
+          <h3 className="board-group-title board-section">Condenser Status</h3>
+          <div className="board-readouts">
+            <div className="board-readout">
+              <span>Steam volume</span>
+              <Display label="Steam volume" text={`${steamMass.toFixed(0)} l`} />
+            </div>
+            <div className="board-readout">
+              <span>Hotwell temperature</span>
+              <Display label="Hotwell temperature" text={`${hotwellTemperature.toFixed(1)} °C`} />
+            </div>
+            <div className="board-readout">
+              <span>Intake flow</span>
+              <Display label="Intake flow" text={`${smoothIntake.toFixed(0)} kg/s`} />
+            </div>
+            <div className="board-readout">
+              <span>Return flow</span>
+              <Display label="Return flow" text={`${returnRate.toFixed(1)} kg`} />
+            </div>
+          </div>
+        </>
+      }
+      title="Condenser"
+    >
       <div className="board-condenser-top">
         <div className="board-cluster">
           <div className="board-instrument">
@@ -183,26 +208,6 @@ function Condenser() {
               cbAdjust={adjustRejectValvePosition}
             />
           </div>
-        </div>
-      </div>
-
-      <h3 className="board-group-title board-section">Condenser Status</h3>
-      <div className="board-readouts">
-        <div className="board-readout">
-          <span>Steam volume</span>
-          <Display label="Steam volume" text={`${steamMass.toFixed(0)} l`} />
-        </div>
-        <div className="board-readout">
-          <span>Hotwell temperature</span>
-          <Display label="Hotwell temperature" text={`${hotwellTemperature.toFixed(1)} °C`} />
-        </div>
-        <div className="board-readout">
-          <span>Intake flow</span>
-          <Display label="Intake flow" text={`${smoothIntake.toFixed(0)} kg/s`} />
-        </div>
-        <div className="board-readout">
-          <span>Return flow</span>
-          <Display label="Return flow" text={`${returnRate.toFixed(1)} kg`} />
         </div>
       </div>
     </PanelFrame>

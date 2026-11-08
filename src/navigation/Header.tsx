@@ -35,13 +35,11 @@ function Header() {
           </Link>
           <nav aria-label="Breadcrumb">
             <ol className="board-breadcrumb">
-              <li>
-                {onOverview ? (
+              {onOverview && (
+                <li>
                   <span aria-current="page">Plant overview</span>
-                ) : (
-                  <Link to={OVERVIEW_PATH}>Plant overview</Link>
-                )}
-              </li>
+                </li>
+              )}
               {part !== undefined && (
                 <li>
                   <span aria-current="page">{PARTS[part].name}</span>
