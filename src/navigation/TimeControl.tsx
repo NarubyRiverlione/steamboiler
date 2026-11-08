@@ -1,5 +1,6 @@
-/** The simulated clock and the plain playback speed selector in the header's clock and speed slots; #86 restyles both. */
+/** The simulated clock (an LCD display that flashes while paused) and the playback speed selector in the header's clock and speed slots. */
 
+import { Display } from "../components/board/Display"
 import { LensButton } from "../components/board/LensButton"
 import usePowerPlant from "../context/PowerPlantContext"
 import { PlaybackSpeeds, PlaybackSpeed, formatClock } from "../context/Playback"
@@ -9,8 +10,10 @@ import { useAnnunciator } from "./useAnnunciator"
 const label = (speed: PlaybackSpeed): string => (speed === 0 ? "Pause" : `${String(speed)}x`)
 
 export function Clock() {
-  const { simulatedSeconds } = usePowerPlant()
-  return <span aria-label="Simulated clock">{formatClock(simulatedSeconds)}</span>
+  const { simulatedSeconds, playbackSpeed } = usePowerPlant()
+  return (
+    <Display label="Simulated clock" text={formatClock(simulatedSeconds)} flashing={playbackSpeed === 0} />
+  )
 }
 
 export function SpeedSelector() {

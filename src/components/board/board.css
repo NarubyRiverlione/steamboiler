@@ -189,6 +189,23 @@
   color: var(--board-lcd-alarm);
 }
 
+/* Flashing readout (the clock while paused): the text drops out, as the mockup's .lcd.paused */
+.board-display-flash {
+  animation: board-display-flash 1.2s steps(1) infinite;
+}
+
+@keyframes board-display-flash {
+  50% {
+    color: var(--board-led-off);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-display-flash {
+    animation-duration: 2s;
+  }
+}
+
 .board-led-bezel {
   fill: var(--board-screw-bg);
   stroke: var(--board-screw-edge);
