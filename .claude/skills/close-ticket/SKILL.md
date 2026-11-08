@@ -11,8 +11,8 @@ Once the gate is green, run straight through: do not ask for confirmation. Stop 
 ## 1. Orient
 
 - Ticket number: the argument, else the trailing number of the current branch (`<slug>-<ticket>`). Ticket branch: `git branch --list "*-<ticket>"`; note whether it lives in a worktree (`git worktree list`).
-- Stop if the branch is `main`, `dev` or `ui`, or if the working tree of the ticket branch is dirty.
-- Target: `ui` if the issue has the `UI design` label (`gh issue view <n> --json labels`), otherwise `dev`.
+- Stop if the branch is `main` or `dev`, or if the working tree of the ticket branch is dirty.
+- Target: `dev`.
 
 ## 2. Gate (skip a step only if it already passed in this session on the current HEAD)
 
@@ -27,7 +27,7 @@ Once the gate is green, run straight through: do not ask for confirmation. Stop 
 ## 3. Sync and merge
 
 - Target current: `git fetch origin`. If `origin/<target>` is ahead of local `<target>`, fast-forward it first (`git -C <main checkout> checkout <target> && git pull --ff-only`). If it has diverged, stop.
-- If the target gained commits since the ticket branched, merge the target into the ticket branch (merge commit, no rebase), then re-run the gate. For a UI ticket, always merge `dev` into `ui` first (pull `dev` before that), as the policy says.
+- If the target gained commits since the ticket branched, merge the target into the ticket branch (merge commit, no rebase), then re-run the gate.
 - In the main checkout: `git checkout <target> && git merge --no-ff <branch>`. On conflicts: stop and ask.
 - `git push origin <target>`.
 
