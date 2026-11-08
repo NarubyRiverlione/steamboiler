@@ -12,7 +12,7 @@ const label = (speed: PlaybackSpeed): string => (speed === 0 ? "Pause" : `${Stri
 export function Clock() {
   const { simulatedSeconds, playbackSpeed } = usePowerPlant()
   return (
-    <Display label="Simulated clock" text={formatClock(simulatedSeconds)} flashing={playbackSpeed === 0} />
+    <Display label="Simulated clock" text={formatClock(simulatedSeconds)} flashing={playbackSpeed === 0} widest="100:00:00" />
   )
 }
 

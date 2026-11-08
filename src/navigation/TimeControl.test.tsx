@@ -7,13 +7,7 @@ import { Clock, SpeedSelector } from "./TimeControl"
 import { isSpeedLocked } from "./speedLock"
 import { AnnunciatorContext, type AnnunciatorValue, type Tile } from "./useAnnunciator"
 
-const tile = (flashing: boolean): Tile => ({
-  id: "burnerTripped",
-  label: "Burner trip",
-  part: "boiler",
-  lit: true,
-  flashing,
-})
+const tile = (flashing: boolean): Tile => ({ id: "burnerTripped", label: "Burner trip", part: "boiler", lit: true, flashing })
 
 function setup(flashing: boolean, playbackSpeed = 1) {
   const setPlaybackSpeed = vi.fn()
