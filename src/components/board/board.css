@@ -1,4 +1,4 @@
-/* Board tokens and bundled fonts, adapted from MC-v2 (console.css, fonts.css). Every name carries the --board- prefix so it cannot clash with simulator.css and App.css. */
+/* Board tokens and bundled fonts, adapted from MC-v2 (console.css, fonts.css). Every name carries the --board- prefix so it cannot clash with other styles. */
 
 @font-face {
   font-family: "Stardos Stencil";
@@ -400,15 +400,29 @@
   stroke-width: 5px;
 }
 
-/* The shell is the board floor: dark, with the plates on it */
-.app.board-shell {
-  max-width: none;
+/* Page base: no margin, border-box sizing, the floor colour behind the shell */
+* {
+  box-sizing: border-box;
+}
+
+body {
   margin: 0;
-  padding: 0.5rem;
+  min-width: 320px;
   min-height: 100vh;
   background: var(--board-page-bg);
-  border-radius: 0;
-  box-shadow: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* The shell is the board floor: dark, with the plates on it */
+.board-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  padding: 0.5rem;
+  background: var(--board-page-bg);
 }
 
 .board-lens-button {
