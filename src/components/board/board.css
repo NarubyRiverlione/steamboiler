@@ -659,3 +659,75 @@ path.board-zone {
 .board-input:disabled {
   opacity: 0.45;
 }
+
+/* Annunciator: tiles flash until acknowledged (ACK), all light while TEST is held */
+:root {
+  --board-tile-off-bg: #5a5a52;
+  --board-tile-off-text: #3b3b3b;
+  --board-tile-lit-bg: #ff8a7a;
+  --board-tile-lit-text: #2b0000;
+  --board-tile-lit-glow: #ff4d3a;
+  --board-annun-well: #1b1b1b;
+}
+
+.board-annunciator {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.board-annun-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+  padding: 0.35rem;
+  background: var(--board-annun-well);
+  border-radius: 4px;
+}
+
+.board-tile {
+  min-height: 3.1rem;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 2px;
+  background: var(--board-tile-off-bg);
+  color: var(--board-tile-off-text);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.55);
+  font-family: var(--board-font-stencil);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.board-tile:focus-visible {
+  outline: 3px solid var(--board-lens-lit-glow);
+  outline-offset: 2px;
+}
+
+.board-tile-lit {
+  background: var(--board-tile-lit-bg);
+  color: var(--board-tile-lit-text);
+  box-shadow:
+    0 0 10px var(--board-tile-lit-glow),
+    inset 0 0 8px #ffffff;
+}
+
+.board-tile-flash {
+  animation: board-tile-flash 0.7s steps(1) infinite;
+}
+
+@keyframes board-tile-flash {
+  50% {
+    background: var(--board-tile-off-bg);
+    color: var(--board-tile-off-text);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-tile-flash {
+    animation-duration: 2s;
+  }
+}

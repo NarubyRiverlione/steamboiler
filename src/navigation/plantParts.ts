@@ -1,6 +1,7 @@
 /** The parts of the plant that have a page: route, name and the alarm flags that light the part's LED. */
 
 import type PowerPlantState from "../context/PowerPlantState"
+import { ALARMS } from "./alarms"
 
 export type PartId = "boiler" | "condenser" | "turbine"
 
@@ -15,11 +16,9 @@ export const PARTS: Readonly<Record<PartId, { readonly path: string; readonly na
 export const OVERVIEW_PATH = "/"
 
 export function partAlarms(state: PowerPlantState): Record<PartId, boolean> {
-  return {
-    boiler: state.Boiler.heatingRateOverLimit || state.Boiler.burnerTripped,
-    condenser: state.Condenser.condensationPumpTripped,
-    turbine: state.Turbine.turbineTripped,
-  }
+  const lit: Record<PartId, boolean> = { boiler: false, condenser: false, turbine: false }
+  for (const alarm of ALARMS) lit[alarm.part] ||= alarm.active(state)
+  return lit
 }
 
 // The part a step away from the current path; the overview steps into the first (next) or last (previous) part, and the ends wrap
