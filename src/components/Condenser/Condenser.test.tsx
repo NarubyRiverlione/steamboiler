@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
+import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
 import Condenser from "./Condenser"
 
 type Ctx = ContextType<typeof PowerPlantContext>
@@ -29,10 +30,12 @@ function renderCondenser(patch: Partial<PowerPlantState["Condenser"]> = {}) {
   return fns
 }
 
-function clickValve(label: string, direction: "Open" | "Close"): void {
-  const valve: HTMLElement =
-    screen.getByRole("meter", { name: `${label} knob` }).closest(".board-valve") ?? document.body
-  fireEvent.click(within(valve).getByRole("button", { name: direction }))
+// Turn a valve knob to an end; the first ramp tick dispatches one ramp step (#41)
+function turnValve(label: string, key: "End" | "Home"): void {
+  fireEvent.keyDown(screen.getByRole("slider", { name: `${label} knob` }), { key })
+  act(() => {
+    vi.advanceTimersByTime(RAMP_TICK_MS)
+  })
 }
 
 describe("Condenser page", () => {
@@ -48,18 +51,26 @@ describe("Condenser page", () => {
     expect(fns.toggleSjae).toHaveBeenCalledTimes(1)
   })
 
-  it("steps each of the five valves with its own step", () => {
-    const fns = renderCondenser()
-    clickValve("SJAE valve", "Open")
-    clickValve("Recirculation pump", "Close")
-    clickValve("Condensation pump", "Open")
-    clickValve("Makeup", "Open")
-    clickValve("Reject", "Close")
-    expect(fns.adjustSjaeValvePosition).toHaveBeenCalledWith(0.05)
-    expect(fns.adjustRecirculationPumpValvePosition).toHaveBeenCalledWith(-0.05)
-    expect(fns.adjustCondensationPumpValvePosition).toHaveBeenCalledWith(0.05)
-    expect(fns.adjustMakeupValvePosition).toHaveBeenCalledWith(0.05)
-    expect(fns.adjustRejectValvePosition).toHaveBeenCalledWith(-0.05)
+  it("turns each of the five valve knobs and ramps its own action", () => {
+    vi.useFakeTimers()
+    const fns = renderCondenser({
+      sjaeValvePosition: 0.5,
+      recirculationPumpValvePosition: 0.5,
+      condensationPumpValvePosition: 0.5,
+      makeupValvePosition: 0.5,
+      rejectValvePosition: 0.5,
+    })
+    turnValve("SJAE valve", "End")
+    turnValve("Recirculation pump", "Home")
+    turnValve("Condensation pump", "End")
+    turnValve("Makeup", "End")
+    turnValve("Reject", "Home")
+    expect(fns.adjustSjaeValvePosition).toHaveBeenCalledWith(RAMP_STEP)
+    expect(fns.adjustRecirculationPumpValvePosition).toHaveBeenCalledWith(-RAMP_STEP)
+    expect(fns.adjustCondensationPumpValvePosition).toHaveBeenCalledWith(RAMP_STEP)
+    expect(fns.adjustMakeupValvePosition).toHaveBeenCalledWith(RAMP_STEP)
+    expect(fns.adjustRejectValvePosition).toHaveBeenCalledWith(-RAMP_STEP)
+    vi.useRealTimers()
   })
 
   it("shows flow rates of the valves that have one", () => {

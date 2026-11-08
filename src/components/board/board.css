@@ -619,41 +619,15 @@ path.board-zone {
   font-family: var(--board-font-label);
 }
 
-.board-valve-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
 
-.board-valve-label {
-  font-family: var(--board-font-stencil);
-  font-weight: 700;
-}
 
 .board-valve-values {
   display: flex;
   gap: 0.35rem;
 }
 
-.board-valve-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
-.board-valve-bar {
-  flex: 1;
-  height: 1rem;
-  background: var(--board-lcd-bg);
-  border: 2px solid var(--board-lcd-border);
-}
 
-.board-valve-bar-fill {
-  height: 100%;
-  background: var(--board-lcd-text);
-}
 
 .board-section {
   margin-top: 0.75rem;
@@ -987,12 +961,6 @@ path.board-zone {
   justify-items: center;
 }
 
-.board-valve-knob .board-valve-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
 
 .board-valve-knob .board-valve-values {
   justify-content: center;
@@ -1194,4 +1162,21 @@ path.board-zone {
   color: var(--board-text);
   min-width: 9ch;
   text-align: center;
+}
+
+/* Valve knob (#41): turned by drag, wheel and keys; the second pointer is the actual position */
+.board-knob-turn {
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.board-knob-turn:focus-visible {
+  outline: 2px solid var(--board-knob-pointer);
+  outline-offset: 2px;
+}
+
+.board-knob-actual {
+  stroke: var(--board-zone-ok);
+  stroke-width: 3;
+  stroke-linecap: round;
 }
