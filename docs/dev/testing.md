@@ -9,9 +9,10 @@ Why: [ADR 0016](../adr/0016-scenario-definition-and-test-layers.md), [ADR 0023](
 | Unit | `pnpm test:unit` | `src/`, `scripts/`, `sim/*.test.ts` | one function or one tick: formulas, reducer rules, operator functions, invariant checks on hand-built samples, snapshot loader | ~1 s |
 | Sim golden | `pnpm test:sim:golden` | `sim/golden/` | golden-path scenarios, their invariants, the stale-snapshot check (tolerant, ADR 0020) | ~5 s |
 | Sim edge | `pnpm test:sim:edge` | `sim/edge/` | edge scenarios and their invariants | ~2 s |
+| UI | `pnpm test:ui` | `src/components/`, `src/navigation/` (`*.test.tsx`) | board components in jsdom: an action is dispatched, a tile lights from a flag; never SVG geometry | ~1 s |
 | Perf | `pnpm test:perf` | `sim/perf/` | the runner wall-clock guard | ~1 s |
 
-`pnpm test` runs unit, golden and edge (Vitest projects in `vite.config.ts`). Perf is opt-in, with its own `vitest.perf.config.ts`: a wall-clock limit depends on the machine, so `pnpm test` and a coverage run skip it. A test file that runs a registered scenario is sim and lives in `sim/golden/` or `sim/edge/`; everything else is unit. A scenario does not re-check what a unit test pins; it checks the outcome.
+`pnpm test` runs unit, ui, golden and edge (Vitest projects in `vite.config.ts`). Perf is opt-in, with its own `vitest.perf.config.ts`: a wall-clock limit depends on the machine, so `pnpm test` and a coverage run skip it. A test file that runs a registered scenario is sim and lives in `sim/golden/` or `sim/edge/`; everything else is unit. Coverage (`pnpm exec vitest run --coverage`) counts every file under `src/`, `sim/` and `scripts/` (the `coverage` block in `vite.config.ts`), so a file no test imports shows as 0% instead of dropping out; tests, `*.d.ts`, `src/main.tsx` and the CLI entry points (`scripts/roadmap.ts`, `sim/run.ts`, `sim/serve.ts`, `sim/write-snapshots.ts`), `sim/perf/`, `sim/reports/` and `sim/snapshots/` are excluded. A scenario does not re-check what a unit test pins; it checks the outcome.
 
 ## Scenario
 

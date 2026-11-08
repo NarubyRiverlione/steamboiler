@@ -1,5 +1,5 @@
 /**
- * Playback speed: ticks per wall-clock second, never a change of DeltaTime (ADR 0026).
+ * Playback speed: ticks per wall-clock second, never a change of DeltaTime (ADR 0034).
  * 1x is 1/DeltaTime ticks per second, the rate of the original loop.
  */
 import { CstSimulation } from "./const"

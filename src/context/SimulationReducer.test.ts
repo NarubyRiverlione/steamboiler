@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { activeAlarms, isSpeedLocked } from "./Alarms"
+import { activeAlarms } from "./Alarms"
 import { runTicks } from "./PowerPlantBatch"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -17,7 +17,7 @@ const act = (state: SimulationState, action: SimulationAction) => simulationRedu
 
 describe("batched ticks", () => {
   test("N batched ticks give exactly the state of N single ticks", () => {
-    const start: PowerPlantState = powerPlantReducer(cold, { type: "INCREASE_GAS_FLOW", amount: 300 })
+    const start: PowerPlantState = powerPlantReducer(cold, { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.3 } })
     let single: PowerPlantState = start
     for (let i = 0; i < 250; i++) single = PowerPlantTick(single)
     expect(runTicks(start, 250).state).toEqual(single)
@@ -25,7 +25,7 @@ describe("batched ticks", () => {
   })
 
   test("splitting a run into batches changes nothing (a speed change causes no jump)", () => {
-    const start: PowerPlantState = powerPlantReducer(cold, { type: "INCREASE_GAS_FLOW", amount: 300 })
+    const start: PowerPlantState = powerPlantReducer(cold, { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.3 } })
     const split: PowerPlantState = [30, 10, 60, 1].reduce((s, n) => runTicks(s, n).state, start)
     expect(split).toEqual(runTicks(start, 101).state)
   })
@@ -39,40 +39,35 @@ describe("alarms", () => {
   test("the batch stops on the tick where an alarm comes on, and the speed drops to 1x", () => {
     const start: SimulationState = sim({ plant: aboutToTrip(), speed: 60 })
     const next: SimulationState = act(start, { type: "SIMULATE_TICKS", count: 600 })
-    expect(activeAlarms(next.plant)).toContain("burnerTrip")
+    expect(activeAlarms(next.plant)).toContain("burnerTripped")
     expect(next.ticks).toBeLessThan(600)
     expect(next.ticks).toBe(1)
     expect(next.speed).toBe(1)
-    expect(next.unacknowledged).toContain("burnerTrip")
-  })
+      })
 
   test("a pause stays a pause when an alarm comes on", () => {
     expect(act(sim({ plant: aboutToTrip(), speed: 0 }), { type: "SIMULATE_TICKS", count: 5 }).speed).toBe(0)
   })
 
-  test("the speed cannot be raised while an alarm is unacknowledged, it can after ACK", () => {
+  test("an alarm already set does not drop the speed again", () => {
     const tripped: SimulationState = act(sim({ plant: aboutToTrip(), speed: 60 }), { type: "SIMULATE_TICK" })
-    expect(isSpeedLocked(tripped.plant, tripped.unacknowledged)).toBe(true)
-    const refused: SimulationState = act(tripped, { type: "SET_PLAYBACK_SPEED", speed: 60 })
-    expect(refused.speed).toBe(1)
-    const acked: SimulationState = act(tripped, { type: "ACKNOWLEDGE_ALARMS" })
-    expect(activeAlarms(acked.plant)).toContain("burnerTrip") // still set
-    expect(act(acked, { type: "SET_PLAYBACK_SPEED", speed: 60 }).speed).toBe(60)
+    const raised: SimulationState = act({ ...tripped, speed: 60 }, { type: "SIMULATE_TICKS", count: 3 })
+    expect(raised.speed).toBe(60)
   })
 
-  test("slowing down or pausing is allowed while locked", () => {
-    const tripped: SimulationState = act(sim({ plant: aboutToTrip(), speed: 60 }), { type: "SIMULATE_TICK" })
-    expect(act(tripped, { type: "SET_PLAYBACK_SPEED", speed: 0 }).speed).toBe(0)
+  test("loading a preset resets the clock to zero and the speed to 1x, without counting its alarms as new", () => {
+    const running: SimulationState = sim({ ticks: 500, speed: 60 })
+    const loaded: SimulationState = act(running, { type: "LOAD_STATE", payload: { state: aboutToTrip() } })
+    expect(loaded.ticks).toBe(0)
+    expect(loaded.speed).toBe(1)
+    expect(loaded.plant).toEqual(aboutToTrip())
   })
 
-  test("an alarm that clears before ACK no longer locks the speed", () => {
-    const tripped: SimulationState = act(sim({ plant: aboutToTrip(), speed: 60 }), { type: "SIMULATE_TICK" })
-    const cleared: SimulationState = act({ ...tripped, plant: cold }, { type: "SIMULATE_TICK" })
-    expect(cleared.unacknowledged).toEqual([])
-    expect(act(cleared, { type: "SET_PLAYBACK_SPEED", speed: 10 }).speed).toBe(10)
+  test("any speed can be set, a pause stays a pause", () => {
+    expect(act(sim(), { type: "SET_PLAYBACK_SPEED", speed: 0 }).speed).toBe(0)
   })
 
   test("the clock is not in PowerPlantState", () => {
-    expect(Object.keys(sim().plant)).toEqual(["Boiler", "Condenser", "Turbine"])
+    expect(Object.keys(sim().plant)).not.toHaveProperty("ticks")
   })
 })

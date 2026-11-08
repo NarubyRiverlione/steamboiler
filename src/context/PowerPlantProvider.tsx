@@ -3,8 +3,8 @@ import { CstSimulation } from "./const.ts"
 import { PowerPlantContext } from "./PowerPlantContext.tsx"
 import PowerPlantAction from "./PowerPlantActions.ts"
 import { PlaybackSpeed, WallClock, simulatedSeconds, startWallClock, ticksDue } from "./Playback.ts"
-import { isSpeedLocked } from "./Alarms.ts"
 import { makeInitialSimulation, simulationReducer } from "./SimulationReducer.ts"
+import { SpeedMode } from "./PowerPlantState.ts"
 
 // Provider
 function PowerPlantProvider({ children }: { children: ReactNode }) {
@@ -12,7 +12,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const state = simulation.plant
   const dispatch = simulationDispatch as (action: PowerPlantAction) => void
 
-  // Simulation loop: ticks due from the elapsed wall time, one batched update per interval (ADR 0026).
+  // Simulation loop: ticks due from the elapsed wall time, one batched update per interval (ADR 0034).
   // The speed is read through a ref so a speed change does not restart the timer or lose the carried fraction.
   const speedRef = useRef<PlaybackSpeed>(simulation.speed)
   useEffect(() => {
@@ -41,16 +41,10 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const setPlaybackSpeed = useCallback((speed: PlaybackSpeed) => {
     simulationDispatch({ type: "SET_PLAYBACK_SPEED", speed })
   }, [])
-  const acknowledgeAlarms = useCallback(() => {
-    simulationDispatch({ type: "ACKNOWLEDGE_ALARMS" })
-  }, [])
 
   //#region  Boiler action creators
-  const increaseGasFlow = (amount: number) => {
-    dispatch({ type: "INCREASE_GAS_FLOW", amount })
-  }
-  const decreaseGasFlow = (amount: number) => {
-    dispatch({ type: "DECREASE_GAS_FLOW", amount })
+  const setGasRate = (gasRateCommand: number) => {
+    dispatch({ type: "SET_GAS_RATE", payload: { gasRateCommand } })
   }
   const toggleDrainValve = () => {
     dispatch({ type: "TOGGLE_DRAIN_VALVE" })
@@ -67,16 +61,18 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const adjustTurbineValve = (position: number) => {
     dispatch({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: position } })
   }
-  const adjustRPMSetPoint = (amount: number) => {
-    dispatch({ type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment: amount } })
+  const setSpeedMode = (speedMode: SpeedMode) => {
+    dispatch({ type: "SET_SPEED_MODE", payload: { speedMode } })
+  }
+  const selectRunUpPoint = (runUpPoint: number) => {
+    dispatch({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint } })
   }
 
-  const toggleHoldMode = () => {
-    dispatch({ type: "TOGGLE_HOLD_MODE" })
-  }
-  
   const toggleGeneratorBreaker = () => {
     dispatch({ type: "TOGGLE_GENERATOR_BREAKER" })
+  }
+  const setLoadSetpoint = (loadSetpoint: number) => {
+    dispatch({ type: "SET_LOAD_SETPOINT", payload: { loadSetpoint } })
   }
   //#endregion
 
@@ -127,19 +123,17 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         // time control
         playbackSpeed: simulation.speed,
         simulatedSeconds: simulatedSeconds(simulation.ticks),
-        speedLocked: isSpeedLocked(simulation.plant, simulation.unacknowledged),
         setPlaybackSpeed,
-        acknowledgeAlarms,
         // boiler actions
-        increaseGasFlow,
-        decreaseGasFlow,
+        setGasRate,
         toggleDrainValve,
         // turbine rpm control actions
         adjustBypassValve,
         toggleMainSteamValve,
         adjustTurbineValve,
-        adjustRPMSetPoint,
-        toggleHoldMode,
+        setSpeedMode,
+        selectRunUpPoint,
+        setLoadSetpoint,
         toggleGeneratorBreaker,
         // condenser actions
         toggleAirExtractionPump,

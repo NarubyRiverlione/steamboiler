@@ -1,9 +1,9 @@
 /**
- * Simulation envelope around the plant: the simulated clock, the playback speed and the alarm acknowledgements
- * live here, outside PowerPlantState, so snapshots do not change. One reducer step also applies the alarm rule,
- * so the speed drops on the very tick the alarm comes on.
+ * Simulation envelope around the plant: the simulated clock and the playback speed live here, outside
+ * PowerPlantState, so snapshots do not change. One reducer step also applies the alarm rule, so the speed drops
+ * on the very tick the alarm comes on. Acknowledging is the annunciator's (UI layer); the speed selector reads it.
  */
-import { AlarmId, activeAlarms, isSpeedLocked, newAlarms } from "./Alarms"
+import { newAlarms } from "./Alarms"
 import PowerPlantAction from "./PowerPlantActions"
 import { PlaybackSpeed } from "./Playback"
 import { initialPowerPlantState, powerPlantReducer } from "./PowerPlantReducer"
@@ -14,32 +14,20 @@ export type SimulationState = {
   plant: PowerPlantState
   ticks: number // fixed ticks run since the start
   speed: PlaybackSpeed
-  unacknowledged: AlarmId[]
 }
 
-export type SimulationAction =
-  | PowerPlantAction
-  | { type: "SET_PLAYBACK_SPEED"; speed: PlaybackSpeed }
-  | { type: "ACKNOWLEDGE_ALARMS" }
+export type SimulationAction = PowerPlantAction | { type: "SET_PLAYBACK_SPEED"; speed: PlaybackSpeed }
 
 export const makeInitialSimulation = (plant: PowerPlantState = initialPowerPlantState): SimulationState => ({
   plant,
   ticks: 0,
   speed: 1,
-  unacknowledged: [],
 })
 
-// An alarm that comes on drops the speed to 1x (a pause stays a pause) and waits for ACK
+// An alarm that comes on drops the speed to 1x (a pause stays a pause)
 function withAlarmRule(before: SimulationState, plant: PowerPlantState, ticks: number): SimulationState {
-  const raised: AlarmId[] = newAlarms(before.plant, plant)
-  const stillActive: AlarmId[] = activeAlarms(plant)
-  return {
-    ...before,
-    plant,
-    ticks,
-    speed: raised.length > 0 && before.speed > 1 ? 1 : before.speed,
-    unacknowledged: [...before.unacknowledged.filter((id) => stillActive.includes(id)), ...raised],
-  }
+  const raised: boolean = newAlarms(before.plant, plant).length > 0
+  return { ...before, plant, ticks, speed: raised && before.speed > 1 ? 1 : before.speed }
 }
 
 export function simulationReducer(state: SimulationState, action: SimulationAction): SimulationState {
@@ -50,12 +38,10 @@ export function simulationReducer(state: SimulationState, action: SimulationActi
       return withAlarmRule(state, plant, state.ticks + ticksRun)
     }
     case "SET_PLAYBACK_SPEED":
-      // Only a raise is refused while locked; slowing down or pausing is always allowed
-      return action.speed > 1 && isSpeedLocked(state.plant, state.unacknowledged)
-        ? state
-        : { ...state, speed: action.speed }
-    case "ACKNOWLEDGE_ALARMS":
-      return { ...state, unacknowledged: [] }
+      return { ...state, speed: action.speed }
+    case "LOAD_STATE":
+      // A loaded preset is a fresh plant: clock to zero, speed to 1x, and its own alarms are not "new"
+      return makeInitialSimulation(powerPlantReducer(state.plant, action))
     default:
       return withAlarmRule(state, powerPlantReducer(state.plant, action), state.ticks)
   }

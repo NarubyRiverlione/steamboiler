@@ -9,7 +9,7 @@ const heatUp: Scenario = {
   description: "Gas on, nothing else",
   duration: 60,
   sampleEvery: 10,
-  actions: [{ at: 0, action: { type: "INCREASE_GAS_FLOW", amount: 5000 } }],
+  actions: [{ at: 0, action: { type: "SET_GAS_RATE", payload: { gasRateCommand: 1 } } }],
 }
 
 describe("runner speed", () => {
@@ -23,8 +23,8 @@ describe("runner speed", () => {
 
 describe("playback batch", () => {
   test("a capped batch fits in one loop update interval", () => {
-    // Gas on, so the tick does real work; the cap is where this stays under UpdateInterval (ADR 0026)
-    const start = powerPlantReducer(makeInitialState(), { type: "INCREASE_GAS_FLOW", amount: 300 })
+    // Gas on, so the tick does real work; the cap is where this stays under UpdateInterval (ADR 0034)
+    const start = powerPlantReducer(makeInitialState(), { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.3 } })
     runTicks(start, 100) // warm up the JIT
     const t0 = performance.now()
     const { ticksRun } = runTicks(start, CstSimulation.MaxTicksPerUpdate)

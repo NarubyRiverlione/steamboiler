@@ -1,36 +1,37 @@
+/** The simulated clock and the plain playback speed selector in the header's clock and speed slots; #86 restyles both. */
+
+import { LensButton } from "../components/board/LensButton"
 import usePowerPlant from "../context/PowerPlantContext"
 import { PlaybackSpeeds, PlaybackSpeed, formatClock } from "../context/Playback"
+import { isSpeedLocked } from "./speedLock"
+import { useAnnunciator } from "./useAnnunciator"
 
 const label = (speed: PlaybackSpeed): string => (speed === 0 ? "Pause" : `${String(speed)}x`)
 
-// Plain header controls: the simulated clock and the playback speed selector (the styled versions are #86)
-function TimeControl() {
-  const { playbackSpeed, simulatedSeconds, speedLocked, setPlaybackSpeed, acknowledgeAlarms } = usePowerPlant()
+export function Clock() {
+  const { simulatedSeconds } = usePowerPlant()
+  return <span aria-label="Simulated clock">{formatClock(simulatedSeconds)}</span>
+}
+
+export function SpeedSelector() {
+  const { playbackSpeed, setPlaybackSpeed } = usePowerPlant()
+  const { tiles } = useAnnunciator()
+  const locked: boolean = isSpeedLocked(tiles)
   return (
-    <div className="time-control">
-      <span className="clock" aria-label="Simulated clock">
-        {formatClock(simulatedSeconds)}
-      </span>
-      <span className="speed" role="group" aria-label="Playback speed">
-        {PlaybackSpeeds.map((speed) => (
-          <button
-            key={speed}
-            type="button"
-            aria-pressed={speed === playbackSpeed}
-            disabled={speedLocked && speed > 1}
-            onClick={() => { setPlaybackSpeed(speed); }}
-          >
-            {label(speed)}
-          </button>
-        ))}
-      </span>
-      {speedLocked && (
-        <button type="button" onClick={acknowledgeAlarms}>
-          ACK
-        </button>
-      )}
+    <div role="group" aria-label="Playback speed" className="board-lens-row">
+      {PlaybackSpeeds.map((speed: PlaybackSpeed) => (
+        <LensButton
+          key={speed}
+          small
+          pressed={speed === playbackSpeed}
+          disabled={locked && speed > 1}
+          onClick={() => {
+            setPlaybackSpeed(speed)
+          }}
+        >
+          {label(speed)}
+        </LensButton>
+      ))}
     </div>
   )
 }
-
-export default TimeControl

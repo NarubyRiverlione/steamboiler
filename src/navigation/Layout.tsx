@@ -1,16 +1,19 @@
 import { Outlet } from "react-router-dom"
-import TabNavigation from "./TabNavigation"
-import TimeControl from "./TimeControl"
+import { AnnunciatorProvider } from "./AnnunciatorProvider"
+import Header from "./Header"
+import { useBoardKeys } from "./useBoardKeys"
 
 function Layout() {
+  useBoardKeys()
   return (
-    <div className="app">
-      <h1>Powerplant Simulation</h1>
-      <TimeControl />
-      <TabNavigation />
-
-      <Outlet />
-    </div>
+    <AnnunciatorProvider>
+      <div className="board-shell">
+        <Header />
+        <main className="board-main">
+          <Outlet />
+        </main>
+      </div>
+    </AnnunciatorProvider>
   )
 }
 

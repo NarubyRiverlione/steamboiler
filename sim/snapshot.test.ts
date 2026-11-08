@@ -15,7 +15,7 @@ describe("snapshot JSON", () => {
   const cold = makeInitialState()
 
   test("round-trips a full plant state exactly", () => {
-    const state = powerPlantReducer(cold, { type: "INCREASE_GAS_FLOW", amount: 500 })
+    const state = powerPlantReducer(cold, { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.5 } })
     expect(parseSnapshot(toSnapshotJson(state), "test")).toEqual(state)
   })
 

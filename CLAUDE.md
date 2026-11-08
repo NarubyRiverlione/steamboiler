@@ -7,7 +7,8 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Rules
 
 - **Branches**: every ticket on its own branch or worktree from `dev`, merged back locally (no pull request) once its
-  gate passes; never commit on `dev` directly. Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
+  gate passes; never commit on `dev` directly. A `UI design` ticket branches from `ui` and merges into `ui`, not `dev`
+  (merge `dev` into `ui` first); `ui` merges into `dev` once, when #85 is done. Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
   (`main` = milestone releases, auto-deployed to GitHub Pages). Gates per merge: `docs/dev/branching.md`.
 - **Realism**: never add a magic number to speed up a process; playability comes from sizing utilities.
   Record every over-dimensioned utility or deliberate reduction in `docs/plant/design-basis.md`.
@@ -26,9 +27,9 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Tickets
 
 GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs in `docs/agents/`.
-Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. New tickets get a `P1`–`P4` label
-(`P1` broken, `P2` realism in scope, `P3` experience and project health, `P4` parked scope expansion; see `docs/agents/issue-tracker.md`) and blocked-by links. A `P4` ticket stays
-`needs-triage` until it is promoted to `P1`–`P3`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
+Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. New tickets get a `P1`–`P5` label
+(`P1` broken, `P2` realism in scope, `P3` experience and project health, `P4` parked, `P5` UI and UX; see `docs/agents/issue-tracker.md`) and blocked-by links. A `P4` ticket stays
+`needs-triage` until it is promoted to `P1`–`P3` or `P5`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
 Before closing, run `git grep "#<ticket>" docs/adr` and update every ADR the ticket makes out of date, then run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
 ~150 s on slow hardware), report the scores (also in
 the closing comment) and flag any method above the risk threshold.
