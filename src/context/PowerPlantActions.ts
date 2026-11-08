@@ -1,7 +1,9 @@
-import { SpeedMode } from "./PowerPlantState"
+import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 
 type PowerPlantAction =
   | { type: "SIMULATE_TICK" } //  payload: { previousSteamMass: number }
+  // Replaces the whole plant state (a UI preset)
+  | { type: "LOAD_STATE"; payload: { state: PowerPlantState } }
   // Boiler Actions
   | { type: "INCREASE_GAS_FLOW"; amount: number }
   | { type: "DECREASE_GAS_FLOW"; amount: number }

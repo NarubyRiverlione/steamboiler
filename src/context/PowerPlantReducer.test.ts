@@ -15,6 +15,12 @@ describe("powerPlantReducer", () => {
     expect(reduce({ type: "SIMULATE_TICK" })).toEqual(PowerPlantTick(base))
   })
 
+  test("LOAD_STATE replaces the whole state", () => {
+    const burning: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 })
+    expect(reduce({ type: "LOAD_STATE", payload: { state: burning } })).toBe(burning)
+    expect(reduce({ type: "LOAD_STATE", payload: { state: base } }, burning)).toBe(base)
+  })
+
   describe("boiler", () => {
     test("gas flow increases, capped at MaxGasFlow", () => {
       expect(reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }).Boiler.gasFlow).toBe(500)

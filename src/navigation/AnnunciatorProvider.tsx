@@ -22,6 +22,7 @@ export function AnnunciatorProvider({ children }: { readonly children: ReactNode
     }),
     testing,
     acknowledge: (): void => { setAcked(active); },
+    clearAcknowledgements: (): void => { setAcked([]); },
     setTesting,
   }
 

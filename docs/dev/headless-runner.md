@@ -133,7 +133,7 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
   A physics change smaller than 1e-9 relative is not caught here, the scenario goal checks cover that.
 - Sources: `turbine-runup` (for `turbine-sync`), `turbine-sync` (for `turbine-load`) and `bypass-loop` (for the edge set). A source starts from cold or from an earlier source; `pnpm sim:snapshots` writes them in the listed order, so a chained one loads the fresh file ([ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)).
 
-UI presets ("cold", "hot standby", "at pressure") are #24; the UI starts cold.
+The UI Presets popup (#24) loads Cold & dark, Hot standby (`bypass-loop`) and At pressure (`turbine-runup`) from these snapshots; the app itself starts cold.
 
 ## Pitfalls
 
