@@ -230,10 +230,23 @@
 
 .board-header-head {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) minmax(300px, 1.4fr);
+  grid-template-columns: minmax(230px, 1fr) auto minmax(300px, 1.4fr);
   gap: 1rem;
   align-items: center;
   min-height: 3rem;
+}
+
+.board-header-values {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Two rows together as tall as the ACK/TEST column: compact LCDs */
+.board-header-values .board-display {
+  min-height: 0;
+  padding: 0.1rem 0.5rem;
+  font-size: 1.1rem;
 }
 
 .board-header-title {
