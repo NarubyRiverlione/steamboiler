@@ -12,7 +12,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}', 'sim/**/*.ts', 'scripts/**/*.ts'],
-      exclude: ['**/*.test.{ts,tsx}', '**/*.d.ts', 'src/main.tsx', 'sim/perf/**', 'sim/reports/**', 'sim/snapshots/**'],
+      exclude: ['**/*.test.{ts,tsx}', '**/*.d.ts', 'src/main.tsx', 'scripts/roadmap.ts', 'sim/run.ts', 'sim/serve.ts', 'sim/write-snapshots.ts', 'sim/perf/**', 'sim/reports/**', 'sim/snapshots/**'],
     },
     // Test layers (docs/dev/testing.md): unit is everything outside the scenario directories;
     // the speed guard in sim/perf/ is opt-in (vitest.perf.config.ts)
