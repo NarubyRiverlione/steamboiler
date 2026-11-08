@@ -1,4 +1,4 @@
-/** Header on every page, a plate like the part pages: title, the Plant overview button, the breadcrumb and the Presets button. The annunciator sits in its slot; the clock and the playback speed selector sit in their slots (plain until #86). */
+/** Header on every page, a plate like the part pages: title, the Plant overview button, the breadcrumb and the Presets button. The annunciator sits in its slot; the clock and the playback speed selector sit in their slots. */
 
 import { Link, useLocation } from "react-router-dom"
 import { Screws } from "../components/board/Screws"

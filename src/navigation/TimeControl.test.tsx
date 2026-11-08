@@ -9,11 +9,11 @@ import { AnnunciatorContext, type AnnunciatorValue, type Tile } from "./useAnnun
 
 const tile = (flashing: boolean): Tile => ({ id: "burnerTripped", label: "Burner trip", part: "boiler", lit: true, flashing })
 
-function setup(flashing: boolean) {
+function setup(flashing: boolean, playbackSpeed = 1) {
   const setPlaybackSpeed = vi.fn()
   const plant = {
     state: makeInitialState(),
-    playbackSpeed: 1,
+    playbackSpeed,
     simulatedSeconds: 3725,
     setPlaybackSpeed,
   } as unknown as ContextType<typeof PowerPlantContext>
@@ -33,6 +33,18 @@ describe("time control", () => {
   it("shows the simulated clock", () => {
     setup(false)
     expect(screen.getByLabelText("Simulated clock").textContent).toBe("1:02:05")
+  })
+
+  it("renders the clock through the board display and does not flash while running", () => {
+    setup(false)
+    const clock: HTMLElement = screen.getByLabelText("Simulated clock")
+    expect(clock.classList.contains("board-display")).toBe(true)
+    expect(clock.classList.contains("board-display-flash")).toBe(false)
+  })
+
+  it("flashes the clock while paused", () => {
+    setup(false, 0)
+    expect(screen.getByLabelText("Simulated clock").classList.contains("board-display-flash")).toBe(true)
   })
 
   it("offers Pause, 1x, 10x and 60x and sets the chosen speed", () => {
