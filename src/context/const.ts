@@ -24,15 +24,15 @@ export const CstSimulation = {
   CstCondenser: {
     TotalVolume: 50e3, // liters (about 3 min of full-gas condensate below normal level, see design-basis.md)
     HotwellStartVolume: 35e3, // liter (70%, the normal level)
-    MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
-    VacuumDecayRate: 5, // mbar per second when pump is off
     OptimalPressure: 31, // mBar, centre of the band on the vacuum readout: the design vacuum (ADR 0032)
     OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
     VacuumLimit: 327, // mbar absolute, turbine trip above it (-0.7 kg/cm² gauge, see design-basis.md)
-    CAR_MaxVacuum: 800, // mbar vacuum  (70-90 kPa vacuum = 11-31 kPa absolute pressure)
-    CAR_TimeNeeded: 15, // seconds to reach max vacuum
-    SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
-    SJAE_MaxPressureDifference: 20, // mbar above AirExtractionPump.MaxVacuum
+    ShellVolume: 450, // m³ steam space of the shell with the exhaust neck and casing (UNVERIFIED, ADR 0035)
+    AirLeakRate: 0.0022, // kg/s of air in-leakage, 3.75 SCFM (ASME PTC 12.2 Table 10-1, ADR 0035)
+    CAR_Capacity: 26, // m³/s of air: over-dimensioned utility, pulls 1 bar to the design vacuum in about a minute (design-basis.md)
+    SJAE_Capacity: 0.96, // m³/s at the full valve (HEI holding example, ADR 0035)
+    SJAE_SuctionLimit: 170, // mbar absolute: above it the ejector breaks and removes nothing (EPRI §8.3.8)
+    HoodReliefPressure: 1353, // mbar absolute: the atmospheric relief diaphragm, the ceiling of the condenser pressure
     SJAE_ValveStep: 5, // % per click open/close
     RecirculationPump_MaxFlowRate: 7400, // l/s: single pass at the rated load with 10 °C water, rise 8.5 K (ADR 0032, design-basis.md)
     RecirculationPump_Step: 5,
@@ -40,9 +40,6 @@ export const CstSimulation = {
     HeatExchangerUA: 27000, // kW/K at the full cooling water flow: terminal temperature difference 6 K at the rated load; scales with flow^0.5 (ADR 0032)
     CondensationPump_MaxFlowRate: 300, // l/s (typical 160 - 270 l/s)
     CondensationPump_Step: 5,
-    PressureMultiplier: 0.8, // steam volume adds pressure
-    SteamVolumeBaseLine: 1000,
-    LeakingRate: 0.01, // kg/s (typical 0.005 to 0.015 kg/s )
     Makeup_MaxFlowRate: 50, // l/s demineralised water into the hotwell
     Makeup_Temperature: 20, // Celsius
     Makeup_Step: 5, // % per click open/close
@@ -105,6 +102,7 @@ export const CstPhysics = {
   GasEnergyDensity: 35000, // kJ/m³: LOWER heating value of natural gas (water leaves as vapour), at 25 °C combustion and 0 °C metering, 1 atm (IS 14504 Table 5: methane 35.8 MJ/m³ less inerts; owner decision, ADR 0029)
   AtmosphericPressure_mBar: 1013.25, // mbar
   AmbientTemperature: 20, // Celsius, the plant at rest and the floor of heat loss
+  AirGasConstant: 287.05, // J/(kg·K), specific gas constant of dry air
 }
 
 // Flue gas, boiler stage and economizer (ADR 0029, figures in docs/plant/design-basis.md and

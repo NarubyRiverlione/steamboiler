@@ -92,8 +92,7 @@ describe("Condenser page", () => {
   })
 
   it("shows the status readouts", () => {
-    renderCondenser({ steamMass: 1234.4, hotwellTemperature: 41.26, pressure: 31.2, returnRate: 12.34 })
-    expect(screen.getByLabelText("Steam volume").textContent).toBe("1234 l")
+    renderCondenser({ hotwellTemperature: 41.26, pressure: 31.2, returnRate: 12.34 })
     expect(screen.getByLabelText("Hotwell temperature").textContent).toBe("41.3 °C")
     expect(screen.getByLabelText("Pressure").textContent).toBe("31 mBar")
     expect(screen.getByLabelText("Return flow").textContent).toBe("12.3 kg")

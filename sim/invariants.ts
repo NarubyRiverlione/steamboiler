@@ -36,7 +36,7 @@ const within = (label: string, value: number, max: number) =>
 
 // Water in the plant, kg: the boiler and hotwell liquid are held as mass, the steam as mass
 export const totalWater = ({ Boiler, Condenser }: PowerPlantState) =>
-  Boiler.waterMass + Boiler.steamMass + Condenser.steamMass + Condenser.hotwellWaterMass
+  Boiler.waterMass + Boiler.steamMass + Condenser.hotwellWaterMass
 
 // Total water with the boundary flows undone: makeup came in, reject, drain and vent went out on purpose
 export const loopWater = (state: PowerPlantState) =>
@@ -44,7 +44,8 @@ export const loopWater = (state: PowerPlantState) =>
   state.Condenser.makeupTotal +
   state.Condenser.rejectTotal +
   state.Boiler.drainedTotal +
-  state.Boiler.ventedTotal
+  state.Boiler.ventedTotal +
+  state.Condenser.ventedTotal
 
 // Steam out of the boiler between samples, taking each sample's flow as constant until the next
 function steamOutSoFar(samples: Sample[]): number[] {

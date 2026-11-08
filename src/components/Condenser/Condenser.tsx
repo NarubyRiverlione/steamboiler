@@ -51,7 +51,6 @@ function Condenser() {
         rejectValvePosition,
         deltaWaterMass,
         pressure, // mbar
-        steamMass,
         hotwellWaterVolume,
         hotwellTemperature,
         returnRate,
@@ -77,10 +76,6 @@ function Condenser() {
         <>
           <h3 className="board-group-title board-section">Condenser Status</h3>
           <div className="board-readouts">
-            <div className="board-readout">
-              <span>Steam volume</span>
-              <Display label="Steam volume" text={`${steamMass.toFixed(0)} l`} widest="99999 l" />
-            </div>
             <div className="board-readout">
               <span>Hotwell temperature</span>
               <Display

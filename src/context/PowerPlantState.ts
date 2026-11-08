@@ -25,13 +25,14 @@ export type BoilerState = {
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)
-  steamMass: number // kg
+  airMass: number // kg of air in the shell, the state; the air pressure follows from it (ADR 0035)
+  ventedTotal: number // kg of steam the hood relief let out since start (totalizer): what the exchanger cannot take
   hotwellWaterMass: number // kg, the state
   hotwellWaterVolume: number // liters, derived: mass × specific volume at the hotwell temperature
   hotwellTemperature: number // Celsius
   intakeFlowRate: number // kg/s turbine exhaust plus bypass steam into the condenser
   returnRate: number // kg returned to the boiler over the last tick
-  condensationRate: number // kg/s into the hotwell: steam condensed from the pool plus exhaust moisture
+  condensationRate: number // kg/s into the hotwell: steam condensed plus exhaust moisture
   coolingRate: number
   coolingWaterOutletTemperature: number // Celsius, the cooling water after the condenser (the intake temperature with no flow)
   isAirExtractionPumpEnabled: boolean

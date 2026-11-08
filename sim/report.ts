@@ -192,6 +192,22 @@ export const panels: Panel[] = [
   },
   {
     group: "Condenser",
+    row: 4,
+    title: "Air in the shell",
+    kind: "volume",
+    unit: "kg",
+    series: one("Air mass", (s) => s.Condenser.airMass),
+  },
+  {
+    group: "Condenser",
+    row: 4,
+    title: "Vented through the hood relief",
+    kind: "volume",
+    unit: "kg",
+    series: one("Vented", (s) => s.Condenser.ventedTotal),
+  },
+  {
+    group: "Condenser",
     row: 1,
     title: "Cooling water valve",
     kind: "valve",
@@ -286,7 +302,6 @@ export const panels: Panel[] = [
     series: [
       { label: "Boiler water", value: (s) => s.Boiler.waterMass },
       { label: "Boiler steam", value: (s) => s.Boiler.steamMass },
-      { label: "Condenser steam", value: (s) => s.Condenser.steamMass },
       { label: "Hotwell", value: (s) => s.Condenser.hotwellWaterMass },
       { label: "Total excl. makeup, reject, drain, vent", value: loopWater },
     ],

@@ -14,6 +14,8 @@ const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 export const LoopSettings = {
   BypassLoadOpening: 0.1, // bypass position once the main steam valve opens: 20 kg/s, close to the turbine's ~18 kg/s at sync speed
   SjaeOpening: 1, // SJAE valve position once there is steam
+  CoolingWaterMinimum: 0.1, // the cooling water never goes below it: a surge of steam (load rejection) must find the exchanger running
+  CoolingWaterOpening: 0.1, // cooling water valve position when the main steam valve opens: the bypass steam has somewhere to condense at once
   CondensationPumpOpening: 0.1, // condensation pump position when the main steam valve opens
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // the level the scenarios judge the hold by: target ± band
@@ -21,8 +23,8 @@ export const LoopSettings = {
   HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (normal level 70%)
   HotwellBandHigh: 0.75, // reject opens above the working band
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
-  CondenserSteamHigh: 100, // kg in the condenser: more cooling water
-  CondenserSteamLow: 10, // kg: less cooling water
+  CondenserPressureHigh: 33, // mbar condenser pressure: more cooling water (the design vacuum is 31 mbar)
+  CondenserPressureLow: 28, // mbar: less cooling water
   GasBackOffPressure: 120, // bar: from here the knob goes down towards the heat-up gas, since the gas takes about 30 s to come back from full and the pressure rises 1 bar/s (#15)
   ValveNudge: 0.02, // position change per adjustment
   AdjustEvery: 1, // sim-seconds between gas, pump and cooling adjustments
@@ -56,6 +58,14 @@ function openMainSteam({ Turbine, Condenser }: PowerPlantState): PowerPlantActio
       type: "ADJUST_STEAM_BYPASS_VALVE",
       payload: { bypassValvePosition },
     })),
+    ...toPosition(
+      Condenser.recirculationPumpValvePosition,
+      S.CoolingWaterOpening,
+      (recirculationPumpValvePosition) => ({
+        type: "SET_RECIRCULATION_PUMP_VALVE_POSITION",
+        payload: { recirculationPumpValvePosition },
+      }),
+    ),
     ...toPosition(
       Condenser.condensationPumpValvePosition,
       S.CondensationPumpOpening,
@@ -116,8 +126,9 @@ function holdBoilerLevel({ Boiler, Condenser, Heater, Turbine }: PowerPlantState
 
 function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
   const direction =
-    Condenser.steamMass > S.CondenserSteamHigh ? 1 : Condenser.steamMass < S.CondenserSteamLow ? -1 : 0
-  const delta = nudge(Condenser.recirculationPumpValvePosition, direction)
+    Condenser.pressure > S.CondenserPressureHigh ? 1 : Condenser.pressure < S.CondenserPressureLow ? -1 : 0
+  const position = Condenser.recirculationPumpValvePosition
+  const delta = direction < 0 && position <= S.CoolingWaterMinimum ? 0 : nudge(position, direction)
   return delta === 0
     ? []
     : [{ type: "SET_RECIRCULATION_PUMP_VALVE_POSITION", payload: { recirculationPumpValvePosition: delta } }]

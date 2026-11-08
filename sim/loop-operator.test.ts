@@ -11,6 +11,7 @@ import PowerPlantState from "../src/context/PowerPlantState"
 const { HotwellBandLow, HotwellBandHigh } = LoopSettings
 const { HotwellLowLow, HotwellHighHigh } = CstSimulation.CstCondenser
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
+const InBand = (LoopSettings.CondenserPressureLow + LoopSettings.CondenserPressureHigh) / 2
 
 describe("hotwellValvePositions", () => {
   it("holds both valves shut anywhere in the band, edges included", () => {
@@ -44,7 +45,7 @@ describe("loopOperator", () => {
   })
   const withCondenser = (patch: Partial<PowerPlantState["Condenser"]>): PowerPlantState => ({
     ...cold,
-    Condenser: { ...cold.Condenser, ...patch },
+    Condenser: { ...cold.Condenser, pressure: InBand, ...patch }, // the condenser pressure inside the operator's band
   })
   const types = (state: PowerPlantState, time = 0) => loopOperator(state, time).map((a) => a.type)
   const hotwellAt = (fraction: number) => fraction * CstCondenser.TotalVolume
@@ -97,6 +98,10 @@ describe("loopOperator", () => {
       { type: "SET_GAS_RATE", payload: { gasRateCommand: -1 } }, // full down, the gas ramps to the heat-up gas
       { type: "TOGGLE_MAIN_STEAM_VALVE" },
       { type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: LoopSettings.BypassLoadOpening } },
+      {
+        type: "SET_RECIRCULATION_PUMP_VALVE_POSITION",
+        payload: { recirculationPumpValvePosition: LoopSettings.CoolingWaterOpening },
+      },
       {
         type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
         payload: { condensationPumpValvePosition: LoopSettings.CondensationPumpOpening },
@@ -187,14 +192,15 @@ describe("loopOperator", () => {
     expect(types(low, 1)).toContain("SET_GAS_RATE")
   })
 
-  test("adds cooling water when steam collects in the condenser, and backs off when it is gone", () => {
-    const cooling = (steamMass: number, position: number) =>
-      loopOperator(withCondenser({ steamMass, recirculationPumpValvePosition: position }), 0).find(
+  test("adds cooling water when the condenser pressure is high, and backs off when it is low, down to the minimum", () => {
+    const cooling = (pressure: number, position: number) =>
+      loopOperator(withCondenser({ pressure, recirculationPumpValvePosition: position }), 0).find(
         (a) => a.type === "SET_RECIRCULATION_PUMP_VALVE_POSITION",
       )
-    expect(cooling(LoopSettings.CondenserSteamHigh + 1, 0)).toBeDefined()
-    expect(cooling(0, 0.5)).toBeDefined()
-    expect(cooling(0, 0)).toBeUndefined()
+    expect(cooling(LoopSettings.CondenserPressureHigh + 1, 0.5)).toBeDefined()
+    expect(cooling(LoopSettings.CondenserPressureLow - 1, 0.5)).toBeDefined()
+    expect(cooling(LoopSettings.CondenserPressureLow - 1, LoopSettings.CoolingWaterMinimum)).toBeUndefined()
+    expect(cooling(LoopSettings.CondenserPressureLow + 1, 0.5)).toBeUndefined()
   })
 
   test("makeup and reject ramp with the distance outside the band and shut inside it", () => {

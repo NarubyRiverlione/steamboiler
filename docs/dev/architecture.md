@@ -87,7 +87,7 @@ scripts/roadmap.ts                    # generates ROADMAP.md from the GitHub iss
 ## Numerical stability
 
 - Boiler pressure is the saturation pressure of the water temperature ([ADR 0001](../adr/0001-boiler-pressure-follows-saturation.md)); the flash that restores the steam inventory each tick is solved implicitly, because an explicit step oscillates near the critical point.
-- Vacuum build-up and decay rates need careful tuning.
+- Vacuum build-up is the air inventory of the shell (ADR 0035); see condenser.md.
 - Edge cases: empty boiler, temperatures or pressures beyond the table, very small steam mass (minimum threshold before it affects pressure).
 
 ## Testing and commands

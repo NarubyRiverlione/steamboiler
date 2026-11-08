@@ -30,8 +30,8 @@ How the parts of the plant connect, what each one does, and where the energy com
 | Generator | Turns shaft power into the load it carries, at 98% | [turbine.md](turbine.md#generator-load-71) |
 | Condenser | Condenses the vapour under vacuum. Cooling water carries the heat away | [condenser.md](condenser.md#energy-balance) |
 | Recirculation pump | Brings cooling water at 10 °C to the condenser | [condenser.md](condenser.md#energy-balance) |
-| Air extraction pump | Pulls the first vacuum | [condenser.md](condenser.md#vacuum-system) |
-| SJAE | Builds the deep vacuum, driven by boiler pressure. It takes no steam or heat from the boiler in the model | [condenser.md](condenser.md#vacuum-system) |
+| Air extraction pump | Pulls the first vacuum | [condenser.md](condenser.md#condenser-pressure-and-the-vacuum-system) |
+| SJAE | Builds the deep vacuum, driven by boiler pressure. It takes no steam or heat from the boiler in the model | [condenser.md](condenser.md#condenser-pressure-and-the-vacuum-system) |
 | Hotwell | Collects the condensate and the exhaust moisture. Makeup comes in here and reject goes out | [condenser.md](condenser.md#hotwell-makeup-and-reject) |
 | Condensation pump | Moves hotwell water into the boiler as the Return, the boiler's only water supply | [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
 

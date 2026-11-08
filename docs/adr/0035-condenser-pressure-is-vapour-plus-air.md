@@ -1,12 +1,14 @@
 # The condenser pressure is shell vapour pressure plus air pressure
 
-The condenser pressure stops being a made-up number (atmospheric, minus a vacuum that builds at a fixed rate, plus `steamMass / 1000`) and becomes two physical parts, as in the `GLOSSARY.md` section Condenser vacuum: the **shell vapour pressure** and the **air pressure**. Decided in the #91 grilling; the figures are sourced in the [research note](../research/2026-11-condenser-air-system.md) (#100). The code is #91.
+The condenser pressure stops being a made-up number (atmospheric, minus a vacuum that builds at a fixed rate, plus `steamMass / 1000`) and becomes two physical parts, as in the `GLOSSARY.md` section Condenser vacuum: the **shell vapour pressure** and the **air pressure**. Decided in the #91 grilling; the figures are sourced in the [research note](../research/2026-11-condenser-air-system.md) (#100). Built in #91.
 
 ## The model
 
 - **Shell vapour pressure is algebraic.** Each tick, solve for the saturation temperature at which the limited exchanger ([ADR 0032](0032-limited-condenser-and-stream-enthalpy.md), `condenserHeatCapacity`) takes the heat the intake brings. The exchanger is linear in Tsat (Q = ε · ṁ · cp · (Tsat − Tin), ε fixed by the flow), so the root is Tsat = Tin + Q ÷ (ε · ṁ · cp). The intake heat itself depends on Tsat (the latent heat, the stream split of [ADR 0028](0028-exhaust-splits-by-quality-at-condenser-intake.md)), so the solve is a short fixed point or a bisection, not a closed form. The steam-mass pool and the `steamMass / 1000` term are gone; the shell holds no vapour inventory.
-- **The ceiling.** What the exchanger cannot take builds pressure along the saturation curve, up to the hood relief pressure. The vacuum limit trip (`VacuumLimit`, 327 mbar, [ADR 0003](0003-turbine-trip-on-vacuum-limit.md)) fires long before it. Total pressure is capped at the ceiling; where the steam goes above it is left to #91 (vented through the relief, so it leaves the loop like the boiler Vent, is the expected form).
+- **The ceiling.** What the exchanger cannot take builds pressure along the saturation curve, up to the hood relief pressure. The vacuum limit trip (`VacuumLimit`, 327 mbar, [ADR 0003](0003-turbine-trip-on-vacuum-limit.md)) fires long before it. Total pressure is capped at the ceiling; the steam above it is vented through the relief and leaves the loop like the boiler Vent (`Condenser.ventedTotal`, a boundary flow of the water inventory). So does moisture and condensate that does not fit in the hotwell.
 - **Air is a mass inventory** in the shell (kg). In: in-leakage, a constant mass flow (a leak chokes below about half atmospheric pressure). Out: the vacuum system. Air pressure is P = m · R · T ÷ V with V the shell volume and T the shell saturation temperature. The plant starts in the Cold state with the shell full of air at 1 bar.
+- **Floor of the vapour pressure (added in #91).** With nothing to condense the shell is not cooler than the water in it: the root is searched from the vapour pressure of the hotter of the cooling water intake and the hotwell. This keeps the cold, stopped plant at rest (shell at 1 bar with the ambient hotwell) and lets the SJAE and pump traces end at a physical floor.
+- **In-leakage only under atmospheric pressure (added in #91).** The leak is a constant mass flow while the shell is under atmospheric pressure and stops at 1 bar; a cold shell does not keep filling.
 - **Condenser pressure** = shell vapour pressure + air pressure.
 - **The vacuum system removes volume, not pressure.** Air removed per second = S · ρ_air(P_air, T). The air extraction pump and the SJAE each have a volumetric capacity S. Operator controls are unchanged (pump toggle, SJAE toggle and valve). SJAE capacity scales linearly with the valve position. The SJAE keeps its two conditions: boiler pressure above `MainSteamValveMinimumPressure`, and the shell pressure below the ejector limit (the "break", below). The pump hogs; the SJAE holds.
 - **No vacuum decay constant.** With the vacuum system stopped, the vacuum is lost by air in-leakage only.
@@ -23,7 +25,7 @@ The condenser pressure stops being a made-up number (atmospheric, minus a vacuum
 | Air pump capacity `CAR_Capacity` (replaces `CAR_MaxVacuum`, `CAR_TimeNeeded`) | about 26 m³/s | **Over-dimensioned utility, not a real size**: the volume that pulls 1013 mbar down to 31 mbar in one minute for 450 m³ (V · ln(1013 ÷ 31) ÷ 60). A real hogger takes 30 minutes (HEI Table 8) and is about 0.3 m³/s. A pull-down of "about a minute" is a playability choice recorded in `design-basis.md`; there is no speed-up constant. Research (c) |
 | Hood relief pressure `HoodReliefPressure` | 1353 mbar abs (0.34 barg) | atmospheric relief diaphragm bursts at 0.34 barg (a plant blog; a patent says 5 psi, the same). A failure analysis says 0.7 barg (snippet only, UNVERIFIED). Research (d) |
 
-`ShellVolume` and the capacities are tuned together with the headless runner in #91 (CAR pull-down about one minute; SJAE holds the air at a few mbar).
+`ShellVolume` and the capacities were checked with the headless runner in #91: the pump pulls 1 bar to 31 mbar in about 60 s, the SJAE alone holds the air at about 2 mbar (`calculateAirInventory` tests), and the pump alone holds the vacuum at 125 MW (`sjae-closed-load`).
 
 ## Constants replaced
 
@@ -40,10 +42,10 @@ The condenser pressure stops being a made-up number (atmospheric, minus a vacuum
 
 - **The vacuum is lost in hours, not minutes (flag for the owner).** The grilling assumed that with the vacuum system stopped the vacuum would go in minutes. With sourced in-leakage and a 450 m³ shell it does not: 31 to 62 mbar takes about 2 hours at 0.0022 kg/s (about 30 minutes at the HEI-class 0.0087), and reaching the 327 mbar trip takes 5 to 60 hours across the sourced range. Real-plant "20 to 25 minutes" needs about 0.13 kg/s, 15 to 190 times a sourced figure, and comes from leakage this model leaves out (opened vacuum breaker, lost gland seal steam). Following the realism rule, the sourced value is used and no leak is inflated. If the owner wants it quicker, the honest levers are a smaller shell volume or a modelled gland seal steam loss, each its own decision. See research (e).
 - A vacuum that holds for hours makes a cold stop and restart cheap to the operator; the playable consequence of the loss is the first pull-down, which is a minute.
-- The condenser pressure now depends on the air inventory in every scenario: golden snapshots, the vacuum readout and the turbine back-pressure move. #91 owns the code, tests and snapshots.
+- The condenser pressure now depends on the air inventory in every scenario: golden snapshots, the vacuum readout and the turbine back-pressure move. Done in #91: snapshots regenerated, the loop operator holds the cooling water against the condenser pressure.
 - The hood relief ceiling means a lost circulating water flow gives a hard cap on pressure; the turbine has already tripped on the vacuum limit.
 
-## Deliberate reductions for `design-basis.md` (the file changes in #91)
+## Deliberate reductions (recorded in `design-basis.md` by #91)
 
 | Item | Our value | Real plant | Why |
 |---|---|---|---|
@@ -55,3 +57,8 @@ The condenser pressure stops being a made-up number (atmospheric, minus a vacuum
 | SJAE hard break | no capacity above 170 mbar | capacity falls steeply near the break | simplified |
 | SJAE and the pump hold at any air pressure | air only, no pump ultimate pressure | a liquid ring pump stops at the seal water vapour pressure (EPRI §2.2.1) | the vapour term is the floor |
 | Hood relief | pressure capped at 1353 mbar | one of several rupture devices, 0.34 to 0.7 barg | weak sources; the vacuum limit trips first |
+
+## Added by #91
+
+- Transient: with no steam pool the pressure follows a change of load in the same tick (the exchanger has no inventory to buffer it). A load rejection or a bypass dump reaches the vacuum limit at once if the cooling water is too low, so the operator keeps a minimum cooling water flow and opens it with the main steam valve (`loop-operator.ts`, [feedwater-loop.md](../plant/feedwater-loop.md)).
+- The `vacuum-loss` edge scenario starts the shell a few minutes short of the vacuum limit, because the sourced in-leakage takes hours to get there from the design vacuum (see Consequences). With the pump and SJAE off, the air grows at exactly the in-leakage rate and the turbine trips on the limit.

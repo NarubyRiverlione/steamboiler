@@ -57,7 +57,7 @@ describe("toReportHtml", () => {
     panels.filter((p) => p.group === group && p.row === row).map((p) => p.title)
 
   test("renders each declared row on its own line, in the layout of the tickets", () => {
-    expect(html.match(/<div class="grid-row"/g)).toHaveLength(7)
+    expect(html.match(/<div class="grid-row"/g)).toHaveLength(8)
     expect(rowTitles("Turbine", 1)).toEqual(["Bypass valve", "Turbine valve", "Steam flow"])
     expect(rowTitles("Turbine", 2)).toEqual(["RPM", "Frequency", "Electric output"])
     expect(rowTitles("Turbine", 3)).toEqual(["Extraction steam", "Tap pressure"])
@@ -75,7 +75,8 @@ describe("toReportHtml", () => {
   test("a chart alone in its row keeps the tile width of its group", () => {
     // Condenser: widest row has 3 charts, so the two charts of the last row keep the one-third tile width
     expect(rowTitles("Condenser", 3)).toEqual(["Condensation rate", "Cooling water temperature"])
-    expect(html.match(/style="--cols:3"/g)).toHaveLength(7)
+    expect(rowTitles("Condenser", 4)).toEqual(["Air in the shell", "Vented through the hood relief"])
+    expect(html.match(/style="--cols:3"/g)).toHaveLength(8)
     expect(html.match(/style="--cols:1"/g)).toBeNull()
   })
 
@@ -156,7 +157,7 @@ describe("toReportHtml", () => {
 
   test("each line of the water inventory chart has its own colour", () => {
     const inventory = panels.find((p) => p.title === "Water inventory")
-    expect(inventory?.series).toHaveLength(5)
+    expect(inventory?.series).toHaveLength(4)
     expect(inventory?.palette).toBe("inventory")
     const colors = /\.kind-inventory \{([^}]*)\}/.exec(html)?.[1].match(/#[0-9a-f]{6}/g) ?? []
     expect(new Set(colors).size).toBe(5)

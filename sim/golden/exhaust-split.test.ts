@@ -6,7 +6,7 @@ import { CstSimulation } from "../../src/context/const"
 
 // Goal check of #81: from the settled bypass loop, the same 25% through the bypass or through the turbine valve.
 // With the rotor at sync speed the shaft takes its full work and the exhaust is about a third moisture, so the two must
-// no longer give the same condenser (ADR 0028). At standstill the shaft takes none and the exhaust is like bypass steam
+// no longer give the same condenser pressure (ADR 0028). At standstill the shaft takes none and the exhaust is like bypass steam
 // (ADR 0032), so the rotor is set to sync speed here; the 3 s run is short enough for it to stay near it.
 const settled: PowerPlantState = loadSnapshot("bypass-loop")
 const { SyncRPM } = CstSimulation.CstTurbine
@@ -37,15 +37,18 @@ describe("exhaust split", () => {
     )
   })
 
-  test("turbine exhaust leaves less steam in the pool than bypass steam", () => {
-    expect(onTurbine.Condenser.steamMass).toBeLessThan(onBypass.Condenser.steamMass)
+  test("turbine exhaust, wetter than bypass steam and less of it, gives a lower condenser pressure", () => {
+    expect(onTurbine.Condenser.pressure).toBeLessThan(onBypass.Condenser.pressure)
   })
 
-  test("with its moisture counted, more enters the hotwell from the exhaust than from the bypass", () => {
-    expect(onTurbine.Condenser.condensationRate).toBeGreaterThan(onBypass.Condenser.condensationRate)
+  test("with its moisture counted, all of the intake reaches the hotwell on either path, none is vented", () => {
+    for (const state of [onBypass, onTurbine]) {
+      expect(state.Condenser.condensationRate).toBeCloseTo(state.Condenser.intakeFlowRate, 1)
+      expect(state.Condenser.ventedTotal).toBeCloseTo(0, 3)
+    }
   })
 
-  test("at standstill the exhaust carries almost no moisture: the pool holds more than at sync speed", () => {
-    expect(atStandstill.Condenser.steamMass).toBeGreaterThan(onTurbine.Condenser.steamMass)
+  test("at standstill the exhaust carries almost no moisture: more heat for the cooling water than at sync speed", () => {
+    expect(atStandstill.Condenser.pressure).toBeGreaterThan(onTurbine.Condenser.pressure)
   })
 })
