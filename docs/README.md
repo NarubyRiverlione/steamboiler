@@ -29,6 +29,8 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | State management, simulation loop, source layout, conventions | [dev/architecture.md](dev/architecture.md) |
 | Headless scenario runner: scenarios, report, invariants, snapshots | [dev/headless-runner.md](dev/headless-runner.md) |
 | Test layers, scenario definition, definition of done | [dev/testing.md](dev/testing.md) |
+| The UI board: `--board-*` tokens, primitives, how a part page is built | [dev/ui-board.md](dev/ui-board.md) |
+| Self-hosted fonts and their licences | [dev/fonts.md](dev/fonts.md) |
 | Branches (`dev` for work, `ui` for the UI redo, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
 
 ## Decisions
