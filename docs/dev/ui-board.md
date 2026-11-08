@@ -4,7 +4,7 @@ The presentation of the analog control-room board. Why: [ADR 0015](../adr/0015-u
 
 ## Tokens
 
-All in `src/components/board/board.css`, under a `--board-*` prefix so they don't clash with `simulator.css` and `App.css` while both exist. Groups: fonts (`--board-font-stencil`, `-lcd`, `-label`), page and text, plate and panel, screws, LCD (`--board-lcd-*`, with `-alarm` for a value in alarm), LED (`--board-led-off`; lit uses `--board-lcd-alarm`), lens button (`--board-lens-*`), mimic (`--board-mimic-*`, one per medium). Class names carry the same `board-` prefix. Fonts: [fonts.md](fonts.md).
+All in `src/components/board/board.css`, under a `--board-*` prefix so they can't clash with other styles. `board.css` also holds the page base (border-box sizing, `body` margin and floor colour). Groups: fonts (`--board-font-stencil`, `-lcd`, `-label`), page and text, plate and panel, screws, LCD (`--board-lcd-*`, with `-alarm` for a value in alarm), LED (`--board-led-off`; lit uses `--board-lcd-alarm`), lens button (`--board-lens-*`), mimic (`--board-mimic-*`, one per medium). Class names carry the same `board-` prefix. Fonts: [fonts.md](fonts.md).
 
 ## Primitives
 
@@ -20,11 +20,11 @@ In `src/components/board/`. Each file opens with a comment saying it is adapted 
 | `LensButton` | Illuminated button; lit while `pressed` (`aria-pressed`); `disabled` dims it, `title` carries the reason |
 | `RoundGauge` | Round dial (`role="meter"`) with a needle and zones (`ok`, `warn`, `alarm`) |
 | `LevelGauge` | Vertical level gauge in percent (`role="meter"`) with a zone strip and a pointer |
-| `ValveControl` | Close and Open lens buttons around a bar (`role="meter"`), position on an LCD; props of the old `ValveSlider`, `cbAdjust(±Step/100)`. Used by the Condenser and Turbine pages; #41 adds the knob |
+| `ValveControl` | Close and Open lens buttons around a bar (`role="meter"`), position on an LCD; props `cbAdjust(±Step/100)`. Used by the Condenser and Turbine pages; #41 adds the knob |
 
 ## Shell and navigation
 
-In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate like the part pages: the `h1` "Powerplant Simulation", a lens button "Plant overview" lit on the overview, the breadcrumb, the annunciator in `data-slot="annunciator"`, and empty slots `data-slot="clock" | "speed"` for #86) above the routed page. There is no tab strip. The shell is the board floor (`--board-page-bg`, #2b2e31) with the plates on it. Pages not yet migrated render below the header with their old styling, in a light `LegacyPage` card so they stay readable on the floor (`LegacyLayout.css` and `LegacyPage`, removed in #98).
+In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate like the part pages: the `h1` "Powerplant Simulation", a lens button "Plant overview" lit on the overview, the breadcrumb, the annunciator in `data-slot="annunciator"`, and empty slots `data-slot="clock" | "speed"` for #86) above the routed page. There is no tab strip. The shell is the board floor (`--board-page-bg`, #2b2e31) with the plates on it. Every page is a board page; no old UI code or CSS is left (#98).
 
 - **Routes** (`AppRoutes`): `/` is `PlantOverview`; `/boiler`, `/condenser`, `/turbine` the detail pages.
 - **Keys** (`useBoardKeys`): Page Down or Right and Page Up or Left cycle Boiler, Condenser, Turbine (from the overview: first or last, ends wrap); Esc returns to the overview. A focused button or link keeps the arrows (not Esc); an unknown path redirects to the overview. Ignored with Alt, Ctrl or Meta, and while the focus is in an `input`, `textarea`, `select`, `contenteditable`, `slider` or `spinbutton`, so a knob keeps its arrow keys.
@@ -34,15 +34,15 @@ In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate lik
 
 ## Boiler page
 
-`src/components/Boiler/Boiler.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 200 bar; green to `ValveRatingPressure`, orange to `ReliefOpenPressure`, red above), the gas controls (four `LensButton` steps of `GasChangeRateFast` and `-Slow`; the knob is #15), the drum `LevelGauge` (one red zone below `BurnerLowLowLevel`) with the drain valve button, then the status readouts as `Display`s with `Lamp`s for heating rate over limit, relief valve open and burner tripped, and an Advanced `<details>`. The pressure and the energy change are smoothed with `useEMA`, as before. The page is not wrapped in `LegacyPage`.
+`src/components/Boiler/Boiler.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 200 bar; green to `ValveRatingPressure`, orange to `ReliefOpenPressure`, red above), the gas controls (four `LensButton` steps of `GasChangeRateFast` and `-Slow`; the knob is #15), the drum `LevelGauge` (one red zone below `BurnerLowLowLevel`) with the drain valve button, then the status readouts as `Display`s with `Lamp`s for heating rate over limit, relief valve open and burner tripped, and an Advanced `<details>`. The pressure and the energy change are smoothed with `useEMA`, as before.
 
 ## Condenser page
 
-`src/components/Condenser/Condenser.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 400 mbar; green within `OptimalPressureBellWidth` of `OptimalPressure`, orange outside the band up to `VacuumLimit`, red above, where the turbine trips) with High and Low `Lamp`s, the pressure controls (air extraction pump and SJAE `LensButton`s, SJAE `ValveControl`), the hotwell `LevelGauge` (no zones yet, #54), a `ValveControl` each for the recirculation pump, condensation pump, makeup and reject (flow rates as before), then the status readouts as `Display`s (steam volume, hotwell temperature, intake and return flow). Smoothed with `useEMA`, as before. The page is not wrapped in `LegacyPage`.
+`src/components/Condenser/Condenser.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 400 mbar; green within `OptimalPressureBellWidth` of `OptimalPressure`, orange outside the band up to `VacuumLimit`, red above, where the turbine trips) with High and Low `Lamp`s, the pressure controls (air extraction pump and SJAE `LensButton`s, SJAE `ValveControl`), the hotwell `LevelGauge` (no zones yet, #54), a `ValveControl` each for the recirculation pump, condensation pump, makeup and reject (flow rates as before), then the status readouts as `Display`s (steam volume, hotwell temperature, intake and return flow). Smoothed with `useEMA`, as before.
 
 ## Turbine page
 
-`src/components/Turbine/Turbine.tsx`, one `PanelFrame`: the speed `RoundGauge` (0 to `MaxRPM`; green to 105% of `SyncRPM`, orange above) with an LCD and an "In sync band" `Lamp` (lit within `BreakerRPMMargin` of `SyncRPM`: the ±2 RPM band is too narrow to see on the dial), the speed mode and run-up point `LensButton`s (lit when selected, disabled with the refusal as `title`), the generator breaker `LensButton` (disabled while open and out of the sync band, with a message saying the band and the current RPM), the load setpoint `input` (disabled with the refusal shown while the breaker is open; applied on Enter or blur), the main steam valve `LensButton` with an "Opening not possible" `Lamp`, a `ValveControl` each for the bypass and turbine valves, then the status readouts as `Display`s with a "Turbine trip" `Lamp`. The steam flow is smoothed with `useEMA`, as before. The page is not wrapped in `LegacyPage`.
+`src/components/Turbine/Turbine.tsx`, one `PanelFrame`: the speed `RoundGauge` (0 to `MaxRPM`; green to 105% of `SyncRPM`, orange above) with an LCD and an "In sync band" `Lamp` (lit within `BreakerRPMMargin` of `SyncRPM`: the ±2 RPM band is too narrow to see on the dial), the speed mode and run-up point `LensButton`s (lit when selected, disabled with the refusal as `title`), the generator breaker `LensButton` (disabled while open and out of the sync band, with a message saying the band and the current RPM), the load setpoint `input` (disabled with the refusal shown while the breaker is open; applied on Enter or blur), the main steam valve `LensButton` with an "Opening not possible" `Lamp`, a `ValveControl` each for the bypass and turbine valves, then the status readouts as `Display`s with a "Turbine trip" `Lamp`. The steam flow is smoothed with `useEMA`, as before.
 
 ## Building a part page
 

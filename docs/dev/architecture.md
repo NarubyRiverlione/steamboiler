@@ -46,15 +46,13 @@ Condenser: ΔE = steam input − (cooling + condensation)
 src/
 ├── components/
 │   ├── Boiler/ Condenser/ Turbine/   # one page per subsystem; Boiler, Condenser and Turbine are single board pages (ui-board.md)
-│   ├── board/                        # board primitives (ui-board.md); ValveControl
-│   ├── Indicator.tsx Readout.tsx
-│   └── simulator.css                 # shared simulator styling
+│   └── board/                        # board primitives and board.css (ui-board.md); ValveControl
 ├── context/
 │   ├── PowerPlant{Actions,Context,Provider,Reducer,State,Tick}
 │   ├── const.ts                      # all tunable constants (Cst* objects)
 │   └── Boiler/ Condenser/ Turbine/   # <Subsystem>Tick.ts
-├── navigation/                       # routing, tab navigation, layout
-└── utils/                            # calculations, steam tables, useEMA, average
+├── navigation/                       # routing, header, annunciator, plant overview
+└── utils/                            # calculations, steam tables, useEMA
 sim/                                  # headless scenario runner, see headless-runner.md
 ├── scenarios/                        # one file per scenario, registered in index.ts
 ├── snapshots/                        # committed start states (JSON)

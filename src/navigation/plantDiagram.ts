@@ -20,9 +20,9 @@ export type DiagramNode = {
   readonly led?: true
 }
 
-export type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
+type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
 
-export type DiagramLabel = {
+type DiagramLabel = {
   readonly x: number
   readonly y: number
   readonly text: string
