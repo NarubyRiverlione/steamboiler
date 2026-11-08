@@ -112,47 +112,50 @@ describe("PowerPlantTick dry boiler", () => {
 
 describe("PowerPlantTick turbine exhaust", () => {
   test("the condenser receives the steam through the turbine valve in the same tick", () => {
-    // 5% of 200 kg/s at working pressure for one 0.1 s tick = 1 kg; recirculation off so none of it condenses yet
+    // 5% of 200 kg/s at working pressure for one 0.1 s tick = 1 kg; recirculation off so none of it condenses
     const turbineOpen: PowerPlantState = {
       ...cold,
       Boiler: { ...cold.Boiler, pressure: 165, steamMass: 1_000 },
       Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.05, turbineSteamFlowOut: 0 },
-      Condenser: { ...cold.Condenser, steamMass: 0, recirculationPumpValvePosition: 0 },
+      Condenser: { ...cold.Condenser, recirculationPumpValvePosition: 0 },
     }
     const next = PowerPlantTick(turbineOpen)
     expect(next.Turbine.turbineSteamFlowOut).toBeCloseTo(10, 9)
     expect(next.Condenser.intakeFlowRate).toBeCloseTo(10, 9)
   })
 
-  // 1 kg as above; at sync speed 165 bar to 100 mbar leaves about two-thirds vapour, the moisture goes to the hotwell
+  // 1 kg as above; at sync speed 165 bar to 100 mbar leaves about two-thirds vapour, the moisture goes to the hotwell.
+  // The cooling water runs, so the pressure is where the exchanger takes the heat of what is left to condense
   const exhaustAt = (rpm: number): PowerPlantState => ({
     ...cold,
     Boiler: { ...cold.Boiler, steamMass: 1_000, pressure: 165 },
     Turbine: { ...cold.Turbine, mainSteamValve: true, turbineValvePosition: 0.05, turbineSteamFlowOut: 0, rpm },
-    Condenser: { ...cold.Condenser, steamMass: 0, pressure: 100, recirculationPumpValvePosition: 0 },
+    Condenser: { ...cold.Condenser, airMass: 0.05, pressure: 100, recirculationPumpValvePosition: 0.02 },
   })
 
-  test("the exhaust splits by its quality at the boiler pressure and the live condenser pressure", () => {
-    const next = PowerPlantTick(exhaustAt(CstSimulation.CstTurbine.SyncRPM))
-    expect(next.Condenser.intakeFlowRate).toBeCloseTo(10, 9)
-    expect(next.Condenser.steamMass).toBeCloseTo(0.667, 2)
+  test("the exhaust splits by its quality: all of it reaches the hotwell, and its moisture costs the cooling water nothing", () => {
+    const sync = PowerPlantTick(exhaustAt(CstSimulation.CstTurbine.SyncRPM))
+    expect(sync.Condenser.intakeFlowRate).toBeCloseTo(10, 9)
+    expect(sync.Condenser.condensationRate).toBeCloseTo(10, 2)
+    expect(sync.Condenser.ventedTotal).toBeCloseTo(0, 3)
+    // Dry steam of the same flow loads the cooling water more, so the pressure is higher
+    expect(sync.Condenser.pressure).toBeLessThan(PowerPlantTick(exhaustAt(0)).Condenser.pressure)
   })
 
-  test("during run-up the exhaust is drier than at sync speed", () => {
-    const runUp = PowerPlantTick(exhaustAt(1500)).Condenser.steamMass
-    expect(runUp).toBeGreaterThan(PowerPlantTick(exhaustAt(CstSimulation.CstTurbine.SyncRPM)).Condenser.steamMass)
-    expect(runUp).toBeLessThanOrEqual(1)
+  test("during run-up the exhaust is drier than at sync speed: more heat, a higher pressure", () => {
+    const runUp = PowerPlantTick(exhaustAt(1500)).Condenser.pressure
+    expect(runUp).toBeGreaterThan(PowerPlantTick(exhaustAt(CstSimulation.CstTurbine.SyncRPM)).Condenser.pressure)
+    expect(runUp).toBeLessThanOrEqual(PowerPlantTick(exhaustAt(0)).Condenser.pressure)
   })
 
-  test("at standstill the exhaust behaves like bypass steam: same enthalpy, hardly any moisture", () => {
-    // The shaft takes no work: 165 bar saturated vapour comes out at its own enthalpy, a hair below saturated vapour at 100 mbar
+  test("at standstill the exhaust behaves like bypass steam: same enthalpy, the same pressure", () => {
+    // The shaft takes no work: 165 bar saturated vapour comes out at its own enthalpy
     const standstill = PowerPlantTick(exhaustAt(0))
     const bypass = PowerPlantTick({
       ...exhaustAt(0),
       Turbine: { ...exhaustAt(0).Turbine, turbineValvePosition: 0, bypassValvePosition: 0.05 },
     })
-    expect(standstill.Condenser.steamMass).toBeGreaterThan(0.98)
-    expect(standstill.Condenser.steamMass).toBeCloseTo(bypass.Condenser.steamMass, 6)
+    expect(standstill.Condenser.pressure).toBeCloseTo(bypass.Condenser.pressure, 6)
   })
 })
 
@@ -173,7 +176,7 @@ describe("PowerPlantTick relief valve", () => {
   test("vented steam never reaches the condenser", () => {
     const next = PowerPlantTick(atLift)
     expect(next.Condenser.intakeFlowRate).toBe(0)
-    expect(next.Condenser.steamMass).toBe(0)
+    expect(next.Condenser.ventedTotal).toBe(0)
   })
 })
 
@@ -365,7 +368,7 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
     const start = running(RatedSteamFlow, 140)
     const next = PowerPlantTick(start)
     const water = (s: PowerPlantState): number =>
-      s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.steamMass + s.Condenser.hotwellWaterMass
+      s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.hotwellWaterMass + s.Condenser.ventedTotal
     expect(water(next) - water(start)).toBeCloseTo(
       next.Condenser.makeupTotal - start.Condenser.makeupTotal - (next.Condenser.rejectTotal - start.Condenser.rejectTotal),
       6,

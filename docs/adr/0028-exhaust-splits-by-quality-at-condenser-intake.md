@@ -11,8 +11,8 @@ All steam entering the condenser joined one steam pool and was charged the full 
 ## Decision
 
 - Exhaust quality comes from the exhaust enthalpy, the inlet enthalpy minus `IsentropicEfficiency` × the enthalpy drop, at the live condenser pressure: the same drop and pressures as the turbine speed model (`getExhaustQuality`). It is limited to 0–1, and is 1 with a zero or negative drop.
-- Moisture enters the hotwell in the tick it arrives, at the saturation temperature like other condensate, and no longer counts in the steam-mass pressure term.
-- Moisture that does not fit in the room left in the hotwell joins the steam pool, so no mass is lost.
+- Moisture enters the hotwell in the tick it arrives, at the saturation temperature like other condensate, and costs the cooling water nothing (the shell holds no steam pool since #91, [ADR 0035](0035-condenser-pressure-is-vapour-plus-air.md)).
+- Moisture that does not fit in the room left in the hotwell is vented through the hood relief (`Condenser.ventedTotal`), so the water count keeps it (was: it joined the steam pool, gone in #91).
 - `condensationRate` counts everything entering the hotwell, moisture included. `intakeFlowRate` stays the total of exhaust and bypass.
 
 ## Consequences

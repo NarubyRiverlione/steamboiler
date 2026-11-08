@@ -1,6 +1,6 @@
 import { CstPhysics, CstSimulation } from "./const"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
-import { hotwellLevel } from "../utils/condenserCalculation"
+import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
 import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
@@ -52,7 +52,9 @@ export const makeInitialState = (): PowerPlantState => ({
     hotwellWaterMass: startHotwellMass,
     hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
     hotwellTemperature: AmbientTemperature, // Celsius
-    steamMass: 0, // Start at 0
+    // kg: the shell full of air at atmospheric pressure, less the vapour of the ambient hotwell (Cold state, ADR 0035)
+    airMass: airMassOf(CstPhysics.AtmosphericPressure_mBar - vapourPressureAt(AmbientTemperature), AmbientTemperature),
+    ventedTotal: 0,
     intakeFlowRate: 0,
     returnRate: 0,
     condensationRate: 0,
