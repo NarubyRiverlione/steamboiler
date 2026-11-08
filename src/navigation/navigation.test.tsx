@@ -193,7 +193,7 @@ describe("routes", () => {
     expect(where()).toBe("/condenser")
   })
 
-  it("shows the overview at the root, with the three header slots", () => {
+  it("shows the overview at the root, with the four header slots", () => {
     const { container } = render(
       <MemoryRouter initialEntries={["/"]}>
         <PowerPlantProvider>
@@ -202,7 +202,7 @@ describe("routes", () => {
       </MemoryRouter>,
     )
     expect(screen.getByRole("heading", { level: 2, name: "Plant" })).toBeTruthy()
-    expect(container.querySelectorAll(".board-header-slot")).toHaveLength(3)
+    expect(container.querySelectorAll(".board-header-slot")).toHaveLength(4)
   })
 
   it("sends an unknown path to the overview", () => {
