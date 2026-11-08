@@ -10,6 +10,8 @@ The physics is realistic. A process is never sped up with a magic number, such a
 
 Playability comes from how the utilities are sized: gas flow, pump capacity, valve flow and similar. A bigger burner heats the water faster for a physical reason, so the plant stays honest and the operator doesn't wait hours for a startup.
 
+Playback speed (Pause, 1x, 10x, 60x) is not a change to the physics. It runs more fixed ticks per wall-clock second and `DeltaTime` stays 0.1 s, so it needs no row in the register ([ADR 0026](../adr/0026-playback-speed-is-ticks-per-second.md)).
+
 When that isn't enough, a value can be changed on purpose, but only if it is listed in the register below. That keeps the simulator honest about where it differs from a real plant.
 
 ## Deliberate departures from a real plant

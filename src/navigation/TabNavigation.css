@@ -66,3 +66,19 @@
   gap: 1rem;
   padding: 1rem;
 }
+
+.time-control {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.time-control .clock {
+  font-family: monospace;
+}
+
+.time-control button[aria-pressed="true"] {
+  font-weight: bold;
+  text-decoration: underline;
+}

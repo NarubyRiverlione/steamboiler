@@ -1,5 +1,6 @@
 type PowerPlantAction =
-  | { type: "SIMULATE_TICK" } //  payload: { previousSteamMass: number }
+  | { type: "SIMULATE_TICK" }
+  | { type: "SIMULATE_TICKS"; count: number } // a batch of fixed ticks, one render
   // Boiler Actions
   | { type: "INCREASE_GAS_FLOW"; amount: number }
   | { type: "DECREASE_GAS_FLOW"; amount: number }

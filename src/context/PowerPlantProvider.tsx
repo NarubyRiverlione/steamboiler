@@ -1,22 +1,42 @@
-import { ReactNode, useReducer, useEffect } from "react"
+import { ReactNode, useReducer, useEffect, useRef, useCallback } from "react"
 import { CstSimulation } from "./const.ts"
 import { PowerPlantContext } from "./PowerPlantContext.tsx"
-import { initialPowerPlantState, powerPlantReducer } from "./PowerPlantReducer.ts"
+import PowerPlantAction from "./PowerPlantActions.ts"
+import { PlaybackSpeed, WallClock, simulatedSeconds, startWallClock, ticksDue } from "./Playback.ts"
+import { isSpeedLocked } from "./Alarms.ts"
+import { makeInitialSimulation, simulationReducer } from "./SimulationReducer.ts"
 
 // Provider
 function PowerPlantProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(powerPlantReducer, initialPowerPlantState)
+  const [simulation, simulationDispatch] = useReducer(simulationReducer, undefined, () => makeInitialSimulation())
+  const state = simulation.plant
+  const dispatch = simulationDispatch as (action: PowerPlantAction) => void
 
-  // Simulation loop
+  // Simulation loop: ticks due from the elapsed wall time, one batched update per interval (ADR 0026).
+  // The speed is read through a ref so a speed change does not restart the timer or lose the carried fraction.
+  const speedRef = useRef<PlaybackSpeed>(simulation.speed)
   useEffect(() => {
+    speedRef.current = simulation.speed
+  }, [simulation.speed])
+  useEffect(() => {
+    let wallClock: WallClock = startWallClock(performance.now())
     const simulationInterval = setInterval(() => {
-      dispatch({ type: "SIMULATE_TICK" })
-    }, CstSimulation.DeltaTime * 1000) // DeltaTime is in sec
+      const due = ticksDue(wallClock, performance.now(), speedRef.current, document.hidden)
+      wallClock = due.clock
+      if (due.ticks > 0) simulationDispatch({ type: "SIMULATE_TICKS", count: due.ticks })
+    }, CstSimulation.UpdateInterval)
 
     return () => {
       clearInterval(simulationInterval)
     }
-  }, [state, dispatch])
+  }, [])
+
+  const setPlaybackSpeed = useCallback((speed: PlaybackSpeed) => {
+    simulationDispatch({ type: "SET_PLAYBACK_SPEED", speed })
+  }, [])
+  const acknowledgeAlarms = useCallback(() => {
+    simulationDispatch({ type: "ACKNOWLEDGE_ALARMS" })
+  }, [])
 
   //#region  Boiler action creators
   const increaseGasFlow = (amount: number) => {
@@ -97,6 +117,12 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         dispatch,
+        // time control
+        playbackSpeed: simulation.speed,
+        simulatedSeconds: simulatedSeconds(simulation.ticks),
+        speedLocked: isSpeedLocked(simulation.plant, simulation.unacknowledged),
+        setPlaybackSpeed,
+        acknowledgeAlarms,
         // boiler actions
         increaseGasFlow,
         decreaseGasFlow,
