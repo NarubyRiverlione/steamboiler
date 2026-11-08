@@ -531,7 +531,12 @@ path.board-zone {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-family: var(--board-font-label);
+  font-family: var(--board-font-stencil);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .board-valve {
@@ -590,6 +595,7 @@ path.board-zone {
   font-size: 0.95rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .board-boiler-main {
@@ -608,8 +614,40 @@ path.board-zone {
 
 .board-instrument-label,
 .board-readout-label {
-  font-family: var(--board-font-label);
+  font-family: var(--board-font-stencil);
+  font-size: 0.95rem;
   font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.board-readout-label {
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+}
+
+.board-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+
+.board-group {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--board-plate-border);
+  border-radius: 6px;
+}
+
+.board-group .board-group-title {
+  margin: 0;
 }
 
 .board-lens-row {
@@ -620,7 +658,7 @@ path.board-zone {
 
 .board-readouts {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 0.35rem 1.5rem;
 }
 
@@ -629,7 +667,15 @@ path.board-zone {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  min-height: 2.25rem;
   font-family: var(--board-font-label);
+}
+
+.board-readout > span:first-child {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .board-readout-values {

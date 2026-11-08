@@ -51,6 +51,8 @@ function Boiler() {
         heatingRate,
         heatingRateOverLimit,
         drainValveOpen,
+        stackTemperature,
+        boilerEfficiency,
       },
       Turbine: { bypassSteamFlowOut, turbineSteamFlowOut },
     },
@@ -82,7 +84,7 @@ function Boiler() {
           <Display label="Pressure" text={`${smoothPressure.toFixed(1)} bar`} />
         </div>
 
-        <div className="board-instrument">
+        <div className="board-instrument board-group">
           <h3 className="board-group-title">Gas Flow Control</h3>
           <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} />
           <div className="board-lens-row">
@@ -102,8 +104,6 @@ function Boiler() {
             >
               + {GasChangeRateSlow} L/s
             </LensButton>
-          </div>
-          <div className="board-lens-row">
             <LensButton
               small
               onClick={() => {
@@ -123,23 +123,27 @@ function Boiler() {
           </div>
         </div>
 
-        <div className="board-instrument">
-          <span className="board-instrument-label">Water volume</span>
-          <LevelGauge
-            label="Drum level gauge"
-            value={(waterVolume / TotalVolume) * 100}
-            zones={LEVEL_ZONES}
-            ticks={LEVEL_TICKS}
-          />
-          <Display
-            label="Water volume"
-            text={`${waterVolume.toFixed(0)} l ${(waterVolume / TotalVolume).toFixed(2)}`}
-          />
-          <h3 className="board-group-title">Water Valve Control</h3>
-          <span className="board-readout-label">Drain Valve</span>
-          <LensButton pressed={drainValveOpen} onClick={toggleDrainValve}>
-            {drainValveOpen ? "Open" : "Closed"}
-          </LensButton>
+        <div className="board-cluster">
+          <div className="board-instrument">
+            <span className="board-instrument-label">Water volume</span>
+            <LevelGauge
+              label="Drum level gauge"
+              value={(waterVolume / TotalVolume) * 100}
+              zones={LEVEL_ZONES}
+              ticks={LEVEL_TICKS}
+            />
+            <Display
+              label="Water volume"
+              text={`${waterVolume.toFixed(0)} l ${(waterVolume / TotalVolume).toFixed(2)}`}
+            />
+          </div>
+          <div className="board-group">
+            <h3 className="board-group-title">Water Valve Control</h3>
+            <span className="board-readout-label">Drain Valve</span>
+            <LensButton pressed={drainValveOpen} onClick={toggleDrainValve}>
+              {drainValveOpen ? "Open" : "Closed"}
+            </LensButton>
+          </div>
         </div>
       </div>
 
@@ -186,6 +190,14 @@ function Boiler() {
             label="Tripped"
             title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, raise the gas to restart`}
           />
+        </div>
+        <div className="board-readout">
+          <span>Stack temperature</span>
+          <Display label="Stack temperature" text={`${stackTemperature.toFixed(0)} °C`} />
+        </div>
+        <div className="board-readout">
+          <span>Boiler efficiency</span>
+          <Display label="Boiler efficiency" text={`${(boilerEfficiency * 100).toFixed(1)} %`} />
         </div>
       </div>
 

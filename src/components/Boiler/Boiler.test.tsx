@@ -55,6 +55,12 @@ describe("Boiler page", () => {
     expect(screen.getByLabelText("Heating rate").classList.contains("board-display-alarm")).toBe(true)
   })
 
+  it("shows the stack temperature and the boiler efficiency", () => {
+    renderBoiler({ stackTemperature: 187.3, boilerEfficiency: 0.916 })
+    expect(screen.getByLabelText("Stack temperature").textContent).toBe("187 °C")
+    expect(screen.getByLabelText("Boiler efficiency").textContent).toBe("91.6 %")
+  })
+
   it("shows the readouts and the advanced section", () => {
     renderBoiler({ temperature: 120.04, ventedTotal: 2500 })
     expect(screen.getByLabelText("Temperature").textContent).toBe("120.0 °C")
