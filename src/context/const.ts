@@ -1,6 +1,6 @@
 export const CstSimulation = {
   DeltaTime: 0.1, // Simulation tick duration in sec
-  MaxTicksPerUpdate: 300, // cap on ticks run in one loop update (about 1.4 ms per 100 ticks measured, 5x the need at 60x); above it the plant runs slower than requested (ADR 0026)
+  MaxTicksPerUpdate: 300, // cap on ticks run in one loop update (about 1.4 ms per 100 ticks measured, 10x the need at 60x); above it the plant runs slower than requested (ADR 0026)
   UpdateInterval: 50, // ms between loop updates
   CstBoiler: {
     StartWaterVolume: 35e3, // liters at ambient: thermal expansion brings it to the 50% working level at 165 bar (ADR 0018)

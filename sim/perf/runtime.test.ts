@@ -29,7 +29,7 @@ describe("playback batch", () => {
     const t0 = performance.now()
     const { ticksRun } = runTicks(start, CstSimulation.MaxTicksPerUpdate)
     const ms = performance.now() - t0
-    console.log(`${String(ticksRun)} ticks in ${ms.toFixed(2)} ms`)
+    expect(ticksRun).toBe(CstSimulation.MaxTicksPerUpdate)
     expect(ms).toBeLessThan(CstSimulation.UpdateInterval)
   })
 })

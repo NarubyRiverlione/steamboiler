@@ -26,8 +26,15 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       if (due.ticks > 0) simulationDispatch({ type: "SIMULATE_TICKS", count: due.ticks })
     }, CstSimulation.UpdateInterval)
 
+    // Browsers throttle timers in a hidden tab: restart the wall clock on every visibility change so nothing is caught up
+    const onVisibilityChange = () => {
+      wallClock = startWallClock(performance.now())
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange)
+
     return () => {
       clearInterval(simulationInterval)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
     }
   }, [])
 
