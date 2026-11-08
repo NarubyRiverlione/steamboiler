@@ -61,11 +61,10 @@ Units used below: 1 SCFM of air (60 °F, 14.7 psia) is 0.0283 m³/min at a densi
   can be masked until the system is overloaded (EPRI §8.3.8).
 
 **Inference for our unit.** About 158 kg/s is 1.25 million lb/h, one shell: the ASME limit is 3.75 SCFM = **0.0022 kg/s**; the Westinghouse figure
-for 125 MW is 1.25 SCFM = 0.0007 kg/s. The design venting capacity is larger. HEI's 500 MW example scales to 15 SCFM for a quarter of
-the exhaust only if linear (we do not know HEI's scaling, so this is a guess): **15 SCFM = 0.0087 kg/s** as an upper "leaky unit" figure.
+for 125 MW is 1.25 SCFM = 0.0007 kg/s. The design venting capacity is larger. HEI's 500 MW example (30 SCFM at 2.3 million lb/h) scales linearly to about 16 SCFM at our 1.25 million lb/h (we do not know HEI's scaling, so this is a guess): **15 SCFM = 0.0087 kg/s** as an upper "leaky unit" figure.
 
 **The existing `LeakingRate`** is 0.01 kg/s, "typical 0.005 to 0.015 kg/s" (`const.ts`), unused and with no source in the repo.
-It equals 17 SCFM, near the HEI design figure for a unit of 4 times our size; it is UNVERIFIED and not a tight-unit value.
+It equals 17 SCFM, near the 15 SCFM estimated above for our own size; it is UNVERIFIED and not a tight-unit value.
 
 ## (b) Shell steam-space volume
 
@@ -110,7 +109,7 @@ It includes the exhaust neck and the turbine casing, which the hogger also evacu
 The real hogger takes 30 minutes; one minute needs ~30 times the displacement. That is the over-dimensioned utility the issue asks to record.
 The air-only convention drops the vapour share that real pumps carry, which makes the sized values lower than the real ones.
 
-**Suction limits chosen from the sources.** Pump floor: the condenser design pressure, 31 mbar, below it nothing more is removed (design suction rule).
+**Suction limits chosen from the sources.** A real pump floor is the condenser design pressure, 31 mbar, or the seal water vapour pressure (design suction rule); ADR 0035 does not adopt it, because the model's pumps move air only.
 SJAE break: 4 to 5 inHgA = 135 to 169 mbar; the ejector holds only below that. The pump hogs, the SJAE holds.
 
 ## (d) Exhaust hood relief pressure
@@ -121,6 +120,7 @@ SJAE break: 4 to 5 inHgA = 135 to 169 mbar; the ejector holds only below that. T
   greater" (Inside Power Station, blog). A background statement in an old patent gives "approximately five pounds greater than external pressure"
   (US 5,222,862), which is 0.34 bar. Two weak sources that agree.
 - A failure analysis of an LP-turbine relief diaphragm gives a design burst above **0.7 barg** (search snippet of the abstract only, 403; UNVERIFIED).
+- The same blog says "all steam is relieved at 1.03 barg or greater" (full relief, not the burst pressure).
 - Construction: flat copper, lead or aluminium discs over a support grid, a cutting edge to slice them (vendor catalogue; snippet).
 - The blog gives a maximum vacuum of about 0.036 bara "due to exhaust hood casing strength" and an hood temperature trip of 107 °C.
 
@@ -137,7 +137,7 @@ diaphragm bursts; above it the hood vents to the atmosphere and the plant is los
   per minute (snippet). A 4 to 24 hour hold test is cited for air cooled condensers (trade blog; unverified).
 - HEI vacuum decay test as a method: pull full vacuum, isolate, monitor for 30 minutes (trade blog; UNVERIFIED).
 
-**Inference (what the sourced inflows give).** Air mass in the shell from the ideal gas law, V = 450 m³, 293 K: 16.6 kg at 31 mbar, 175 kg at 327 mbar (the trip
+**Inference (what the sourced inflows give).** Air mass in the shell from the ideal gas law, V = 450 m³, a fixed 293 K (the ADR uses the shell saturation temperature, so the air mass at 327 mbar is about 15% lower there): 16.6 kg at 31 mbar, 175 kg at 327 mbar (the trip
 limit). With the vacuum system stopped and the leak running at a constant rate:
 
 | In-leakage | kg/s | 31 → 62 mbar | 31 → 327 mbar (trip) |
@@ -151,7 +151,7 @@ For V between 300 and 600 m³ the times scale in proportion. The leak runs at a 
 below about half atmospheric pressure (inference, ideal gas; not sourced).
 
 **Finding: the design's claim that the vacuum "takes minutes" to be lost is not supported by these figures.** The 20 to 25 min of the forum thread needs about
-0.13 kg/s, which is 220 SCFM, 25 to 100 times a sourced in-leakage. A real trip also opens the vacuum breaker and loses the gland steam seal, which add
+0.13 kg/s, which is 220 SCFM, 15 to 190 times a sourced in-leakage. A real trip also opens the vacuum breaker and loses the gland steam seal, which add
 leakage that this model does not have. With the sourced values, the pressure rises over hours. The ADR records that choice.
 
 ## What the numbers mean for the ticket
