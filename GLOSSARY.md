@@ -49,27 +49,51 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow the plant is rated for, the full-gas steam flow: 171 kg/s. A design figure: the sim can pass more at 165 bar (see the departures in `design-basis.md`).
+The steam flow the plant is rated for, the full-gas steam flow: 192 kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater, measured in a headless run (#88, was 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 141 MWe at the 31 mbar design vacuum.
 _Avoid_: Nominal flow
 
 **Valve capacity**:
-The steam flow through the turbine valve or the bypass when fully open: 200 kg/s each. A valve limit, not a steady flow.
+The steam flow through the turbine valve or the bypass when fully open at working pressure: 200 kg/s each. The flow falls with boiler pressure. A valve limit, not a steady flow.
 _Avoid_: Max steam removal, rated steam flow
 
 **Electric output**:
-The power the generator delivers to the grid, in MW. Only produced with the breaker closed at sync speed; it follows from the steam flow and from the energy the turbine takes out of each kilogram, which depends on boiler pressure and condenser pressure.
+The power the generator delivers to the grid, in MW: the load it carries. It is an input to the shaft, not a result of the steam flow, and is 0 MW with the breaker open or at the no-load flow.
 _Avoid_: Power, electricity, MW readout
+
+**Load**:
+The electric power the generator carries, a resisting torque on the shaft. More load slows the shaft, so the Hold mode opens the valve and takes more steam.
+_Avoid_: Demand, consumption, shaft load, generator torque
+
+**Load setpoint**:
+The load the operator asks for, in MW, from 0 up to the load setpoint limit, above the rated output. Only settable with the breaker closed. The load moves toward it at the load rate.
+_Avoid_: Net demand, demand, target load
+
+**Load rate**:
+The rate at which the load moves toward the load setpoint: 3% of the rated output per minute, up and down. When the breaker opens the load is lost at once, whatever the load rate.
+_Avoid_: Ramp rate (that is the run-up rate), load ramp
 
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
 _Avoid_: Bell curve, optimal pressure, vacuum permissive
 
+**Free mode**:
+The speed mode in which the operator moves the turbine valve by hand and no controller acts on it.
+_Avoid_: Manual mode
+
+**Ramp up**:
+The speed mode for every start: the turbine valve moves automatically so the turbine climbs to the selected run-up point at the run-up rate. On arrival it engages hold mode at that point. It only goes up.
+_Avoid_: Run-up mode, auto start
+
 **Hold mode**:
-The turbine's speed governor: switched on, it moves the turbine valve to keep the turbine at the speed setpoint (sync speed by default).
+The speed mode that keeps the turbine at the selected run-up point by moving the turbine valve. It engages only within ±5 rpm of that point, and never takes the turbine to a new speed. It is also the mode that adds steam when electrical load is added to the shaft.
 _Avoid_: Autopilot, speed hold, cruise
 
+**Run-up point**:
+One of the fixed speeds the operator can select: 500, 1500, 2500 or 3000 rpm (sync speed). Ramp up climbs to it and hold mode keeps it.
+_Avoid_: Setpoint (on its own), soak point
+
 **Run-up rate**:
-The rate, in rpm per minute, at which hold mode moves its working speed target toward the operator's setpoint. The turbine is brought up gradually to protect the rotor, not as fast as the steam would take it.
+The rate, in rpm per minute, at which Ramp up moves its speed reference toward the selected run-up point. The turbine is brought up gradually to protect the rotor, not as fast as the steam would take it.
 _Avoid_: Acceleration, ramp rate, spin-up
 
 **No-load flow**:
@@ -77,8 +101,76 @@ The steam flow that holds the turbine at sync speed with the breaker open: it on
 _Avoid_: Idle flow, minimum flow
 
 **Turbine trip**:
-The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit. It also switches hold mode off; the turbine only takes steam again when the operator reopens the valve.
-_Avoid_: Trip (on its own), shutdown
+The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit, or when the main steam valve closes on low pressure with the turbine valve open. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
+_Avoid_: Trip (on its own); for the operator's planned stop see Shutdown
+
+**Exhaust quality**:
+The share of the turbine exhaust that is still vapour, by mass. The rest is exhaust moisture, already liquid when it reaches the condenser.
+_Avoid_: Dryness, wetness
+
+### Flue gas
+
+**Flue gas**:
+The exhaust of the burner, on its way through the boiler and the economizer to the chimney.
+_Avoid_: Exhaust (that is the turbine's), smoke
+
+**Economizer**:
+The heat exchanger where flue gas heats the Return on its way to the boiler. With no Return it recovers nothing.
+_Avoid_: Feedwater heater, preheater
+
+**Stack temperature**:
+The flue gas temperature where it leaves for the chimney.
+_Avoid_: Exit temperature, chimney temperature
+
+**Boiler efficiency**:
+The share of the fuel's lower heating value that ends up in the water, counting the boiler and the economizer together.
+_Avoid_: Burner efficiency, gas efficiency
+
+**Extraction steam**:
+Steam taken from the turbine partway through its expansion.
+_Avoid_: Bleed steam, tap steam
+
+**Extraction heater**:
+The heat exchanger where extraction steam heats the Return on its way to the economizer.
+_Avoid_: Feedwater heater, preheater
+
+**Heater drain**:
+The condensed extraction steam, pumped forward into the Return after the extraction heater.
+_Avoid_: Drain (that is the boiler's)
+
+**Cooling water**:
+The water that takes the condenser's heat, drawn in by the recirculation pump.
+_Avoid_: Recirculation water, circulating water
+
+**Cooling water rise**:
+How much the cooling water warms up across the condenser.
+_Avoid_: Temperature rise, delta T
+
+**Terminal temperature difference**:
+How far the cooling water leaves below the saturation temperature of the condenser.
+_Avoid_: TTD, approach
+
+### Condenser vacuum
+
+**Condenser pressure**:
+The absolute pressure in the condenser shell: the shell vapour pressure plus the air pressure.
+_Avoid_: Vacuum (that is how far it is below atmospheric), back-pressure (that is the turbine's view of it)
+
+**Shell vapour pressure**:
+The pressure of the steam in the condenser shell: the saturation pressure at the temperature where the cooling water takes exactly the heat the exhaust brings.
+_Avoid_: Saturation pressure (that is the boiler's), steam pressure
+
+**Air pressure**:
+The pressure of the air in the condenser shell, from the air inventory.
+_Avoid_: Vacuum offset, air partial vacuum
+
+**Air in-leakage**:
+Air that leaks into the shell from outside, in kg/s. With the vacuum system stopped it is the only reason the vacuum is lost.
+_Avoid_: Leak (the Vent is steam leaving the boiler), vacuum decay
+
+**Vacuum system**:
+The air extraction pump and the SJAE together: the machines that remove air from the shell.
+_Avoid_: Vacuum reducers, vacuum pumps
 
 ### Operation
 
@@ -96,7 +188,19 @@ _Avoid_: Pressure control, steady state (that is the outcome, not the operation)
 
 **Snapshot**:
 A saved full plant state that a scenario can start from instead of replaying the operation leading up to it.
-_Avoid_: Preset (reserved for the UI choices of #24), save game
+_Avoid_: Preset (that is the UI choice that loads a snapshot, or the cold state, into the app), save game
+
+**Preset**:
+A start state the operator picks in the app's Presets popup (#24): Cold & dark, Hot standby or At pressure. Loading one replaces the whole plant state with the cold state or a snapshot.
+_Avoid_: Scenario (that is a headless-runner script that plays actions over time)
+
+**Playback speed**:
+How many simulated seconds pass per wall-clock second in the app: Pause, 1x, 10x or 60x. It changes how often the plant ticks, never the physics or the size of a tick.
+_Avoid_: Time scale, sim speed, speed (alone: that is the turbine's)
+
+**Simulated clock**:
+The plant time elapsed since the current plant state was loaded, shown in the header. It is not part of the plant state, so snapshots do not hold it.
+_Avoid_: Game time, uptime
 
 **Makeup**:
 Demineralised water fed into the condenser hotwell from outside the loop, to top up losses. Never into the boiler.
@@ -107,7 +211,7 @@ Hotwell water sent out of the loop to storage when the hotwell is too full.
 _Avoid_: Dump, overflow
 
 **Return**:
-Hotwell water pumped into the boiler by the condensation pump. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
+Hotwell water pumped through the extraction heater and the economizer into the boiler by the condensation pump. The extraction heater heats it with turbine steam first, and the heater drain joins it after the heater; the economizer then heats it with flue gas. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
 _Avoid_: Feedwater, refill
 
 **Hotwell level**:
@@ -158,6 +262,18 @@ _Avoid_: Cooling rate, natural cooling (that is the resulting behaviour, see Nat
 The fastest the boiler water temperature may rise without over-stressing the drum: 0.4 K/s (24 K/min), a time-compressed version of the real limit of about 100 K/h. Going over it raises an alarm; nothing is limited or tripped automatically.
 _Avoid_: Ramp limit, max heat-up rate
 
+**Playback speed**:
+How fast the app runs the plant: Pause, 1x, 10x or 60x, meaning 0, 10, 100 or 600 ticks per wall-clock second. `DeltaTime` stays 0.1 s and the physics does not change. An alarm drops it to 1x.
+_Avoid_: Time scale, time multiplier, game speed
+
+**Simulated clock**:
+The plant time since the start of the run, in h:mm:ss: ticks run times `DeltaTime`. It is not wall time and it is not in the plant state.
+_Avoid_: Timer, uptime
+
 **Natural cooldown**:
-The plant left alone with gas off and all valves closed, cooling down on its own.
-_Avoid_: Shutdown, trip
+The plant left alone with gas off and all valves closed, cooling down on its own. It is the state a Shutdown ends in.
+_Avoid_: Shutdown (that is the operator procedure leading to it), trip
+
+**Shutdown**:
+The operator's planned stop, the way the plant is meant to be taken out of service: gas off, breaker open, speed mode to Free with the turbine valve closed, then the main steam valve and the bypass valve closed. Nothing trips; it ends in the Natural cooldown.
+_Avoid_: Trip, cooldown (that is the state that follows)

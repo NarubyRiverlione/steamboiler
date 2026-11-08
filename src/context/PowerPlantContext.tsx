@@ -1,21 +1,26 @@
 import { Dispatch, createContext, useContext } from "react"
-import PowerPlantState from "./PowerPlantState"
+import PowerPlantState, { SpeedMode } from "./PowerPlantState"
+import { PlaybackSpeed } from "./Playback"
 import PowerPlantAction from "./PowerPlantActions"
 
 type PowerPlantContextType = {
   state: PowerPlantState
   dispatch: Dispatch<PowerPlantAction>
+  // Time control (outside the plant state)
+  playbackSpeed: PlaybackSpeed
+  simulatedSeconds: number
+  setPlaybackSpeed: (speed: PlaybackSpeed) => void
   // Action creators
-  increaseGasFlow: (amount: number) => void
-  decreaseGasFlow: (amount: number) => void
+  setGasRate: (gasRateCommand: number) => void // the gas knob, -1 to 1
   toggleDrainValve: () => void
   // Turbine RPM Control
   adjustBypassValve: (amount: number) => void
   toggleMainSteamValve: () => void
   adjustTurbineValve: (amount: number) => void
-  adjustRPMSetPoint: (amount: number) => void
-  toggleHoldMode: () => void
+  setSpeedMode: (speedMode: SpeedMode) => void
+  selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
+  setLoadSetpoint: (loadSetpoint: number) => void
   // Condenser
   toggleAirExtractionPump: () => void
   toggleSjae: () => void

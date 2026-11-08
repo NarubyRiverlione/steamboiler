@@ -8,9 +8,9 @@ React 19, TypeScript, Vite, react-router-dom, Vitest. CSS files per component. p
 
 One reducer and one provider for the whole plant.
 
-- `PowerPlantReducer` (`src/context/`) is the only state-transition point. It handles user actions and the tick.
+- `PowerPlantReducer` (`src/context/`) is the only state-transition point. It handles user actions, the tick and `LOAD_STATE`, which replaces the whole state with a UI preset (#24). The preset list is `src/context/startPresets.ts`; the shape check that rejects a stale snapshot is `src/utils/stateShape.ts`, shared with the headless runner.
 - `PowerPlantProvider` owns the simulation loop and exposes state through `PowerPlantContext`.
-- Simulation core is pure functions, decoupled from React: `PowerPlantTick` calls `BoilerTick`, `TurbineTick`, `CondenserTick` (in `src/context/<Subsystem>/`). Order per tick: the relief valve vents (`BoilerVent`), remove bypass steam, `TurbineTick`, remove turbine steam, `CondenserTick` with those same-tick flows, then `BoilerTick` with the return.
+- Simulation core is pure functions, decoupled from React: `PowerPlantTick` calls `BoilerTick`, `TurbineTick`, `CondenserTick` (in `src/context/<Subsystem>/`). Order per tick: the relief valve vents (`BoilerVent`), the main steam valve closes on low pressure (`MainSteamValveLowPressureClosure`), remove bypass steam, `TurbineTick`, remove turbine steam, `CondenserTick` with those same-tick flows, then `BoilerTick` with the return.
 - Physics lives in `src/utils/` (`boilerCalculations`, `condenserCalculation`, `turbineCalculations`, `steamTable`, `steamData`).
 - State is immutable. Every update creates a new state object.
 - Display-only values are calculated in components, not stored in state. `useEMA` smooths readouts.
@@ -18,7 +18,7 @@ One reducer and one provider for the whole plant.
 ```mermaid
 flowchart TD
     UI[UI components] -->|actions| Reducer[PowerPlantReducer]
-    Loop[Simulation loop 10 Hz] -->|SIMULATE_TICK| Reducer
+    Loop[Simulation loop 20 Hz] -->|SIMULATE_TICKS n| Reducer
     Reducer --> Tick[PowerPlantTick]
     Tick --> B[BoilerTick]
     Tick --> T[TurbineTick]
@@ -31,7 +31,11 @@ flowchart TD
 
 ## Simulation loop
 
-`PowerPlantProvider` dispatches `SIMULATE_TICK` with the real elapsed `deltaTime` every 100 ms (10 updates/s) from a `setInterval` in `useEffect`, cleaned up on unmount. Each tick runs boiler, turbine and condenser, so steam, condensate and energy move between subsystems.
+`PowerPlantProvider` runs a `setInterval` every `UpdateInterval` (50 ms). Each update asks `ticksDue` (`Playback.ts`) how many fixed ticks the elapsed wall time earns at the chosen playback speed, and dispatches one `SIMULATE_TICKS` with that count: one render per update. `DeltaTime` stays 0.1 s; speed is ticks per wall-clock second, 1x = 10 per second ([ADR 0034](../adr/0034-playback-speed-is-ticks-per-second.md)). The count is capped at `MaxTicksPerUpdate`; above it the plant runs slower, no tick is skipped. A hidden tab and Pause run nothing and bank no time, so there is no catch-up.
+
+`simulationReducer` (`SimulationReducer.ts`) wraps the plant reducer with state kept outside `PowerPlantState`: the tick count (the simulated clock, `ticks × DeltaTime`) and the playback speed. In the same step as a batch it applies the alarm rule: an alarm from the annunciator's list (`navigation/alarms.ts`, the single source) that comes on stops the batch on that tick and drops the speed to 1x. `LOAD_STATE` (a preset) resets the clock and the speed.
+
+The header (`navigation/TimeControl.tsx`) shows the clock and the plain speed selector in its `clock` and `speed` slots. The selector disables speeds above 1x while an annunciator tile flashes (unacknowledged). #86 restyles both.
 
 Each subsystem uses an energy balance:
 
@@ -45,15 +49,15 @@ Condenser: ΔE = steam input − (cooling + condensation)
 ```
 src/
 ├── components/
-│   ├── Boiler/ Condenser/ Turbine/   # Visual, Readouts, ControlPanel, controls per subsystem
-│   ├── Indicator.tsx Readout.tsx ValveSlider.tsx
-│   └── simulator.css                 # shared simulator styling
+│   ├── Boiler/ Condenser/ Turbine/   # one page per subsystem; Boiler, Condenser and Turbine are single board pages (ui-board.md)
+│   └── board/                        # board primitives and board.css (ui-board.md); ValveControl
 ├── context/
-│   ├── PowerPlant{Actions,Context,Provider,Reducer,State,Tick}
+│   ├── PowerPlant{Actions,Batch,Context,Provider,Reducer,State,Tick}
+│   ├── SimulationReducer, Playback, Alarms   # clock, playback speed, alarm rule
 │   ├── const.ts                      # all tunable constants (Cst* objects)
 │   └── Boiler/ Condenser/ Turbine/   # <Subsystem>Tick.ts
-├── navigation/                       # routing, tab navigation, layout
-└── utils/                            # calculations, steam tables, useEMA, average
+├── navigation/                       # routing, header, annunciator, plant overview
+└── utils/                            # calculations, steam tables, useEMA
 sim/                                  # headless scenario runner, see headless-runner.md
 ├── scenarios/                        # one file per scenario, registered in index.ts
 ├── snapshots/                        # committed start states (JSON)

@@ -1,5 +1,7 @@
 import { CstSimulation } from "../src/context/const"
 import PowerPlantState from "../src/context/PowerPlantState"
+import { saturationTemperature } from "../src/utils/condenserCalculation"
+import { generatorFrequency } from "../src/utils/turbineCalculations"
 import { loopWater } from "./invariants"
 import { Lift, Sample, Scenario } from "./scenario"
 
@@ -10,7 +12,7 @@ export type Kind = "temperature" | "pressure" | "volume" | "flow" | "valve" | "o
 // row: panels sharing a row number render on one line; a group without rows keeps the auto-filling grid.
 // Flow charts each get their own hue; every other chart uses its kind's colour.
 export type Palette =
-  Kind | "flowSteam" | "flowIntake" | "flowReturn" | "flowCondensation" | "flowGas" | "inventory"
+  Kind | "flowSteam" | "flowExtraction" | "flowIntake" | "flowReturn" | "flowCondensation" | "flowGas" | "inventory"
 
 export type Panel = {
   group: string
@@ -41,6 +43,20 @@ export const panels: Panel[] = [
     kind: "temperature",
     unit: "°C",
     series: one("Temperature", (s) => s.Boiler.temperature),
+  },
+  {
+    group: "Boiler",
+    title: "Return after economizer",
+    kind: "temperature",
+    unit: "°C",
+    series: one("Return after economizer", (s) => s.Boiler.returnTemperatureOut),
+  },
+  {
+    group: "Boiler",
+    title: "Return after heater",
+    kind: "temperature",
+    unit: "°C",
+    series: one("Return after heater", (s) => s.Heater.returnTemperature),
   },
   {
     group: "Boiler",
@@ -118,11 +134,36 @@ export const panels: Panel[] = [
   },
   {
     group: "Turbine",
+    row: 3,
+    title: "Extraction steam",
+    kind: "flow",
+    palette: "flowExtraction",
+    unit: "kg/s",
+    series: one("Extraction", (s) => s.Heater.extractionFlow),
+  },
+  {
+    group: "Turbine",
+    row: 3,
+    title: "Tap pressure",
+    kind: "pressure",
+    unit: "bar",
+    series: one("Tap pressure", (s) => s.Heater.tapPressure),
+  },
+  {
+    group: "Turbine",
     row: 2,
     title: "RPM",
     kind: "other",
     unit: "rpm",
     series: one("RPM", (s) => s.Turbine.rpm),
+  },
+  {
+    group: "Turbine",
+    row: 2,
+    title: "Frequency",
+    kind: "other",
+    unit: "Hz",
+    series: one("Frequency", (s) => generatorFrequency(s.Turbine.rpm)),
   },
   {
     group: "Turbine",
@@ -191,6 +232,18 @@ export const panels: Panel[] = [
     palette: "flowCondensation",
     unit: "kg/s",
     series: one("Condensation rate", (s) => s.Condenser.condensationRate),
+  },
+  // The gap between the two lines is the terminal temperature difference (ADR 0032)
+  {
+    group: "Condenser",
+    row: 3,
+    title: "Cooling water temperature",
+    kind: "temperature",
+    unit: "°C",
+    series: [
+      { label: "Outlet", value: (s) => s.Condenser.coolingWaterOutletTemperature },
+      { label: "Saturation", value: (s) => saturationTemperature(s.Condenser.pressure) },
+    ],
   },
   // Hotwell: level is hotwell volume over the condenser's TotalVolume, shown in %
   {
@@ -446,6 +499,10 @@ const PALETTE: Record<Palette, { light: string[]; dark: string[] }> = {
   flowSteam: {
     light: ["#d92d20", "#12a150", "#2a78d6"],
     dark: ["#f04438", "#32d583", "#3987e5"],
+  },
+  flowExtraction: {
+    light: ["#7a5af8", "#b8a9fb", "#5925dc", "#d9d1fd", "#6938ef"],
+    dark: ["#9b8afb", "#d9d1fd", "#7a5af8", "#ebe9fe", "#6938ef"],
   },
   flowIntake: {
     light: ["#06aed4", "#67e3f9", "#0e7090", "#a5f0fc", "#088ab2"],

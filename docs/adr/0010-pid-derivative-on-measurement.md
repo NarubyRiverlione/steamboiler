@@ -1,8 +1,8 @@
-# The hold-mode PID takes its derivative on the measurement
+# The turbine speed PID takes its derivative on the measurement
 
 The derivative term acted on the rpm error and kept `pidPreviousError` in the turbine state. On the first tick after hold mode (or the main steam valve) came on, the previous error was 0 or stale, so a 3000 rpm error gave `Kd · 3000 / 0.1 = 15` and slammed the valve open in one tick. Decided in #25.
 
-D is now `−Kd · (rpm_now − rpm_previous) / dt`, with the previous rpm being `turbineState.rpm` (the value before the tick). `pidPreviousError` is gone from `TurbineState`, the initial state and the trip. While the PID is inactive (hold mode off or main steam valve closed) `pidIntegralError` is returned as 0, so every engage starts with a zero integral.
+D is now `−Kd · (rpm_now − rpm_previous) / dt`, with the previous rpm being `turbineState.rpm` (the value before the tick). `pidPreviousError` is gone from `TurbineState`, the initial state and the trip. While the PID is inactive (Free mode or main steam valve closed, [ADR 0021](0021-turbine-runup-from-steam-power.md)) `pidIntegralError` is returned as 0, so every engage starts with a zero integral.
 
 ## Considered options
 

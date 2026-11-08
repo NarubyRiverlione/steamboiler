@@ -27,13 +27,21 @@ const openShare = (open: (s: PowerPlantState) => boolean) =>
 describe("bypass-loop setup", () => {
   const atOpen = samples.find((s) => s.time >= valveOpenAt)
 
-  test("starts at full gas", () => {
-    expect(samples[0].state.Boiler.gasFlow).toBe(CstBoiler.MaxGasFlow)
+  test("starts with the knob fully up and reaches full gas in one turn and one wait, without a jump", () => {
+    expect(samples[0].state.Boiler.gasRateCommand).toBe(1)
+    const full = samples.find((s) => s.state.Boiler.gasFlow >= CstBoiler.MaxGasFlow)
+    expect(full?.time).toBeCloseTo(CstBoiler.MaxGasFlow / CstBoiler.GasRateMax, 0)
+    for (let i = 1; i < samples.length; i++) {
+      const step = samples[i].state.Boiler.gasFlow - samples[i - 1].state.Boiler.gasFlow
+      expect(Math.abs(step)).toBeLessThanOrEqual(
+        CstBoiler.GasRateMax * (samples[i].time - samples[i - 1].time) + 1e-6,
+      )
+    }
   })
 
   test("opens the main steam valve at working pressure, not during heat-up (ADR 0018)", () => {
     expect(valveOpenAt).toBeLessThan(SettleTime)
-    expect(atOpen?.state.Boiler.gasFlow).toBe(StartGas)
+    expect(atOpen?.state.Boiler.gasFlow).toBeCloseTo(StartGas, 3)
     expect(atOpen?.state.Condenser.sjaeValvePosition).toBe(LoopSettings.SjaeOpening)
   })
 
@@ -44,7 +52,7 @@ describe("bypass-loop setup", () => {
 
   test("gas never goes above the heat-up gas once the main steam valve opens", () => {
     for (const { state } of samples.filter((s) => s.time > valveOpenAt))
-      expect(state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas)
+      expect(state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas + 1e-6)
   })
 
   test("keeps the turbine valve closed throughout", () => {
@@ -58,13 +66,13 @@ describe("bypass-loop assertions", () => {
   test("condensation pump never returns more than the hotwell holds", () => {
     const empty = makeInitialState().Condenser
     const pumping = { ...empty, hotwellWaterMass: 0, hotwellWaterVolume: 0, condensationPumpValvePosition: 1 }
-    const next = CondenserTick(pumping, 1, { flow: 0, temp: 0 }, { flow: 0, temp: 0, pressure: 0 }, CstBoiler.TotalVolume)
+    const next = CondenserTick(pumping, 1, { flow: 0, enthalpy: 0 }, { flow: 0, enthalpy: 0 }, CstBoiler.TotalVolume)
     expect(next.returnRate).toBe(0)
   })
 
   test("condensation pump returns nothing into a full boiler, the water stays in the hotwell", () => {
     const pumping = { ...makeInitialState().Condenser, condensationPumpValvePosition: 1 }
-    const next = CondenserTick(pumping, 1, { flow: 0, temp: 0 }, { flow: 0, temp: 0, pressure: 0 }, 0)
+    const next = CondenserTick(pumping, 1, { flow: 0, enthalpy: 0 }, { flow: 0, enthalpy: 0 }, 0)
     expect(next.returnRate).toBe(0)
     expect(next.hotwellWaterMass).toBe(pumping.hotwellWaterMass)
   })

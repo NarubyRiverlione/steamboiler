@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest"
-import BoilerTick, { BoilerRemoveSteam, BoilerVent, drainBoiler, heatLossOf, warmBy } from "./BoilerTick"
+import BoilerTick, {
+  BoilerRemoveSteam,
+  BoilerVent,
+  ReliefCapacity,
+  drainBoiler,
+  gasRateOf,
+  heatLossOf,
+  returnHeatOf,
+  warmBy,
+} from "./BoilerTick"
 import { CstPhysics, CstSimulation } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 import {
@@ -8,7 +17,8 @@ import {
   waterMassOf,
   waterVolumeOf,
 } from "../../utils/boilerCalculations"
-import { getWaterSpecificVolume } from "../../utils/steamTable"
+import { calculateFlueGasHeatBalance } from "../../utils/flueGas"
+import { getBoilingPoint, getLatentHeat, getWaterSpecificVolume } from "../../utils/steamTable"
 
 const { CstBoiler, CstTurbine, DeltaTime } = CstSimulation
 // The thermal-model numbers below are derived for 50 t of water, so the fixture pins that fill rather than following
@@ -76,15 +86,15 @@ describe("BoilerTick heat loss", () => {
   test("reports the heat loss (kW) of the tick", () => {
     expect(BoilerTick(settled(170)).heatLoss).toBeCloseTo(heatLossOf(170), 6)
   })
-
 })
 
 describe("BoilerTick thermal mass", () => {
-  // Full gas is 357 MW, 35.7 MJ per tick. 50 t of water at 4.196 kJ/kg·K is 209.8 MJ/K; with 100 t of steel at
-  // 0.5 kJ/kg·K that becomes 259.8 MJ/K, so one tick warms 0.137 K instead of the water-only 0.170 K
+  // Full gas at 60 °C with no Return puts 389.9 MW into the water (flue gas leaves the cold boiler 92.8% spent, ADR
+  // 0029), 39.0 MJ per tick. 50 t of water at 4.18 kJ/kg·K is 209 MJ/K; with 100 t of steel at 0.5 kJ/kg·K that
+  // becomes 259 MJ/K, so one tick warms 0.150 K instead of the water-only 0.187 K
   test("the drum and tube metal slow the heat-up", () => {
     const next = BoilerTick({ ...settled(60), gasFlow: CstBoiler.MaxGasFlow })
-    expect(next.temperature - 60).toBeCloseTo(0.137, 2)
+    expect(next.temperature - 60).toBeCloseTo(0.15, 2)
   })
 })
 
@@ -94,15 +104,16 @@ describe("BoilerTick heating rate", () => {
     for (let i = 0; i < Math.round(seconds / DeltaTime); i++) state = BoilerTick(state)
     return state
   }
-  // 2000 L/s of gas is 59.5 MW into 259.8 MJ/K of water and metal: a steady rise of 0.229 K/s
+  // 2000 L/s of gas is 68.4 MW into 259 MJ/K of water and metal at 60 °C: a steady rise of 0.263 K/s
 
   test("settles at the true rate of rise", () => {
-    // 0.229 K/s at 60 °C; after 300 s the water is at about 128 °C, where its specific heat is 2% higher
-    expect(ticks(300, 2000).heatingRate).toBeCloseTo(0.224, 2)
+    // 0.263 K/s at 60 °C; after 300 s the water is at about 128 °C, where its specific heat is higher and the
+    // flue gas leaves hotter
+    expect(ticks(300, 2000).heatingRate).toBeCloseTo(0.247, 2)
   })
 
   test("is smoothed over 30 s: after a step it has covered about 63% of it in 30 s", () => {
-    expect(ticks(30, 2000).heatingRate).toBeCloseTo(0.632 * 0.229, 2)
+    expect(ticks(30, 2000).heatingRate).toBeCloseTo(0.632 * 0.263, 2)
   })
 
   test("raises no alarm below the limit", () => {
@@ -160,7 +171,7 @@ describe("steam draw cools the boiler", () => {
     const rest = BoilerTick(hot)
     expect(after.temperature).toBeLessThan(rest.temperature)
     expect(after.pressure).toBeLessThan(rest.pressure)
-    // 10 kg out in a tick, each kg needs about 1700 kJ from tens of tonnes of water: a fraction of a kelvin
+    // A few kg out in a tick, each kg needs about 1700 kJ from tens of tonnes of water: a fraction of a kelvin
     expect(rest.temperature - after.temperature).toBeGreaterThan(0.01)
     expect(rest.temperature - after.temperature).toBeLessThan(1)
   })
@@ -174,15 +185,16 @@ describe("steam draw cools the boiler", () => {
 
 describe("BoilerRemoveSteam", () => {
   const plant = makeInitialState()
+  const atRating = { ...plant.Boiler, pressure: 165 }
   const openTurbine = { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: 0.5 }
-  // A half-open valve passes half the valve capacity (kg/s), so this much per tick
+  // At the rating pressure a half-open valve passes half the valve capacity (kg/s), so this much per tick
   const halfOpenFlow = 0.5 * CstTurbine.MaxSteamRemovalRate
   const halfOpenPerTick = halfOpenFlow * DeltaTime
 
-  test("caps the flow at the valve rate when the boiler holds plenty of steam", () => {
+  test("passes the valve flow when the boiler holds plenty of steam", () => {
     const plenty = 100 * halfOpenPerTick
     const { boilerState, turbineState } = BoilerRemoveSteam(
-      { ...plant.Boiler, steamMass: plenty },
+      { ...atRating, steamMass: plenty },
       openTurbine,
       "TURBINE",
     )
@@ -193,7 +205,7 @@ describe("BoilerRemoveSteam", () => {
   test("removes only the steam the boiler holds when the valve asks for more", () => {
     const little = halfOpenPerTick / 5
     const { boilerState, turbineState } = BoilerRemoveSteam(
-      { ...plant.Boiler, steamMass: little },
+      { ...atRating, steamMass: little },
       openTurbine,
       "TURBINE",
     )
@@ -204,15 +216,65 @@ describe("BoilerRemoveSteam", () => {
   test("bypass and turbine draw from the same steam", () => {
     const both = { ...openTurbine, bypassValvePosition: 0.5 }
     // One tick's worth through the bypass leaves half a tick's worth for the turbine
-    const bypass = BoilerRemoveSteam({ ...plant.Boiler, steamMass: 1.5 * halfOpenPerTick }, both, "BYPASS")
+    const bypass = BoilerRemoveSteam({ ...atRating, steamMass: 1.5 * halfOpenPerTick }, both, "BYPASS")
     const turbine = BoilerRemoveSteam(bypass.boilerState, bypass.turbineState, "TURBINE")
     expect(turbine.turbineState.bypassSteamFlowOut).toBeCloseTo(halfOpenFlow)
     expect(turbine.turbineState.turbineSteamFlowOut).toBeCloseTo(halfOpenFlow / 2)
     expect(turbine.boilerState.steamMass).toBe(0)
   })
 
+  describe("flow follows boiler pressure", () => {
+    const plenty = 1e6
+    const fullyOpen = {
+      ...plant.Turbine,
+      mainSteamValve: true,
+      turbineValvePosition: 1,
+      bypassValvePosition: 1,
+    }
+    const flowAt = (pressure: number, position: number, removeBy: "BYPASS" | "TURBINE"): number => {
+      const valves = { ...fullyOpen, turbineValvePosition: position, bypassValvePosition: position }
+      const { turbineState } = BoilerRemoveSteam(
+        { ...plant.Boiler, pressure, steamMass: plenty },
+        valves,
+        removeBy,
+      )
+      return removeBy === "BYPASS" ? turbineState.bypassSteamFlowOut : turbineState.turbineSteamFlowOut
+    }
+
+    test.each(["BYPASS", "TURBINE"] as const)("%s passes position × 200 kg/s at 165 bar", (outlet) => {
+      expect(flowAt(165, 1, outlet)).toBeCloseTo(200, 9)
+      expect(flowAt(165, 0.05, outlet)).toBeCloseTo(10, 9)
+    })
+
+    // The figures of the owner's brief on #80, from √(P·ρ) with saturated steam density
+    test.each([
+      [100, 109],
+      [34, 35],
+      [10, 10.5],
+    ])("a fully open valve at %d bar passes about %d kg/s", (pressure, expected) => {
+      expect(Math.abs(flowAt(pressure, 1, "BYPASS") - expected)).toBeLessThan(0.5)
+      expect(Math.abs(flowAt(pressure, 1, "TURBINE") - expected)).toBeLessThan(0.5)
+    })
+
+    test.each([
+      [171, 210],
+      [178, 223],
+    ])("above the rating point the flow is not capped: %d bar passes about %d kg/s", (pressure, expected) => {
+      expect(Math.abs(flowAt(pressure, 1, "BYPASS") - expected)).toBeLessThan(0.5)
+    })
+
+    test("the steam taken from the boiler is exactly the reported flow", () => {
+      const { boilerState, turbineState } = BoilerRemoveSteam(
+        { ...plant.Boiler, pressure: 100, steamMass: plenty },
+        fullyOpen,
+        "BYPASS",
+      )
+      expect(plenty - boilerState.steamMass).toBeCloseTo(turbineState.bypassSteamFlowOut * DeltaTime, 6)
+    })
+  })
+
   test("a closed main steam valve removes nothing", () => {
-    const boiler = { ...plant.Boiler, steamMass: 50 }
+    const boiler = { ...atRating, steamMass: 50 }
     const { boilerState, turbineState } = BoilerRemoveSteam(
       boiler,
       { ...openTurbine, mainSteamValve: false },
@@ -287,9 +349,92 @@ describe("BoilerTick helpers", () => {
   })
 })
 
+describe("BoilerTick flue gas heat balance (ADR 0029)", () => {
+  const fullGas = { ...settled(350), gasFlow: CstBoiler.MaxGasFlow }
+
+  test("reports the stack temperature, the efficiency and the Return after the economizer", () => {
+    const next = BoilerTick(fullGas, { flow: 171, temperature: 37 })
+    expect(next.stackTemperature).toBeCloseTo(160, 0)
+    expect(next.boilerEfficiency).toBeCloseTo(0.934, 2)
+    expect(next.returnTemperatureOut).toBeGreaterThan(120)
+    expect(next.returnTemperatureOut).toBeLessThan(124)
+  })
+
+  test("with no Return given, nothing is recovered", () => {
+    const next = BoilerTick(fullGas)
+    expect(next.boilerEfficiency).toBeCloseTo(0.79, 2)
+    expect(next.stackTemperature).toBeGreaterThan(400)
+  })
+
+  test("the heat into the water of the tick is the fuel heat less the stack heat", () => {
+    const withReturn = BoilerTick(fullGas, { flow: 171, temperature: 37 })
+    const without = BoilerTick(fullGas)
+    const stepMW =
+      (calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 171, 37).heatIntoWater -
+        calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 0, 37).heatIntoWater) /
+      1000
+    expect(stepMW).toBeCloseTo(60.8, 0)
+    // The cold Return costs more than the economizer recovers (ADR 0030)
+    expect(withReturn.energyDelta).toBeLessThan(without.energyDelta)
+  })
+
+  test("a Return of cold water cools the boiler and lowers its energy by the enthalpy difference (ADR 0030)", () => {
+    const idle = settled(350)
+    const feed = { flow: 100, temperature: 37 }
+    const cooled = BoilerTick(idle, feed)
+    const untouched = BoilerTick(idle)
+    const expected: number = returnHeatOf(100 * CstSimulation.DeltaTime, 37, 350)
+    expect(cooled.temperature).toBeLessThan(untouched.temperature)
+    // A fixed specific heat (4.18) would be about half the real cost at 350 °C
+    expect(expected).toBeLessThan(100 * CstSimulation.DeltaTime * 4.18 * (37 - 350) * 0.6)
+    // The steam flashed at the new temperature moves the energy a little more, so within a tenth
+    const change: number = (cooled.energyDelta - untouched.energyDelta) * CstSimulation.DeltaTime
+    expect(Math.abs(change / expected - 1)).toBeLessThan(0.1)
+  })
+
+  test("a Return hotter than the boiler warms it", () => {
+    const warm = settled(100)
+    expect(BoilerTick(warm, { flow: 100, temperature: 250 }).temperature).toBeGreaterThan(
+      BoilerTick(warm).temperature,
+    )
+  })
+
+  test("a Return of zero flow changes nothing", () => {
+    const idle = settled(350)
+    const withZero = { ...BoilerTick(idle, { flow: 0, temperature: 37 }), returnTemperatureOut: 0 }
+    const without = { ...BoilerTick(idle), returnTemperatureOut: 0 }
+    expect(withZero).toEqual(without)
+  })
+
+  test("a stopped burner reports no efficiency and the ambient stack", () => {
+    const next = BoilerTick(settled(100), { flow: 50, temperature: 37 })
+    expect(next.boilerEfficiency).toBe(0)
+    expect(next.stackTemperature).toBe(CstPhysics.AmbientTemperature)
+  })
+})
+
 describe("BoilerVent relief valve", () => {
-  // 1.1 × 357 MW of heat over about 790 kJ/kg latent heat at 178 bar (356.2 °C, IAPWS-IF97) ≈ 497 kg/s
-  const capacityPerTick = 497 * DeltaTime
+  test("the capacity beats the steam full gas makes at the opening pressure, whatever the Return (ADR 0030)", () => {
+    const openingTemperature = getBoilingPoint(CstBoiler.ReliefOpenPressure)
+    let mostHeat = 0
+    for (const flow of [0, 24, 171, 250, 299.5])
+      for (const hotwell of [10, 20, 40]) {
+        const balance = calculateFlueGasHeatBalance(CstBoiler.MaxGasFlow, openingTemperature, flow, hotwell)
+        // Heat left for steam: the boiler stage, less what the Return costs to bring to the boiler temperature
+        const steaming: number =
+          balance.heatIntoWater -
+          balance.economizerHeat +
+          returnHeatOf(flow, balance.returnTemperatureOut, openingTemperature)
+        mostHeat = Math.max(mostHeat, steaming)
+      }
+    expect(ReliefCapacity).toBeGreaterThan(mostHeat / getLatentHeat(openingTemperature))
+    expect(ReliefCapacity).toBeGreaterThan(450)
+    expect(ReliefCapacity).toBeLessThan(470)
+  })
+
+  // 1.1 × the worst-case heat into the water (full gas at 178 bar, no Return, ADR 0030) over about 790 kJ/kg latent
+  // heat at 178 bar (356.2 °C, IAPWS-IF97) ≈ 457 kg/s
+  const capacityPerTick = ReliefCapacity * DeltaTime
   const at = (pressure: number, reliefValveOpen = false) => ({
     ...cold,
     pressure,
@@ -378,5 +523,55 @@ describe("BoilerTick water in kg", () => {
     const expectedKg: number =
       (CstBoiler.TotalVolume * CstBoiler.DrainingRate * DeltaTime) / getWaterSpecificVolume(100)
     expect(next.drainedTotal).toBeCloseTo(expectedKg, 6)
+  })
+})
+
+describe("gas rate command (#15)", () => {
+  const { GasRateMax, GasRateDeadZone, MaxGasFlow } = CstBoiler
+  const withCommand = (gasRateCommand: number, gasFlow = 0) => ({ ...cold, gasRateCommand, gasFlow })
+
+  test("the centre and the dead zone hold the gas", () => {
+    expect(gasRateOf(0)).toBe(0)
+    expect(gasRateOf(GasRateDeadZone)).toBe(0)
+    expect(gasRateOf(-GasRateDeadZone)).toBe(0)
+    expect(BoilerTick(withCommand(0, 4000)).gasFlow).toBe(4000)
+  })
+
+  test("full deflection moves the gas at the maximum rate, either way", () => {
+    expect(gasRateOf(1)).toBe(GasRateMax)
+    expect(gasRateOf(-1)).toBe(-GasRateMax)
+  })
+
+  test("the rate tapers quadratically past the dead zone", () => {
+    const half: number = 0.5 + GasRateDeadZone / 2 // midway through the live range
+    expect(gasRateOf(half)).toBeCloseTo(GasRateMax / 4, 9)
+    expect(gasRateOf(-half)).toBeCloseTo(-GasRateMax / 4, 9)
+  })
+
+  test("a small deflection trims by no more than 50 L/s per second", () => {
+    expect(gasRateOf(0.25)).toBeGreaterThan(0)
+    expect(gasRateOf(0.25)).toBeLessThanOrEqual(50)
+  })
+
+  test("the gas moves by the rate over one tick, never a jump", () => {
+    const next = BoilerTick(withCommand(1))
+    expect(next.gasFlow).toBeCloseTo(GasRateMax * DeltaTime, 9)
+    expect(BoilerTick(withCommand(-1, 1000)).gasFlow).toBeCloseTo(1000 - GasRateMax * DeltaTime, 9)
+  })
+
+  test("full gas takes one turn and one wait, and the gas then clamps at the maximum", () => {
+    let state = withCommand(1)
+    const ticks: number = Math.ceil(MaxGasFlow / GasRateMax / DeltaTime)
+    for (let i = 0; i < ticks; i++) state = BoilerTick(state)
+    expect(state.gasFlow).toBeCloseTo(MaxGasFlow, 6)
+    state = BoilerTick(state)
+    expect(state.gasFlow).toBe(MaxGasFlow)
+    expect(state.gasRateCommand).toBe(1)
+  })
+
+  test("the gas clamps at 0 going down and leaves the command where it is", () => {
+    const next = BoilerTick(withCommand(-1, 10))
+    expect(next.gasFlow).toBe(0)
+    expect(next.gasRateCommand).toBe(-1)
   })
 })

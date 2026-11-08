@@ -8,7 +8,7 @@ The hotwell is now 50 m³ (`CstCondenser.TotalVolume`), and the plant starts it 
 
 - **Keep 15 m³ and record it as a deliberate reduction:** nothing about playability needs a small hotwell, so there is nothing to record it for; it only made the level fast and the makeup and reject churn.
 - **Size it to hold the boiler's water at a trip (≥ 50 m³ of free room):** real plants put that inventory in the condensate storage tanks (TMI-1 has two of 265,000 gal next to a 154,000 gal hotwell), not the hotwell.
-- **Size on 200 kg/s (one valve fully open), about 60 m³:** the full-gas flow of 171 kg/s is the rated steam flow; 200 kg/s is the valve capacity, not a steady flow.
+- **Size on 200 kg/s (one valve fully open), about 60 m³:** the full-gas flow was 171 kg/s, the rated steam flow until #74 made it 161 kg/s; 200 kg/s is the valve capacity, not a steady flow.
 - **50 m³, about 3 minutes at full gas (chosen):** the middle of HEI's range, and in line with three ways of counting the minutes (HEI, CEA and TMI-1/ABWR proportions all give 45 to 55 m³).
 
 ## Consequences

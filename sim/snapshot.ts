@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { makeInitialState } from "../src/context/PowerPlantReducer"
 import PowerPlantState from "../src/context/PowerPlantState"
+import { shapeErrors } from "../src/utils/stateShape"
 
 // Committed snapshots: plain PowerPlantState JSON, one file per name.
 const SnapshotDir = fileURLToPath(new URL("./snapshots/", import.meta.url))
@@ -10,20 +11,7 @@ export const snapshotPath = (name: string) => `${SnapshotDir}${name}.json`
 
 export const toSnapshotJson = (state: PowerPlantState) => `${JSON.stringify(state, null, 2)}\n`
 
-// Where `value` differs in shape from `template`: missing or extra keys, or a different type.
-export function shapeErrors(template: unknown, value: unknown, path = "state"): string[] {
-  const kind = (v: unknown) => (v === null ? "null" : Array.isArray(v) ? "array" : typeof v)
-  if (kind(template) !== kind(value)) return [`${path}: expected ${kind(template)}, got ${kind(value)}`]
-  if (kind(template) !== "object") return []
-  const want = template as Record<string, unknown>
-  const got = value as Record<string, unknown>
-  const missing = Object.keys(want).filter((k) => !Object.hasOwn(got, k)).map((k) => `${path}.${k}: missing`)
-  const extra = Object.keys(got).filter((k) => !Object.hasOwn(want, k)).map((k) => `${path}.${k}: unexpected`)
-  const nested = Object.keys(want)
-    .filter((k) => Object.hasOwn(got, k))
-    .flatMap((k) => shapeErrors(want[k], got[k], `${path}.${k}`))
-  return [...missing, ...extra, ...nested]
-}
+export { shapeErrors }
 
 // Relative tolerance of the larger magnitude: three orders above the ~1e-12 cross-machine noise of #67 (ADR 0020).
 const RelativeTolerance = 1e-9

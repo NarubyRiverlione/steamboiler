@@ -13,7 +13,7 @@ The owner's 10% and 95% were first proposed as working setpoints. Real plants re
 
 - **10% and 95% as working setpoints:** rejected. The level would wander 85 points before anything reacted, the pump would run into cavitation before makeup helped, and 95% is a brim-full hotwell with flooded tubes.
 - **Everything in the operator:** rejected. A trip or clamp that the operator can leave out is not a protection; scenarios and the app must get the same behaviour.
-- **Alarms at 25% and 85%:** left out. The sim has no hotwell alarm infrastructure; filed as a `P4` ticket.
+- **Alarms at 25% and 85%:** left out. The sim has no hotwell alarm infrastructure; filed as #59.
 - **Enlarging the hotwell, a deaerator-driven condensate trim, closing the condenser steam inlet on high-high:** out of scope. #53 already sized the hotwell, the sim has no deaerator, and the steam-inlet claim is unverified.
 
 ## Consequences

@@ -14,7 +14,7 @@ edit const.ts  →  pnpm sim <scenario>  →  open the newest sim/reports/*.html
 `sim/reports/<scenario>-<timestamp>.csv` and `.html`, git-ignored) runs a named scenario through `powerPlantReducer`
 (`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV plus
 a self-contained HTML report in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`,
-`runScenarioWithLifts`, `firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`), `sim/report.ts` (`toReportHtml`; the
+`runScenarioWithLifts`, `firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`; the speed mode is the column `turbine_speedMode`: 0 Free, 1 Ramp up, 2 Hold), `sim/report.ts` (`toReportHtml`; the
 panel list is the `panels` array), `sim/scenarios/` (one file per scenario, registered in
 `index.ts`), `sim/run.ts` (CLI). A scenario's `initial` state is the cold plant from
 `makeInitialState()` in `src/context/PowerPlantReducer.ts` (the UI starts there too), or a snapshot
@@ -32,7 +32,7 @@ heating-rate limit. Lifts are recorded per tick
 file is re-read per request, so re-run `pnpm sim` and refresh. `pnpm sim:view` does both.
 
 Panels are grouped Boiler, Turbine, Condenser, Hotwell and Loop (the list is the `panels` array in
-`sim/report.ts`). The **Turbine** steam flow panel uses semantic colours (bypass red, turbine
+`sim/report.ts`). The **Turbine** speed row reads RPM, Frequency (derived from rpm), Electric output (the load carried). The **Turbine** steam flow panel uses semantic colours (bypass red, turbine
 green, total blue); every other flow chart is one hue per chart. The **Loop** group's water
 inventory shows a total that should stay flat
 (boundary flows undone). The water
@@ -46,15 +46,21 @@ Scenarios (`pnpm sim <name>`), defined and classed in [testing.md](testing.md). 
 
 | Scenario | Class | Starts from | Goal |
 | --- | --- | --- | --- |
-| `bypass-loop` | golden | cold | cold start at full gas, bypass only; the main steam valve stays shut during heat-up (35% cold fill expands to 50%, ADR 0018) and opens at working pressure (163 bar, 220 s), gas goes to `StartGas` (2000 L/s) and the bypass to a fixed 10%; pressure reaches 165 bar, then gas holds 165 ± 2 bar, with boiler level at 50% and the hotwell at 70% (#19, #43). Runs 7200 s: the loop settles after about 680 s, no relief lift, no reject during heat-up (see feedwater-loop.md). Source of the `bypass-loop` snapshot |
-| `turbine-runup` | golden | cold | two phases (`startupOperator`). Build pressure: cold → 10 bar (timed `AtPressure`), main steam valve open, turbine valve cracked to 5% at 790 s, gas 2000 L/s, so pressure rises. Pressure hold: when pressure first enters 165 ± 2 bar (~1500 s; the main steam valve opens at 780 s with no level hold until then, and no reject occurs) the turbine valve opens once to 9.1% (18.2 kg/s; speed settles near steam flow × pressure = 3003 rpm) and gas becomes the throttle (`PressureHoldSettings`), with the holds of `loopOperator`. Hold mode off, breaker open. The turbine speed has a time constant of about 2600 s, so the run lasts 14000 s: over the last 600 s pressure is 165 ± 2 bar and speed 3000 ± 50 rpm. Source of the `turbine-runup` snapshot |
-| `turbine-sync` | golden | `turbine-runup` | hold mode on, the PID takes the speed to 3000 rpm (it overshoots to ~3018 rpm and chatters for the first minute), the operator closes the breaker within ±2 rpm; over the last 600 s the breaker stays closed (it reopens itself outside ±2) |
-| `turbine-load` | golden | `turbine-sync` | the generator carries load (#14): MW follows the real steam flow and the live condenser pressure; over the last 600 s pressure is 165 ± 2 bar, boiler and hotwell levels hold their operator bands, speed stays within ±2 rpm of sync, the breaker stays closed and the relief valve never lifts (the former `steady-state` idea, #38) |
-| `relief-lift` | edge | cold | full gas with everything closed until the relief valve lifts (~229 s), then gas off at 233 s: one lift, 178 → 171 bar, then cooldown (the #46 expected failure no longer fires with the 35% cold fill; the steam density kink itself is still tracked in #46) |
+| `bypass-loop` | golden | cold | cold start with the knob fully up (the gas reaches full in 40 s, #15), bypass only; the main steam valve stays shut during heat-up (35% cold fill expands to 50%, ADR 0018) and opens at working pressure (163 bar, 284 s); the operator has brought the gas to `StartGas` (2000 L/s) from 120 bar on (`GasBackOffPressure`), since the gas takes about 33 s to come back from full and the bypass to a fixed 10%; pressure reaches 165 bar, then gas holds 165 ± 2 bar, with boiler level at 50% and the hotwell at 70% (#19, #43). Runs 7200 s: the loop settles after about 600 s, no relief lift, no reject during heat-up (see feedwater-loop.md). Source of the `bypass-loop` snapshot |
+| `turbine-runup` | golden | cold | two phases (`startupOperator`). Build pressure: cold → ~34 bar (timed `AtPressure`), main steam valve open at 780 s, bypass cracked to 5% at 790 s (about 1.8 kg/s there, 10 kg/s at working pressure; the turbine valve stays shut: a 5% turbine crack at working pressure passes 10 kg/s against ~4.3 kg/s of no-load flow and would spin the rotor past `MaxRPM`), gas 2000 L/s, so pressure rises. Pressure hold and run-up: when pressure first enters 165 ± 2 bar (~1240 s) gas becomes the throttle (`PressureHoldSettings`) with the holds of `loopOperator`; the boiler level hold waits for that moment too (the cold fill already holds the right mass, ADR 0018), so nothing is made up or rejected during heat-up and the hotwell stays at 57–70%, and the operator takes Ramp up through 500, 1500, 2500 and 3000 rpm (from Free it selects 500 and starts Ramp up; each time Hold engages it selects the next point, so Hold lasts one tick at 500, 1500 and 2500 and only shows in a per-tick run). The reference moves at 50 rpm/min and the speed tracks it within 0.4 rpm; the run-up takes 60 min and Hold engages at 3000 rpm at ~4840 s. The run ends after a 600 s settling time (`StartupSettings.SettlingTime`, the window turbine-sync judges; the scenario has no stop condition, so `Duration` is 5800 s): Hold at 3000 ± 2 rpm, pressure 165 ± 2 bar, steam out matches steam generated within 5%, breaker open. Source of the `turbine-runup` snapshot |
+| `turbine-sync` | golden | `turbine-runup` | starts in Hold at 3000 rpm (no mode toggle in the scenario), the operator closes the breaker within ±2 rpm at the first tick; over the last 600 s the breaker stays closed (it reopens itself outside ±2). Per tick the breaker closes once and never reopens. The test also engages Hold from Free at ±5 rpm (the scenario itself starts settled): the valve never shuts and the speed stays within 3000 ± 10 rpm (#63) |
+| `turbine-load` | golden | `turbine-sync` | the operator shuts the bypass and sets the load setpoint to 125 MW at t = 0 (#71, #14; rated output, 141.3 MW, is out of reach, #82), the load climbs at 3% of rated per minute and the gas ceiling is full gas; speed stays within ±2 rpm all the way, the breaker never opens, the electric output tracks the load; over the last 600 s pressure is 165 ± 2 bar, boiler and hotwell levels hold their operator bands, speed stays within ±2 rpm of sync, the breaker stays closed and the relief valve never lifts (the former `steady-state` idea, #38) |
+| `relief-lift` | edge | cold | full gas with everything closed until the relief valve lifts (~227 s), then gas off at 233 s: one lift, 178 → 171 bar, then cooldown (the #46 expected failure no longer fires with the 35% cold fill; the steam density kink itself is still tracked in #46) |
 | `hotwell-high` | edge | `bypass-loop` | makeup forced open, reject shut: the level reaches 95% (`HotwellHighHigh`), the clamp forces the reject open, no overflow |
 | `hotwell-low` | edge | `bypass-loop` | makeup shut and reject forced open (a closed loop never drains by itself): the condensation pump trips as the level crosses 10% (`HotwellLowLow`) |
-| `boiler-low` | edge | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 98 K/min), the relief valve lifts at ~229 s and holds the pressure below design (peak ≈ 177.5 bar, 355.7 °C), until the burner trips at ~270 s with ~18 m³ left (ADR 0017); the boiler never runs dry |
-| `heat-up` | edge | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~980 s (16.3 min), smoothed rate peaks at 23.4 K/min, no alarm; gas off at 165 bar |
+| `boiler-low` | edge | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 103 K/min), the relief valve lifts at ~227 s and holds the pressure below design (peak ≈ 178.0 bar, 356.1 °C), until the burner trips at ~271 s with ~19 m³ left (ADR 0017); the boiler never runs dry |
+| `return-stop` | edge | bypass-loop snapshot | full gas and the bypass fully open, the condensation pump shuts at 15 s: the economizer recovers nothing and the cold Return no longer costs heat, so pressure rises (from 159 to the relief opening in about 40 s) and the relief valve keeps it at or below 178 bar plus one tick (#87, #74). The burner trips on low level later |
+| `heat-up` | edge | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~964 s (16.1 min), smoothed rate peaks at 23.5 K/min, no alarm; knob fully down at 165 bar, the gas ramps off in about 7 s |
+| `low-pressure-close` | edge | `turbine-sync` | gas off and bypass fully open with the turbine in Hold: the burner trips on low level at ~191 s, the hotwell reaches 95% so its clamp forces the reject open, and at ~388 s the first tick starting at or below 10 bar closes the main steam valve and trips the turbine, under vacuum, so the trip can only be the closure; no steam leaves through either valve after that (ADR 0026). Expected failure: "natural cooldown stops steam generation", a draw flashes water with the gas off (#58) |
+| `max-output` | edge | `turbine-sync` | bypass shut (a delta of −1; it was a no-op before #74), load setpoint to `LoadSetpointLimit` at t = 0, Hold, gas ceiling full gas (#84). The gas is the limit (#74): the load climbs at the load rate, full gas is reached at about 138 MW and 192 kg/s (about 1950 s) and the valve is nearly full by then (200 kg/s at 165 bar, #88): pressure sags a little while Hold keeps opening the valve until it is fully open at about 142 MW, and the breaker opens on the speed sag a moment later, which is the plant's maximum output. Load rejection after that: speed peaks under `MaxRPM`, Hold returns to 3000 ± 2 rpm, and the relief valve lifts several times with pressure at most 178.1 bar, because the gas hold comes down slowly |
+| `turbine-trip` | edge | `turbine-sync` | the `turbine-load` run to 125 MW, then at 2500 s Hold goes to Free, the turbine valve slams shut and the bypass opens fully to dump the steam (#88). The turbine takes no steam, so the extraction heater loses its tap at once: extraction and tap pressure are 0 and the Return reaches the economizer at the hotwell temperature. The cold Return costs heat and the pressure falls to about 136 bar at full gas, under the design pressure all the way |
+
+`sim/golden/exhaust-split.test.ts` runs no named scenario: from the `bypass-loop` snapshot it puts the same 25% on the bypass and on the turbine valve for 120 s, and checks the exhaust leaves less steam in the pool and counts its moisture in `condensationRate` (#81).
 
 The turbine valve only opens under the vacuum limit, and above it an open valve closes in a turbine
 trip (ADR 0003). So the turbine scenarios hold the vacuum: `heatUp` starts the air extraction pump at
@@ -70,14 +76,16 @@ there is no level control. Use `bypass-loop` for the controlled loop.
 A scenario's optional `operator(state, time)` is a feedback hook called every tick after the timed
 actions; its actions go through `powerPlantReducer` like any other. It must decide from state and
 time alone so runs stay reproducible. `sim/scenarios/heat-up.ts` has `rampOperator`: once a second it
-raises the gas 20 L/s while the smoothed heating rate is under 0.36 K/s (a margin under the 0.4 K/s
-limit for the readout's 30 s lag) and lowers it above, and cuts the gas at 165 bar.
+turns the gas knob to raise the gas 20 L/s over the next second while the smoothed heating rate is under 0.36 K/s (a margin under the 0.4 K/s
+limit for the readout's 30 s lag) and to lower it above, and turns the knob fully down at 165 bar.
+The gas is a rate command ([ADR 0033](../adr/0033-gas-is-a-rate-knob.md)), so a scenario never sets a gas value:
+`sim/scenarios/gas.ts` has `setGasCommand` (a timed action), `rampGas` (full deflection for whole ticks, the remainder in one tick, then the knob centred) and `steerGas` (the operator's hand on the knob: the command that reaches a target gas in N seconds, full deflection for 0 or the maximum so the clamp hits it exactly).
 `sim/scenarios/loop-operator.ts` is the other: it starts
-steam (gas down to `StartGas`, main steam valve, bypass at its fixed 10%, condensation pump start position, SJAE restart),
+steam (gas back from full to `StartGas` from 120 bar on, main steam valve, bypass at its fixed 10%, condensation pump start position, SJAE restart),
 nudges the gas toward the working pressure (`sim/scenarios/pressure-hold.ts`, shared with `turbine-runup`),
 the condensation pump toward the boiler level target and cooling water against condenser steam once a second, and sets makeup and reject in
 proportion to the distance outside the 55–75% hotwell band. Operator actions are not drawn as dashed lines in the report; the
-valve panels in each group show the positions instead. Operator settings, not plant physics: gas step 20 L/s and valve nudge 0.02 per adjustment, fast enough that `bypass-loop` stays under the relief setpoint and inside the boiler level band with the condenser on its real energy balance. Loop targets: [feedwater-loop.md](../plant/feedwater-loop.md).
+valve panels in each group show the positions instead. Operator settings, not plant physics: gas step 20 L/s per second (a turn of the knob) and valve nudge 0.02 per adjustment, fast enough that `bypass-loop` stays under the relief setpoint and inside the boiler level band with the condenser on its real energy balance. Loop targets: [feedwater-loop.md](../plant/feedwater-loop.md).
 
 ## Tests
 
@@ -103,7 +111,7 @@ The water is held as kg ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)), 
 
 | | Worst case | Limit in `sim/invariants.ts` |
 |---|---|---|
-| Water created, fraction of start mass | 1.9e-12 after 14000 s (`turbine-runup`; 2.0e-13 at 3000 s) | `MassCreatedLimit` = 1e-12 per 1800 s of sim time, 1e-12 minimum: the rounding adds up tick by tick |
+| Water created, fraction of start mass | 3.7e-15 after 5800 s (`turbine-runup`, re-measured in #70 after its run was shortened; the other scenarios were not re-measured, the 1.9e-12 of the old 14000 s run was the worst before) | `MassCreatedLimit` = 1e-12 per 1800 s of sim time, 1e-12 minimum: the rounding adds up tick by tick |
 | Water lost with no steam out, fraction of start mass | 2.3e-14 (`heat-up`) | `MassLostFixed` = 1e-13 |
 | Water lost per kg of steam out of the boiler | 5.1e-12 (`bypass-loop`) | `MassLostPerSteamOut` = 2e-11 |
 
@@ -127,7 +135,7 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
   A physics change smaller than 1e-9 relative is not caught here, the scenario goal checks cover that.
 - Sources: `turbine-runup` (for `turbine-sync`), `turbine-sync` (for `turbine-load`) and `bypass-loop` (for the edge set). A source starts from cold or from an earlier source; `pnpm sim:snapshots` writes them in the listed order, so a chained one loads the fresh file ([ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)).
 
-UI presets ("cold", "hot standby", "at pressure") are #24; the UI starts cold.
+The UI Presets popup (#24) loads Cold & dark, Hot standby (`bypass-loop`) and At pressure (`turbine-runup`) from these snapshots; the app itself starts cold.
 
 ## Pitfalls
 

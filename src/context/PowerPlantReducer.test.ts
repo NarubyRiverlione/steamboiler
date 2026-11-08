@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "./const"
 import PowerPlantAction from "./PowerPlantActions"
-import PowerPlantState from "./PowerPlantState"
+import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
+import { ratedOutputMW } from "../utils/turbineCalculations"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 const base = makeInitialState()
@@ -14,43 +15,86 @@ describe("powerPlantReducer", () => {
     expect(reduce({ type: "SIMULATE_TICK" })).toEqual(PowerPlantTick(base))
   })
 
+  test("LOAD_STATE replaces the whole state", () => {
+    const burning: PowerPlantState = reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: 0.5 } })
+    expect(reduce({ type: "LOAD_STATE", payload: { state: burning } })).toBe(burning)
+    expect(reduce({ type: "LOAD_STATE", payload: { state: base } }, burning)).toBe(base)
+  })
+
   describe("boiler", () => {
-    test("gas flow increases, capped at MaxGasFlow", () => {
-      expect(reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }).Boiler.gasFlow).toBe(500)
-      expect(reduce({ type: "INCREASE_GAS_FLOW", amount: CstBoiler.MaxGasFlow + 1 }).Boiler.gasFlow).toBe(
-        CstBoiler.MaxGasFlow,
-      )
+    test("the gas knob sets the rate command and leaves the gas flow to the tick", () => {
+      const turned: PowerPlantState = reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: 0.6 } })
+      expect(turned.Boiler.gasRateCommand).toBe(0.6)
+      expect(turned.Boiler.gasFlow).toBe(0)
     })
 
-    test("gas flow decreases, floored at 0", () => {
-      const burning = reduce({ type: "INCREASE_GAS_FLOW", amount: 1000 })
-      expect(reduce({ type: "DECREASE_GAS_FLOW", amount: 400 }, burning).Boiler.gasFlow).toBe(600)
-      expect(reduce({ type: "DECREASE_GAS_FLOW", amount: 5000 }, burning).Boiler.gasFlow).toBe(0)
+    test("the command is clamped to the knob travel", () => {
+      expect(reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: 7 } }).Boiler.gasRateCommand).toBe(1)
+      expect(reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: -7 } }).Boiler.gasRateCommand).toBe(-1)
     })
 
     describe("burner trip", () => {
       const lowLowVolume: number = CstBoiler.TotalVolume * CstBoiler.BurnerLowLowLevel - 1
+      const raise = (gasRateCommand: number): PowerPlantAction => ({
+        type: "SET_GAS_RATE",
+        payload: { gasRateCommand },
+      })
       const tripped: PowerPlantState = {
         ...base,
         Boiler: { ...base.Boiler, waterVolume: lowLowVolume, burnerTripped: true },
       }
 
-      test("raising the gas is refused while the water is below the burner low-low level", () => {
-        const next: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }, tripped)
+      test("turning the knob up is refused while the water is below the burner low-low level", () => {
+        const next: PowerPlantState = reduce(raise(1), tripped)
+        expect(next.Boiler.gasRateCommand).toBe(0)
         expect(next.Boiler.gasFlow).toBe(0)
         expect(next.Boiler.burnerTripped).toBe(true)
       })
 
-      test("a raise once the water is back above the level restarts the burner and clears the trip", () => {
-        const refilled: PowerPlantState = { ...tripped, Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 } }
-        const next: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }, refilled)
-        expect(next.Boiler.gasFlow).toBe(500)
+      test("a trip in the tick centres the knob and zeroes the gas", () => {
+        const burning: PowerPlantState = {
+          ...base,
+          Boiler: { ...base.Boiler, waterVolume: lowLowVolume, gasFlow: 5000, gasRateCommand: 0.8 },
+        }
+        const next: PowerPlantState = reduce({ type: "SIMULATE_TICK" }, burning)
+        expect(next.Boiler.burnerTripped).toBe(true)
+        expect(next.Boiler.gasFlow).toBe(0)
+        expect(next.Boiler.gasRateCommand).toBe(0)
+      })
+
+      test("a raise past the dead zone once the water is back above the level clears the trip", () => {
+        const refilled: PowerPlantState = {
+          ...tripped,
+          Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
+        }
+        const next: PowerPlantState = reduce(raise(0.5), refilled)
+        expect(next.Boiler.gasRateCommand).toBe(0.5)
         expect(next.Boiler.burnerTripped).toBe(false)
       })
 
-      test("lowering the gas is always allowed and leaves the trip as it was", () => {
-        const next: PowerPlantState = reduce({ type: "DECREASE_GAS_FLOW", amount: 500 }, tripped)
-        expect(next.Boiler.burnerTripped).toBe(true)
+      test("a deflection inside the dead zone does not restart the burner", () => {
+        const refilled: PowerPlantState = {
+          ...tripped,
+          Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
+        }
+        expect(reduce(raise(CstBoiler.GasRateDeadZone), refilled).Boiler.burnerTripped).toBe(true)
+      })
+
+      test("the gas ramps up from 0 after the restart", () => {
+        const refilled: PowerPlantState = {
+          ...tripped,
+          Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
+        }
+        const next: PowerPlantState = reduce({ type: "SIMULATE_TICK" }, reduce(raise(1), refilled))
+        expect(next.Boiler.gasFlow).toBeGreaterThan(0)
+        expect(next.Boiler.gasFlow).toBeLessThan(CstBoiler.GasRateMax)
+      })
+
+      test("centring or lowering the knob is always allowed and leaves the trip as it was", () => {
+        for (const command of [0, -1]) {
+          const next: PowerPlantState = reduce(raise(command), tripped)
+          expect(next.Boiler.burnerTripped).toBe(true)
+        }
       })
     })
 
@@ -221,20 +265,98 @@ describe("powerPlantReducer", () => {
       })
     })
 
-    test("RPM setpoint adjusts within MinRPM..MaxRPM", () => {
-      const adjust = (rpmAdjustment: number, state?: PowerPlantState) =>
-        reduce({ type: "ADJUST_RPM_SETPOINT", payload: { rpmAdjustment } }, state)
-      expect(base.Turbine.rpmSetPoint).toBe(CstTurbine.SyncRPM)
-      expect(CstTurbine.MaxRPM).toBeGreaterThan(CstTurbine.SyncRPM)
-      expect(adjust(100).Turbine.rpmSetPoint).toBe(CstTurbine.DefaultRPMSetPoint + 100)
-      expect(adjust(1e6).Turbine.rpmSetPoint).toBe(CstTurbine.MaxRPM)
-      expect(adjust(-1e6).Turbine.rpmSetPoint).toBe(CstTurbine.MinRPM)
-    })
+    describe("speed modes", () => {
+      const turbine = (patch: Partial<PowerPlantState["Turbine"]>): PowerPlantState => ({
+        ...base,
+        Turbine: { ...base.Turbine, ...patch },
+      })
+      const setMode = (speedMode: SpeedMode, state: PowerPlantState) =>
+        reduce({ type: "SET_SPEED_MODE", payload: { speedMode } }, state)
+      const select = (runUpPoint: number, state: PowerPlantState) =>
+        reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint } }, state)
+      const open = { mainSteamValve: true }
 
-    test("hold mode toggles", () => {
-      const on = reduce({ type: "TOGGLE_HOLD_MODE" })
-      expect(on.Turbine.holdMode).toBe(true)
-      expect(reduce({ type: "TOGGLE_HOLD_MODE" }, on).Turbine.holdMode).toBe(false)
+      test("starts in Free at the default run-up point", () => {
+        expect(base.Turbine.speedMode).toBe("free")
+        expect(base.Turbine.runUpPoint).toBe(CstTurbine.SyncRPM)
+        expect(CstTurbine.RunUpPoints).toEqual([500, 1500, 2500, 3000])
+      })
+
+      test("Free is always allowed", () => {
+        for (const mode of ["rampUp", "hold"] as const) {
+          expect(setMode("free", turbine({ ...open, speedMode: mode })).Turbine.speedMode).toBe("free")
+        }
+        expect(setMode("free", base)).toEqual(base)
+      })
+
+      test("Ramp up starts the reference at the current speed", () => {
+        const next = setMode("rampUp", turbine({ ...open, rpm: 700, runUpPoint: 1500, pidIntegralError: 0.5 })).Turbine
+        expect(next).toMatchObject({ speedMode: "rampUp", speedReference: 700, pidIntegralError: 0 })
+      })
+
+      test("Ramp up is refused with the main steam valve closed or a point not above the speed", () => {
+        const closed = turbine({ rpm: 700, runUpPoint: 1500 })
+        expect(setMode("rampUp", closed)).toBe(closed)
+        for (const rpm of [1500, 1800]) {
+          const notAbove = turbine({ ...open, rpm, runUpPoint: 1500 })
+          expect(setMode("rampUp", notAbove)).toBe(notAbove)
+        }
+      })
+
+      test("Hold engages within ±5 rpm of the point and is refused outside it", () => {
+        const window = CstTurbine.HoldEngageWindow
+        expect(window).toBe(5)
+        for (const rpm of [1500 - window, 1500, 1500 + window]) {
+          const next = setMode("hold", turbine({ ...open, rpm, runUpPoint: 1500 })).Turbine
+          expect(next).toMatchObject({ speedMode: "hold", speedReference: 1500 })
+        }
+        for (const rpm of [1500 - window - 1, 1500 + window + 1]) {
+          const outside = turbine({ ...open, rpm, runUpPoint: 1500 })
+          expect(setMode("hold", outside)).toBe(outside)
+        }
+      })
+
+      test("selecting a point in Free only selects the target", () => {
+        const next = select(2500, turbine({ rpm: 3000 })).Turbine
+        expect(next).toMatchObject({ runUpPoint: 2500, speedMode: "free" })
+      })
+
+      test("a value that is not a run-up point is refused", () => {
+        expect(select(1234, base)).toBe(base)
+      })
+
+      test("a point above the speed starts Ramp up from Hold, from the current speed", () => {
+        const hold = turbine({ ...open, speedMode: "hold", rpm: 500, runUpPoint: 500, speedReference: 500 })
+        expect(select(1500, hold).Turbine).toMatchObject({
+          runUpPoint: 1500,
+          speedMode: "rampUp",
+          speedReference: 500,
+        })
+      })
+
+      test("a point above the speed retargets a running Ramp up and keeps its reference and integral", () => {
+        const ramp = turbine({ ...open, speedMode: "rampUp", rpm: 900, runUpPoint: 1500, speedReference: 920, pidIntegralError: 0.2 })
+        expect(select(2500, ramp).Turbine).toMatchObject({
+          runUpPoint: 2500,
+          speedMode: "rampUp",
+          speedReference: 920,
+          pidIntegralError: 0.2,
+        })
+      })
+
+      test("a point at or below the speed is refused in Ramp up and Hold", () => {
+        for (const speedMode of ["rampUp", "hold"] as const) {
+          for (const point of [500, 1500]) {
+            const state = turbine({ ...open, speedMode, rpm: 1500, runUpPoint: 2500, speedReference: 1500 })
+            expect(select(point, state)).toBe(state)
+          }
+        }
+      })
+
+      test("a point is refused in Ramp up or Hold with the main steam valve closed", () => {
+        const state = turbine({ speedMode: "hold", rpm: 500, runUpPoint: 500 })
+        expect(select(1500, state)).toBe(state)
+      })
     })
 
     describe("generator breaker", () => {
@@ -260,8 +382,50 @@ describe("powerPlantReducer", () => {
     })
   })
 
+  describe("load setpoint", () => {
+    const withTurbine = (patch: Partial<PowerPlantState["Turbine"]>): PowerPlantState => ({
+      ...base,
+      Turbine: { ...base.Turbine, ...patch },
+    })
+    const setLoad = (loadSetpoint: number, state: PowerPlantState) =>
+      reduce({ type: "SET_LOAD_SETPOINT", payload: { loadSetpoint } }, state)
+
+    test("is refused with the breaker open and leaves the state unchanged", () => {
+      const state = withTurbine({ generatorBreaker: false })
+      expect(setLoad(50, state)).toBe(state)
+    })
+
+    test("is set with the breaker closed, in any speed mode", () => {
+      for (const speedMode of ["free", "rampUp", "hold"] as const) {
+        const state = withTurbine({ generatorBreaker: true, speedMode })
+        expect(setLoad(50, state).Turbine.loadSetpoint).toBe(50)
+      }
+    })
+
+    test("is limited to 0 up to the load setpoint limit, above the rated output", () => {
+      const state = withTurbine({ generatorBreaker: true })
+      expect(setLoad(-5, state).Turbine.loadSetpoint).toBe(0)
+      expect(setLoad(1000, state).Turbine.loadSetpoint).toBe(CstTurbine.LoadSetpointLimit)
+      expect(CstTurbine.LoadSetpointLimit).toBeGreaterThan(ratedOutputMW)
+    })
+
+    test("opening the breaker by hand drops the load and the setpoint to 0", () => {
+      const state = withTurbine({ generatorBreaker: true, rpm: CstTurbine.SyncRPM, electricOutput: 40, loadSetpoint: 60 })
+      const opened = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, state).Turbine
+      expect(opened.generatorBreaker).toBe(false)
+      expect(opened.electricOutput).toBe(0)
+      expect(opened.loadSetpoint).toBe(0)
+    })
+
+    test("closing the breaker starts with no load", () => {
+      const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, withTurbine({ rpm: CstTurbine.SyncRPM })).Turbine
+      expect(closed.generatorBreaker).toBe(true)
+      expect(closed.loadSetpoint).toBe(0)
+    })
+  })
+
   test("leaves the other subsystems untouched", () => {
-    const next = reduce({ type: "TOGGLE_HOLD_MODE" })
+    const next = reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint: 500 } })
     expect(next.Boiler).toBe(base.Boiler)
     expect(next.Condenser).toBe(base.Condenser)
   })
