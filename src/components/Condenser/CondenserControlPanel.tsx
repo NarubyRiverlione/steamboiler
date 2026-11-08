@@ -1,6 +1,6 @@
 import { CstSimulation } from "../../context/const"
 import usePowerPlant from "../../context/PowerPlantContext"
-import ValveSlider from "../ValveSlider"
+import { ValveControl } from "../board/ValveControl"
 
 const {
   CstCondenser: {
@@ -61,7 +61,7 @@ const CondenserControlPanel = () => {
             {isSjaeEnabled ? "DISABLE" : "ENABLE"}
           </button>
 
-          <ValveSlider
+          <ValveControl
             Label="Position:"
             //  Value={steamFlowOut}
             Position={sjaeValvePosition }
@@ -75,7 +75,7 @@ const CondenserControlPanel = () => {
         <h3>Recirculation Pump</h3>
 
         <div className="control-section">
-          <ValveSlider
+          <ValveControl
             Label="Flow Rate:"
             Position={recirculationPumpValvePosition }
             Value={`${recirculationPumpFlowRate.toFixed(1)} l/s`}
@@ -88,7 +88,7 @@ const CondenserControlPanel = () => {
       <div className="component-controls">
         <div className="control-section">
           <h3>Condensation Pump</h3>
-          <ValveSlider
+          <ValveControl
             Label="Flow Rate:"
             Position={condensationPumpValvePosition }
             Step={CondensationPump_Step }
@@ -100,14 +100,14 @@ const CondenserControlPanel = () => {
       <div className="component-controls">
         <h3>Hotwell Makeup &amp; Reject</h3>
         <div className="control-section">
-          <ValveSlider
+          <ValveControl
             Label="Makeup:"
             Position={makeupValvePosition}
             Value={`${(makeupValvePosition * Makeup_MaxFlowRate).toFixed(1)} l/s`}
             Step={Makeup_Step}
             cbAdjust={adjustMakeupValvePosition}
           />
-          <ValveSlider
+          <ValveControl
             Label="Reject:"
             Position={rejectValvePosition}
             Value={`${(rejectValvePosition * Reject_MaxFlowRate).toFixed(1)} l/s`}

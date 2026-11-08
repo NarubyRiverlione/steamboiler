@@ -3,7 +3,7 @@ import usePowerPlant from "../../context/PowerPlantContext"
 import { isAboveMainSteamValveMinimum } from "../../utils/turbineCalculations"
 // import useEMA from "../../utils/useEMA"
 import Indicator from "../Indicator"
-import ValveSlider from "../ValveSlider"
+import { ValveControl } from "../board/ValveControl"
 
 const {
   CstTurbine: { BypassValveStep, TurbineValveStep, MainSteamValveMinimumPressure },
@@ -46,14 +46,14 @@ const SteamValveControl = () => {
         </div>
       </div>
 
-      <ValveSlider
+      <ValveControl
         Label="Bypass Valve"
         Value={`${bypassSteamFlowOut.toFixed(1)} kg/s`}
         Position={bypassValvePosition}
         Step={BypassValveStep}
         cbAdjust={adjustBypassValve}
       />
-      <ValveSlider
+      <ValveControl
         Label="Turbine Valve"
         Position={turbineValvePosition}
         Step={TurbineValveStep}
