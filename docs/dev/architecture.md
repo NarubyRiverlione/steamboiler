@@ -45,7 +45,7 @@ Condenser: ΔE = steam input − (cooling + condensation)
 ```
 src/
 ├── components/
-│   ├── Boiler/ Condenser/ Turbine/   # one page per subsystem; Boiler and Condenser are single board pages (ui-board.md)
+│   ├── Boiler/ Condenser/ Turbine/   # one page per subsystem; Boiler, Condenser and Turbine are single board pages (ui-board.md)
 │   ├── board/                        # board primitives (ui-board.md); ValveControl
 │   ├── Indicator.tsx Readout.tsx
 │   └── simulator.css                 # shared simulator styling

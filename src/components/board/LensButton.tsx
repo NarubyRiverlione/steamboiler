@@ -8,10 +8,11 @@ type LensButtonProps = {
   readonly onClick: () => void
   readonly pressed?: boolean
   readonly small?: boolean
+  readonly disabled?: boolean
   readonly title?: string
 }
 
-export function LensButton({ children, onClick, pressed, small = false, title }: LensButtonProps) {
+export function LensButton({ children, onClick, pressed, small = false, disabled = false, title }: LensButtonProps) {
   const lit: boolean = pressed === true
   const className: string = [
     "board-lens",
@@ -22,7 +23,7 @@ export function LensButton({ children, onClick, pressed, small = false, title }:
     .filter((c: string) => c !== "")
     .join(" ")
   return (
-    <button type="button" className={className} aria-pressed={pressed} title={title} onClick={onClick}>
+    <button type="button" className={className} aria-pressed={pressed} disabled={disabled} title={title} onClick={onClick}>
       {children}
     </button>
   )

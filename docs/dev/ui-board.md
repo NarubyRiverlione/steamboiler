@@ -17,10 +17,10 @@ In `src/components/board/`. Each file opens with a comment saying it is adapted 
 | `Screws` | The four corner screws at fixed angles; used by `PanelFrame` and `Header` |
 | `Led` | Round bezel LED for use inside an SVG (an `img` named "<label>: on/off"); red while `lit` |
 | `Lamp` | `Led` in its own SVG with a text label, for use in HTML |
-| `LensButton` | Illuminated button; lit while `pressed` (`aria-pressed`) |
+| `LensButton` | Illuminated button; lit while `pressed` (`aria-pressed`); `disabled` dims it, `title` carries the reason |
 | `RoundGauge` | Round dial (`role="meter"`) with a needle and zones (`ok`, `warn`, `alarm`) |
 | `LevelGauge` | Vertical level gauge in percent (`role="meter"`) with a zone strip and a pointer |
-| `ValveControl` | Close and Open lens buttons around a bar (`role="meter"`), position on an LCD; props of the old `ValveSlider`, `cbAdjust(±Step/100)`. Used by the Condenser page and, until its own step, the Turbine page; #41 adds the knob |
+| `ValveControl` | Close and Open lens buttons around a bar (`role="meter"`), position on an LCD; props of the old `ValveSlider`, `cbAdjust(±Step/100)`. Used by the Condenser and Turbine pages; #41 adds the knob |
 
 ## Shell and navigation
 
@@ -38,6 +38,10 @@ In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate lik
 ## Condenser page
 
 `src/components/Condenser/Condenser.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 400 mbar; green within `OptimalPressureBellWidth` of `OptimalPressure`, orange outside the band up to `VacuumLimit`, red above, where the turbine trips) with High and Low `Lamp`s, the pressure controls (air extraction pump and SJAE `LensButton`s, SJAE `ValveControl`), the hotwell `LevelGauge` (no zones yet, #54), a `ValveControl` each for the recirculation pump, condensation pump, makeup and reject (flow rates as before), then the status readouts as `Display`s (steam volume, hotwell temperature, intake and return flow). Smoothed with `useEMA`, as before. The page is not wrapped in `LegacyPage`.
+
+## Turbine page
+
+`src/components/Turbine/Turbine.tsx`, one `PanelFrame`: the speed `RoundGauge` (0 to `MaxRPM`; green to 105% of `SyncRPM`, orange above) with an LCD and an "In sync band" `Lamp` (lit within `BreakerRPMMargin` of `SyncRPM`: the ±2 RPM band is too narrow to see on the dial), the speed mode and run-up point `LensButton`s (lit when selected, disabled with the refusal as `title`), the generator breaker `LensButton` (disabled while open and out of the sync band, with a message saying the band and the current RPM), the load setpoint `input` (disabled with the refusal shown while the breaker is open; applied on Enter or blur), the main steam valve `LensButton` with an "Opening not possible" `Lamp`, a `ValveControl` each for the bypass and turbine valves, then the status readouts as `Display`s with a "Turbine trip" `Lamp`. The steam flow is smoothed with `useEMA`, as before. The page is not wrapped in `LegacyPage`.
 
 ## Building a part page
 

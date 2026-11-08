@@ -635,3 +635,27 @@ path.board-zone {
   grid-template-columns: repeat(2, 1fr);
   gap: 0.25rem 1.5rem;
 }
+
+.board-lens-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.board-note {
+  margin: 0;
+  font-family: var(--board-font-label);
+  font-size: 0.85rem;
+}
+
+.board-input {
+  width: 6rem;
+  font-family: var(--board-font-lcd);
+  background: var(--board-lcd-bg);
+  color: var(--board-lcd-text);
+  border: 2px inset var(--board-lens-bezel-light);
+  padding: 0.2rem 0.4rem;
+}
+
+.board-input:disabled {
+  opacity: 0.45;
+}
