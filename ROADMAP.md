@@ -42,9 +42,9 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 16 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Faster gas control | P5 | needs-triage |  |  |
-| 17 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P5 | needs-triage |  |  |
-| 18 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P5 | needs-triage |  |  |
+| 16 | [#15](https://github.com/NarubyRiverlione/steamboiler/issues/15) Gas rate knob (latching, replaces the step buttons) | P5 | ready-for-agent |  |  |
+| 17 | [#24](https://github.com/NarubyRiverlione/steamboiler/issues/24) UI start presets (cold, hot standby, at pressure) | P5 | ready-for-agent |  |  |
+| 18 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P5 | ready-for-agent |  |  |
 | 19 | [#41](https://github.com/NarubyRiverlione/steamboiler/issues/41) Continuous-fire valve buttons | P5 | needs-triage |  |  |
 | 20 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P5 | needs-triage |  |  |
 | 21 | [#86](https://github.com/NarubyRiverlione/steamboiler/issues/86) Simulation speed control and clock in the analog board style | P5 | needs-triage | [#78](https://github.com/NarubyRiverlione/steamboiler/issues/78) |  |

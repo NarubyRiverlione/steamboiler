@@ -188,7 +188,11 @@ _Avoid_: Pressure control, steady state (that is the outcome, not the operation)
 
 **Snapshot**:
 A saved full plant state that a scenario can start from instead of replaying the operation leading up to it.
-_Avoid_: Preset (reserved for the UI choices of #24), save game
+_Avoid_: Preset (that is the UI choice that loads a snapshot, or the cold state, into the app), save game
+
+**Preset**:
+A start state the operator picks in the app's Presets popup (#24): Cold & dark, Hot standby or At pressure. Loading one replaces the whole plant state with the cold state or a snapshot.
+_Avoid_: Scenario (that is a headless-runner script that plays actions over time)
 
 **Makeup**:
 Demineralised water fed into the condenser hotwell from outside the loop, to top up losses. Never into the boiler.
