@@ -4,6 +4,7 @@ import BoilerTick, {
   BoilerVent,
   ReliefCapacity,
   drainBoiler,
+  gasRateOf,
   heatLossOf,
   returnHeatOf,
   warmBy,
@@ -522,5 +523,55 @@ describe("BoilerTick water in kg", () => {
     const expectedKg: number =
       (CstBoiler.TotalVolume * CstBoiler.DrainingRate * DeltaTime) / getWaterSpecificVolume(100)
     expect(next.drainedTotal).toBeCloseTo(expectedKg, 6)
+  })
+})
+
+describe("gas rate command (#15)", () => {
+  const { GasRateMax, GasRateDeadZone, MaxGasFlow } = CstBoiler
+  const withCommand = (gasRateCommand: number, gasFlow = 0) => ({ ...cold, gasRateCommand, gasFlow })
+
+  test("the centre and the dead zone hold the gas", () => {
+    expect(gasRateOf(0)).toBe(0)
+    expect(gasRateOf(GasRateDeadZone)).toBe(0)
+    expect(gasRateOf(-GasRateDeadZone)).toBe(0)
+    expect(BoilerTick(withCommand(0, 4000)).gasFlow).toBe(4000)
+  })
+
+  test("full deflection moves the gas at the maximum rate, either way", () => {
+    expect(gasRateOf(1)).toBe(GasRateMax)
+    expect(gasRateOf(-1)).toBe(-GasRateMax)
+  })
+
+  test("the rate tapers quadratically past the dead zone", () => {
+    const half: number = 0.5 + GasRateDeadZone / 2 // midway through the live range
+    expect(gasRateOf(half)).toBeCloseTo(GasRateMax / 4, 9)
+    expect(gasRateOf(-half)).toBeCloseTo(-GasRateMax / 4, 9)
+  })
+
+  test("a small deflection trims by no more than 50 L/s per second", () => {
+    expect(gasRateOf(0.25)).toBeGreaterThan(0)
+    expect(gasRateOf(0.25)).toBeLessThanOrEqual(50)
+  })
+
+  test("the gas moves by the rate over one tick, never a jump", () => {
+    const next = BoilerTick(withCommand(1))
+    expect(next.gasFlow).toBeCloseTo(GasRateMax * DeltaTime, 9)
+    expect(BoilerTick(withCommand(-1, 1000)).gasFlow).toBeCloseTo(1000 - GasRateMax * DeltaTime, 9)
+  })
+
+  test("full gas takes one turn and one wait, and the gas then clamps at the maximum", () => {
+    let state = withCommand(1)
+    const ticks: number = Math.ceil(MaxGasFlow / GasRateMax / DeltaTime)
+    for (let i = 0; i < ticks; i++) state = BoilerTick(state)
+    expect(state.gasFlow).toBeCloseTo(MaxGasFlow, 6)
+    state = BoilerTick(state)
+    expect(state.gasFlow).toBe(MaxGasFlow)
+    expect(state.gasRateCommand).toBe(1)
+  })
+
+  test("the gas clamps at 0 going down and leaves the command where it is", () => {
+    const next = BoilerTick(withCommand(-1, 10))
+    expect(next.gasFlow).toBe(0)
+    expect(next.gasRateCommand).toBe(-1)
   })
 })

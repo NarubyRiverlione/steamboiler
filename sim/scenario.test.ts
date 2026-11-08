@@ -7,10 +7,10 @@ import { CstPhysics } from "../src/context/const"
 
 const heatUp: Scenario = {
   name: "test-heat-up",
-  description: "Gas on, nothing else",
+  description: "Gas knob turned up, nothing else",
   duration: 60,
   sampleEvery: 10,
-  actions: [{ at: 0, action: { type: "INCREASE_GAS_FLOW", amount: 5000 } }],
+  actions: [{ at: 0, action: { type: "SET_GAS_RATE", payload: { gasRateCommand: 1 } } }],
 }
 
 describe("runScenario", () => {
@@ -21,12 +21,13 @@ describe("runScenario", () => {
 
   test("applies scripted actions through the reducer", () => {
     const samples = runScenario(heatUp)
-    expect(samples[0].state.Boiler.gasFlow).toBe(5000)
+    expect(samples[0].state.Boiler.gasRateCommand).toBe(1)
+    expect(samples[2].state.Boiler.gasFlow).toBeGreaterThan(0)
   })
 
   test("matches stepping the reducer by hand", () => {
     let state = initialPowerPlantState
-    state = powerPlantReducer(state, { type: "INCREASE_GAS_FLOW", amount: 5000 })
+    state = powerPlantReducer(state, { type: "SET_GAS_RATE", payload: { gasRateCommand: 1 } })
     for (let i = 0; i < 100; i++) state = powerPlantReducer(state, { type: "SIMULATE_TICK" })
     const [, second] = runScenario(heatUp)
     expect(second.state.Boiler.temperature).toBe(state.Boiler.temperature)
@@ -34,7 +35,10 @@ describe("runScenario", () => {
 
   test("starts from the scenario's initial state when given", () => {
     const warm = makeInitialState()
-    const [first] = runScenario({ ...heatUp, initial: { ...warm, Boiler: { ...warm.Boiler, temperature: 90 } } })
+    const [first] = runScenario({
+      ...heatUp,
+      initial: { ...warm, Boiler: { ...warm.Boiler, temperature: 90 } },
+    })
     expect(first.state.Boiler.temperature).toBe(90)
   })
 
@@ -52,19 +56,19 @@ describe("runScenario", () => {
   })
 
   test("operator actions go through the reducer every tick, after the timed actions", () => {
-    const seen: { time: number; gas: number }[] = []
+    const seen: { time: number; command: number }[] = []
     const samples = runScenario({
       ...heatUp,
       duration: 1,
       operator: (state, time) => {
-        seen.push({ time, gas: state.Boiler.gasFlow })
-        return [{ type: "INCREASE_GAS_FLOW", amount: 1 }]
+        seen.push({ time, command: state.Boiler.gasRateCommand })
+        return [{ type: "SET_GAS_RATE", payload: { gasRateCommand: 0.5 } }]
       },
     })
     expect(seen).toHaveLength(10)
-    expect(seen[0]).toEqual({ time: 0, gas: 5000 })
-    expect(seen[9].gas).toBe(5009)
-    expect(samples[0].state.Boiler.gasFlow).toBe(5001)
+    expect(seen[0]).toEqual({ time: 0, command: 1 })
+    expect(seen[9].command).toBe(0.5)
+    expect(samples[0].state.Boiler.gasRateCommand).toBe(0.5)
   })
 
   test("no operator actions leaves the run unchanged", () => {
@@ -85,7 +89,7 @@ describe("firstTimeWhere", () => {
   })
 
   test("returns 0 when the condition holds from the start", () => {
-    expect(firstTimeWhere(samples, (s) => s.Boiler.gasFlow === 5000)).toBe(0)
+    expect(firstTimeWhere(samples, (s) => s.Boiler.gasRateCommand === 1)).toBe(0)
   })
 
   test("returns undefined when the condition never holds", () => {

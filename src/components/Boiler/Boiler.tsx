@@ -15,13 +15,11 @@ import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 const {
   CstBoiler: {
     TotalVolume,
-    MaxGasFlow,
     ReliefOpenPressure,
     ReliefClosePressure,
     HeatingRateLimit,
     BurnerLowLowLevel,
-    GasChangeRateFast,
-    GasChangeRateSlow,
+    GasRateDeadZone,
   },
   CstTurbine: { ValveRatingPressure },
 } = CstSimulation
@@ -42,6 +40,7 @@ function Boiler() {
     state: {
       Boiler: {
         gasFlow,
+        gasRateCommand,
         waterVolume,
         temperature,
         pressure,
@@ -60,14 +59,19 @@ function Boiler() {
       },
       Turbine: { bypassSteamFlowOut, turbineSteamFlowOut },
     },
-    increaseGasFlow,
-    decreaseGasFlow,
+    setGasRate,
     toggleDrainValve,
   } = usePowerPlant()
 
   const smoothPressure: number = useEMA(pressure, 0.01)
   const smoothEnergyDelta: number = useEMA(energyDelta / 1e3, 0.01)
   const [advanced, setAdvanced] = useState<boolean>(false)
+  const gasTrend: string =
+    gasRateCommand > GasRateDeadZone
+      ? "▲ RISING"
+      : gasRateCommand < -GasRateDeadZone
+        ? "▼ FALLING"
+        : "HOLDING"
   const energyText = `${smoothEnergyDelta > 0 ? "+" : ""}${smoothEnergyDelta.toFixed(0)} MJ/s`
 
   return (
@@ -108,7 +112,7 @@ function Boiler() {
                 <Lamp
                   lit={burnerTripped}
                   label="Tripped"
-                  title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, raise the gas to restart`}
+                  title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, turn the gas knob up to restart`}
                 />
               </div>
             </div>
@@ -204,48 +208,16 @@ function Boiler() {
         <div className="board-instrument board-group">
           <h3 className="board-group-title">Gas Flow Control</h3>
           <Knob
+            mode="centre-zero"
             label="Gas knob"
-            value={gasFlow}
-            min={0}
-            max={MaxGasFlow}
-            ends={["OFF", "MAX"]}
-            note="MOCKUP"
+            value={gasRateCommand}
+            deadZone={GasRateDeadZone}
+            onChange={setGasRate}
           />
           <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} widest="12000 l/s" />
-          <div className="board-lens-row">
-            <LensButton
-              small
-              onClick={() => {
-                increaseGasFlow(GasChangeRateFast)
-              }}
-            >
-              + {GasChangeRateFast} L/s
-            </LensButton>
-            <LensButton
-              small
-              onClick={() => {
-                increaseGasFlow(GasChangeRateSlow)
-              }}
-            >
-              + {GasChangeRateSlow} L/s
-            </LensButton>
-            <LensButton
-              small
-              onClick={() => {
-                decreaseGasFlow(GasChangeRateSlow)
-              }}
-            >
-              - {GasChangeRateSlow} L/s
-            </LensButton>
-            <LensButton
-              small
-              onClick={() => {
-                decreaseGasFlow(GasChangeRateFast)
-              }}
-            >
-              - {GasChangeRateFast} L/s
-            </LensButton>
-          </div>
+          <span className="board-rate-indicator" role="status" aria-label="Gas trend">
+            {gasTrend}
+          </span>
         </div>
 
         <div className="board-cluster">

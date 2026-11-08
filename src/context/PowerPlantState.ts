@@ -1,5 +1,6 @@
 export type BoilerState = {
-  gasFlow: number // liters/second
+  gasFlow: number // liters/second, the integral of the gas rate command
+  gasRateCommand: number // -1 to 1, the gas knob: 0 holds, positive raises, negative lowers (#15)
   waterMass: number // kg, the state; volume and level are derived from it
   waterVolume: number // liters, derived: mass × specific volume at the boiler temperature
   deltaWaterMass: number // kg change over the last tick
@@ -17,7 +18,7 @@ export type BoilerState = {
   reliefValveOpen: boolean // relief valve lifted (automatic, see GLOSSARY.md)
   ventedTotal: number // kg of steam vented to the atmosphere since start (totalizer)
   reliefLifts: number // lifts of the relief valve since start (counter)
-  burnerTripped: boolean // set by the low-low level trip, cleared by the next successful gas raise
+  burnerTripped: boolean // set by the low-low level trip, cleared by the next gas raise past the dead zone
   stackTemperature: number // Celsius, flue gas after the economizer (ADR 0029)
   boilerEfficiency: number // 0-1, heat into the water over fuel heat; 0 with no gas
   returnTemperatureOut: number // Celsius, the Return after the economizer (the hotwell temperature when it takes no heat)

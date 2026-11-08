@@ -34,7 +34,7 @@ In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate lik
 
 ## Boiler page
 
-`src/components/Boiler/Boiler.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 200 bar; green to `ValveRatingPressure`, orange to `ReliefOpenPressure`, red above), the gas controls (four `LensButton` steps of `GasChangeRateFast` and `-Slow`; the knob is #15), the drum `LevelGauge` (one red zone below `BurnerLowLowLevel`) with the drain valve button, then the status readouts as `Display`s with `Lamp`s for heating rate over limit, relief valve open and burner tripped, then the stack temperature and boiler efficiency (#89), and an Advanced `<details>`. The pressure and the energy change are smoothed with `useEMA`, as before.
+`src/components/Boiler/Boiler.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 200 bar; green to `ValveRatingPressure`, orange to `ReliefOpenPressure`, red above), the gas controls (the latching rate `Knob` in `centre-zero` mode, with an LCD of the actual gas flow and a RISING, FALLING or HOLDING indicator for a forgotten knob, #15; the valve knobs use the `absolute` mode), the drum `LevelGauge` (one red zone below `BurnerLowLowLevel`) with the drain valve button, then the status readouts as `Display`s with `Lamp`s for heating rate over limit, relief valve open and burner tripped, then the stack temperature and boiler efficiency (#89), and an Advanced `<details>`. The pressure and the energy change are smoothed with `useEMA`, as before.
 
 ## Condenser page
 

@@ -16,42 +16,79 @@ describe("powerPlantReducer", () => {
   })
 
   describe("boiler", () => {
-    test("gas flow increases, capped at MaxGasFlow", () => {
-      expect(reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }).Boiler.gasFlow).toBe(500)
-      expect(reduce({ type: "INCREASE_GAS_FLOW", amount: CstBoiler.MaxGasFlow + 1 }).Boiler.gasFlow).toBe(
-        CstBoiler.MaxGasFlow,
-      )
+    test("the gas knob sets the rate command and leaves the gas flow to the tick", () => {
+      const turned: PowerPlantState = reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: 0.6 } })
+      expect(turned.Boiler.gasRateCommand).toBe(0.6)
+      expect(turned.Boiler.gasFlow).toBe(0)
     })
 
-    test("gas flow decreases, floored at 0", () => {
-      const burning = reduce({ type: "INCREASE_GAS_FLOW", amount: 1000 })
-      expect(reduce({ type: "DECREASE_GAS_FLOW", amount: 400 }, burning).Boiler.gasFlow).toBe(600)
-      expect(reduce({ type: "DECREASE_GAS_FLOW", amount: 5000 }, burning).Boiler.gasFlow).toBe(0)
+    test("the command is clamped to the knob travel", () => {
+      expect(reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: 7 } }).Boiler.gasRateCommand).toBe(1)
+      expect(reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: -7 } }).Boiler.gasRateCommand).toBe(-1)
     })
 
     describe("burner trip", () => {
       const lowLowVolume: number = CstBoiler.TotalVolume * CstBoiler.BurnerLowLowLevel - 1
+      const raise = (gasRateCommand: number): PowerPlantAction => ({
+        type: "SET_GAS_RATE",
+        payload: { gasRateCommand },
+      })
       const tripped: PowerPlantState = {
         ...base,
         Boiler: { ...base.Boiler, waterVolume: lowLowVolume, burnerTripped: true },
       }
 
-      test("raising the gas is refused while the water is below the burner low-low level", () => {
-        const next: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }, tripped)
+      test("turning the knob up is refused while the water is below the burner low-low level", () => {
+        const next: PowerPlantState = reduce(raise(1), tripped)
+        expect(next.Boiler.gasRateCommand).toBe(0)
         expect(next.Boiler.gasFlow).toBe(0)
         expect(next.Boiler.burnerTripped).toBe(true)
       })
 
-      test("a raise once the water is back above the level restarts the burner and clears the trip", () => {
-        const refilled: PowerPlantState = { ...tripped, Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 } }
-        const next: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 }, refilled)
-        expect(next.Boiler.gasFlow).toBe(500)
+      test("a trip in the tick centres the knob and zeroes the gas", () => {
+        const burning: PowerPlantState = {
+          ...base,
+          Boiler: { ...base.Boiler, waterVolume: lowLowVolume, gasFlow: 5000, gasRateCommand: 0.8 },
+        }
+        const next: PowerPlantState = reduce({ type: "SIMULATE_TICK" }, burning)
+        expect(next.Boiler.burnerTripped).toBe(true)
+        expect(next.Boiler.gasFlow).toBe(0)
+        expect(next.Boiler.gasRateCommand).toBe(0)
+      })
+
+      test("a raise past the dead zone once the water is back above the level clears the trip", () => {
+        const refilled: PowerPlantState = {
+          ...tripped,
+          Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
+        }
+        const next: PowerPlantState = reduce(raise(0.5), refilled)
+        expect(next.Boiler.gasRateCommand).toBe(0.5)
         expect(next.Boiler.burnerTripped).toBe(false)
       })
 
-      test("lowering the gas is always allowed and leaves the trip as it was", () => {
-        const next: PowerPlantState = reduce({ type: "DECREASE_GAS_FLOW", amount: 500 }, tripped)
-        expect(next.Boiler.burnerTripped).toBe(true)
+      test("a deflection inside the dead zone does not restart the burner", () => {
+        const refilled: PowerPlantState = {
+          ...tripped,
+          Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
+        }
+        expect(reduce(raise(CstBoiler.GasRateDeadZone), refilled).Boiler.burnerTripped).toBe(true)
+      })
+
+      test("the gas ramps up from 0 after the restart", () => {
+        const refilled: PowerPlantState = {
+          ...tripped,
+          Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
+        }
+        const next: PowerPlantState = reduce({ type: "SIMULATE_TICK" }, reduce(raise(1), refilled))
+        expect(next.Boiler.gasFlow).toBeGreaterThan(0)
+        expect(next.Boiler.gasFlow).toBeLessThan(CstBoiler.GasRateMax)
+      })
+
+      test("centring or lowering the knob is always allowed and leaves the trip as it was", () => {
+        for (const command of [0, -1]) {
+          const next: PowerPlantState = reduce(raise(command), tripped)
+          expect(next.Boiler.burnerTripped).toBe(true)
+        }
       })
     })
 
@@ -284,7 +321,11 @@ describe("powerPlantReducer", () => {
 
       test("a point above the speed starts Ramp up from Hold, from the current speed", () => {
         const hold = turbine({ ...open, speedMode: "hold", rpm: 500, runUpPoint: 500, speedReference: 500 })
-        expect(select(1500, hold).Turbine).toMatchObject({ runUpPoint: 1500, speedMode: "rampUp", speedReference: 500 })
+        expect(select(1500, hold).Turbine).toMatchObject({
+          runUpPoint: 1500,
+          speedMode: "rampUp",
+          speedReference: 500,
+        })
       })
 
       test("a point above the speed retargets a running Ramp up and keeps its reference and integral", () => {

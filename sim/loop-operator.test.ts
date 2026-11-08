@@ -1,3 +1,4 @@
+import { gasRateOf } from "../src/context/Boiler/BoilerTick"
 import { describe, expect, it, test } from "vitest"
 import { CstSimulation } from "../src/context/const"
 import { hotwellValvePositions, loopOperator, LoopSettings } from "./scenarios/loop-operator"
@@ -83,7 +84,7 @@ describe("loopOperator", () => {
     ])
   })
 
-  test("at working pressure: gas down, main steam valve open, bypass, SJAE and pump to their start positions", () => {
+  test("at working pressure: the knob already coming down, main steam valve open, bypass, SJAE and pump to their start positions", () => {
     const atPressure = withBoiler({
       pressure: PressureHoldSettings.Target - PressureHoldSettings.Band,
       gasFlow: CstBoiler.MaxGasFlow,
@@ -93,7 +94,7 @@ describe("loopOperator", () => {
       Condenser: { ...atPressure.Condenser, hotwellWaterVolume: hotwellAt(0.7) },
     }
     expect(loopOperator(state, 0.5)).toEqual([
-      { type: "DECREASE_GAS_FLOW", amount: CstBoiler.MaxGasFlow - StartGas },
+      { type: "SET_GAS_RATE", payload: { gasRateCommand: -1 } }, // full down, the gas ramps to the heat-up gas
       { type: "TOGGLE_MAIN_STEAM_VALVE" },
       { type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: LoopSettings.BypassLoadOpening } },
       {
@@ -109,17 +110,16 @@ describe("loopOperator", () => {
     const { Target, Band, GasStep } = PressureHoldSettings
     const gas = (pressure: number, gasFlow: number, heatingRate = 0) => {
       const state = steaming({ pressure, gasFlow, heatingRate })
-      const action = loopOperator(state, 0).find(
-        (a) => a.type === "INCREASE_GAS_FLOW" || a.type === "DECREASE_GAS_FLOW",
-      )
+      const action = loopOperator(state, 0).find((a) => a.type === "SET_GAS_RATE")
       if (action === undefined) return 0
-      return action.type === "INCREASE_GAS_FLOW" ? action.amount : -action.amount
+      // The knob command turns into the gas change over the adjustment interval
+      return gasRateOf(action.payload.gasRateCommand) * PressureHoldSettings.AdjustEvery
     }
-    expect(gas(Target + Band + 1, StartGas)).toBe(-GasStep)
-    expect(gas(Target - Band - 1, 500)).toBe(GasStep)
+    expect(gas(Target + Band + 1, StartGas)).toBeCloseTo(-GasStep, 6)
+    expect(gas(Target - Band - 1, 500)).toBeCloseTo(GasStep, 6)
     expect(gas(Target - Band - 1, StartGas)).toBe(0)
-    expect(gas(Target + 1, 500, 0.01)).toBe(-GasStep)
-    expect(gas(Target - 1, 500, -0.01)).toBe(GasStep)
+    expect(gas(Target + 1, 500, 0.01)).toBeCloseTo(-GasStep, 6)
+    expect(gas(Target - 1, 500, -0.01)).toBeCloseTo(GasStep, 6)
     expect(gas(Target + 1, 500, -0.01)).toBe(0)
     expect(holdPressureWithGas(steaming({ pressure: Target, gasFlow: 500 }))).toEqual([])
   })
@@ -134,7 +134,7 @@ describe("loopOperator", () => {
 
   test("leaves gas hold, bypass and condensation pump alone before the main steam valve opens", () => {
     const cold = withBoiler({ waterVolume: boilerAt(0.4), pressure: 5, gasFlow: 500 })
-    expect(types(cold, 1)).not.toContain("INCREASE_GAS_FLOW")
+    expect(types(cold, 1)).not.toContain("SET_GAS_RATE")
     expect(types(cold)).not.toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
     expect(types(cold)).not.toContain("ADJUST_STEAM_BYPASS_VALVE")
   })
@@ -182,9 +182,9 @@ describe("loopOperator", () => {
       waterVolume: boilerAt(0.4),
     })
     expect(types(low, 0.5)).not.toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
-    expect(types(low, 0.5)).not.toContain("DECREASE_GAS_FLOW")
+    expect(types(low, 0.5)).not.toContain("SET_GAS_RATE")
     expect(types(low, 1)).toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
-    expect(types(low, 1)).toContain("DECREASE_GAS_FLOW")
+    expect(types(low, 1)).toContain("SET_GAS_RATE")
   })
 
   test("adds cooling water when steam collects in the condenser, and backs off when it is gone", () => {

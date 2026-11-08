@@ -3,8 +3,7 @@ import { SpeedMode } from "./PowerPlantState"
 type PowerPlantAction =
   | { type: "SIMULATE_TICK" } //  payload: { previousSteamMass: number }
   // Boiler Actions
-  | { type: "INCREASE_GAS_FLOW"; amount: number }
-  | { type: "DECREASE_GAS_FLOW"; amount: number }
+  | { type: "SET_GAS_RATE"; payload: { gasRateCommand: number } } // the gas knob, -1 to 1 (#15)
   | { type: "TOGGLE_DRAIN_VALVE" }
   // Turbine RPM Control Actions
   | { type: "TOGGLE_MAIN_STEAM_VALVE" }

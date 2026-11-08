@@ -43,6 +43,8 @@
   --board-knob-cap: #0c0c0c;
   --board-knob-grip: #3a3a3a;
   --board-knob-pointer: #cfd2d6;
+  --board-knob-rate-cap: #1c2b3a; /* the rate knob's own tint: neither red nor a lamp colour (ADR 0015) */
+  --board-knob-rate-arc: #5d8fb8;
   --board-panel-edge: #ffffff;
   --board-screw-bg: #c4c4c4;
   --board-screw-edge: #8f8f8f;
@@ -884,6 +886,41 @@ path.board-zone {
   fill: var(--board-knob-cap);
 }
 
+.board-knob-cap.board-knob-cap-rate {
+  fill: var(--board-knob-rate-cap);
+}
+
+.board-knob-rate {
+  cursor: grab;
+  touch-action: none;
+}
+
+.board-knob-rate:focus-visible {
+  outline: 2px solid var(--board-knob-rate-arc);
+  outline-offset: 2px;
+}
+
+.board-knob-arc {
+  fill: none;
+  stroke: var(--board-knob-rate-arc);
+  stroke-width: 4;
+}
+
+.board-detent {
+  stroke: var(--board-text);
+  stroke-width: 5;
+  stroke-linecap: butt;
+}
+
+.board-detent-lit {
+  stroke: var(--board-knob-rate-arc);
+  filter: drop-shadow(0 0 3px var(--board-knob-rate-arc));
+}
+
+.board-knob-note.board-knob-hold {
+  fill: var(--board-text);
+}
+
 .board-knob-grip {
   stroke: var(--board-knob-grip);
   stroke-width: 2;
@@ -1030,4 +1067,14 @@ path.board-zone {
 
 .board-group-cols .board-lens-button:not(.board-lens-small) {
   min-width: 120px;
+}
+
+.board-rate-indicator {
+  font-family: var(--board-font-stencil);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--board-text);
+  min-width: 9ch;
+  text-align: center;
 }
