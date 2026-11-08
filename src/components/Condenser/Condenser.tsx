@@ -153,7 +153,6 @@ function Condenser() {
                 {isSjaeEnabled ? "DISABLE" : "ENABLE"}
               </LensButton>
               <ValveControl
-                knob
                 Label="SJAE valve"
                 Caption="Position:"
                 Position={sjaeValvePosition}
@@ -169,7 +168,6 @@ function Condenser() {
         <div className="board-group">
           <h3 className="board-group-title">Recirculation Pump</h3>
           <ValveControl
-            knob
             Label="Recirculation pump"
             Caption="Flow rate:"
             Position={recirculationPumpValvePosition}
@@ -182,7 +180,6 @@ function Condenser() {
         <div className="board-group">
           <h3 className="board-group-title">Condensation Pump</h3>
           <ValveControl
-            knob
             Label="Condensation pump"
             Caption="Flow rate:"
             Position={condensationPumpValvePosition}
@@ -194,7 +191,6 @@ function Condenser() {
           <h3 className="board-group-title">Hotwell Makeup &amp; Reject</h3>
           <div className="board-group-cols">
             <ValveControl
-              knob
               Label="Makeup"
               Caption="Makeup:"
               Position={makeupValvePosition}
@@ -204,7 +200,6 @@ function Condenser() {
               cbAdjust={adjustMakeupValvePosition}
             />
             <ValveControl
-              knob
               Label="Reject"
               Caption="Reject:"
               Position={rejectValvePosition}

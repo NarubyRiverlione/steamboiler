@@ -189,6 +189,25 @@
   color: var(--board-lcd-alarm);
 }
 
+/* Flashing readout (the clock while paused): the LCD goes dark like an unlit tile, as the mockup's .lcd.paused */
+.board-display-flash {
+  animation: board-display-flash 1.2s steps(1) infinite;
+}
+
+@keyframes board-display-flash {
+  50% {
+    color: var(--board-tile-off-text);
+    background: var(--board-tile-off-bg);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-display-flash {
+    animation-duration: 2s;
+  }
+}
+
 .board-led-bezel {
   fill: var(--board-screw-bg);
   stroke: var(--board-screw-edge);
@@ -587,41 +606,15 @@ path.board-zone {
   font-family: var(--board-font-label);
 }
 
-.board-valve-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
 
-.board-valve-label {
-  font-family: var(--board-font-stencil);
-  font-weight: 700;
-}
 
 .board-valve-values {
   display: flex;
   gap: 0.35rem;
 }
 
-.board-valve-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
-.board-valve-bar {
-  flex: 1;
-  height: 1rem;
-  background: var(--board-lcd-bg);
-  border: 2px solid var(--board-lcd-border);
-}
 
-.board-valve-bar-fill {
-  height: 100%;
-  background: var(--board-lcd-text);
-}
 
 .board-section {
   margin-top: 0.75rem;
@@ -955,12 +948,6 @@ path.board-zone {
   justify-items: center;
 }
 
-.board-valve-knob .board-valve-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
 
 .board-valve-knob .board-valve-values {
   justify-content: center;
@@ -1162,4 +1149,21 @@ path.board-zone {
   color: var(--board-text);
   min-width: 9ch;
   text-align: center;
+}
+
+/* Valve knob (#41): turned by drag, wheel and keys; the second pointer is the actual position */
+.board-knob-turn {
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.board-knob-turn:focus-visible {
+  outline: 2px solid var(--board-knob-pointer);
+  outline-offset: 2px;
+}
+
+.board-knob-actual {
+  stroke: var(--board-zone-ok);
+  stroke-width: 3;
+  stroke-linecap: round;
 }

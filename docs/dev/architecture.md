@@ -35,7 +35,7 @@ flowchart TD
 
 `simulationReducer` (`SimulationReducer.ts`) wraps the plant reducer with state kept outside `PowerPlantState`: the tick count (the simulated clock, `ticks × DeltaTime`) and the playback speed. In the same step as a batch it applies the alarm rule: an alarm from the annunciator's list (`navigation/alarms.ts`, the single source) that comes on stops the batch on that tick and drops the speed to 1x. `LOAD_STATE` (a preset) resets the clock and the speed.
 
-The header (`navigation/TimeControl.tsx`) shows the clock and the plain speed selector in its `clock` and `speed` slots. The selector disables speeds above 1x while an annunciator tile flashes (unacknowledged). #86 restyles both.
+The header (`navigation/TimeControl.tsx`) shows the clock (an LCD `Display`, flashing while paused) and the speed selector in its `clock` and `speed` slots. The selector disables speeds above 1x while an annunciator tile flashes (unacknowledged).
 
 Each subsystem uses an energy balance:
 

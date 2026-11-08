@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
+import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
 import Turbine from "./Turbine"
 
 type Ctx = ContextType<typeof PowerPlantContext>
@@ -30,19 +31,23 @@ function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPr
   return fns
 }
 
-function clickValve(label: string, direction: "Open" | "Close"): void {
-  const valve: HTMLElement =
-    screen.getByRole("meter", { name: `${label} knob` }).closest(".board-valve") ?? document.body
-  fireEvent.click(within(valve).getByRole("button", { name: direction }))
+// Turn a valve knob to an end; the first ramp tick dispatches one ramp step (#41)
+function turnValve(label: string, key: "End" | "Home"): void {
+  fireEvent.keyDown(screen.getByRole("slider", { name: `${label} knob` }), { key })
+  act(() => {
+    vi.advanceTimersByTime(RAMP_TICK_MS)
+  })
 }
 
 describe("Turbine page", () => {
-  it("steps the bypass and turbine valves with their own step", () => {
-    const fns = renderTurbine()
-    clickValve("Bypass valve", "Open")
-    clickValve("Turbine valve", "Close")
-    expect(fns.adjustBypassValve).toHaveBeenCalledWith(0.05)
-    expect(fns.adjustTurbineValve).toHaveBeenCalledWith(-0.01)
+  it("turns the bypass and turbine valve knobs and ramps their own actions", () => {
+    vi.useFakeTimers()
+    const fns = renderTurbine({ bypassValvePosition: 0.5, turbineValvePosition: 0.5 })
+    turnValve("Bypass valve", "End")
+    turnValve("Turbine valve", "Home")
+    expect(fns.adjustBypassValve).toHaveBeenCalledWith(RAMP_STEP)
+    expect(fns.adjustTurbineValve).toHaveBeenCalledWith(-RAMP_STEP)
+    vi.useRealTimers()
   })
 
   it("shows the bypass flow", () => {
@@ -101,11 +106,11 @@ describe("Turbine page", () => {
     expect(screen.getByLabelText("Turbine speed").textContent).toBe("1234 RPM")
   })
 
-  it("has display-only knobs for the load setpoint and the two valves", () => {
+  it("has knobs for the load setpoint and the two valves", () => {
     renderTurbine({ loadSetpoint: 80, bypassValvePosition: 0.2 })
     expect(screen.getByRole("meter", { name: "Load setpoint knob" }).getAttribute("aria-valuenow")).toBe("80")
-    expect(screen.getByRole("meter", { name: "Bypass valve knob" }).getAttribute("aria-valuenow")).toBe("20")
-    expect(screen.getByRole("meter", { name: "Turbine valve knob" })).toBeTruthy()
+    expect(screen.getByRole("slider", { name: "Bypass valve knob" }).getAttribute("aria-valuenow")).toBe("20")
+    expect(screen.getByRole("slider", { name: "Turbine valve knob" })).toBeTruthy()
   })
 
   it("lights the sync LED and lets the breaker close within the band", () => {
