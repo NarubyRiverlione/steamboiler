@@ -52,7 +52,8 @@ export const makeInitialState = (): PowerPlantState => ({
     hotwellWaterMass: startHotwellMass,
     hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
     hotwellTemperature: AmbientTemperature, // Celsius
-    airMass: airMassOf(CstPhysics.AtmosphericPressure_mBar - vapourPressureAt(AmbientTemperature), AmbientTemperature), // kg, the shell full of air at atmospheric pressure, less the vapour of the ambient hotwell (Cold state, ADR 0035)
+    // kg: the shell full of air at atmospheric pressure, less the vapour of the ambient hotwell (Cold state, ADR 0035)
+    airMass: airMassOf(CstPhysics.AtmosphericPressure_mBar - vapourPressureAt(AmbientTemperature), AmbientTemperature),
     ventedTotal: 0,
     intakeFlowRate: 0,
     returnRate: 0,

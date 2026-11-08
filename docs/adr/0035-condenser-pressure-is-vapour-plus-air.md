@@ -62,3 +62,4 @@ The condenser pressure stops being a made-up number (atmospheric, minus a vacuum
 
 - Transient: with no steam pool the pressure follows a change of load in the same tick (the exchanger has no inventory to buffer it). A load rejection or a bypass dump reaches the vacuum limit at once if the cooling water is too low, so the operator keeps a minimum cooling water flow and opens it with the main steam valve (`loop-operator.ts`, [feedwater-loop.md](../plant/feedwater-loop.md)).
 - The `vacuum-loss` edge scenario starts the shell a few minutes short of the vacuum limit, because the sourced in-leakage takes hours to get there from the design vacuum (see Consequences). With the pump and SJAE off, the air grows at exactly the in-leakage rate and the turbine trips on the limit.
+- The ceiling for the vapour pressure subtracts the air pressure of the previous tick (a one-tick lag, negligible next to the 1353 mbar ceiling).

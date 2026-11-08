@@ -9,7 +9,8 @@ import { holdLoop } from "./loop-operator"
 const AirJustUnderTheLimit = airMassOf(298, 21)
 
 // Edge (#91): the air extraction pump and the SJAE both off. Nothing removes the in-leakage, the air builds up and the
-// pressure rises until the turbine trips on the vacuum limit (ADR 0003). The loop operator's holds keep running (gas against the pressure, the boiler level, the hotwell, the cooling water), so the boiler is held after the trip; nobody touches the vacuum system again.
+// pressure rises until the turbine trips on the vacuum limit (ADR 0003). The loop operator's holds keep running, so the boiler is held after the trip;
+// nobody touches the vacuum system again.
 export const vacuumLoss: Scenario = {
   name: "vacuum-loss",
   description:
