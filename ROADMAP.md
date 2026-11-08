@@ -33,15 +33,15 @@ Next: the first ticket with nothing under Waiting on.
 | 9 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | needs-triage |  |  |
 | 10 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
 | 11 | [#103](https://github.com/NarubyRiverlione/steamboiler/issues/103) Restore the real heating-rate limit (about 100 K/h) and retune the cold-start scenarios | P3 | needs-triage |  |  |
-| 12 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P3 | needs-triage |  |  |
 
 ## P4: parked
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 13 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
-| 14 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
-| 15 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
+| 12 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Aerator between hotwell and boiler | P4 | needs-triage |  |  |
+| 13 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
+| 14 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
+| 15 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
 
 ## P5: UI and UX
 
