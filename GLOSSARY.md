@@ -262,6 +262,14 @@ _Avoid_: Cooling rate, natural cooling (that is the resulting behaviour, see Nat
 The fastest the boiler water temperature may rise without over-stressing the drum: 0.4 K/s (24 K/min), a time-compressed version of the real limit of about 100 K/h. Going over it raises an alarm; nothing is limited or tripped automatically.
 _Avoid_: Ramp limit, max heat-up rate
 
+**Playback speed**:
+How fast the app runs the plant: Pause, 1x, 10x or 60x, meaning 0, 10, 100 or 600 ticks per wall-clock second. `DeltaTime` stays 0.1 s and the physics does not change. An alarm drops it to 1x.
+_Avoid_: Time scale, time multiplier, game speed
+
+**Simulated clock**:
+The plant time since the start of the run, in h:mm:ss: ticks run times `DeltaTime`. It is not wall time and it is not in the plant state.
+_Avoid_: Timer, uptime
+
 **Natural cooldown**:
 The plant left alone with gas off and all valves closed, cooling down on its own. It is the state a Shutdown ends in.
 _Avoid_: Shutdown (that is the operator procedure leading to it), trip

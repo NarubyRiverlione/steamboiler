@@ -5,6 +5,7 @@ import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTu
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
+import { runTicks } from "./PowerPlantBatch"
 import { isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
@@ -118,6 +119,7 @@ type Handler<T extends ActionType> = (
 // One handler per action type; the mapped type makes a missing handler a compile error.
 const handlers: { [T in ActionType]: Handler<T> } = {
   SIMULATE_TICK: (state) => PowerPlantTick(state),
+  SIMULATE_TICKS: (state, { count }) => runTicks(state, count).state,
   LOAD_STATE: (_state, { payload: { state } }) => state,
 
   //#region Boiler

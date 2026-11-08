@@ -1,10 +1,11 @@
-/** Header on every page, a plate like the part pages: title, the Plant overview button, the breadcrumb and the Presets button. The annunciator sits in its slot; the clock and speed slots stay empty until #86. */
+/** Header on every page, a plate like the part pages: title, the Plant overview button, the breadcrumb and the Presets button. The annunciator sits in its slot; the clock and the playback speed selector sit in their slots (plain until #86). */
 
 import { Link, useLocation } from "react-router-dom"
 import { Screws } from "../components/board/Screws"
 import "../components/board/board.css"
 import Annunciator from "./Annunciator"
 import PresetsButton from "./PresetsButton"
+import { Clock, SpeedSelector } from "./TimeControl"
 import { OVERVIEW_PATH, PART_IDS, PARTS, type PartId } from "./plantParts"
 
 function Header() {
@@ -19,8 +20,12 @@ function Header() {
         <div className="board-header-head">
           <div>
             <h1 className="board-header-title">Powerplant Simulation</h1>
-            <div className="board-header-slot" data-slot="clock" />
-            <div className="board-header-slot" data-slot="speed" />
+            <div className="board-header-slot" data-slot="clock">
+              <Clock />
+            </div>
+            <div className="board-header-slot" data-slot="speed">
+              <SpeedSelector />
+            </div>
           </div>
           <div className="board-header-slot" data-slot="annunciator">
             <Annunciator />

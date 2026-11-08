@@ -1,10 +1,15 @@
 import { Dispatch, createContext, useContext } from "react"
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
+import { PlaybackSpeed } from "./Playback"
 import PowerPlantAction from "./PowerPlantActions"
 
 type PowerPlantContextType = {
   state: PowerPlantState
   dispatch: Dispatch<PowerPlantAction>
+  // Time control (outside the plant state)
+  playbackSpeed: PlaybackSpeed
+  simulatedSeconds: number
+  setPlaybackSpeed: (speed: PlaybackSpeed) => void
   // Action creators
   setGasRate: (gasRateCommand: number) => void // the gas knob, -1 to 1
   toggleDrainValve: () => void

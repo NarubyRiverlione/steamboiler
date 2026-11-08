@@ -1,7 +1,8 @@
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 
 type PowerPlantAction =
-  | { type: "SIMULATE_TICK" } //  payload: { previousSteamMass: number }
+  | { type: "SIMULATE_TICK" }
+  | { type: "SIMULATE_TICKS"; count: number } // a batch of fixed ticks, one render
   // Replaces the whole plant state (a UI preset)
   | { type: "LOAD_STATE"; payload: { state: PowerPlantState } }
   // Boiler Actions
