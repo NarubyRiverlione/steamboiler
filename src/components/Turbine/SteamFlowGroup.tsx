@@ -42,7 +42,6 @@ export function SteamFlowGroup({
       </div>
       <div className="board-group-cols">
         <ValveControl
-          knob
           Label="Bypass valve"
           Value={`${turbine.bypassSteamFlowOut.toFixed(1)} kg/s`}
           ValueWidest="999.9 kg/s"
@@ -51,7 +50,6 @@ export function SteamFlowGroup({
           cbAdjust={onAdjustBypass}
         />
         <ValveControl
-          knob
           Label="Turbine valve"
           Position={turbine.turbineValvePosition}
           Step={TurbineValveStep}

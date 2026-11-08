@@ -1,6 +1,7 @@
 /**
  * Rotary knob, adapted from the full-board mockup (knob). Two modes:
- * - absolute: the pointer shows a level from min to max, display only (valve knobs, #41);
+ * - absolute: the pointer shows a level from min to max. Display only, or turned (valve knobs, #41) with horizontal drag,
+ *   wheel and arrow keys when `onChange` is given; `actual` adds a second pointer for where the thing really is;
  * - centre-zero: a latching rate knob (the gas knob, #15). The position is a command from -1 to 1, centre holds, and it
  *   turns with mouse drag, scroll wheel and arrow keys. Its shape differs from the absolute one: a bold detent at 12
  *   o'clock that lights at zero rate, a bipolar arc, ticks denser towards the ends, LOWER/HOLD/RAISE labels and its own
@@ -20,6 +21,9 @@ type AbsoluteKnobProps = {
   readonly ends: readonly [string, string]
   readonly note?: string
   readonly size?: number
+  readonly onChange?: (value: number) => void // makes the knob a slider
+  readonly step?: number // value per arrow key press or wheel notch, default 5
+  readonly actual?: number // second pointer: the real position while the knob shows the command
 }
 
 type CentreZeroKnobProps = {
@@ -179,22 +183,109 @@ export function Knob(props: KnobProps) {
   return <AbsoluteKnob {...props} />
 }
 
-function AbsoluteKnob({ label, value, min, max, ends, note, size = 150 }: AbsoluteKnobProps) {
+const DEFAULT_STEP = 5
+
+// Value after a horizontal drag, on the same travel maths as the centre-zero knob (right raises, left lowers)
+function valueFromDrag(start: number, dx: number, min: number, max: number): number {
+  const travel: number = knobValueFromDrag(((start - min) / (max - min)) * 2 - 1, dx)
+  return min + ((travel + 1) / 2) * (max - min)
+}
+
+function AbsoluteKnob({
+  label,
+  value,
+  min,
+  max,
+  ends,
+  note,
+  size = 150,
+  onChange,
+  step = DEFAULT_STEP,
+  actual,
+}: AbsoluteKnobProps) {
+  const ref = useRef<SVGSVGElement>(null)
+  const drag = useRef<{ startX: number; startValue: number } | null>(null)
   const clamped: number = Math.min(max, Math.max(min, value))
-  const angle: number = SWEEP_START + ((SWEEP_END - SWEEP_START) * (clamped - min)) / (max - min)
+  const angleOf = (v: number): number =>
+    SWEEP_START + ((SWEEP_END - SWEEP_START) * (Math.min(max, Math.max(min, v)) - min)) / (max - min)
+  const angle: number = angleOf(value)
+  const interactive: boolean = onChange !== undefined
+
+  // The wheel listener is not passive, so the page does not scroll while the knob turns
+  useEffect(() => {
+    const node: SVGSVGElement | null = ref.current
+    if (node === null || onChange === undefined) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      onChange(Math.min(max, Math.max(min, clamped + (e.deltaY < 0 ? step : -step))))
+    }
+    node.addEventListener("wheel", onWheel, { passive: false })
+    return () => {
+      node.removeEventListener("wheel", onWheel)
+    }
+  }, [clamped, onChange, min, max, step])
+
+  const onKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
+    const steps: Record<string, number | undefined> = {
+      ArrowRight: clamped + step,
+      ArrowUp: clamped + step,
+      ArrowLeft: clamped - step,
+      ArrowDown: clamped - step,
+      Home: min,
+      End: max,
+    }
+    const next: number | undefined = steps[e.key]
+    if (next === undefined || onChange === undefined) return
+    e.preventDefault()
+    onChange(Math.min(max, Math.max(min, next)))
+  }
+
   const ticks: number[] = Array.from({ length: TICK_COUNT + 1 }, (_: unknown, i: number) => i)
   const grips: number[] = Array.from({ length: GRIP_COUNT }, (_: unknown, i: number) => i)
   return (
     <svg
-      className="board-knob"
+      ref={ref}
+      className={interactive ? "board-knob board-knob-turn" : "board-knob"}
       viewBox="0 0 170 170"
       width={size}
       height={size}
-      role="meter"
+      role={interactive ? "slider" : "meter"}
+      tabIndex={interactive ? 0 : undefined}
       aria-label={label}
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={clamped}
+      onKeyDown={interactive ? onKeyDown : undefined}
+      onPointerDown={
+        interactive
+          ? (e: PointerEvent<SVGSVGElement>) => {
+              drag.current = { startX: e.clientX, startValue: clamped }
+              e.currentTarget.setPointerCapture(e.pointerId)
+            }
+          : undefined
+      }
+      onPointerMove={
+        interactive
+          ? (e: PointerEvent<SVGSVGElement>) => {
+              if (drag.current === null || onChange === undefined) return
+              onChange(valueFromDrag(drag.current.startValue, e.clientX - drag.current.startX, min, max))
+            }
+          : undefined
+      }
+      onPointerUp={
+        interactive
+          ? () => {
+              drag.current = null
+            }
+          : undefined
+      }
+      onPointerCancel={
+        interactive
+          ? () => {
+              drag.current = null
+            }
+          : undefined
+      }
     >
       {ticks.map((i: number) => {
         const deg: number = SWEEP_START + ((SWEEP_END - SWEEP_START) * i) / TICK_COUNT
@@ -221,6 +312,17 @@ function AbsoluteKnob({ label, value, min, max, ends, note, size = 150 }: Absolu
         <text className="board-knob-note" x={CX} y={158} textAnchor="middle">
           {note}
         </text>
+      )}
+      {actual !== undefined && (
+        <line
+          className="board-knob-actual"
+          data-testid="knob-actual"
+          x1={CX}
+          y1={CY - 57}
+          x2={CX}
+          y2={CY - 67}
+          transform={`rotate(${angleOf(actual).toFixed(2)} ${String(CX)} ${String(CY)})`}
+        />
       )}
       <circle className="board-knob-bezel" cx={CX} cy={CY} r={54} />
       <circle className="board-knob-well" cx={CX} cy={CY} r={46} />
