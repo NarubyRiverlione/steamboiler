@@ -88,7 +88,14 @@ function Boiler() {
 
         <div className="board-instrument board-group">
           <h3 className="board-group-title">Gas Flow Control</h3>
-          <Knob label="Gas knob" value={gasFlow} min={0} max={MaxGasFlow} ends={["OFF", "MAX"]} />
+          <Knob
+            label="Gas knob"
+            value={gasFlow}
+            min={0}
+            max={MaxGasFlow}
+            ends={["OFF", "MAX"]}
+            note="MOCKUP"
+          />
           <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} />
           <div className="board-lens-row">
             <LensButton

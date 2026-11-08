@@ -8,6 +8,7 @@ type KnobProps = {
   readonly min: number
   readonly max: number
   readonly ends: readonly [string, string]
+  readonly note?: string
 }
 
 const CX = 85
@@ -22,7 +23,7 @@ function polar(radius: number, deg: number): [number, number] {
   return [CX + radius * Math.cos(rad), CY + radius * Math.sin(rad)]
 }
 
-export function Knob({ label, value, min, max, ends }: KnobProps) {
+export function Knob({ label, value, min, max, ends, note }: KnobProps) {
   const clamped: number = Math.min(max, Math.max(min, value))
   const angle: number = SWEEP_START + ((SWEEP_END - SWEEP_START) * (clamped - min)) / (max - min)
   const ticks: number[] = Array.from({ length: TICK_COUNT + 1 }, (_: unknown, i: number) => i)
@@ -60,6 +61,11 @@ export function Knob({ label, value, min, max, ends }: KnobProps) {
       <text className="board-knob-end" x={136} y={158} textAnchor="middle">
         {ends[1]}
       </text>
+      {note !== undefined && (
+        <text className="board-knob-note" x={CX} y={158} textAnchor="middle">
+          {note}
+        </text>
+      )}
       <circle className="board-knob-bezel" cx={CX} cy={CY} r={54} />
       <circle className="board-knob-well" cx={CX} cy={CY} r={46} />
       <g transform={`rotate(${angle.toFixed(2)} ${String(CX)} ${String(CY)})`}>

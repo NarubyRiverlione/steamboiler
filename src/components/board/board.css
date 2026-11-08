@@ -826,3 +826,11 @@ path.board-zone {
   font-size: 13px;
   font-weight: 700;
 }
+
+.board-knob-note {
+  fill: var(--board-zone-alarm);
+  font-family: var(--board-font-stencil);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
