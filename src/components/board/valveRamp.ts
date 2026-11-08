@@ -1,7 +1,7 @@
 /** Travel of a valve knob: a UX constant (not a plant parameter, #41) that paces the dispatched position toward the commanded one. */
 
 // Real seconds for a full 0 to 100 % travel, the same at every playback speed
-export const FULL_TRAVEL_SECONDS = 5
+export const FULL_TRAVEL_SECONDS = 15
 export const RAMP_TICK_MS = 50
 export const RAMP_STEP: number = RAMP_TICK_MS / 1000 / FULL_TRAVEL_SECONDS // fraction per tick
 export const RAMP_EPSILON = 1e-6

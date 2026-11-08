@@ -1,7 +1,7 @@
 /**
  * Valve control: a knob the operator turns (drag right to open, left to close; wheel and arrow keys too), with the
  * position and flow on LCDs. The knob sets an absolute position; useValveRamp dispatches it as steps toward the command
- * at 100 % per 5 real seconds (#41). The cap shows the command, a second pointer and the LCD show the actual position.
+ * at 100 % per 15 real seconds (#41). The cap shows the command, a second pointer and the LCD show the actual position.
  */
 
 import { Display } from "./Display"

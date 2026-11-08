@@ -86,14 +86,14 @@ describe("ValveControl", () => {
     expect(knob().getAttribute("aria-valuenow")).toBe("50")
   })
 
-  it("ramps the actual position toward the command at 100 % per 5 real seconds", () => {
+  it("ramps the actual position toward the command at 100 % per 15 real seconds", () => {
     render(<Harness start={0} />)
     fireEvent.keyDown(knob(), { key: "End" })
     expect(lcd()).toBe("0 % Open")
-    advance(2500)
+    advance(7500)
     expect(lcd()).toBe("50 % Open")
     expect(knob().getAttribute("aria-valuenow")).toBe("100")
-    advance(2500 + RAMP_TICK_MS)
+    advance(7500 + RAMP_TICK_MS)
     expect(lcd()).toBe("100 % Open")
     const count: number = dispatched.length
     advance(1000)
@@ -103,11 +103,11 @@ describe("ValveControl", () => {
   it("retargets a ramp that is running", () => {
     render(<Harness start={0} />)
     fireEvent.keyDown(knob(), { key: "End" })
-    advance(2500)
+    advance(7500)
     fireEvent.keyDown(knob(), { key: "Home" })
-    advance(1000)
+    advance(3000)
     expect(lcd()).toBe("30 % Open")
-    advance(2000)
+    advance(6000)
     expect(lcd()).toBe("0 % Open")
   })
 
@@ -115,7 +115,7 @@ describe("ValveControl", () => {
     render(<Harness start={0} />)
     const before: string | null = screen.getByTestId("knob-actual").getAttribute("transform")
     fireEvent.keyDown(knob(), { key: "End" })
-    advance(2500)
+    advance(7500)
     expect(screen.getByTestId("knob-actual").getAttribute("transform")).not.toBe(before)
     expect(knob().getAttribute("aria-valuenow")).toBe("100")
   })
