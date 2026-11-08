@@ -194,6 +194,14 @@ _Avoid_: Preset (that is the UI choice that loads a snapshot, or the cold state,
 A start state the operator picks in the app's Presets popup (#24): Cold & dark, Hot standby or At pressure. Loading one replaces the whole plant state with the cold state or a snapshot.
 _Avoid_: Scenario (that is a headless-runner script that plays actions over time)
 
+**Playback speed**:
+How many simulated seconds pass per wall-clock second in the app: Pause, 1x, 10x or 60x. It changes how often the plant ticks, never the physics or the size of a tick.
+_Avoid_: Time scale, sim speed, speed (alone: that is the turbine's)
+
+**Simulated clock**:
+The plant time elapsed since the current plant state was loaded, shown in the header. It is not part of the plant state, so snapshots do not hold it.
+_Avoid_: Game time, uptime
+
 **Makeup**:
 Demineralised water fed into the condenser hotwell from outside the loop, to top up losses. Never into the boiler.
 _Avoid_: Fill, top-up valve
