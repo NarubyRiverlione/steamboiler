@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { Knob } from "./Knob"
-import { knobValueFromPointer } from "./knobTravel"
+import { knobValueFromDrag } from "./knobTravel"
 
 const DEAD_ZONE = 0.05
 
@@ -86,32 +86,43 @@ describe("Knob centre-zero", () => {
     expect(onChange.mock.calls).toEqual([[0.1], [-0.1]])
   })
 
-  it("follows a mouse drag around the knob and stays where it is let go", () => {
+  it("moves with horizontal drag only, right raising and left lowering, and stays where it is let go", () => {
     const onChange = vi.fn()
-    const knob: HTMLElement = renderRateKnob(0, onChange)
-    knob.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect
+    const knob: HTMLElement = renderRateKnob(0.2, onChange)
     knob.setPointerCapture = vi.fn()
-    fireEvent.pointerMove(knob, { clientX: 100, clientY: 50 })
+    fireEvent.pointerMove(knob, { clientX: 500, clientY: 50 })
     expect(onChange).not.toHaveBeenCalled()
     fireEvent.pointerDown(knob, { clientX: 100, clientY: 50, pointerId: 1 })
-    fireEvent.pointerMove(knob, { clientX: 50, clientY: 0 })
+    fireEvent.pointerMove(knob, { clientX: 130, clientY: 50 })
+    fireEvent.pointerMove(knob, { clientX: 70, clientY: 50 })
     fireEvent.pointerUp(knob, { pointerId: 1 })
     fireEvent.pointerMove(knob, { clientX: 0, clientY: 50 })
-    expect(onChange.mock.calls).toEqual([[0.67], [0]])
+    expect(onChange.mock.calls).toEqual([[0.7], [-0.3]])
+  })
+
+  it("ignores vertical drag and clamps at the ends", () => {
+    const onChange = vi.fn()
+    const knob: HTMLElement = renderRateKnob(0.9, onChange)
+    knob.setPointerCapture = vi.fn()
+    fireEvent.pointerDown(knob, { clientX: 100, clientY: 50, pointerId: 1 })
+    fireEvent.pointerMove(knob, { clientX: 100, clientY: -300 })
+    fireEvent.pointerMove(knob, { clientX: 100, clientY: 400 })
+    expect(onChange.mock.calls).toEqual([[0.9], [0.9]])
+    fireEvent.pointerMove(knob, { clientX: 400, clientY: 50 })
+    fireEvent.pointerMove(knob, { clientX: -400, clientY: 50 })
+    expect(onChange.mock.calls.slice(2)).toEqual([[1], [-1]])
   })
 })
 
-describe("knobValueFromPointer", () => {
-  it("is 0 straight up, positive to the right and negative to the left", () => {
-    expect(knobValueFromPointer(0, -10)).toBe(0)
-    expect(knobValueFromPointer(10, -10)).toBeCloseTo(0.33, 2)
-    expect(knobValueFromPointer(-10, -10)).toBeCloseTo(-0.33, 2)
+describe("knobValueFromDrag", () => {
+  it("adds the horizontal travel over the full-sweep width to the starting value", () => {
+    expect(knobValueFromDrag(0, 0)).toBe(0)
+    expect(knobValueFromDrag(0, 30)).toBe(0.5)
+    expect(knobValueFromDrag(0.5, -30)).toBe(0)
   })
 
-  it("stops at the ends of the sweep, below the centre included", () => {
-    expect(knobValueFromPointer(10, 0)).toBe(0.67)
-    expect(knobValueFromPointer(10, 10)).toBe(1)
-    expect(knobValueFromPointer(-10, 10)).toBe(-1)
-    expect(knobValueFromPointer(0, 10)).toBe(1)
+  it("stops at the ends of the travel", () => {
+    expect(knobValueFromDrag(0.5, 500)).toBe(1)
+    expect(knobValueFromDrag(-0.5, -500)).toBe(-1)
   })
 })

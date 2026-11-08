@@ -1,14 +1,15 @@
-/** Knob travel maths of the centre-zero knob (-1 to 1 over a sweep of +-135 degrees). */
+/** Knob travel maths of the centre-zero knob (-1 to 1 over a sweep of +-135 degrees, dragged horizontally). */
 
 export const SWEEP_END = 135
 
 export const roundTravel = (value: number): number => Math.round(value * 100) / 100
 export const clampTravel = (value: number): number => Math.max(-1, Math.min(1, roundTravel(value)))
 
-// Knob travel (-1 to 1) from a pointer offset to the knob centre: 0 straight up, clamped to the sweep (the dead sector
-// below the knob goes to the nearer end)
-export function knobValueFromPointer(dx: number, dy: number): number {
-  const degrees: number = (Math.atan2(dx, -dy) * 180) / Math.PI
-  const clamped: number = Math.max(-SWEEP_END, Math.min(SWEEP_END, degrees))
-  return roundTravel(clamped / SWEEP_END)
+// Pixels of horizontal drag for a full sweep from one end to the other (-1 to 1)
+export const DRAG_FULL_SWEEP_PX = 120
+
+// Knob travel from a drag: the value at pointer-down plus the horizontal pointer travel since (right raises, left
+// lowers; vertical travel does not count), clamped to the ends
+export function knobValueFromDrag(startValue: number, dx: number): number {
+  return clampTravel(startValue + (dx * 2) / DRAG_FULL_SWEEP_PX)
 }

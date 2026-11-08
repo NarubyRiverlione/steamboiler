@@ -104,6 +104,8 @@ A boiler that runs dry with gas on keeps heating its metal: with no water left t
 
 The operator does not set a gas value; the gas knob sets a **gas rate** ([ADR 0033](../adr/0033-gas-is-a-rate-knob.md)). `gasRateCommand` (-1 to 1) is the knob position in `BoilerState`: centre holds, right raises, left lowers. The reducer's `SET_GAS_RATE` sets it (clamped to the travel) and nothing else; `gasFlow` is the integral of the command, stepped in `BoilerTick` in simulated seconds (so pause and the 1x, 10x and 60x speeds behave correctly), and clamped to 0 to `MaxGasFlow`. At the ends the knob stays where it is.
 
+In the UI the knob is dragged sideways only (right raises, left lowers, 120 px for the full sweep; up and down do nothing), or turned with the scroll wheel or the arrow keys. A drag moves the knob relative to where it was grabbed, so grabbing it never jumps the command.
+
 ```
 rate (L/s per second) = sign × ((|command| − GasRateDeadZone) / (1 − GasRateDeadZone))² × GasRateMax     (0 inside the dead zone)
 gasFlow               = clamp(gasFlow + rate × DeltaTime, 0, MaxGasFlow)

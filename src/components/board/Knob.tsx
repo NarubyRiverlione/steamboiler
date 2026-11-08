@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from "react"
-import { clampTravel, knobValueFromPointer, SWEEP_END } from "./knobTravel"
+import { clampTravel, knobValueFromDrag, SWEEP_END } from "./knobTravel"
 import "./board.css"
 
 type AbsoluteKnobProps = {
@@ -63,7 +63,7 @@ function arcPath(radius: number, deg: number): string {
 
 function CentreZeroKnob({ label, value, deadZone, onChange, size = 150 }: Omit<CentreZeroKnobProps, "mode">) {
   const ref = useRef<SVGSVGElement>(null)
-  const dragging = useRef<boolean>(false)
+  const drag = useRef<{ startX: number; startValue: number } | null>(null)
 
   // The wheel listener is not passive, so the page does not scroll while the knob turns
   useEffect(() => {
@@ -79,12 +79,6 @@ function CentreZeroKnob({ label, value, deadZone, onChange, size = 150 }: Omit<C
     }
   }, [value, onChange])
 
-  const turnTo = (e: PointerEvent<SVGSVGElement>) => {
-    const box: DOMRect = e.currentTarget.getBoundingClientRect()
-    onChange(
-      knobValueFromPointer(e.clientX - (box.left + box.width / 2), e.clientY - (box.top + box.height / 2)),
-    )
-  }
   const onKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
     const steps: Record<string, number | undefined> = {
       ArrowRight: value + RATE_STEP,
@@ -119,15 +113,15 @@ function CentreZeroKnob({ label, value, deadZone, onChange, size = 150 }: Omit<C
       aria-valuetext={zero ? "Holding" : value > 0 ? "Raising" : "Lowering"}
       onKeyDown={onKeyDown}
       onPointerDown={(e: PointerEvent<SVGSVGElement>) => {
-        dragging.current = true
+        drag.current = { startX: e.clientX, startValue: value }
         e.currentTarget.setPointerCapture(e.pointerId)
-        turnTo(e)
       }}
       onPointerMove={(e: PointerEvent<SVGSVGElement>) => {
-        if (dragging.current) turnTo(e)
+        if (drag.current === null) return
+        onChange(knobValueFromDrag(drag.current.startValue, e.clientX - drag.current.startX))
       }}
       onPointerUp={() => {
-        dragging.current = false
+        drag.current = null
       }}
     >
       {sides.flatMap((side: number) =>
