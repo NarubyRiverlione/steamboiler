@@ -933,3 +933,27 @@ path.board-zone {
   background: var(--board-lens-lit-bg);
   color: var(--board-text);
 }
+
+.board-condenser-top {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.board-condenser-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 1rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.board-group .board-group-cols {
+  justify-self: stretch;
+  align-items: start;
+}
+
+.board-group-cols .board-lens-button:not(.board-lens-small) {
+  min-width: 120px;
+}

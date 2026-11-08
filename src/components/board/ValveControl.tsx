@@ -11,15 +11,24 @@ type ValveControlProps = {
   readonly Position: number // 0..1, how much the valve is open
   readonly Step: number // percent per click
   readonly cbAdjust: (step: number) => void
+  readonly Caption?: string // visible heading of the knob form, when it differs from Label
   readonly knob?: boolean // a display-only knob between Close and Open instead of the bar (mockup of #41)
 }
 
-export function ValveControl({ Label, Value, Position, Step, cbAdjust, knob = false }: ValveControlProps) {
+export function ValveControl({
+  Label,
+  Value,
+  Position,
+  Step,
+  cbAdjust,
+  Caption,
+  knob = false,
+}: ValveControlProps) {
   const percent: number = Math.round(Position * 100)
   if (knob) {
     return (
       <div className="board-valve board-valve-knob">
-        <span className="board-instrument-label">{Label}</span>
+        <span className="board-instrument-label">{Caption ?? Label}</span>
         <div className="board-valve-row">
           <LensButton
             small

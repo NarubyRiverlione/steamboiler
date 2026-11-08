@@ -38,7 +38,7 @@ In `src/navigation/`. `Layout` is the shell of every page: `Header` (a plate lik
 
 ## Condenser page
 
-`src/components/Condenser/Condenser.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 400 mbar; green within `OptimalPressureBellWidth` of `OptimalPressure`, orange outside the band up to `VacuumLimit`, red above, where the turbine trips) with High and Low `Lamp`s, the pressure controls (air extraction pump and SJAE `LensButton`s, SJAE `ValveControl`), the hotwell `LevelGauge` (no zones yet, #54), a `ValveControl` each for the recirculation pump, condensation pump, makeup and reject (flow rates as before), then the status readouts as `Display`s (steam volume, hotwell temperature, intake and return flow). Smoothed with `useEMA`, as before.
+`src/components/Condenser/Condenser.tsx`, one `PanelFrame`: the pressure `RoundGauge` (0 to 1100 mbar, so atmospheric is on the dial; green within `OptimalPressureBellWidth` of `OptimalPressure`, orange outside the band up to `VacuumLimit`, red above, where the turbine trips) with High and Low `Lamp`s, the pressure controls (air extraction pump and SJAE `LensButton`s, SJAE `ValveControl`), the hotwell `LevelGauge` (no zones yet, #54), a `ValveControl` each for the recirculation pump, condensation pump, makeup and reject (flow rates as before), then the status readouts as `Display`s (steam volume, hotwell temperature, intake and return flow). Smoothed with `useEMA`, as before.
 
 ## Turbine page
 

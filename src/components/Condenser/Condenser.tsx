@@ -28,7 +28,7 @@ const {
   },
 } = CstSimulation
 
-const PRESSURE_MAX = 400 // mbar, top of the dial (turbine trip at VacuumLimit)
+const PRESSURE_MAX = 1100 // mbar, top of the dial: atmospheric (1013) is on the scale, the turbine trips at VacuumLimit
 const HIGH_PRESSURE: number = OptimalPressure + OptimalPressureBellWidth
 const LOW_PRESSURE: number = OptimalPressure - OptimalPressureBellWidth
 const PRESSURE_ZONES: readonly GaugeZone[] = [
@@ -73,88 +73,117 @@ function Condenser() {
 
   return (
     <PanelFrame title="Condenser">
-      <div className="board-boiler-main">
-        <div className="board-instrument">
-          <span className="board-instrument-label">Pressure</span>
-          <RoundGauge
-            label="Pressure gauge"
-            unit="mbar"
-            value={pressure}
-            min={0}
-            max={PRESSURE_MAX}
-            major={100}
-            minor={20}
-            zones={PRESSURE_ZONES}
-          />
-          <Display label="Pressure" text={`${pressure.toFixed(0)} mBar`} />
-          <span className="board-readout-values">
-            <Lamp
-              lit={pressure > HIGH_PRESSURE}
-              label="High"
-              title={`Pressure above ${HIGH_PRESSURE.toFixed(0)} mBar`}
+      <div className="board-condenser-top">
+        <div className="board-cluster">
+          <div className="board-instrument">
+            <span className="board-instrument-label">Pressure</span>
+            <RoundGauge
+              label="Pressure gauge"
+              unit="mbar"
+              value={pressure}
+              min={0}
+              max={PRESSURE_MAX}
+              major={200}
+              minor={100}
+              zones={PRESSURE_ZONES}
             />
-            <Lamp
-              lit={pressure < LOW_PRESSURE}
-              label="Low"
-              title={`Pressure below ${LOW_PRESSURE.toFixed(0)} mBar`}
-            />
-          </span>
+            <Display label="Pressure" text={`${pressure.toFixed(0)} mBar`} />
+            <span className="board-readout-values">
+              <Lamp
+                lit={pressure > HIGH_PRESSURE}
+                label="High"
+                title={`Pressure above ${HIGH_PRESSURE.toFixed(0)} mBar`}
+              />
+              <Lamp
+                lit={pressure < LOW_PRESSURE}
+                label="Low"
+                title={`Pressure below ${LOW_PRESSURE.toFixed(0)} mBar`}
+              />
+            </span>
+          </div>
+
+          <div className="board-instrument">
+            <span className="board-instrument-label">Hotwell level</span>
+            <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
+            <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} />
+            <Display label="Hotwell level change" text={`Δ ${smoothDelta.toFixed(1)}`} />
+          </div>
         </div>
 
-        <div className="board-instrument">
+        <div className="board-group">
           <h3 className="board-group-title">Pressure Control</h3>
-          <span className="board-readout-label">Air Extraction Pump (CAR)</span>
-          <LensButton pressed={isAirExtractionPumpEnabled} onClick={toggleAirExtractionPump}>
-            {isAirExtractionPumpEnabled ? "STOP" : "START"}
-          </LensButton>
-          <span className="board-readout-label">Steam Jet Air Extraction (SJAE)</span>
-          <LensButton pressed={isSjaeEnabled} onClick={toggleSjae}>
-            {isSjaeEnabled ? "DISABLE" : "ENABLE"}
-          </LensButton>
-          <ValveControl
-            Label="SJAE valve"
-            Position={sjaeValvePosition}
-            Step={SJAE_ValveStep}
-            cbAdjust={adjustSjaeValvePosition}
-          />
-        </div>
-
-        <div className="board-instrument">
-          <span className="board-instrument-label">Hotwell level</span>
-          <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
-          <Display label="Hotwell level" text={`${hotwellLevel.toFixed(1)} Δ ${smoothDelta.toFixed(1)}`} />
+          <div className="board-group-cols">
+            <div className="board-instrument">
+              <span className="board-readout-label">Air Extraction Pump (CAR)</span>
+              <LensButton pressed={isAirExtractionPumpEnabled} onClick={toggleAirExtractionPump}>
+                {isAirExtractionPumpEnabled ? "STOP" : "START"}
+              </LensButton>
+            </div>
+            <div className="board-instrument">
+              <span className="board-readout-label">Steam Jet Air Extraction (SJAE)</span>
+              <LensButton pressed={isSjaeEnabled} onClick={toggleSjae}>
+                {isSjaeEnabled ? "DISABLE" : "ENABLE"}
+              </LensButton>
+              <ValveControl
+                knob
+                Label="SJAE valve"
+                Caption="Position:"
+                Position={sjaeValvePosition}
+                Step={SJAE_ValveStep}
+                cbAdjust={adjustSjaeValvePosition}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <h3 className="board-group-title board-section">Pumps and Hotwell Valves</h3>
-      <div className="board-valves">
-        <ValveControl
-          Label="Recirculation pump"
-          Position={recirculationPumpValvePosition}
-          Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
-          Step={RecirculationPump_Step}
-          cbAdjust={adjustRecirculationPumpValvePosition}
-        />
-        <ValveControl
-          Label="Condensation pump"
-          Position={condensationPumpValvePosition}
-          Step={CondensationPump_Step}
-          cbAdjust={adjustCondensationPumpValvePosition}
-        />
-        <ValveControl
-          Label="Makeup"
-          Position={makeupValvePosition}
-          Value={`${(makeupValvePosition * Makeup_MaxFlowRate).toFixed(1)} l/s`}
-          Step={Makeup_Step}
-          cbAdjust={adjustMakeupValvePosition}
-        />
-        <ValveControl
-          Label="Reject"
-          Position={rejectValvePosition}
-          Value={`${(rejectValvePosition * Reject_MaxFlowRate).toFixed(1)} l/s`}
-          Step={Reject_Step}
-          cbAdjust={adjustRejectValvePosition}
-        />
+      <div className="board-condenser-bottom">
+        <div className="board-group">
+          <h3 className="board-group-title">Recirculation Pump</h3>
+          <ValveControl
+            knob
+            Label="Recirculation pump"
+            Caption="Flow rate:"
+            Position={recirculationPumpValvePosition}
+            Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
+            Step={RecirculationPump_Step}
+            cbAdjust={adjustRecirculationPumpValvePosition}
+          />
+        </div>
+        <div className="board-group">
+          <h3 className="board-group-title">Condensation Pump</h3>
+          <ValveControl
+            knob
+            Label="Condensation pump"
+            Caption="Flow rate:"
+            Position={condensationPumpValvePosition}
+            Step={CondensationPump_Step}
+            cbAdjust={adjustCondensationPumpValvePosition}
+          />
+        </div>
+        <div className="board-group">
+          <h3 className="board-group-title">Hotwell Makeup &amp; Reject</h3>
+          <div className="board-group-cols">
+            <ValveControl
+              knob
+              Label="Makeup"
+              Caption="Makeup:"
+              Position={makeupValvePosition}
+              Value={`${(makeupValvePosition * Makeup_MaxFlowRate).toFixed(1)} l/s`}
+              Step={Makeup_Step}
+              cbAdjust={adjustMakeupValvePosition}
+            />
+            <ValveControl
+              knob
+              Label="Reject"
+              Caption="Reject:"
+              Position={rejectValvePosition}
+              Value={`${(rejectValvePosition * Reject_MaxFlowRate).toFixed(1)} l/s`}
+              Step={Reject_Step}
+              cbAdjust={adjustRejectValvePosition}
+            />
+          </div>
+        </div>
       </div>
 
       <h3 className="board-group-title board-section">Condenser Status</h3>

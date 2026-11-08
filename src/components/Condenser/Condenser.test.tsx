@@ -31,7 +31,7 @@ function renderCondenser(patch: Partial<PowerPlantState["Condenser"]> = {}) {
 
 function clickValve(label: string, direction: "Open" | "Close"): void {
   const valve: HTMLElement =
-    screen.getByRole("meter", { name: `${label} bar` }).closest(".board-valve") ?? document.body
+    screen.getByRole("meter", { name: `${label} knob` }).closest(".board-valve") ?? document.body
   fireEvent.click(within(valve).getByRole("button", { name: direction }))
 }
 
@@ -75,7 +75,8 @@ describe("Condenser page", () => {
     expect(screen.getByRole("meter", { name: "Hotwell level gauge" }).getAttribute("aria-valuenow")).toBe(
       "70",
     )
-    expect(screen.getByLabelText("Hotwell level").textContent).toContain("0.7")
+    expect(screen.getByLabelText("Hotwell level").textContent).toBe("0.7")
+    expect(screen.getByLabelText("Hotwell level change").textContent).toContain("Δ")
   })
 
   it("lights the pressure High and Low lamps outside the band", () => {
