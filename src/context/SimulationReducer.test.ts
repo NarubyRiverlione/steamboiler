@@ -63,6 +63,13 @@ describe("alarms", () => {
     expect(loaded.plant).toEqual(aboutToTrip())
   })
 
+  test("an operator action goes to the plant and leaves clock and speed alone", () => {
+    const next: SimulationState = act(sim({ ticks: 7, speed: 10 }), { type: "TOGGLE_DRAIN_VALVE" })
+    expect(next.plant.Boiler.drainValveOpen).toBe(true)
+    expect(next.ticks).toBe(7)
+    expect(next.speed).toBe(10)
+  })
+
   test("any speed can be set, a pause stays a pause", () => {
     expect(act(sim(), { type: "SET_PLAYBACK_SPEED", speed: 0 }).speed).toBe(0)
   })
