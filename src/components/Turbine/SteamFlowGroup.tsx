@@ -31,7 +31,7 @@ export function SteamFlowGroup({
       <h3 className="board-group-title">Steam Flow</h3>
       <span className="board-readout-label">Main steam valve</span>
       <div className="board-group-row" role="group" aria-label="Main steam valve">
-        <LensButton pressed={turbine.mainSteamValve} onClick={onToggleMainSteamValve}>
+        <LensButton pressed={turbine.mainSteamValve} onClick={onToggleMainSteamValve} widest="Closed">
           {turbine.mainSteamValve ? "Open" : "Closed"}
         </LensButton>
         <Lamp
@@ -45,6 +45,7 @@ export function SteamFlowGroup({
           knob
           Label="Bypass valve"
           Value={`${turbine.bypassSteamFlowOut.toFixed(1)} kg/s`}
+          ValueWidest="999.9 kg/s"
           Position={turbine.bypassValvePosition}
           Step={BypassValveStep}
           cbAdjust={onAdjustBypass}

@@ -9,7 +9,9 @@ function Layout() {
     <AnnunciatorProvider>
       <div className="board-shell">
         <Header />
-        <Outlet />
+        <main className="board-main">
+          <Outlet />
+        </main>
       </div>
     </AnnunciatorProvider>
   )

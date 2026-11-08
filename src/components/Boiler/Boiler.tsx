@@ -26,6 +26,8 @@ const {
   CstTurbine: { ValveRatingPressure },
 } = CstSimulation
 
+// One width for the heating rate and vented LCDs (the longer, "999.9 t vented"), so their ends line up
+const STACKED_LCD_WIDEST = "999.9 t vented"
 const PRESSURE_MAX = 200 // bar, top of the dial (design pressure 180)
 const PRESSURE_ZONES: readonly GaugeZone[] = [
   { from: 0, to: ValveRatingPressure, tone: "ok" },
@@ -73,56 +75,75 @@ function Boiler() {
       status={
         <>
           <h3 className="board-group-title board-section">Boiler Status</h3>
-          <div className="board-readouts">
-            <div className="board-readout">
-              <span>Temperature</span>
-              <Display label="Temperature" text={`${temperature.toFixed(1)} °C`} />
+          <div className="board-readouts board-readouts-cols">
+            <div className="board-readout-col">
+              <div className="board-readout">
+                <span>Temperature</span>
+                <Display label="Temperature" text={`${temperature.toFixed(1)} °C`} widest="999.9 °C" />
+              </div>
+              <div className="board-readout">
+                <span>Energy Change</span>
+                <Display label="Energy change" text={energyText} widest="-999999 MJ/s" />
+              </div>
             </div>
-            <div className="board-readout">
-              <span>Energy Change</span>
-              <Display label="Energy change" text={energyText} />
-            </div>
-            <div className="board-readout">
-              <span>Heating rate</span>
-              <span className="board-readout-values">
-                <Lamp
-                  lit={heatingRateOverLimit}
-                  label="Over limit"
-                  title={`Alarm above ${String(HeatingRateLimit * 60)} K/min`}
-                />
+            <div className="board-readout-col">
+              <div className="board-readout">
+                <span>Stack temperature</span>
                 <Display
-                  label="Heating rate"
-                  text={`${(heatingRate * 60).toFixed(1)} K/min`}
-                  alarm={heatingRateOverLimit}
+                  label="Stack temperature"
+                  text={`${stackTemperature.toFixed(0)} °C`}
+                  widest="999 °C"
                 />
-              </span>
-            </div>
-            <div className="board-readout">
-              <span>Relief valve</span>
-              <span className="board-readout-values">
+              </div>
+              <div className="board-readout">
+                <span>Boiler efficiency</span>
+                <Display
+                  label="Boiler efficiency"
+                  text={`${(boilerEfficiency * 100).toFixed(1)} %`}
+                  widest="100.0 %"
+                />
+              </div>
+              <div className="board-readout">
+                <span>Burner trip</span>
                 <Lamp
-                  lit={reliefValveOpen}
-                  label="Open"
-                  title={`Opens at ${String(ReliefOpenPressure)} bar, closes at ${String(ReliefClosePressure)} bar`}
+                  lit={burnerTripped}
+                  label="Tripped"
+                  title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, raise the gas to restart`}
                 />
-                <Display label="Vented" text={`${(ventedTotal / 1e3).toFixed(1)} t vented`} />
-              </span>
+              </div>
             </div>
-            <div className="board-readout">
-              <span>Burner trip</span>
-              <Lamp
-                lit={burnerTripped}
-                label="Tripped"
-                title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, raise the gas to restart`}
-              />
-            </div>
-            <div className="board-readout">
-              <span>Stack temperature</span>
-              <Display label="Stack temperature" text={`${stackTemperature.toFixed(0)} °C`} />
-            </div>
-            <div className="board-readout">
-              <span>Boiler efficiency</span>
-              <Display label="Boiler efficiency" text={`${(boilerEfficiency * 100).toFixed(1)} %`} />
+            <div className="board-readout-col">
+              <div className="board-readout board-readout-stacked">
+                <span>Heating rate</span>
+                <span className="board-readout-values">
+                  <Lamp
+                    lit={heatingRateOverLimit}
+                    label="Over limit"
+                    title={`Alarm above ${String(HeatingRateLimit * 60)} K/min`}
+                  />
+                  <Display
+                    label="Heating rate"
+                    text={`${(heatingRate * 60).toFixed(1)} K/min`}
+                    alarm={heatingRateOverLimit}
+                    widest={STACKED_LCD_WIDEST}
+                  />
+                </span>
+              </div>
+              <div className="board-readout board-readout-stacked">
+                <span>Relief valve</span>
+                <span className="board-readout-values">
+                  <Lamp
+                    lit={reliefValveOpen}
+                    label="Open"
+                    title={`Opens at ${String(ReliefOpenPressure)} bar, closes at ${String(ReliefClosePressure)} bar`}
+                  />
+                  <Display
+                    label="Vented"
+                    text={`${(ventedTotal / 1e3).toFixed(1)} t vented`}
+                    widest={STACKED_LCD_WIDEST}
+                  />
+                </span>
+              </div>
             </div>
           </div>
 
@@ -138,19 +159,24 @@ function Boiler() {
               <div className="board-readout">
                 <span>Steam Mass</span>
                 <span className="board-readout-values">
-                  <Display label="Steam mass" text={`${steamMass.toFixed(1)} kg`} />
-                  <Display label="Steam mass change" text={`Δ ${deltaSteamMass.toFixed(2)} kg`} />
+                  <Display label="Steam mass" text={`${steamMass.toFixed(1)} kg`} widest="99999.9 kg" />
+                  <Display
+                    label="Steam mass change"
+                    text={`Δ ${deltaSteamMass.toFixed(2)} kg`}
+                    widest="Δ -999.99 kg"
+                  />
                 </span>
               </div>
               <div className="board-readout">
                 <span>Energy</span>
-                <Display label="Energy" text={`${(energy / 1e3).toFixed(1)} MJ`} />
+                <Display label="Energy" text={`${(energy / 1e3).toFixed(1)} MJ`} widest="999999.9 MJ" />
               </div>
               <div className="board-readout">
                 <span>Steam Removal</span>
                 <Display
                   label="Steam removal"
                   text={`${(bypassSteamFlowOut + turbineSteamFlowOut).toFixed(1)} kg/s`}
+                  widest="999.9 kg/s"
                 />
               </div>
             </div>
@@ -172,7 +198,7 @@ function Boiler() {
             minor={10}
             zones={PRESSURE_ZONES}
           />
-          <Display label="Pressure" text={`${smoothPressure.toFixed(1)} bar`} />
+          <Display label="Pressure" text={`${smoothPressure.toFixed(1)} bar`} widest="999.9 bar" />
         </div>
 
         <div className="board-instrument board-group">
@@ -185,7 +211,7 @@ function Boiler() {
             ends={["OFF", "MAX"]}
             note="MOCKUP"
           />
-          <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} />
+          <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} widest="12000 l/s" />
           <div className="board-lens-row">
             <LensButton
               small
@@ -234,12 +260,13 @@ function Boiler() {
             <Display
               label="Water volume"
               text={`${waterVolume.toFixed(0)} l ${(waterVolume / TotalVolume).toFixed(2)}`}
+              widest="99999 l 1.00"
             />
           </div>
           <div className="board-group">
             <h3 className="board-group-title">Water Valve Control</h3>
             <span className="board-readout-label">Drain Valve</span>
-            <LensButton pressed={drainValveOpen} onClick={toggleDrainValve}>
+            <LensButton pressed={drainValveOpen} onClick={toggleDrainValve} widest="Closed">
               {drainValveOpen ? "Open" : "Closed"}
             </LensButton>
           </div>
