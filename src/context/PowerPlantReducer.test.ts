@@ -16,7 +16,7 @@ describe("powerPlantReducer", () => {
   })
 
   test("LOAD_STATE replaces the whole state", () => {
-    const burning: PowerPlantState = reduce({ type: "INCREASE_GAS_FLOW", amount: 500 })
+    const burning: PowerPlantState = reduce({ type: "SET_GAS_RATE", payload: { gasRateCommand: 0.5 } })
     expect(reduce({ type: "LOAD_STATE", payload: { state: burning } })).toBe(burning)
     expect(reduce({ type: "LOAD_STATE", payload: { state: base } }, burning)).toBe(base)
   })
