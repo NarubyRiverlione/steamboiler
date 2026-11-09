@@ -22,6 +22,6 @@ The UI redo (#85, [ADR 0015](0015-ui-redo-analog-board-preferred.md)) first used
 
 - A ticket is a branch (`<slug>-<ticket>`), merged into `dev` locally once its gate passes locally; agents never commit ticket work on `dev` directly.
 - GitHub cannot block a merge into `dev`; the gate is run locally, and CI on push to `dev` reports afterwards.
-- `ROADMAP.md` updates after creating or closing a ticket travel with that ticket's branch.
+- `ROADMAP.md` is the one file committed directly on `dev`: after creating or closing a ticket, or changing labels or links, run `pnpm roadmap` and commit the result on `dev`. It is generated, carries no logic and needs no gate. (Earlier it travelled with the ticket's branch, which left uncommitted roadmap changes on `dev` between tickets; changed 2026-11-09.)
 - The crap report flags methods over the threshold but does not fail the gate, until it is decided whether coverage should count unit tests only.
 - The hooks and CI jobs that enforce this are built in #61, after the test layers exist (#60).
