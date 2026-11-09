@@ -69,7 +69,7 @@ function Condenser() {
 
   const smoothIntake: number = useEMA(intakeFlowRate, 0.01)
   const hotwellLevel: number = useEMA(hotwellWaterVolume / TotalVolume, 0.1)
-  const smoothDelta: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.5)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.5)
 
   return (
     <PanelFrame
@@ -131,7 +131,7 @@ function Condenser() {
             <span className="board-instrument-label">Hotwell level</span>
             <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
             <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} widest="100.0" />
-            <Display label="Hotwell level change" text={formatSigned(smoothDelta, 1, "kg/s")} widest="-999.9 kg/s" />
+            <Display label="Hotwell level change" text={formatSigned(smoothWaterChange, 1, "kg/s")} widest="-999.9 kg/s" />
           </div>
         </div>
 
