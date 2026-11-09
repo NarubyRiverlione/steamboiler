@@ -1,4 +1,6 @@
 import { CstSimulation } from "../src/context/const"
+import { MetalHeatCapacity } from "../src/context/Boiler/BoilerTick"
+import { getLatentHeat, getLiquidEnthalpy, getWaterSpecificHeat } from "../src/utils/steamTable"
 import PowerPlantState from "../src/context/PowerPlantState"
 import { Sample } from "./scenario"
 
@@ -16,7 +18,10 @@ const MassCreatedLimit = 1e-12 // fraction of start mass per MassCreatedSpan of 
 const MassCreatedSpan = 1800 // sim-seconds: rounding adds up per tick, `startup-cold` (14000 s) measures 1.9e-12 at the end
 const MassLostFixed = 1e-13 // fraction of start mass, allowed even with no steam out
 const MassLostPerSteamOut = 2e-11 // fraction of the steam that left the boiler (the rounding of the flow integral)
-export const SteamStopWithin = 120 // seconds after gas reaches 0
+
+// The flash is a per-tick rate and the cooling an average over the sample interval (10 ticks at 1 s), so the last tick
+// can run above the average. The worst ratio measured over all scenarios is 1.0099 (`return-stop`); the slack is 3x that.
+const FlashSamplingSlack = 0.03 // fraction of the cooling power
 
 const at = (time: number) => `t=${String(time)} s`
 
@@ -77,17 +82,12 @@ function waterNeverCreated(samples: Sample[]): string[] {
     .slice(0, MaxReported)
 }
 
-// Consecutive sample pairs while gas is off, with the time gas went to 0
-function gasOffPairs(samples: Sample[]): { prev: Sample; curr: Sample; gasOffSince: number }[] {
-  const pairs: { prev: Sample; curr: Sample; gasOffSince: number }[] = []
-  let gasOffSince: number | undefined
+// Consecutive sample pairs with the gas off at both samples
+function gasOffPairs(samples: Sample[]): { prev: Sample; curr: Sample }[] {
+  const pairs: { prev: Sample; curr: Sample }[] = []
   for (let i = 1; i < samples.length; i++) {
     const [prev, curr] = [samples[i - 1], samples[i]]
-    if (prev.state.Boiler.gasFlow > 0 || curr.state.Boiler.gasFlow > 0) gasOffSince = undefined
-    else {
-      gasOffSince ??= prev.time
-      pairs.push({ prev, curr, gasOffSince })
-    }
+    if (prev.state.Boiler.gasFlow === 0 && curr.state.Boiler.gasFlow === 0) pairs.push({ prev, curr })
   }
   return pairs
 }
@@ -105,14 +105,26 @@ function cooldownNeverHeats(samples: Sample[]): string[] {
     .slice(0, MaxReported)
 }
 
-function cooldownSteamStops(samples: Sample[]): string[] {
+// With the gas off, flashed steam takes its latent heat from the water, so the boiler must have cooled by at least that
+// heat (kW), less what the Return can bring in. A flash without that cooling would be steam made from nothing.
+function cooldownSteamFromStoredHeat(samples: Sample[]): string[] {
   return gasOffPairs(samples)
-    .filter(({ curr, gasOffSince }) => curr.time - gasOffSince >= SteamStopWithin)
-    .flatMap(({ curr }) =>
-      curr.state.Boiler.deltaSteamMass > Tolerance
-        ? [`${at(curr.time)}: still generating ${String(curr.state.Boiler.deltaSteamMass)} kg/s`]
-        : [],
-    )
+    .flatMap(({ prev, curr }) => {
+      const [p, c] = [prev.state.Boiler, curr.state.Boiler]
+      if (c.deltaSteamMass <= Tolerance) return []
+      const interval = curr.time - prev.time
+      const heatCapacity = c.waterMass * getWaterSpecificHeat(c.temperature) + MetalHeatCapacity // kJ/K
+      const coolingPower = (heatCapacity * (p.temperature - c.temperature)) / interval // kW
+      const returnPower = Math.max(
+        0,
+        (curr.state.Condenser.returnRate / CstSimulation.DeltaTime) *
+          (getLiquidEnthalpy(c.returnTemperatureOut) - getLiquidEnthalpy(c.temperature)),
+      ) // kW, only a Return hotter than the boiler brings heat
+      const flashPower = c.deltaSteamMass * getLatentHeat(c.temperature) // kW
+      return flashPower > (coolingPower + returnPower) * (1 + FlashSamplingSlack) + Tolerance
+        ? [`${at(curr.time)}: flash takes ${String(flashPower)} kW, the cooling gives ${String(coolingPower + returnPower)} kW`]
+        : []
+    })
     .slice(0, MaxReported)
 }
 
@@ -162,5 +174,5 @@ export const invariants: Invariant[] = [
   },
   { name: "water is never created or lost", check: waterNeverCreated },
   { name: "natural cooldown never heats", check: cooldownNeverHeats },
-  { name: "natural cooldown stops steam generation", check: cooldownSteamStops },
+  { name: "natural cooldown steam comes from stored heat", check: cooldownSteamFromStoredHeat },
 ]
