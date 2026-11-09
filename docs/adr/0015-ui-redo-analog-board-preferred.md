@@ -22,6 +22,7 @@ A redo replaces only the presentation (`src/components/`, `src/navigation/`). Th
 
 - **Added to what the app has:** the simulation speed selector (Pause, 1x, 10x, 60x) and a simulated-time clock in the header (#78, #86), a latching gas rate knob (centre-zero, `Knob` in its `centre-zero` mode) in place of the four step buttons (#15, [ADR 0033](0033-gas-is-a-rate-knob.md); the mockup's absolute-range knob is superseded), knobs on the valves beside Close and Open, an annunciator with one tile per existing alarm, a mimic strip, a round RPM dial, and the stack temperature and boiler efficiency (#89). The ±2 RPM sync band is too narrow to see on the dial, so an LED and a message carry it.
 - **Left out of the app:** the placeholder condenser and turbine visuals.
+- **Ahead of the sim:** a Deaerator page, its overview part with the let-down valve and the heater drain cascading into it, and two yellow vent warning tiles, from the panel spec in #40. The stand-in heats the deaerator; the sim has no deaerator yet. The feed pump of #112 is not drawn (#118).
 - **Fonts:** Stardos Stencil, Share Tech Mono and IBM Plex Sans Condensed. LiquidCrystal is not used.
 
 ## Consequences
