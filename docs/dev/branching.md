@@ -5,12 +5,12 @@ Two long-lived branches and one short-lived branch per ticket. Why: [ADR 0012](.
 | Branch | Holds | Who commits |
 |---|---|---|
 | `<slug>-<ticket>` (e.g. `hotwell-volume-53`) | One ticket's work, branched from `dev` (a branch or a worktree) | Everyone, agents included |
-| `dev` | Integration: merged tickets only | Nobody directly; ticket branches are merged in locally |
+| `dev` | Integration: merged tickets only | Nobody directly, except a regenerated `ROADMAP.md`; ticket branches are merged in locally |
 | `main` | Milestone releases only, via pull request; every merge publishes the app | Only on the owner's explicit say-so |
 
 ## Rules
 
-- **One ticket, one branch.** Start every ticket on its own branch or worktree from `dev`; commit there, never on `dev` itself. Run the gate below locally, then merge back into `dev` locally (no pull request: too much overhead for a sole developer) and push `dev`.
+- **One ticket, one branch.** Start every ticket on its own branch or worktree from `dev`; commit there, never on `dev` itself (the one exception: a regenerated `ROADMAP.md`, committed straight on `dev` and pushed; it is generated, carries no logic and needs no gate). Run the gate below locally, then merge back into `dev` locally (no pull request: too much overhead for a sole developer) and push `dev`.
 - **Never commit, merge or push to `main`** unless the owner explicitly says so for that release. Approval for one release does not carry over to the next.
 - **Release:** open a pull request from `dev` into `main` (`gh pr create --base main --head dev`) and merge it once its gate is green. `main` accepts no direct pushes.
 - **Fixes go through a ticket branch and `dev`** as well; a fix reaches `main` with the next release.
