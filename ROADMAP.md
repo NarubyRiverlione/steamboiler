@@ -16,9 +16,9 @@ Next: the first ticket with nothing under Waiting on.
 | 2 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
 | 3 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P3 | ready-for-agent |  |  |
 | 4 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | ready-for-agent |  |  |
-| 5 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | needs-triage |  |  |
+| 5 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | ready-for-agent |  |  |
 | 6 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
-| 7 | [#103](https://github.com/NarubyRiverlione/steamboiler/issues/103) Restore the real heating-rate limit (about 100 K/h) and retune the cold-start scenarios | P3 | needs-triage |  |  |
+| 7 | [#103](https://github.com/NarubyRiverlione/steamboiler/issues/103) Restore the real heating-rate limit (about 100 K/h) and retune the cold-start scenarios | P3 | ready-for-agent |  |  |
 
 ## P4: parked
 
