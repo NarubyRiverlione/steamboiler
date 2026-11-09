@@ -74,7 +74,8 @@ function Boiler() {
       : gasRateCommand < -GasRateDeadZone
         ? "▼ FALLING"
         : "HOLDING"
-  const waterChangeText = `${smoothWaterChange > 0 ? "+" : ""}${smoothWaterChange.toFixed(1)} kg/s`
+  const roundedWaterChange = Number(smoothWaterChange.toFixed(1)) // +0: a drift that rounds to zero shows no sign
+  const waterChangeText = `${roundedWaterChange > 0 ? "+" : ""}${(roundedWaterChange + 0).toFixed(1)} kg/s`
   const energyText = `${smoothEnergyDelta > 0 ? "+" : ""}${smoothEnergyDelta.toFixed(0)} MJ/s`
 
   return (

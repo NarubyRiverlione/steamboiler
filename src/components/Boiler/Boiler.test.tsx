@@ -74,6 +74,16 @@ describe("Boiler page", () => {
     expect(screen.getByLabelText("Drum water change").textContent).toBe("-2.5 kg/s")
   })
 
+  it("shows a steady drum as 0.0 with no sign, also for a tiny drift", () => {
+    renderBoiler({ deltaWaterMass: 0 })
+    expect(screen.getByLabelText("Drum water change").textContent).toBe("0.0 kg/s")
+  })
+
+  it("does not show a sign for a drift that rounds to zero", () => {
+    renderBoiler({ deltaWaterMass: -0.0001 })
+    expect(screen.getByLabelText("Drum water change").textContent).toBe("0.0 kg/s")
+  })
+
   it("no longer shows the drum volume in litres", () => {
     renderBoiler({ waterVolume: 35e3 })
     expect(screen.queryByLabelText("Water volume")).toBeNull()
