@@ -35,7 +35,7 @@ Next: the first ticket with nothing under Waiting on.
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 12 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P5 | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
 | 13 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P5 | needs-triage |  |  |
-| 14 | [#99](https://github.com/NarubyRiverlione/steamboiler/issues/99) Mimic strip: live piping diagram on the analog board | P5 | needs-triage |  |  |
+| 14 | [#99](https://github.com/NarubyRiverlione/steamboiler/issues/99) Mimic strip: live piping diagram on the analog board | P5 | ready-for-agent |  |  |
 | 15 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | P5 | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
 | 16 | [#104](https://github.com/NarubyRiverlione/steamboiler/issues/104) Turbine RPM: horizontal bar gauge instead of the round dial | P5 | needs-triage |  |  |
 | 17 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | P5 | needs-triage |  |  |
