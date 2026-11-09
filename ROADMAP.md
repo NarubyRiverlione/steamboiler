@@ -13,18 +13,18 @@ Next: the first ticket with nothing under Waiting on.
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 1 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P3 | ready-for-agent |  |  |
-| 2 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
-| 3 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P3 | ready-for-agent |  |  |
-| 4 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | ready-for-agent |  |  |
-| 5 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | ready-for-agent |  |  |
-| 6 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
-| 7 | [#103](https://github.com/NarubyRiverlione/steamboiler/issues/103) Restore the real heating-rate limit (about 100 K/h) and retune the cold-start scenarios | P3 | ready-for-agent |  |  |
+| 2 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Deaerator between hotwell and boiler | P3 | needs-triage |  | [#112](https://github.com/NarubyRiverlione/steamboiler/issues/112) |
+| 3 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 4 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P3 | ready-for-agent |  |  |
+| 5 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | ready-for-agent |  |  |
+| 6 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | ready-for-agent |  |  |
+| 7 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
+| 8 | [#103](https://github.com/NarubyRiverlione/steamboiler/issues/103) Restore the real heating-rate limit (about 100 K/h) and retune the cold-start scenarios | P3 | ready-for-agent |  |  |
 
 ## P4: parked
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 8 | [#40](https://github.com/NarubyRiverlione/steamboiler/issues/40) Deaerator between hotwell and boiler | P4 | needs-triage |  | [#112](https://github.com/NarubyRiverlione/steamboiler/issues/112) |
 | 9 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
 | 10 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
 | 11 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
