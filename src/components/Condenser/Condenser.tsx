@@ -2,6 +2,7 @@
 
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
+import formatSigned from "../../utils/formatSigned"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
@@ -68,7 +69,7 @@ function Condenser() {
 
   const smoothIntake: number = useEMA(intakeFlowRate, 0.01)
   const hotwellLevel: number = useEMA(hotwellWaterVolume / TotalVolume, 0.1)
-  const smoothDelta: number = useEMA(deltaWaterMass, 0.5)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.5)
 
   return (
     <PanelFrame
@@ -130,7 +131,7 @@ function Condenser() {
             <span className="board-instrument-label">Hotwell level</span>
             <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
             <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} widest="100.0" />
-            <Display label="Hotwell level change" text={`Δ ${smoothDelta.toFixed(1)}`} widest="Δ -99.9" />
+            <Display label="Hotwell level change" text={formatSigned(smoothWaterChange, 1, "kg/s")} widest="-999.9 kg/s" />
           </div>
         </div>
 

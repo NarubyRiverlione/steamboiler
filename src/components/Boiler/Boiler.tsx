@@ -3,6 +3,7 @@
 import { useState, type SyntheticEvent } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
+import formatSigned from "../../utils/formatSigned"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
@@ -74,8 +75,6 @@ function Boiler() {
       : gasRateCommand < -GasRateDeadZone
         ? "▼ FALLING"
         : "HOLDING"
-  const roundedWaterChange = Number(smoothWaterChange.toFixed(1)) // +0: a drift that rounds to zero shows no sign
-  const waterChangeText = `${roundedWaterChange > 0 ? "+" : ""}${(roundedWaterChange + 0).toFixed(1)} kg/s`
   const energyText = `${smoothEnergyDelta > 0 ? "+" : ""}${smoothEnergyDelta.toFixed(0)} MJ/s`
 
   return (
@@ -233,7 +232,7 @@ function Boiler() {
               zones={LEVEL_ZONES}
               ticks={LEVEL_TICKS}
             />
-            <Display label="Drum water change" text={waterChangeText} widest="-999.9 kg/s" />
+            <Display label="Drum water change" text={formatSigned(smoothWaterChange, 1, "kg/s")} widest="-999.9 kg/s" />
           </div>
           <div className="board-group">
             <h3 className="board-group-title">Water Valve Control</h3>

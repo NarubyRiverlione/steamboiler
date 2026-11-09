@@ -87,7 +87,21 @@ describe("Condenser page", () => {
       "70",
     )
     expect(screen.getByLabelText("Hotwell level").textContent).toBe("0.7")
-    expect(screen.getByLabelText("Hotwell level change").textContent).toContain("Δ")
+  })
+
+  it("shows the hotwell level change in kg/s, + when filling", () => {
+    renderCondenser({ deltaWaterMass: 0.5 })
+    expect(screen.getByLabelText("Hotwell level change").textContent).toBe("+5.0 kg/s")
+  })
+
+  it("shows a draining hotwell with a minus sign", () => {
+    renderCondenser({ deltaWaterMass: -0.25 })
+    expect(screen.getByLabelText("Hotwell level change").textContent).toBe("-2.5 kg/s")
+  })
+
+  it("shows no sign for a hotwell change that rounds to zero", () => {
+    renderCondenser({ deltaWaterMass: -0.0001 })
+    expect(screen.getByLabelText("Hotwell level change").textContent).toBe("0.0 kg/s")
   })
 
   it("lights the pressure High and Low lamps outside the band", () => {
