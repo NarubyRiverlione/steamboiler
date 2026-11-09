@@ -46,4 +46,4 @@ Next: the first ticket with nothing under Waiting on.
 | 17 | [#104](https://github.com/NarubyRiverlione/steamboiler/issues/104) Turbine RPM: horizontal bar gauge instead of the round dial | P5 | needs-triage |  |  |
 | 18 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | P5 | needs-triage |  |  |
 | 19 | [#107](https://github.com/NarubyRiverlione/steamboiler/issues/107) Boiler: precision pressure dial (150–180 bar, 165 at 12 o'clock) and a new green band on the main dial | P5 | needs-triage |  |  |
-| 20 | [#111](https://github.com/NarubyRiverlione/steamboiler/issues/111) Condenser: show the hotwell level change in kg/s | P5 | needs-triage |  |  |
+| 20 | [#111](https://github.com/NarubyRiverlione/steamboiler/issues/111) Condenser: show the hotwell level change in kg/s | P5 | ready-for-agent |  |  |
