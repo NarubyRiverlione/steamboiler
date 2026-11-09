@@ -42,6 +42,7 @@ function Boiler() {
         gasFlow,
         gasRateCommand,
         waterVolume,
+        deltaWaterMass,
         temperature,
         pressure,
         energyDelta,
@@ -65,6 +66,7 @@ function Boiler() {
 
   const smoothPressure: number = useEMA(pressure, 0.01)
   const smoothEnergyDelta: number = useEMA(energyDelta / 1e3, 0.01)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.01)
   const [advanced, setAdvanced] = useState<boolean>(false)
   const gasTrend: string =
     gasRateCommand > GasRateDeadZone
@@ -72,6 +74,7 @@ function Boiler() {
       : gasRateCommand < -GasRateDeadZone
         ? "▼ FALLING"
         : "HOLDING"
+  const waterChangeText = `${smoothWaterChange > 0 ? "+" : ""}${smoothWaterChange.toFixed(1)} kg/s`
   const energyText = `${smoothEnergyDelta > 0 ? "+" : ""}${smoothEnergyDelta.toFixed(0)} MJ/s`
 
   return (
@@ -222,18 +225,14 @@ function Boiler() {
 
         <div className="board-cluster">
           <div className="board-instrument">
-            <span className="board-instrument-label">Water volume</span>
+            <span className="board-instrument-label">Drum level</span>
             <LevelGauge
               label="Drum level gauge"
               value={(waterVolume / TotalVolume) * 100}
               zones={LEVEL_ZONES}
               ticks={LEVEL_TICKS}
             />
-            <Display
-              label="Water volume"
-              text={`${waterVolume.toFixed(0)} l ${(waterVolume / TotalVolume).toFixed(2)}`}
-              widest="99999 l 1.00"
-            />
+            <Display label="Drum water change" text={waterChangeText} widest="-999.9 kg/s" />
           </div>
           <div className="board-group">
             <h3 className="board-group-title">Water Valve Control</h3>

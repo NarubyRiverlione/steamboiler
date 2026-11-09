@@ -64,6 +64,21 @@ describe("Boiler page", () => {
     expect(screen.getByRole("meter", { name: "Drum level gauge" }).getAttribute("aria-valuenow")).toBe("35")
   })
 
+  it("shows the drum water change in kg/s, + when filling", () => {
+    renderBoiler({ deltaWaterMass: 0.5 })
+    expect(screen.getByLabelText("Drum water change").textContent).toBe("+5.0 kg/s")
+  })
+
+  it("shows a draining drum with a minus sign", () => {
+    renderBoiler({ deltaWaterMass: -0.25 })
+    expect(screen.getByLabelText("Drum water change").textContent).toBe("-2.5 kg/s")
+  })
+
+  it("no longer shows the drum volume in litres", () => {
+    renderBoiler({ waterVolume: 35e3 })
+    expect(screen.queryByLabelText("Water volume")).toBeNull()
+  })
+
   it("lights the alarm lamps from the flags", () => {
     renderBoiler({ burnerTripped: true, heatingRateOverLimit: true, reliefValveOpen: false })
     expect(screen.getByRole("img", { name: "Tripped: on" })).toBeTruthy()
