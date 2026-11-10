@@ -1,6 +1,6 @@
 # One passive extraction heater heats the Return; its drain cascades into the deaerator
 
-One extraction heater takes steam from the turbine at about 5 bar and heats the Return to about 150 °C at rated flow, before the economizer. Hand estimates give about 1.9 points of plant efficiency, about 6% less fuel per MWh ([research](../research/2026-11-extraction-heaters.md)). Decided in #88.
+One extraction heater takes steam from the turbine at about 5 bar and heats the feedwater to about 150 °C at rated flow, before the economizer. Hand estimates give about 1.9 points of plant efficiency, about 6% less fuel per MWh ([research](../research/2026-11-extraction-heaters.md)). Decided in #88.
 
 ## The model
 
@@ -8,14 +8,14 @@ One extraction heater takes steam from the turbine at about 5 bar and heats the 
 - **Tap pressure:** proportional to turbine flow, from about 5 bar at rated.
 - **Heater:** a closed heater with no vessel of its own. Its pressure is the tap pressure less about 6% for the line, and the Return leaves about 2 K below that saturation temperature. There is no sized surface.
 - **Extraction steam:** follows from the heat the Return takes.
-- **Heater drain:** cascades back into the deaerator ([ADR 0036](0036-deaerator-is-a-steam-heated-tank.md), #40), so its heat stays in the water. Until #119 is built it is pumped forward into the Return after the heater, as built in #88.
+- **Heater drain:** cascades back into the deaerator ([ADR 0036](0036-deaerator-is-a-steam-heated-tank.md), built in #119), so its heat stays in the water and replaces some deaerator steam. In #88 it was pumped forward into the Return after the heater.
 - **Passive:** no operator controls, no drain level, no cut-in load, no thermal mass. The heater fades with load and stops when the turbine stops.
 
 ## As built (#88)
 
-- **One tick of lag:** the condenser runs after the exhaust flow is known, so the extraction follows the Return and hotwell temperature of the last tick (0.1 s). The heater drain is the extraction steam actually taken, and the Return and drain together reach the economizer at the mixed enthalpy (never above the heater saturation), so heat and mass close exactly whatever the lag.
+- **One tick of lag:** the condenser runs after the exhaust flow is known, so the extraction follows the deaerator outflow and temperature of the last tick (0.1 s). The heater drain is the extraction steam actually taken and goes back into the deaerator; the water leaves the heater at the heated enthalpy (never above the heater saturation), so heat and mass close exactly whatever the lag.
 - **Shaft power** takes the extraction of the last tick, as it takes the steam flow of the last tick. The no-load loss and the inertia still come from the rated flow and drop, with the rated output counting the extraction.
-- **Turbine trip:** the `turbine-trip` edge scenario shuts the turbine valve at 125 MW and dumps the steam through the bypass. The extraction stops at once and the Return turns cold; pressure falls to about 136 bar. Closing the main steam valve instead, with the gas left on, took the boiler to 209 bar through a numerical jump of the flash solver at about 355 °C and 177 bar (steam inventory condensed in one tick). The cause was not looked into; it is not caused by the heater, but by a plant state with the valve shut and the Return cold. It belongs to a ticket of its own.
+- **Turbine trip:** the `turbine-trip` edge scenario shuts the turbine valve at 125 MW and dumps the steam through the bypass. The extraction stops at once and the feedwater reaches the economizer at the deaerator temperature (134 °C, the let-down valve holds 3 bar); pressure falls to about 136 bar. Closing the main steam valve instead, with the gas left on, took the boiler to 209 bar through a numerical jump of the flash solver at about 355 °C and 177 bar (steam inventory condensed in one tick). The cause was not looked into; it is not caused by the heater, but by a plant state with the valve shut and the Return cold. It belongs to a ticket of its own.
 
 ## Considered options
 

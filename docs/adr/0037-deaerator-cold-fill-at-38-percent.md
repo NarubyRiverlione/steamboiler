@@ -1,6 +1,6 @@
 # The deaerator is filled cold to about 38% so it ends at 50% hot
 
-**Status: proposed** until the figures are checked in the headless runner. Decided in #40; built in #119. In the style of [ADR 0018](0018-cold-fill-at-35-percent.md).
+**Status: accepted.** Decided in #40; built and checked in #119: the headless runner ends at 50.1% hot (`bypass-loop`) and 50.4% (`turbine-runup`). In the style of [ADR 0018](0018-cold-fill-at-35-percent.md).
 
 Heating from 20 °C to 3 bar (134 °C) raises the level for two reasons:
 

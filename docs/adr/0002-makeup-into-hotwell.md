@@ -1,6 +1,6 @@
 # Makeup water enters at the hotwell; the boiler is fed only by the condensation pump
 
-Water from outside the loop (**makeup**) enters the condenser hotwell, never the boiler. Excess hotwell water leaves through a **reject** valve. The boiler fill valve is gone: the boiler gets water only as **return** from the condensation pump, the way a real drum boiler gets its feedwater. The drain valve stays. Decided in #19, built in 5796c65.
+Water from outside the loop (**makeup**) enters the condenser hotwell, never the boiler. Excess hotwell water leaves through a **reject** valve. The boiler fill valve is gone: the boiler gets water only as **return** from the condensation pump (by way of the deaerator, [ADR 0036](0036-deaerator-is-a-steam-heated-tank.md), #119), the way a real drum boiler gets its feedwater. The drain valve stays. Decided in #19, built in 5796c65.
 
 ## Considered options
 

@@ -112,10 +112,10 @@ function startSteam(state: PowerPlantState): PowerPlantAction[] {
 // Feedforward feedwater control (#74): the Return costs heat, so the pump follows the steam leaving the boiler and the
 // level only trims it. The pump position that returns the steam flow, plus LevelGain per unit of level error. The steam
 // the heater takes comes back as its drain, not through the pump (#88), so the pump returns the rest.
-function holdBoilerLevel({ Boiler, Condenser, Heater, Turbine }: PowerPlantState): PowerPlantAction[] {
+function holdBoilerLevel({ Boiler, Condenser, Deaerator, Heater, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
-  const steamOut = Turbine.turbineSteamFlowOut + Turbine.bypassSteamFlowOut - Heater.extractionFlow
+  const steamOut = Turbine.turbineSteamFlowOut + Turbine.bypassSteamFlowOut - Heater.extractionFlow - Deaerator.extractionFlow
   const feedforward = steamOut / CstCondenser.CondensationPump_MaxFlowRate
   const wanted = Math.max(0, Math.min(1, feedforward + S.LevelGain * (S.BoilerLevelTarget - level)))
   return toPosition(Condenser.condensationPumpValvePosition, wanted, (condensationPumpValvePosition) => ({

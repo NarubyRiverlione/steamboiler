@@ -1,4 +1,5 @@
 import { CstPhysics, CstSimulation } from "./const"
+import { makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
 import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
@@ -72,6 +73,7 @@ export const makeInitialState = (): PowerPlantState => ({
     rejectTotal: 0,
     deltaWaterMass: 0,
   },
+  Deaerator: makeColdDeaerator(), // filled cold to 38% at ambient (ADR 0037)
   Heater: {
     extractionFlow: 0, // kg/s
     tapPressure: 0, // bar

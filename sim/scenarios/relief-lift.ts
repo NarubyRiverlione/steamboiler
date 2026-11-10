@@ -2,8 +2,8 @@ import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import { Scenario } from "../scenario"
 import { setGasCommand } from "./gas"
 
-// Full gas lifts the relief valve at about 227 s (35% cold fill, ADR 0018); the gas goes off during that lift
-export const GasOffAt = 230
+// Full gas would lift the relief valve at about 259 s (35% cold fill, ADR 0018; the deaerator draws let-down steam from the boiler as it warms up, #119). The gas goes off at 250 s, before that: the knob takes 40 s to bring it down, so the pressure still peaks on the heat in the water and lifts once (at about 261 s)
+export const GasOffAt = 250
 
 // Full gas from cold with everything closed until the relief valve lifts, then gas off so it reseats and the boiler cools
 export const reliefLift: Scenario = {

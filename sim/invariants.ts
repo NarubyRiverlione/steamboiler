@@ -1,4 +1,4 @@
-import { CstSimulation } from "../src/context/const"
+import { CstDeaerator, CstSimulation } from "../src/context/const"
 import { MetalHeatCapacity } from "../src/context/Boiler/BoilerTick"
 import { getLatentHeat, getLiquidEnthalpy, getWaterSpecificHeat } from "../src/utils/steamTable"
 import PowerPlantState from "../src/context/PowerPlantState"
@@ -39,9 +39,9 @@ const everySample =
 const within = (label: string, value: number, max: number) =>
   value >= 0 && value <= max ? undefined : `${label} ${String(value)} outside 0..${String(max)}`
 
-// Water in the plant, kg: the boiler and hotwell liquid are held as mass, the steam as mass
-export const totalWater = ({ Boiler, Condenser }: PowerPlantState) =>
-  Boiler.waterMass + Boiler.steamMass + Condenser.hotwellWaterMass
+// Water in the plant, kg: the boiler, deaerator and hotwell liquid are held as mass, the steam as mass
+export const totalWater = ({ Boiler, Condenser, Deaerator }: PowerPlantState) =>
+  Boiler.waterMass + Boiler.steamMass + Condenser.hotwellWaterMass + Deaerator.waterMass
 
 // Total water with the boundary flows undone: makeup came in, reject, drain and vent went out on purpose
 export const loopWater = (state: PowerPlantState) =>
@@ -59,7 +59,7 @@ function steamOutSoFar(samples: Sample[]): number[] {
     const current = total
     const next = samples[i + 1] as Sample | undefined
     if (next) {
-      const flow = state.Turbine.turbineSteamFlowOut + state.Turbine.bypassSteamFlowOut
+      const flow = state.Turbine.turbineSteamFlowOut + state.Turbine.bypassSteamFlowOut + state.Deaerator.letDownFlow
       total += flow * (next.time - samples[i].time)
     }
     return current
@@ -117,7 +117,7 @@ function cooldownSteamFromStoredHeat(samples: Sample[]): string[] {
       const coolingPower = (heatCapacity * (p.temperature - c.temperature)) / interval // kW
       const returnPower = Math.max(
         0,
-        (curr.state.Condenser.returnRate / CstSimulation.DeltaTime) *
+        (curr.state.Deaerator.outflowMass / CstSimulation.DeltaTime) *
           (getLiquidEnthalpy(c.returnTemperatureOut) - getLiquidEnthalpy(c.temperature)),
       ) // kW, only a Return hotter than the boiler brings heat
       const flashPower = c.deltaSteamMass * getLatentHeat(c.temperature) // kW
@@ -164,6 +164,10 @@ export const invariants: Invariant[] = [
     check: everySample(({ Condenser }) =>
       within("hotwell", Condenser.hotwellWaterVolume, CstCondenser.TotalVolume),
     ),
+  },
+  {
+    name: "deaerator within capacity",
+    check: everySample(({ Deaerator }) => within("deaerator", Deaerator.waterVolume, CstDeaerator.TotalVolume)),
   },
   {
     // A sample holds no pre-pump hotwell volume; "never more than the hotwell holds" is a CondenserTick test

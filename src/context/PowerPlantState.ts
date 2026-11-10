@@ -31,7 +31,7 @@ export type CondenserState = {
   hotwellWaterVolume: number // liters, derived: mass × specific volume at the hotwell temperature
   hotwellTemperature: number // Celsius
   intakeFlowRate: number // kg/s turbine exhaust plus bypass steam into the condenser
-  returnRate: number // kg returned to the boiler over the last tick
+  returnRate: number // kg returned to the deaerator over the last tick
   condensationRate: number // kg/s into the hotwell: steam condensed plus exhaust moisture
   coolingRate: number
   coolingWaterOutletTemperature: number // Celsius, the cooling water after the condenser (the intake temperature with no flow)
@@ -72,8 +72,22 @@ export type HeaterState = {
   returnTemperature: number // Celsius, the Return after the heater and its drain, what the economizer receives
 }
 
+export type DeaeratorState = {
+  waterMass: number // kg, the state; volume and level are derived from it
+  waterVolume: number // liters, derived: mass x specific volume at the water temperature
+  temperature: number // Celsius, the water and the outflow
+  pressure: number // bar, the saturation pressure of the water (no air yet, ADR 0036); the controlled value
+  extractionFlow: number // kg/s of turbine steam taken at the tap through the non-return valve
+  tapDemand: number // kg/s the pressure loop asks of the tap for the next tick (the extraction follows the last tick's demand, like the heater)
+  extractionValvePosition: number // 0-1 (0-100%) open, derived from the flow it passes
+  letDownFlow: number // kg/s of boiler steam taken through the let-down valve (auxiliary line)
+  letDownValvePosition: number // 0-1 (0-100%) open, derived from the flow it passes
+  outflowMass: number // kg that left toward the boiler over the last tick (the pass-through until #112)
+}
+
 type PowerPlantState = {
   Boiler: BoilerState
+  Deaerator: DeaeratorState
   Heater: HeaterState
   Condenser: CondenserState
   Turbine: TurbineState

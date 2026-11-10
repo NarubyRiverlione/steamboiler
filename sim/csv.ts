@@ -8,7 +8,7 @@ const toNumber = (value: number | boolean | SpeedMode): number =>
 
 function flatten(state: PowerPlantState): Record<string, number> {
   const row: Record<string, number> = {}
-  const parts = { boiler: state.Boiler, turbine: state.Turbine, condenser: state.Condenser, heater: state.Heater }
+  const parts = { boiler: state.Boiler, turbine: state.Turbine, condenser: state.Condenser, deaerator: state.Deaerator, heater: state.Heater }
   for (const [prefix, part] of Object.entries(parts)) {
     for (const [key, value] of Object.entries(part)) {
       row[`${prefix}_${key}`] = toNumber(value)

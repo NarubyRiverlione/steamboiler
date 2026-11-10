@@ -61,10 +61,10 @@ describe("shaftWorkFraction", () => {
 })
 
 describe("ratedOutputMW", () => {
-  test("is the 141.3 MW of the rated flow, the 31 mbar design vacuum and the extraction steam that stops working at the tap (ADR 0031)", () => {
-    // 192 kg/s x 0.85 x 0.98 x the drop that does work: 1016 kJ/kg less the extracted share (about a quarter) of what is below
+  test("is the 141.9 MW of the rated flow, the 31 mbar design vacuum and the extraction steam that stops working at the tap (ADR 0031)", () => {
+    // 192 kg/s x 0.85 x 0.98 x the drop that does work: 1016 kJ/kg less the extracted share (about a quarter: the deaerator tap and the heater) of what is below
     // the tap; with no extraction it would be 162.5 MW
-    expect(ratedOutputMW).toBeCloseTo(141.3, 1)
+    expect(ratedOutputMW).toBeCloseTo(141.9, 1)
   })
 
   test("RatedSteamFlow is the measured 192 kg/s: re-derive it from max-output if the plant changes (ADR 0031)", () => {
@@ -144,8 +144,8 @@ describe("calculateRPM", () => {
   //   S = 161 x 917e3 x 0.85 x 0.98 = 122.97 MW;  J = 2 x 4 x S / ω_s² = 9 967 kg·m²
   //   Δω = T / J x 0.1 s = 0.4886 rad/s = 4.665 rpm
   test("hand-calculated first tick from standstill", () => {
-    // J scales with the rated output (141.3 MW since ADR 0031; 4.292 at 133.7 MW, 4.665 at 123.0 MW)
-    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.060, 2)
+    // J scales with the rated output (141.9 MW since the deaerator, #119; 141.3 MW with the heater alone, ADR 0031; 4.292 at 133.7 MW, 4.665 at 123.0 MW)
+    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.043, 2)
   })
 
   // Load power at sync speed: the generator draws load / efficiency from the shaft, so the steam must cover the

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { CstHeater, CstPhysics, CstSimulation } from "./const"
-import { getWaterSpecificVolume } from "../utils/steamTable"
+import { CstDeaerator, CstHeater, CstPhysics, CstSimulation } from "./const"
+import { getBoilingPoint, getWaterSpecificVolume } from "../utils/steamTable"
 import { calculateSteamInventory } from "../utils/boilerCalculations"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -306,8 +306,18 @@ describe("PowerPlantTick low-pressure closure", () => {
 describe("PowerPlantTick extraction heater (ADR 0031)", () => {
   const { RatedSteamFlow, SyncRPM } = CstSimulation.CstTurbine
   // A hot plant at sync speed with the turbine passing about the rated flow and a Return flowing from a warm hotwell
+  // The deaerator is hot at its 3 bar setpoint and passes the Return plus about 40 kg/s of steam and drain on to the heater
   const running = (turbineFlow: number, returnRate: number): PowerPlantState => ({
     ...cold,
+    Deaerator: {
+      ...cold.Deaerator,
+      waterMass: 70_000,
+      waterVolume: 75_000,
+      temperature: getBoilingPoint(CstDeaerator.Pressure),
+      pressure: CstDeaerator.Pressure,
+      tapDemand: 35,
+      outflowMass: returnRate > 0 ? (returnRate + 40) * CstSimulation.DeltaTime : 0,
+    },
     Boiler: {
       ...cold.Boiler,
       temperature: 350,
@@ -352,39 +362,56 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
 
   test("at the rated flow the heater takes steam, the tap is at its rated pressure and the Return is heated to about 150 °C", () => {
     const next = PowerPlantTick(running(RatedSteamFlow, 140))
-    expect(next.Heater.extractionFlow).toBeGreaterThan(30)
+    // the heater only takes the water on from the deaerator (about 134 °C) to its own saturation
+    expect(next.Heater.extractionFlow).toBeGreaterThan(5)
     expect(next.Heater.tapPressure).toBeCloseTo(CstHeater.TapPressureAtRated, 1)
     expect(next.Heater.heaterPressure).toBeCloseTo(next.Heater.tapPressure * (1 - CstHeater.LineDrop), 6)
     expect(next.Heater.returnTemperature).toBeGreaterThan(138)
     expect(next.Heater.returnTemperature).toBeLessThan(152)
   })
 
-  test("the extraction leaves the turbine: the condenser receives only the rest", () => {
-    const next = PowerPlantTick(running(RatedSteamFlow, 140))
-    expect(next.Condenser.intakeFlowRate).toBeCloseTo(next.Turbine.turbineSteamFlowOut - next.Heater.extractionFlow, 9)
-  })
-
   test("water is conserved across the turbine, heater and Return in one tick", () => {
     const start = running(RatedSteamFlow, 140)
     const next = PowerPlantTick(start)
     const water = (s: PowerPlantState): number =>
-      s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.hotwellWaterMass + s.Condenser.ventedTotal
+      s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.hotwellWaterMass + s.Deaerator.waterMass + s.Condenser.ventedTotal
     expect(water(next) - water(start)).toBeCloseTo(
       next.Condenser.makeupTotal - start.Condenser.makeupTotal - (next.Condenser.rejectTotal - start.Condenser.rejectTotal),
       6,
     )
   })
 
-  test("the heater drain joins the Return: the boiler gets the Return and the extraction steam", () => {
+  test("the heater drain cascades into the deaerator and the boiler gets the deaerator outflow", () => {
     const start = running(RatedSteamFlow, 140)
     const next = PowerPlantTick(start)
-    const gained: number = next.Boiler.waterMass - start.Boiler.waterMass
-    const steamLeft: number = next.Turbine.turbineSteamFlowOut * CstSimulation.DeltaTime
+    const steamLeft: number =
+      (next.Turbine.turbineSteamFlowOut + next.Turbine.bypassSteamFlowOut + next.Deaerator.letDownFlow) * CstSimulation.DeltaTime
     // flash exchanges water and steam inside the boiler, so test through the whole plant balance of water in the boiler
-    expect(gained + (next.Boiler.steamMass - start.Boiler.steamMass) + steamLeft).toBeCloseTo(
-      next.Condenser.returnRate + next.Heater.extractionFlow * CstSimulation.DeltaTime,
+    const gained: number =
+      next.Boiler.waterMass + next.Boiler.steamMass - (start.Boiler.waterMass + start.Boiler.steamMass) + steamLeft
+    expect(gained).toBeCloseTo(next.Deaerator.outflowMass, 6)
+    const steam: number = (next.Deaerator.extractionFlow + next.Deaerator.letDownFlow) * CstSimulation.DeltaTime
+    const drain: number = next.Heater.extractionFlow * CstSimulation.DeltaTime
+    expect(next.Deaerator.waterMass + next.Deaerator.outflowMass).toBeCloseTo(
+      start.Deaerator.waterMass + next.Condenser.returnRate + drain + steam,
       6,
     )
+  })
+
+  test("the deaerator tap takes steam from the turbine, so the condenser gets less", () => {
+    const next = PowerPlantTick(running(RatedSteamFlow, 140))
+    expect(next.Deaerator.extractionFlow).toBeGreaterThan(20)
+    expect(next.Condenser.intakeFlowRate).toBeCloseTo(
+      next.Turbine.turbineSteamFlowOut - next.Heater.extractionFlow - next.Deaerator.extractionFlow,
+      9,
+    )
+  })
+
+  test("with the turbine stopped the let-down valve holds the deaerator from the boiler", () => {
+    const next = PowerPlantTick(running(0, 100))
+    expect(next.Deaerator.extractionFlow).toBe(0)
+    expect(next.Deaerator.letDownFlow).toBeGreaterThan(0)
+    expect(next.Deaerator.pressure).toBeCloseTo(CstDeaerator.Pressure, 1)
   })
 
   test("tap pressure and the Return temperature fall as the turbine flow falls", () => {
@@ -392,6 +419,6 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
     const half = PowerPlantTick(running(RatedSteamFlow / 2, 70))
     expect(half.Heater.tapPressure).toBeLessThan(full.Heater.tapPressure)
     expect(half.Heater.returnTemperature).toBeLessThan(full.Heater.returnTemperature)
-    expect(half.Heater.returnTemperature).toBeGreaterThan(half.Condenser.hotwellTemperature)
+    expect(half.Heater.returnTemperature).toBeGreaterThanOrEqual(half.Deaerator.temperature)
   })
 })

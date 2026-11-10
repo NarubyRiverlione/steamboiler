@@ -1,8 +1,8 @@
 /**
- * Extraction heater (ADR 0031): steam taken from the turbine at a tap heats the Return before the economizer, and its
- * drain is pumped forward into the Return, so no water or heat is lost. Pure functions, no state.
+ * Extraction heater (ADR 0031): steam taken from the turbine at a tap heats the feedwater from the deaerator before the
+ * economizer, and its drain cascades back into the deaerator (ADR 0036), so no water or heat is lost. Pure functions, no state.
  */
-import { CstHeater, CstSimulation } from "../context/const"
+import { CstDeaerator, CstHeater, CstSimulation } from "../context/const"
 import {
   getBoilingPoint,
   getIsentropicEnthalpyDrop,
@@ -71,21 +71,25 @@ export function calculateExtraction({
   return { ...none, flow: Math.min(turbineFlow, waterHeat / heatPerKgSteam) }
 }
 
+// Enthalpy (kJ/kg) of the heater drain: saturated liquid at the heater pressure
+export const drainEnthalpyOf = (heaterPressure: number): number => getLiquidEnthalpy(getBoilingPoint(heaterPressure))
+
 /**
- * The Return after the heater, drain included: the heated water and the drain pumped forward into it. Mass in = mass out
- * and so is the heat, the steam bringing its tap enthalpy. The temperature is that of the mixed enthalpy, never above
- * the heater saturation (when a lagging extraction meets less water than it expected, the excess heat is not kept).
+ * The feedwater after the heater: the water takes the heat the steam gives up from its tap enthalpy to the drain
+ * (saturated liquid at the heater pressure). The drain does not join the water: it cascades back into the deaerator
+ * (ADR 0036). The temperature is that of the heated enthalpy, never above the heater saturation (when a lagging
+ * extraction meets less water than it expected, the excess heat is not kept).
  */
-export function mixReturn(
-  returnMass: number,
-  returnTemperature: number,
+export function heatFeedwater(
+  waterMass: number,
+  waterTemperature: number,
   extractionMass: number,
   { tapEnthalpy, heaterPressure }: Pick<Extraction, "tapEnthalpy" | "heaterPressure">,
-): { mass: number; temperature: number } {
-  const mass: number = returnMass + extractionMass
-  if (extractionMass <= 0 || mass <= 0) return { mass: Math.max(0, mass), temperature: returnTemperature }
-  const enthalpy: number = (returnMass * getLiquidEnthalpy(returnTemperature) + extractionMass * tapEnthalpy) / mass
-  return { mass, temperature: Math.min(getBoilingPoint(heaterPressure), getLiquidTemperature(enthalpy)) }
+): number {
+  if (extractionMass <= 0 || waterMass <= 0) return waterTemperature
+  const enthalpy: number =
+    getLiquidEnthalpy(waterTemperature) + (extractionMass * (tapEnthalpy - drainEnthalpyOf(heaterPressure))) / waterMass
+  return Math.min(getBoilingPoint(heaterPressure), getLiquidTemperature(enthalpy))
 }
 
 /**
@@ -106,17 +110,23 @@ export function shaftDropWithExtraction(
 }
 
 /**
- * The share of the rated turbine flow the heater takes at the rated state: the hotwell at the saturation temperature of
- * the design vacuum, the shaft at sync speed. The Return is the flow the heater does not take, so with e kg of steam per kg of
- * Return the share is e / (1 + e). It sizes the rated output, which the extraction steam no longer produces.
+ * The share of the rated turbine flow the two extractions take at the rated state: the hotwell at the saturation
+ * temperature of the design vacuum, the deaerator heating it to its setpoint with tap steam, the heater taking the
+ * water on from there, the shaft at sync speed. The Return is the flow the extractions do not take, so with x kg of
+ * steam per kg of Return the share is x / (1 + x). It sizes the rated output, which the extraction steam no longer produces.
  */
 export const ratedExtractionShare: number = (() => {
-  const perKgReturn: number = calculateExtraction({
+  const hotwell: number = getBoilingPoint(CstCondenser.OptimalPressure / 1000)
+  const heater: Extraction = calculateExtraction({
     turbineFlow: CstTurbine.RatedSteamFlow,
     workFraction: 1,
     boilerPressure: CstTurbine.ValveRatingPressure,
     returnFlow: 1,
-    returnTemperature: getBoilingPoint(CstCondenser.OptimalPressure / 1000),
-  }).flow
+    returnTemperature: getBoilingPoint(CstDeaerator.Pressure),
+  })
+  const deaeratorSteam: number =
+    (getLiquidEnthalpy(getBoilingPoint(CstDeaerator.Pressure)) - getLiquidEnthalpy(hotwell)) /
+    (heater.tapEnthalpy - getLiquidEnthalpy(getBoilingPoint(CstDeaerator.Pressure)))
+  const perKgReturn: number = heater.flow + deaeratorSteam
   return perKgReturn / (1 + perKgReturn)
 })()
