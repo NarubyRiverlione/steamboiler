@@ -72,6 +72,9 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0033](adr/0033-gas-is-a-rate-knob.md) | The gas is set by a latching rate knob, and the gas never jumps |
 | [0034](adr/0034-playback-speed-is-ticks-per-second.md) | Playback speed is ticks per wall-clock second, never `DeltaTime` |
 | [0035](adr/0035-condenser-pressure-is-vapour-plus-air.md) | The condenser pressure is shell vapour pressure plus air pressure; the vacuum system removes volume, not pressure |
+| [0036](adr/0036-deaerator-is-a-steam-heated-tank.md) | The deaerator is a steam-heated tank on the feedwater path, held at 3 bar |
+| [0037](adr/0037-deaerator-cold-fill-at-38-percent.md) | The deaerator is filled cold to about 38% so it ends at 50% hot |
+| [0038](adr/0038-deaerator-air-and-vents.md) | The deaerator holds one amount of air and has two vents; mistakes cost steam, never damage |
 
 ## Research (dated, frozen)
 
