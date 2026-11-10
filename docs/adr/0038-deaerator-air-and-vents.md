@@ -1,6 +1,6 @@
 # The deaerator holds one amount of air and has two vents; mistakes cost steam, never damage
 
-Decided in #40 (start-up discussion, 2026-11-09).
+Decided in #40 (start-up discussion, 2026-11-09); built in #120.
 
 - **Cold start is vented:** the vessel starts full of air at atmospheric pressure. The operator heats it with the start-up vent open and closes it once the air is out.
 - **One tracked amount of non-condensable air.** Total pressure is air pressure plus the saturation pressure of the water temperature (as [ADR 0035](0035-condenser-pressure-is-vapour-plus-air.md) does for the condenser). The same amount drives the safe-to-close lamp, the vent consequences and, later, the O₂ reading (#114).

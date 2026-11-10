@@ -1,6 +1,6 @@
 # The deaerator is a steam-heated tank on the feedwater path, held at 3 bar
 
-A deaerator sits between the hotwell and the boiler. It heats the feedwater to saturation so dissolved gas comes out, and the steam scrubs the gas to the vent. Decided in #40, slice 1 of 2 (the vessel); the boiler feed pump is slice 2, #112.
+A deaerator sits between the hotwell and the boiler. It heats the feedwater to saturation so dissolved gas comes out, and the steam scrubs the gas to the vent. Decided in #40; built in #119 (the vessel). The air, vents and panel are #120 ([ADR 0038](0038-deaerator-air-and-vents.md)); the boiler feed pump is #112.
 
 ## The model
 
