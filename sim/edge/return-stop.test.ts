@@ -23,7 +23,8 @@ describe("return-stop", () => {
   test("the Return stops, the economizer recovers nothing and the efficiency falls to about 79% in one tick", () => {
     for (const { state } of after) {
       expect(state.Condenser.returnRate).toBe(0)
-      expect(state.Boiler.returnTemperatureOut).toBe(state.Condenser.hotwellTemperature)
+      // nothing flows to the economizer, which reads the temperature of the water it would get: the deaerator's
+      expect(state.Boiler.returnTemperatureOut).toBe(state.Deaerator.temperature)
     }
     expect(firingAfter.length).toBeGreaterThan(0)
     for (const { state } of firingAfter) expect(state.Boiler.stackTemperature).toBeGreaterThan(400)

@@ -2,12 +2,13 @@ import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick, { MainSteamValveLowPressureClosure } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerRemoveSteam, BoilerVent } from "./Boiler/BoilerTick"
 
-import PowerPlantState, { BoilerState, CondenserState, HeaterState, TurbineState } from "./PowerPlantState"
-import { CstSimulation } from "./const"
+import { DeaeratorResult, DeaeratorTick } from "./Deaerator/DeaeratorTick"
+import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, HeaterState, TurbineState } from "./PowerPlantState"
+import { CstDeaerator, CstSimulation } from "./const"
 import { roomInKg } from "../utils/boilerCalculations"
 import { getExhaustEnthalpy, getSaturationEnthalpies } from "../utils/steamTable"
 import { shaftWorkFraction } from "../utils/turbineCalculations"
-import { calculateExtraction, Extraction, mixReturn } from "../utils/extractionHeater"
+import { calculateExtraction, drainEnthalpyOf, Extraction, heatFeedwater } from "../utils/extractionHeater"
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
   // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
@@ -24,7 +25,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     bypassResult.turbineState,
     bypassResult.boilerState.pressure,
     state.Condenser.pressure,
-    state.Heater.extractionFlow,
+    state.Heater.extractionFlow + state.Deaerator.extractionFlow,
   )
 
   // remove steam via turbine valve
@@ -33,15 +34,29 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // Condenser: receives the steam removed from the boiler in this same tick
   const boilerPressure: number = bypassResult.boilerState.pressure
 
-  // Extraction heater (ADR 0031): the steam it takes follows from the heat the Return takes, and leaves the turbine before
-  // the condenser. The Return is last tick's (the condenser runs after the exhaust is known), a lag of one tick.
+  // Extraction heater (ADR 0031): the steam it takes follows from the heat the feedwater takes, and leaves the turbine
+  // before the condenser. The feedwater is last tick's outflow of the deaerator, a lag of one tick.
   const extraction: Extraction = calculateExtraction({
     turbineFlow: turbineResult.turbineState.turbineSteamFlowOut,
     workFraction: shaftWorkFraction(state.Turbine.rpm),
     boilerPressure,
-    returnFlow: state.Condenser.returnRate / CstSimulation.DeltaTime,
-    returnTemperature: state.Condenser.hotwellTemperature,
+    returnFlow: state.Deaerator.outflowMass / CstSimulation.DeltaTime,
+    returnTemperature: state.Deaerator.temperature,
   })
+
+  // Deaerator tap (ADR 0036): the non-return valve passes steam in proportion to the pressure margin of the heater line at
+  // the tap over the setpoint (nothing at or below it, so no backflow), and only what the turbine has left after the
+  // heater. It follows the demand of the last tick.
+  const tapOpening: number = Math.min(
+    1,
+    Math.max(0, (extraction.heaterPressure - CstDeaerator.Pressure) / (CstDeaerator.Pressure * CstDeaerator.ExtractionOpeningRange)),
+  )
+  const tapFlow: number = Math.min(
+    state.Deaerator.tapDemand,
+    CstDeaerator.ExtractionValveCapacity * tapOpening,
+    Math.max(0, turbineResult.turbineState.turbineSteamFlowOut - extraction.flow),
+  )
+
   // Bypass steam is saturated vapour at the boiler pressure
   const steamFromBypass: { flow: number; enthalpy: number } = {
     flow: turbineResult.turbineState.bypassSteamFlowOut,
@@ -50,7 +65,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // Exhaust enthalpy at the same pressures as the enthalpy drop in TurbineTick, less the work the shaft takes at its
   // speed: at standstill the exhaust is the inlet steam
   const steamFromTurbine: { flow: number; enthalpy: number } = {
-    flow: turbineResult.turbineState.turbineSteamFlowOut - extraction.flow,
+    flow: turbineResult.turbineState.turbineSteamFlowOut - extraction.flow - tapFlow,
     enthalpy: getExhaustEnthalpy(
       boilerPressure,
       state.Condenser.pressure / 1000,
@@ -58,13 +73,12 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
       shaftWorkFraction(state.Turbine.rpm),
     ),
   }
-  // The return fills the boiler at most to its total volume (kg at the boiler temperature); steam and drain only lower
-  // it afterwards
-  // The heater drain joins the Return, so it takes room in the boiler first
+  // The deaerator passes the Return on to the boiler in the same tick, with the steam that heated it and the heater drain
+  // (until #112); that water takes room in the boiler first, so the pump stops short of a full boiler
   const boilerRoom: number = Math.max(
     0,
     roomInKg(CstSimulation.CstBoiler.TotalVolume, state.Boiler.waterVolume, state.Boiler.temperature) -
-      extraction.flow * CstSimulation.DeltaTime,
+      (extraction.flow + tapFlow + state.Deaerator.letDownFlow) * CstSimulation.DeltaTime,
   )
   const condenserNewState: CondenserState = CondenserTick(
     state.Condenser,
@@ -74,32 +88,46 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     boilerRoom,
   )
 
-  // The heater drain is pumped forward into the Return: this tick's Return and the extraction steam, condensed, together
-  const heated = mixReturn(
-    condenserNewState.returnRate,
-    condenserNewState.hotwellTemperature,
+  // Deaerator: takes this tick's Return and the heater drain, holds 3 bar with the tap steam and the let-down valve
+  const deaerator: DeaeratorResult = DeaeratorTick(state.Deaerator, {
+    intake: { mass: condenserNewState.returnRate, temperature: condenserNewState.hotwellTemperature },
+    drain: { mass: extraction.flow * CstSimulation.DeltaTime, enthalpy: drainEnthalpyOf(extraction.heaterPressure) },
+    tapSteam: { mass: tapFlow * CstSimulation.DeltaTime, enthalpy: extraction.tapEnthalpy },
+    boiler: {
+      pressure: boilerPressure,
+      steamMass: turbineResult.boilerState.steamMass,
+      lowLevel: ventedBoiler.burnerTripped, // the low-low trip latches, so the valve does not chatter at the level
+    },
+  })
+  const deaeratorNewState: DeaeratorState = deaerator.state
+
+  // The heater heats the deaerator outflow; its drain went back into the deaerator
+  const feedwaterTemperature: number = heatFeedwater(
+    deaerator.outflow.mass,
+    deaerator.outflow.temperature,
     extraction.flow * CstSimulation.DeltaTime,
     extraction,
   )
 
   // Boiler
-  // add this tick's return, drain included, before recalculating the boiler state
+  // the let-down steam leaves the boiler and comes back as water in the outflow, which joins before the boiler state is recalculated
   const boilerRemovedSteam: BoilerState = {
     ...turbineResult.boilerState,
-    waterMass: turbineResult.boilerState.waterMass + heated.mass,
+    steamMass: turbineResult.boilerState.steamMass - deaerator.letDownMass,
+    waterMass: turbineResult.boilerState.waterMass + deaerator.outflow.mass,
   }
 
-  // The economizer heats this tick's Return with the flue gas; the Return arrives from the heater
+  // The economizer heats the feedwater with the flue gas; it arrives from the heater
   const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam, {
-    flow: heated.mass / CstSimulation.DeltaTime,
-    temperature: heated.temperature,
+    flow: deaerator.outflow.mass / CstSimulation.DeltaTime,
+    temperature: feedwaterTemperature,
   })
 
   const heaterNewState: HeaterState = {
     extractionFlow: extraction.flow,
     tapPressure: extraction.tapPressure,
     heaterPressure: extraction.heaterPressure,
-    returnTemperature: heated.temperature,
+    returnTemperature: feedwaterTemperature,
   }
   
   // Update turbine state with the new flow values
@@ -113,6 +141,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     ...state,
     Boiler: boilerNewState,
     Condenser: condenserNewState,
+    Deaerator: deaeratorNewState,
     Heater: heaterNewState,
     Turbine: updatedTurbineState,
   }

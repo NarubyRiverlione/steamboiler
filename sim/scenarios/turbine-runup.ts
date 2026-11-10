@@ -19,7 +19,7 @@ const { RunUpPoints } = CstSimulation.CstTurbine
 
 export const StartupSettings = {
   SettlingTime: 600, // sim-seconds in Hold at sync speed before the run ends: the same window turbine-sync judges
-  Duration: 5800, // sim-seconds: pressure build to ~1234 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~4836 s) and the settling time
+  Duration: 6500, // sim-seconds: pressure build to ~1870 s (the deaerator warm-up draws about 12 t of boiler steam, #119; ~1234 s before), the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5470 s) and the settling time
 }
 
 // At working pressure: from Free, select the first point above the speed and start Ramp up; in Hold at a point

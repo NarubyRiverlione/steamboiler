@@ -11,9 +11,9 @@ describe("relief-lift", () => {
   test("records the one lift with its open and close time, though it is shorter than a sample", () => {
     expect(lifts).toHaveLength(1)
     const [lift] = lifts
-    // Full gas reaches 178 bar after about 4 minutes (the knob takes 40 s to bring the gas up, #15). The knob goes down
+    // Full gas reaches 178 bar after about 4.3 minutes (the deaerator let-down draw delays it, #119) (the knob takes 40 s to bring the gas up, #15). The knob goes down
     // before that and the gas takes 40 s to come off, so the pressure still peaks on the heat in the water and lifts once
-    expect(lift.open).toBeGreaterThan(200)
+    expect(lift.open).toBeGreaterThan(230)
     expect(lift.open).toBeGreaterThan(GasOffAt)
     expect(lift.close).toBeGreaterThan(lift.open)
     expect(lift.close).toBeLessThan(GasOffAt + CstBoiler.MaxGasFlow / CstBoiler.GasRateMax)

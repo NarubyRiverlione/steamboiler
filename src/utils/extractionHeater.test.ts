@@ -3,7 +3,8 @@ import { CstHeater, CstSimulation } from "../context/const"
 import {
   calculateExtraction,
   heaterPressureOf,
-  mixReturn,
+  drainEnthalpyOf,
+  heatFeedwater,
   ratedExtractionShare,
   shaftDropWithExtraction,
   tapPressureOf,
@@ -90,36 +91,34 @@ describe("calculateExtraction", () => {
   })
 })
 
-describe("mixReturn", () => {
-  it("conserves mass and heat: the drain joins the Return after the heater", () => {
+describe("heatFeedwater", () => {
+  const DeaeratorTemperature = 134
+
+  it("heats the water with the heat the steam gives up down to the drain, which leaves the water", () => {
     const result = calculateExtraction({
       turbineFlow: RatedSteamFlow,
       workFraction: 1,
       boilerPressure: 165,
-      returnFlow: RatedReturn,
-      returnTemperature: HotwellTemperature,
+      returnFlow: 190,
+      returnTemperature: DeaeratorTemperature,
     })
-    const mixed = mixReturn(RatedReturn, HotwellTemperature, result.flow, result)
-    expect(mixed.mass).toBeCloseTo(RatedReturn + result.flow, 9)
-    expect(mixed.temperature).toBeGreaterThan(145)
-    expect(mixed.temperature).toBeLessThan(getBoilingPoint(result.heaterPressure))
-    const inHeat: number = RatedReturn * getLiquidEnthalpy(HotwellTemperature) + result.flow * result.tapEnthalpy
-    expect(mixed.mass * getLiquidEnthalpy(mixed.temperature)).toBeCloseTo(inHeat, 3)
+    const temperature: number = heatFeedwater(190, DeaeratorTemperature, result.flow, result)
+    expect(temperature).toBeGreaterThan(145)
+    expect(temperature).toBeLessThanOrEqual(getBoilingPoint(result.heaterPressure))
+    const heatIn: number = result.flow * (result.tapEnthalpy - drainEnthalpyOf(result.heaterPressure))
+    expect(190 * (getLiquidEnthalpy(temperature) - getLiquidEnthalpy(DeaeratorTemperature))).toBeCloseTo(heatIn, 0)
   })
 
-  it("is the Return unchanged with no extraction", () => {
-    const mixed = mixReturn(100, 30, 0, { tapEnthalpy: 2500, heaterPressure: 5 })
-    expect(mixed).toEqual({ mass: 100, temperature: 30 })
+  it("is the water unchanged with no extraction", () => {
+    expect(heatFeedwater(100, 30, 0, { tapEnthalpy: 2500, heaterPressure: 5 })).toBe(30)
   })
 
-  it("never leaves hotter than the heater saturation, even with no water to heat", () => {
-    const mixed = mixReturn(0, 30, 10, { tapEnthalpy: 2500, heaterPressure: 5 })
-    expect(mixed.temperature).toBeLessThanOrEqual(getBoilingPoint(5))
-    expect(mixed.mass).toBe(10)
+  it("is the water unchanged with no water to heat", () => {
+    expect(heatFeedwater(0, 30, 10, { tapEnthalpy: 2500, heaterPressure: 5 })).toBe(30)
   })
 
-  it("is empty with nothing in", () => {
-    expect(mixReturn(0, 30, 0, { tapEnthalpy: 2500, heaterPressure: 5 })).toEqual({ mass: 0, temperature: 30 })
+  it("never leaves hotter than the heater saturation", () => {
+    expect(heatFeedwater(1, 30, 10, { tapEnthalpy: 2500, heaterPressure: 5 })).toBeLessThanOrEqual(getBoilingPoint(5))
   })
 })
 

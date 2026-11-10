@@ -26,7 +26,8 @@ How the parts of the plant connect, what each one does, and where the energy com
 | Turbine valve | Sets the steam flow to the turbine | [turbine.md](turbine.md) |
 | Bypass valve | Sends steam straight to the condenser, past the turbine | [condenser.md](condenser.md#intakes) |
 | Turbine | Takes the enthalpy drop from boiler pressure to condenser pressure as shaft power, in one stage. The steam is saturated, as there is no superheater | [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried) |
-| Extraction heater | Takes steam from the turbine at a tap (about 5 bar at the rated flow) and heats the Return to about 150 °C before the economizer; its drain is pumped forward into the Return. Passive: no controls | [turbine.md](turbine.md#extraction-heater-88) |
+| Deaerator | Feedwater tank (150 m³) between the hotwell and the boiler, held at 3 bar (134 °C) by turbine tap steam first and boiler steam through a let-down valve for the rest; passes the water on to the boiler until the feed pump (#112) | [deaerator.md](deaerator.md) |
+| Extraction heater | Takes steam from the turbine at a tap (about 5 bar at the rated flow) and heats the deaerator outflow to about 150 °C before the economizer; its drain cascades back into the deaerator. Passive: no controls | [turbine.md](turbine.md#extraction-heater-88) |
 | Generator | Turns shaft power into the load it carries, at 98% | [turbine.md](turbine.md#generator-load-71) |
 | Condenser | Condenses the vapour under vacuum. Cooling water carries the heat away | [condenser.md](condenser.md#energy-balance) |
 | Recirculation pump | Brings cooling water at 10 °C to the condenser | [condenser.md](condenser.md#energy-balance) |
@@ -49,6 +50,6 @@ Measured at the end of `turbine-load` (#74, #82, #88): 125.0 MW, 165 bar, 173 kg
 | | | | Not accounted (storage drift) | 0.2 |
 | **Total** | **377** | | **Total** | **377** |
 
-The Return pays for its heat: it enters at the hotwell temperature (about 21 °C), is warmed to about 144 °C by the extraction steam, to about 197 °C by the flue gas in the economizer, and the boiler heats it the rest of the way to the steam. The plant efficiency is 33.2%, electricity over fuel heat, against 31.4% before the heater (#82). The heater gains the cycle about 2 points, but the Return reaches the economizer hotter, so the stack rises from 148 to 227 °C and boiler efficiency falls from 94% to 90%; only part of the cycle gain survives ([ADR 0031](../adr/0031-one-extraction-heater.md)). The earlier free-feedwater departure is gone ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
+The Return pays for its heat: it enters at the hotwell temperature (about 21 °C), is warmed to 134 °C in the deaerator and to about 144 °C by the heater, to about 198 °C by the flue gas in the economizer, and the boiler heats it the rest of the way to the steam. The plant efficiency is 32.4% at 125 MW with the deaerator (#119; 33.2% with the heater alone in #88), electricity over fuel heat, against 31.4% before the heater (#82). The energy table above is the #88 balance and was not re-measured. The heater gains the cycle about 2 points, but the Return reaches the economizer hotter, so the stack rises from 148 to 227 °C and boiler efficiency falls from 94% to 90%; only part of the cycle gain survives ([ADR 0031](../adr/0031-one-extraction-heater.md)). The earlier free-feedwater departure is gone ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md)).
 
 Not in the table: makeup, reject and drain carry a little heat when they run, and no pump uses power.

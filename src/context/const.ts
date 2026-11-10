@@ -96,6 +96,17 @@ export const CstHeater = {
   TerminalTemperatureDifference: 2, // K, the Return leaves this far below the saturation temperature of the heater pressure (1.7-2.8 K sourced, weak)
 }
 
+// Deaerator vessel (ADR 0036, ADR 0037, figures in docs/plant/design-basis.md and docs/plant/deaerator.md); all estimates
+// to confirm in the headless runner
+export const CstDeaerator = {
+  TotalVolume: 150e3, // liters: 5 minutes of rated feedwater (192 kg/s) from the 50% working level down to the 38% low-low trip
+  StartLevel: 0.38, // share of TotalVolume filled cold at ambient: ends at 50% at 3 bar (ADR 0037)
+  Pressure: 3, // bar, held by the steam inlet valve (about 134 °C)
+  ExtractionValveCapacity: 60, // kg/s the extraction valve passes: over-dimensioned, about 35 kg/s are needed at rated flow (design-basis.md)
+  ExtractionOpeningRange: 0.5, // share of the setpoint the tap pressure must rise above it for the non-return valve to pass its full capacity: flow rises with the pressure margin, so no step when the tap crosses 3 bar (design-basis.md)
+  LetDownCapacity: 50, // kg/s the let-down valve passes at the boiler working pressure; scales with the boiler pressure like the steam valves (ADR 0026)
+}
+
 export const CstPhysics = {
   Water_SpecificHeat: 4.18, // kJ/kg°C (used as fallback for temperatures below 80°C)
   Steel_SpecificHeat: 0.5, // kJ/kg·K, carbon steel

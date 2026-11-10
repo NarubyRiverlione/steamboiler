@@ -10,6 +10,8 @@ import { CstSimulation } from "../../src/context/const"
 // (ADR 0032), so the rotor is set to sync speed here; the 3 s run is short enough for it to stay near it.
 const settled: PowerPlantState = loadSnapshot("bypass-loop")
 const { SyncRPM } = CstSimulation.CstTurbine
+// 25% passes about 50 kg/s: the tap pressure (about 1.3 bar) is under the deaerator setpoint, so nothing is extracted (#119)
+const Opening = 0.25
 
 const after3s = (bypassValvePosition: number, turbineValvePosition: number, rpm: number): PowerPlantState => {
   const scenario: Scenario = {
@@ -24,17 +26,16 @@ const after3s = (bypassValvePosition: number, turbineValvePosition: number, rpm:
 }
 
 describe("exhaust split", () => {
-  const onBypass: PowerPlantState = after3s(0.25, 0, SyncRPM)
-  const onTurbine: PowerPlantState = after3s(0, 0.25, SyncRPM)
-  const atStandstill: PowerPlantState = after3s(0, 0.25, 0)
+  const onBypass: PowerPlantState = after3s(Opening, 0, SyncRPM)
+  const onTurbine: PowerPlantState = after3s(0, Opening, SyncRPM)
+  const atStandstill: PowerPlantState = after3s(0, Opening, 0)
 
-  test("both paths bring the same steam flow to the condenser, the turbine's less what the heater takes (ADR 0031)", () => {
-    expect(onBypass.Heater.extractionFlow).toBe(0)
-    expect(onTurbine.Heater.extractionFlow).toBeGreaterThan(0)
-    expect(onTurbine.Condenser.intakeFlowRate + onTurbine.Heater.extractionFlow).toBeCloseTo(
-      onBypass.Condenser.intakeFlowRate,
-      0,
-    )
+  test("both paths bring the same steam flow to the condenser: below the deaerator setpoint the tap gives nothing, the heater and the tap take none (ADR 0031, ADR 0036)", () => {
+    for (const state of [onBypass, onTurbine]) {
+      expect(state.Heater.extractionFlow).toBe(0)
+      expect(state.Deaerator.extractionFlow).toBe(0)
+    }
+    expect(onTurbine.Condenser.intakeFlowRate).toBeCloseTo(onBypass.Condenser.intakeFlowRate, 0)
   })
 
   test("turbine exhaust, wetter than bypass steam and less of it, gives a lower condenser pressure", () => {
