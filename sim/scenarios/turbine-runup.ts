@@ -13,7 +13,7 @@ import PowerPlantState from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
 import { holdLoop } from "./loop-operator"
 import { atWorkingPressure } from "./pressure-hold"
-import { heatUp, openMainSteam } from "./steps"
+import { heatUp, openMainSteam, startUpVent } from "./steps"
 
 const { RunUpPoints } = CstSimulation.CstTurbine
 
@@ -37,8 +37,9 @@ function runUp({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
 // With steam flowing, the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md).
 // The boiler level hold waits for working pressure: the cold fill already holds the right mass (ADR 0018)
 export function startupOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
-  if (!state.Turbine.mainSteamValve) return []
-  return [...runUp(state), ...holdLoop(state, time, atWorkingPressure(state.Boiler.pressure))]
+  const vent: PowerPlantAction[] = startUpVent(state, time)
+  if (!state.Turbine.mainSteamValve) return vent
+  return [...vent, ...runUp(state), ...holdLoop(state, time, atWorkingPressure(state.Boiler.pressure))]
 }
 
 export const turbineRunup: Scenario = {

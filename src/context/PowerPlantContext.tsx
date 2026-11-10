@@ -21,6 +21,8 @@ type PowerPlantContextType = {
   selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
   setLoadSetpoint: (loadSetpoint: number) => void
+  // Deaerator
+  toggleDeaeratorVent: () => void
   // Condenser
   toggleAirExtractionPump: () => void
   toggleSjae: () => void

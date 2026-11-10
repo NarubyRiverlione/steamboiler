@@ -1,10 +1,10 @@
 # The deaerator is a steam-heated tank on the feedwater path, held at 3 bar
 
-A deaerator sits between the hotwell and the boiler. It heats the feedwater to saturation so dissolved gas comes out, and the steam scrubs the gas to the vent. Decided in #40; built in #119 (the vessel). The air, vents and panel are #120 ([ADR 0038](0038-deaerator-air-and-vents.md)); the boiler feed pump is #112.
+A deaerator sits between the hotwell and the boiler. It heats the feedwater to saturation so dissolved gas comes out, and the steam scrubs the gas to the vent. Decided in #40; built in #119 (the vessel) and #120 (the air, vents, relief valve and panel, [ADR 0038](0038-deaerator-air-and-vents.md)); the boiler feed pump is #112.
 
 ## The model
 
-- **Vessel:** a lumped tank in the style of [ADR 0019](0019-boiler-is-one-lumped-vessel.md). Pressure follows the saturation of the contents (plus air, see [ADR 0038](0038-deaerator-air-and-vents.md)); there is no separate pressure physics.
+- **Vessel:** a lumped tank in the style of [ADR 0019](0019-boiler-is-one-lumped-vessel.md). The pressure is the saturation pressure of the water plus the air pressure ([ADR 0038](0038-deaerator-air-and-vents.md), #120); the 3 bar setpoint is the saturation temperature the steam control heats to.
 - **Control:** a steam inlet valve holds the pressure at a fixed **3 bar** (about 134 °C). The valve is an enthalpy input (steam mass flow times latent heat into the water). No sliding pressure. The operator reads pressure (controlled) and saturation temperature (check).
 - **Steam source:** extraction plus an auxiliary line. The turbine tap of [ADR 0031](0031-one-extraction-heater.md) (5 bar) holds 3 bar at load, with a non-return valve against backflow into the turbine. The auxiliary line comes from the boiler through a pressure-reducing (let-down) valve and takes over when the tap falls below the setpoint (trip, closed valve, low load, cold start). The two valves work in split range on the one pressure loop. The bypass does not feed the deaerator; it feeds the condenser.
 - **Steam only from the plant:** there is no auxiliary steam header, like the SJAE ([research](../research/2026-11-sjae-motive-steam.md)). The let-down valve passes steam only while boiler pressure is above deaerator pressure, so the pressure needed at start-up falls out of the physics. The idea of a 5 bar minimum boiler pressure is dropped.
@@ -13,7 +13,7 @@ A deaerator sits between the hotwell and the boiler. It heats the feedwater to s
 - **Economizer inlet:** the economizer and the flue gas balance ([ADR 0029](0029-boiler-efficiency-from-flue-gas-heat-balance.md)) take the temperature of the water that enters them, the **heater outlet** (about 150 °C at rated flow; the deaerator outlet, the saturation temperature at the deaerator pressure, when the heater is off). Chosen in #119: the heater is in series between the deaerator and the economizer. Chain: steam valve, pressure, saturation temperature, heater, economizer inlet, stack temperature and boiler efficiency. It stays this way after #112, because pump work is ignored ([ADR 0030](0030-return-pays-real-enthalpy.md)).
 - **Tank size:** 5 minutes of rated feedwater (192 kg/s, about 58 t), measured from the 50% working level down to the low-low trip (about 38%): about **150 m³**. The alternative, the water at the 50% level, gives 117 m³. Bands, all estimates: low alarm 25 to 30%, low-low 10 to 15%, high alarm 70 to 75%, high-high 85 to 90% (dump valve, extraction isolation). Recorded in `design-basis.md`.
 
-The numbers: 3 bar and the 38% cold fill (ADR 0037) were checked in the headless runner in #119 (50.1% hot). The 150 m³ is not tested by any scenario yet (the level bands are #120); the bands are hand estimates. The tap steam opens in proportion to the pressure margin over 3 bar and the let-down valve is shut while the burner low-low trip holds (#119).
+The numbers: 3 bar and the 38% cold fill (ADR 0037) were checked in the headless runner in #119 (50.1% hot). The 150 m³ is not tested by any scenario yet (the level bands are still open); the bands are hand estimates. The tap steam opens in proportion to the pressure margin over 3 bar and the let-down valve is shut while the burner low-low trip holds (#119).
 
 ## Considered options
 

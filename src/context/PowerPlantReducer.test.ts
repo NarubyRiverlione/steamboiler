@@ -424,6 +424,22 @@ describe("powerPlantReducer", () => {
     })
   })
 
+  describe("deaerator", () => {
+    test("the start-up vent opens and closes on the toggle, and nothing else changes", () => {
+      const opened: PowerPlantState = reduce({ type: "TOGGLE_DEAERATOR_VENT" })
+      expect(opened.Deaerator.startUpVentOpen).toBe(true)
+      expect({ ...opened.Deaerator, startUpVentOpen: false }).toEqual(base.Deaerator)
+      expect(reduce({ type: "TOGGLE_DEAERATOR_VENT" }, opened).Deaerator.startUpVentOpen).toBe(false)
+      expect(opened.Boiler).toBe(base.Boiler)
+    })
+
+    test("the cold plant starts with the vent shut and the vessel full of air at atmospheric pressure", () => {
+      expect(base.Deaerator.startUpVentOpen).toBe(false)
+      expect(base.Deaerator.airMass).toBeGreaterThan(100)
+      expect(base.Deaerator.pressure).toBeCloseTo(1.01325, 5)
+    })
+  })
+
   test("leaves the other subsystems untouched", () => {
     const next = reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint: 500 } })
     expect(next.Boiler).toBe(base.Boiler)

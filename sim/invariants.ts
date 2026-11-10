@@ -50,7 +50,8 @@ export const loopWater = (state: PowerPlantState) =>
   state.Condenser.rejectTotal +
   state.Boiler.drainedTotal +
   state.Boiler.ventedTotal +
-  state.Condenser.ventedTotal
+  state.Condenser.ventedTotal +
+  state.Deaerator.ventedTotal
 
 // Steam out of the boiler between samples, taking each sample's flow as constant until the next
 function steamOutSoFar(samples: Sample[]): number[] {

@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { CstDeaerator, CstHeater, CstPhysics, CstSimulation } from "./const"
-import { getBoilingPoint, getWaterSpecificVolume } from "../utils/steamTable"
+import { getWaterSpecificVolume } from "../utils/steamTable"
 import { calculateSteamInventory } from "../utils/boilerCalculations"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { makeInitialState } from "./PowerPlantReducer"
+import { makeHotDeaerator } from "./Deaerator/DeaeratorTick"
 
 const { CstBoiler } = CstSimulation
 const cold = makeInitialState()
@@ -310,11 +311,8 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
   const running = (turbineFlow: number, returnRate: number): PowerPlantState => ({
     ...cold,
     Deaerator: {
-      ...cold.Deaerator,
+      ...makeHotDeaerator(75_000),
       waterMass: 70_000,
-      waterVolume: 75_000,
-      temperature: getBoilingPoint(CstDeaerator.Pressure),
-      pressure: CstDeaerator.Pressure,
       tapDemand: 35,
       outflowMass: returnRate > 0 ? (returnRate + 40) * CstSimulation.DeltaTime : 0,
     },
@@ -374,7 +372,7 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
     const start = running(RatedSteamFlow, 140)
     const next = PowerPlantTick(start)
     const water = (s: PowerPlantState): number =>
-      s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.hotwellWaterMass + s.Deaerator.waterMass + s.Condenser.ventedTotal
+      s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.hotwellWaterMass + s.Deaerator.waterMass + s.Condenser.ventedTotal + s.Deaerator.ventedTotal
     expect(water(next) - water(start)).toBeCloseTo(
       next.Condenser.makeupTotal - start.Condenser.makeupTotal - (next.Condenser.rejectTotal - start.Condenser.rejectTotal),
       6,
@@ -393,7 +391,7 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
     const steam: number = (next.Deaerator.extractionFlow + next.Deaerator.letDownFlow) * CstSimulation.DeltaTime
     const drain: number = next.Heater.extractionFlow * CstSimulation.DeltaTime
     expect(next.Deaerator.waterMass + next.Deaerator.outflowMass).toBeCloseTo(
-      start.Deaerator.waterMass + next.Condenser.returnRate + drain + steam,
+      start.Deaerator.waterMass + next.Condenser.returnRate + drain + steam - (next.Deaerator.ventedTotal - start.Deaerator.ventedTotal),
       6,
     )
   })

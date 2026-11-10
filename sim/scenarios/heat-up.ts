@@ -3,7 +3,7 @@ import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
 import { steerGas } from "./gas"
-import { isAdjustTime } from "./steps"
+import { isAdjustTime, startUpVent } from "./steps"
 
 // Cold to working pressure with everything closed, the operator ramping the gas at the heating-rate limit:
 // the realistic startup pace (see docs/plant/design-basis.md). Decided from state and time alone.
@@ -19,11 +19,13 @@ const S = RampSettings
 
 // At working pressure the knob goes fully down; below it the gas is steered up by a step while the smoothed rate is under
 // the target, down by a step above it, each reached over one adjustment interval
-export function rampOperator({ Boiler }: PowerPlantState, time: number): PowerPlantAction[] {
-  if (Boiler.pressure >= S.PressureTarget) return steerGas(Boiler, 0, S.AdjustEvery)
-  if (!isAdjustTime(time, S.AdjustEvery)) return []
+export function rampOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
+  const { Boiler } = state
+  const vent: PowerPlantAction[] = startUpVent(state, time)
+  if (Boiler.pressure >= S.PressureTarget) return [...vent, ...steerGas(Boiler, 0, S.AdjustEvery)]
+  if (!isAdjustTime(time, S.AdjustEvery)) return vent
   const step: number = Boiler.heatingRate < S.RateTarget ? S.GasStep : -S.GasStep
-  return steerGas(Boiler, Boiler.gasFlow + step, S.AdjustEvery)
+  return [...vent, ...steerGas(Boiler, Boiler.gasFlow + step, S.AdjustEvery)]
 }
 
 export const heatUpAtLimit: Scenario = {

@@ -4,7 +4,7 @@ import PowerPlantState from "../../src/context/PowerPlantState"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { atWorkingPressure, holdPressureWithGas, PressureHoldSettings } from "./pressure-hold"
 import { steerGas } from "./gas"
-import { isAdjustTime, StartGas } from "./steps"
+import { isAdjustTime, StartGas, startUpVent } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
 // Valve actions are deltas, so the operator asks for the difference to the position it wants.
@@ -164,7 +164,7 @@ export function holdLoop(
 }
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
-  return [...startSteam(state), ...holdLoop(state, time)]
+  return [...startUpVent(state, time), ...startSteam(state), ...holdLoop(state, time)]
 }
 
 // The loop operator with its hotwell hold taken away, for edge scenarios that force makeup and reject themselves
@@ -172,4 +172,14 @@ export function loopOperatorWithoutHotwellHold(state: PowerPlantState, time: num
   return loopOperator(state, time).filter(
     (a) => a.type !== "SET_MAKEUP_VALVE_POSITION" && a.type !== "SET_REJECT_VALVE_POSITION",
   )
+}
+
+// The loop operator that never touches the deaerator start-up vent: the vessel stays full of air (#120)
+export function loopOperatorWithoutVent(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return loopOperator(state, time).filter((a) => a.type !== "TOGGLE_DEAERATOR_VENT")
+}
+
+// The loop operator that opens the start-up vent at the start and never closes it: the air goes, then steam is lost (#120)
+export function loopOperatorLeavingVentOpen(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return loopOperator(state, time).filter((a) => a.type !== "TOGGLE_DEAERATOR_VENT" || !state.Deaerator.startUpVentOpen)
 }

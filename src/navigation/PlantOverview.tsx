@@ -1,10 +1,11 @@
-/** Plant overview: the plant to be (ADR 0029) as a static SVG, drawn from plantDiagram.ts. A part with controls links to its page and carries an alarm LED; no live numbers. */
+/** Plant overview: the plant to be (ADR 0029) as an SVG, drawn from plantDiagram.ts. A part with controls links to its page and carries an alarm LED. The only live values are the deaerator's: temperature, level and, while the start-up vent is open, the safe-to-close lamp (ADR 0038). */
 
 import { Link } from "react-router-dom"
 import { PanelFrame } from "../components/board/PanelFrame"
 import { Led } from "../components/board/Led"
 import usePowerPlant from "../context/PowerPlantContext"
 import { DIAGRAM_HEIGHT, DIAGRAM_WIDTH, LABELS, MEDIA, NODES, PIPES, type DiagramNode } from "./plantDiagram"
+import { CstDeaerator } from "../context/const"
 import { PARTS, partAlarms } from "./plantParts"
 
 function NodeShape({ node }: { readonly node: DiagramNode }) {
@@ -33,6 +34,8 @@ function NodeShape({ node }: { readonly node: DiagramNode }) {
 function PlantOverview() {
   const { state } = usePowerPlant()
   const alarms = partAlarms(state)
+  const { temperature, waterVolume, startUpVentOpen, safeToClose } = state.Deaerator
+  const deaerator: DiagramNode | undefined = NODES.find((node: DiagramNode) => node.id === "deaerator")
   return (
     <PanelFrame title="Plant">
       <svg
@@ -103,6 +106,21 @@ function PlantOverview() {
               <Led lit={alarms[node.part ?? "boiler"]} label={PARTS[node.part ?? "boiler"].name + " alarm"} />
             </g>
           ),
+        )}
+        {deaerator !== undefined && (
+          <g className="board-node-values" pointerEvents="none">
+            <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + 20}>
+              {temperature.toFixed(0)} °C
+            </text>
+            <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + deaerator.h - 10}>
+              {((waterVolume / CstDeaerator.TotalVolume) * 100).toFixed(0)} %
+            </text>
+            {startUpVentOpen && (
+              <g transform={"translate(" + String(deaerator.x + deaerator.w) + " " + String(deaerator.y) + ")"}>
+                <Led lit={safeToClose} tone="ok" label="Deaerator safe to close" />
+              </g>
+            )}
+          </g>
         )}
       </svg>
     </PanelFrame>
