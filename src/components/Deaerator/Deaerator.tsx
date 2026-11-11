@@ -12,6 +12,7 @@ import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
 import { warningText } from "./warningText"
 
+const STEAM_SOURCE_MIN_FLOW = 0.5 // kg/s, about 1% of a valve: below it the source lamp stays off
 const PRESSURE_MAX = 5 // bar, top of the dial: the relief valve lifts at 4
 const PRESSURE_ZONES: readonly GaugeZone[] = [
   { from: 0, to: CstDeaerator.Pressure * 1.1, tone: "ok" },
@@ -35,6 +36,8 @@ function Deaerator() {
         warnVentOpenNoAir,
         feedPumpValvePosition,
         feedPumpTripped,
+        extractionFlow,
+        letDownFlow,
       },
     },
     toggleDeaeratorVent,
@@ -57,7 +60,11 @@ function Deaerator() {
             </div>
             <div className="board-readout">
               <span>Saturation pressure</span>
-              <Display label="Saturation pressure" text={`${saturationPressure.toFixed(2)} bar`} widest="9.99 bar" />
+              <Display
+                label="Saturation pressure"
+                text={`${saturationPressure.toFixed(2)} bar`}
+                widest="9.99 bar"
+              />
             </div>
           </div>
         </>
@@ -95,32 +102,56 @@ function Deaerator() {
             Step={CstDeaerator.FeedPump_Step}
             cbAdjust={adjustFeedPumpValvePosition}
           />
-          <Lamp lit={feedPumpTripped} label="Feed pump trip" title="The deaerator level fell below low-low: open the pump again once the level is back" />
+          <Lamp
+            lit={feedPumpTripped}
+            label="Feed pump trip"
+            title="The deaerator level fell below low-low: open the pump again once the level is back"
+          />
         </div>
 
-        <div className="board-group board-group-plain">
-          <h3 className="board-group-title">Vents</h3>
-          <div className="board-group-cols">
-            <div className="board-instrument">
-              <span className="board-readout-label">Start-up vent</span>
-              <LensButton pressed={startUpVentOpen} onClick={toggleDeaeratorVent} widest="CLOSE">
-                {startUpVentOpen ? "CLOSE" : "OPEN"}
-              </LensButton>
+        <div className="board-deaerator-side">
+          <div className="board-group board-group-plain">
+            <h3 className="board-group-title">Vents</h3>
+            <div className="board-group-cols">
+              <div className="board-instrument">
+                <span className="board-readout-label">Start-up vent</span>
+                <LensButton pressed={startUpVentOpen} onClick={toggleDeaeratorVent} widest="CLOSE">
+                  {startUpVentOpen ? "CLOSE" : "OPEN"}
+                </LensButton>
+                <Lamp
+                  lit={safeToClose}
+                  tone="ok"
+                  label="Safe to close"
+                  title="The air is out: the start-up vent can be closed"
+                />
+              </div>
+              <div className="board-instrument">
+                <span className="board-readout-label">Relief valve</span>
+                <Lamp lit={reliefValveOpen} label="Relief open" title="The 4 bar relief valve is lifted" />
+              </div>
+            </div>
+            <p className="board-warning" role="status" aria-label="Deaerator warning">
+              {warning}
+            </p>
+          </div>
+
+          <div className="board-group board-group-plain board-steam-source">
+            <h3 className="board-group-title">Steam source</h3>
+            <div className="board-group-cols">
               <Lamp
-                lit={safeToClose}
+                lit={letDownFlow > STEAM_SOURCE_MIN_FLOW}
                 tone="ok"
-                label="Safe to close"
-                title="The air is out: the start-up vent can be closed"
+                label="Boiler"
+                title="The let-down valve takes steam from the boiler"
+              />
+              <Lamp
+                lit={extractionFlow > STEAM_SOURCE_MIN_FLOW}
+                tone="ok"
+                label="Turbine"
+                title="The extraction tap takes steam from the turbine"
               />
             </div>
-            <div className="board-instrument">
-              <span className="board-readout-label">Relief valve</span>
-              <Lamp lit={reliefValveOpen} label="Relief open" title="The 4 bar relief valve is lifted" />
-            </div>
           </div>
-          <p className="board-warning" role="status" aria-label="Deaerator warning">
-            {warning}
-          </p>
         </div>
       </div>
     </PanelFrame>
