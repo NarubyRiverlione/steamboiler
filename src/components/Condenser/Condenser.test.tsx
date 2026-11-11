@@ -90,9 +90,9 @@ describe("Condenser page", () => {
     expect(screen.getByLabelText("Hotwell level").textContent).toBe("0.70")
   })
 
-  it("shows the pump flows in l/s and no % open", () => {
+  it("shows the pump flows in kg/s and no % open", () => {
     renderCondenser({ condensationPumpValvePosition: 0.5, recirculationPumpValvePosition: 1 })
-    expect(screen.getByLabelText("Condensation pump flow").textContent).toBe("150.0 l/s")
+    expect(screen.getByLabelText("Condensation pump flow").textContent).toBe("149.7 kg/s")
     expect(screen.queryByLabelText("Condensation pump position")).toBeNull()
     expect(screen.queryByLabelText("Recirculation pump position")).toBeNull()
   })
