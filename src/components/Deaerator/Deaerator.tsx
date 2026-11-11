@@ -59,15 +59,12 @@ function Deaerator() {
               <span>Saturation pressure</span>
               <Display label="Saturation pressure" text={`${saturationPressure.toFixed(2)} bar`} widest="9.99 bar" />
             </div>
-            <span className="board-readout-values">
-              <Lamp lit={reliefValveOpen} label="Relief open" title="The 4 bar relief valve is lifted" />
-            </span>
           </div>
         </>
       }
       title="Deaerator"
     >
-      <div className="board-condenser-top">
+      <div className="board-condenser-top board-deaerator-top">
         <div className="board-cluster">
           <div className="board-instrument">
             <span className="board-instrument-label">Pressure</span>
@@ -87,27 +84,6 @@ function Deaerator() {
         </div>
 
         <div className="board-group">
-          <h3 className="board-group-title">Start-up Vent</h3>
-          <div className="board-group-cols">
-            <div className="board-instrument">
-              <span className="board-readout-label">Vent to atmosphere</span>
-              <LensButton pressed={startUpVentOpen} onClick={toggleDeaeratorVent} widest="CLOSE">
-                {startUpVentOpen ? "CLOSE" : "OPEN"}
-              </LensButton>
-              <Lamp
-                lit={safeToClose}
-                tone="ok"
-                label="Safe to close"
-                title="The air is out: the start-up vent can be closed"
-              />
-            </div>
-          </div>
-          <p className="board-warning" role="status" aria-label="Deaerator warning">
-            {warning}
-          </p>
-        </div>
-
-        <div className="board-group">
           <h3 className="board-group-title">Boiler Feed Pump</h3>
           <ValveControl
             Label="Feed pump"
@@ -120,6 +96,31 @@ function Deaerator() {
             cbAdjust={adjustFeedPumpValvePosition}
           />
           <Lamp lit={feedPumpTripped} label="Feed pump trip" title="The deaerator level fell below low-low: open the pump again once the level is back" />
+        </div>
+
+        <div className="board-group board-group-plain">
+          <h3 className="board-group-title">Vents</h3>
+          <div className="board-group-cols">
+            <div className="board-instrument">
+              <span className="board-readout-label">Start-up vent</span>
+              <LensButton pressed={startUpVentOpen} onClick={toggleDeaeratorVent} widest="CLOSE">
+                {startUpVentOpen ? "CLOSE" : "OPEN"}
+              </LensButton>
+              <Lamp
+                lit={safeToClose}
+                tone="ok"
+                label="Safe to close"
+                title="The air is out: the start-up vent can be closed"
+              />
+            </div>
+            <div className="board-instrument">
+              <span className="board-readout-label">Relief valve</span>
+              <Lamp lit={reliefValveOpen} label="Relief open" title="The 4 bar relief valve is lifted" />
+            </div>
+          </div>
+          <p className="board-warning" role="status" aria-label="Deaerator warning">
+            {warning}
+          </p>
         </div>
       </div>
     </PanelFrame>

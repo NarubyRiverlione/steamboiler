@@ -717,6 +717,15 @@ path.board-zone {
   border-radius: 6px;
 }
 
+/* A group without its outline (Deaerator start-up vent) */
+.board-group.board-group-plain {
+  border: none;
+}
+
+.board-group-plain .board-lens-button + .board-lamp {
+  margin-top: 0.5rem;
+}
+
 .board-group .board-group-title {
   margin: 0;
 }
@@ -1081,6 +1090,11 @@ path.board-zone {
   grid-template-columns: 1fr 1.6fr;
   gap: 1rem;
   align-items: start;
+}
+
+/* Deaerator page: pressure and level, the feed pump centred on the panel, the vents */
+.board-condenser-top.board-deaerator-top {
+  grid-template-columns: 1fr auto 1fr;
 }
 
 .board-condenser-bottom {
