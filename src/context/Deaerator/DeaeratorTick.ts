@@ -97,6 +97,40 @@ export function letDownCapacity(boilerPressure: number, deaeratorPressure: numbe
   return CstDeaerator.LetDownCapacity * valveFlowFactor(boilerPressure) * choke
 }
 
+// The steam the let-down valve passes (kg): what the demand needs after the tap, limited by the valve, the boiler burner
+// trip (the valve is shut while it holds) and the steam the boiler holds
+function letDownSteam(
+  state: DeaeratorState,
+  boiler: DeaeratorInput["boiler"],
+  demand: number,
+  tapHeat: number,
+  letDownEnthalpy: number,
+): number {
+  if (demand <= 0) return 0
+  const valveMass: number = boiler.lowLevel ? 0 : letDownCapacity(boiler.pressure, state.pressure) * DeltaTime
+  const needed: number = Math.max(0, demand - tapHeat) / (letDownEnthalpy - SetEnthalpy)
+  return Math.min(needed, valveMass, Math.max(0, boiler.steamMass))
+}
+
+// Vents and relief (ADR 0038): flows from the pressure at the start of the tick, the mixture of air and steam of the gas space
+function ventLoss(state: DeaeratorState): { reliefOpen: boolean; airOut: number; steamOut: number } {
+  const gas: VentGas = ventGasOf(state.airPressure, state.saturationPressure, state.temperature)
+  const reliefOpen: boolean = state.reliefValveOpen ? state.pressure > CstDeaerator.ReliefReseatPressure : state.pressure >= CstDeaerator.ReliefPressure
+  const ventArea: number = CstDeaerator.OperatingVentArea + (state.startUpVentOpen ? CstDeaerator.StartUpVentArea : 0)
+  const reliefFlow: number = reliefOpen ? (CstDeaerator.ReliefCapacity * state.pressure) / CstDeaerator.ReliefPressure : 0
+  const ventedMixture: number = (orificeFlow(ventArea, gas.density, state.pressure) + reliefFlow) * DeltaTime
+  return { reliefOpen, airOut: Math.min(state.airMass, ventedMixture * gas.airShare), steamOut: ventedMixture * (1 - gas.airShare) }
+}
+
+// Feed pump: the valve position in litres, taken at the water temperature; low-low shuts it, as the hotwell's pump (ADR 0011)
+function feedPump(state: DeaeratorState, temperature: number, mixedMass: number, boilerRoom: number): { tripped: boolean; position: number; outflowMass: number } {
+  const tripped: boolean = state.feedPumpTripped || deaeratorLevel(state.waterVolume) < CstDeaerator.LowLowLevel
+  const position: number = tripped ? 0 : state.feedPumpValvePosition
+  const pumpMass: number = waterMassOf(position * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate * DeltaTime, temperature)
+  return { tripped, position, outflowMass: Math.max(0, Math.min(pumpMass, mixedMass, boilerRoom)) }
+}
+
+
 /**
  * One tick of the vessel. The heat that brings the stored water and the inflow to the setpoint is the steam demand; the
  * tap supplies it first, the let-down valve the rest. All the steam condenses into the tank; the feed pump takes the water
@@ -114,12 +148,7 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
 
   const letDownEnthalpy: number = getSaturationEnthalpies(boiler.pressure).vapor
   const tapMass: number = Math.max(0, tapSteam.mass)
-  let letDownMass = 0
-  if (demand > 0) {
-    const remaining: number = demand - tapMass * (tapSteam.enthalpy - SetEnthalpy)
-    const valveMass: number = boiler.lowLevel ? 0 : letDownCapacity(boiler.pressure, state.pressure) * DeltaTime
-    letDownMass = Math.min(Math.max(0, remaining) / (letDownEnthalpy - SetEnthalpy), valveMass, Math.max(0, boiler.steamMass))
-  }
+  const letDownMass: number = letDownSteam(state, boiler, demand, tapMass * (tapSteam.enthalpy - SetEnthalpy), letDownEnthalpy)
   const steamMass: number = tapMass + letDownMass
 
   // Perfect mixing: everything ends at one enthalpy
@@ -132,25 +161,15 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
     letDownMass * letDownEnthalpy
   const temperature: number = getLiquidTemperature(totalEnthalpy / totalMass)
 
-  // Vents and relief (ADR 0038): flows from the pressure at the start of the tick, the mixture of air and steam of the gas space
-  const gas: VentGas = ventGasOf(state.airPressure, state.saturationPressure, state.temperature)
-  const reliefOpen: boolean = state.reliefValveOpen ? state.pressure > CstDeaerator.ReliefReseatPressure : state.pressure >= CstDeaerator.ReliefPressure
-  const ventArea: number = CstDeaerator.OperatingVentArea + (state.startUpVentOpen ? CstDeaerator.StartUpVentArea : 0)
-  const reliefFlow: number = reliefOpen ? (CstDeaerator.ReliefCapacity * state.pressure) / CstDeaerator.ReliefPressure : 0
-  const ventedMixture: number = (orificeFlow(ventArea, gas.density, state.pressure) + reliefFlow) * DeltaTime
-  const airOut: number = Math.min(state.airMass, ventedMixture * gas.airShare)
-  const steamOut: number = ventedMixture * (1 - gas.airShare)
+  // Vents and relief (ADR 0038)
+  const { reliefOpen, airOut, steamOut } = ventLoss(state)
 
   // The vented steam leaves the mixed water as saturated vapour: everything that is left is cooler by its latent heat
   const mixedMass: number = totalMass - steamOut
   const waterEnthalpy: number = (totalEnthalpy - steamOut * getSaturationEnthalpies(saturationPressureOf(temperature)).vapor) / (totalMass - steamOut)
   const waterTemperature: number = steamOut > 0 ? getLiquidTemperature(waterEnthalpy) : temperature
 
-  // Feed pump: the valve position in litres, taken at the water temperature; low-low shuts it, as the hotwell's pump (ADR 0011)
-  const feedPumpTripped: boolean = state.feedPumpTripped || deaeratorLevel(state.waterVolume) < CstDeaerator.LowLowLevel
-  const feedPumpValvePosition: number = feedPumpTripped ? 0 : state.feedPumpValvePosition
-  const pumpMass: number = waterMassOf(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate * DeltaTime, waterTemperature)
-  const outflowMass: number = Math.max(0, Math.min(pumpMass, mixedMass, boilerRoom))
+  const { tripped: feedPumpTripped, position: feedPumpValvePosition, outflowMass } = feedPump(state, waterTemperature, mixedMass, boilerRoom)
   const waterMass: number = mixedMass - outflowMass
   const waterVolume: number = waterVolumeOf(waterMass, waterTemperature)
   const airMass: number = state.airMass - airOut
