@@ -15,6 +15,7 @@ import { ValveControl } from "../board/ValveControl"
 const {
   CstCondenser: {
     TotalVolume,
+    HotwellNormalLevel,
     OptimalPressure,
     OptimalPressureBellWidth,
     VacuumLimit,
@@ -129,7 +130,7 @@ function Condenser() {
             </span>
           </div>
 
-          <LevelInstrument label="Hotwell level" fraction={hotwellLevel} change={smoothWaterChange} />
+          <LevelInstrument label="Hotwell level" fraction={hotwellLevel} change={smoothWaterChange} target={HotwellNormalLevel} />
         </div>
 
         <div className="board-group">

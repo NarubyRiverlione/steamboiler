@@ -8,12 +8,13 @@ type LevelGaugeProps = {
   readonly value: number // percent
   readonly zones?: readonly GaugeZone[]
   readonly ticks?: readonly number[]
+  readonly target?: number // percent, a line across the glass at the level the vessel should hold
 }
 
 const TOP = 14
 const BOTTOM = 176
 
-export function LevelGauge({ label, value, zones = [], ticks = [0, 50, 100] }: LevelGaugeProps) {
+export function LevelGauge({ label, value, zones = [], ticks = [0, 50, 100], target }: LevelGaugeProps) {
   const y = (p: number): number => BOTTOM - ((BOTTOM - TOP) * Math.min(100, Math.max(0, p))) / 100
   const level: number = y(value)
   return (
@@ -31,6 +32,9 @@ export function LevelGauge({ label, value, zones = [], ticks = [0, 50, 100] }: L
       <rect className="board-level-housing" x={8} y={TOP - 8} width={52} height={BOTTOM - TOP + 16} rx={6} />
       <rect className="board-level-glass" x={18} y={TOP} width={32} height={BOTTOM - TOP} />
       <rect className="board-level-fill" x={19} y={level} width={30} height={Math.max(0, BOTTOM - level)} />
+      {target !== undefined && (
+        <line className="board-level-target" data-testid="level-target" x1={14} y1={y(target)} x2={54} y2={y(target)} />
+      )}
       {zones.map((z: GaugeZone) => (
         <rect
           key={`${String(z.from)}-${String(z.to)}`}
