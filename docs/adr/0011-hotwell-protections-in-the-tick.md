@@ -13,7 +13,7 @@ The owner's 10% and 95% were first proposed as working setpoints. Real plants re
 
 - **10% and 95% as working setpoints:** rejected. The level would wander 85 points before anything reacted, the pump would run into cavitation before makeup helped, and 95% is a brim-full hotwell with flooded tubes.
 - **Everything in the operator:** rejected. A trip or clamp that the operator can leave out is not a protection; scenarios and the app must get the same behaviour.
-- **Alarms at 25% and 85%:** built in #59 as two rows of the annunciator list (`alarms.ts`), derived from the level with no state, deadband or latch: low below `HotwellLow` (25%), high from `HotwellHigh` (85%). The tick is unchanged.
+- **Alarms at 25% and 85%:** built in #59 as two rows of the annunciator list (`alarms.ts`), derived from the level with no state, deadband or latch in the sim (the tile latches in the UI, #116): low below `HotwellLow` (25%), high from `HotwellHigh` (85%). The tick is unchanged.
 - **Enlarging the hotwell, a deaerator-driven condensate trim, closing the condenser steam inlet on high-high:** out of scope. #53 already sized the hotwell, the deaerator of #119 ([ADR 0036](0036-deaerator-is-a-steam-heated-tank.md)) sits after the hotwell and changes none of its protections, and the steam-inlet claim is unverified.
 
 ## Consequences

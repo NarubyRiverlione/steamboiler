@@ -1,4 +1,4 @@
-/** Annunciator in the header: one tile per alarm flag, ACK and TEST. A tile opens the part that owns the alarm. */
+/** Annunciator in the header: one tile per alarm flag, ACK and RESET. A tile opens the part that owns the alarm. */
 
 import { useNavigate } from "react-router-dom"
 import { LensButton } from "../components/board/LensButton"
@@ -11,7 +11,7 @@ import type { AlarmSeverity } from "./alarms"
 const SEVERITY_CLASS: Record<AlarmSeverity, string> = { error: "board-tile-error", warning: "board-tile-warning" }
 
 function Annunciator() {
-  const { tiles, testing, acknowledge, setTesting } = useAnnunciator()
+  const { tiles, acknowledge, reset } = useAnnunciator()
   const navigate = useNavigate()
 
   return (
@@ -33,21 +33,9 @@ function Annunciator() {
         <LensButton small onClick={acknowledge}>
           ACK
         </LensButton>
-        {/* Held: lit from press to release (pointer, Space or Enter); a click alone does not toggle it */}
-        <span
-          onPointerDown={() => { setTesting(true); }}
-          onPointerUp={() => { setTesting(false); }}
-          onPointerLeave={() => { setTesting(false); }}
-          onKeyDown={(e) => {
-            if (e.key === " " || e.key === "Enter") setTesting(true)
-          }}
-          onKeyUp={() => { setTesting(false); }}
-          onBlur={() => { setTesting(false); }}
-        >
-          <LensButton small pressed={testing} onClick={() => undefined}>
-            TEST
-          </LensButton>
-        </span>
+        <LensButton small onClick={reset}>
+          RESET
+        </LensButton>
       </div>
     </div>
   )
