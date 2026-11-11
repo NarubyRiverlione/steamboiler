@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject, type SVGProps } from "react"
-import { clampTravel, knobValueFromDrag, SWEEP_END } from "./knobTravel"
+import { clampTravel, DRAG_FULL_SWEEP_PX, knobValueFromDrag, PUMP_DRAG_FULL_SWEEP_PX, SWEEP_END } from "./knobTravel"
 import "./board.css"
 
 type AbsoluteKnobProps = {
@@ -189,8 +189,8 @@ const DEFAULT_STEP = 5
 const clampTo = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v))
 
 // Value after a horizontal drag, on the same travel maths as the centre-zero knob (right raises, left lowers)
-function valueFromDrag(start: number, dx: number, min: number, max: number): number {
-  const travel: number = knobValueFromDrag(((start - min) / (max - min)) * 2 - 1, dx)
+function valueFromDrag(start: number, dx: number, min: number, max: number, fullSweepPx: number): number {
+  const travel: number = knobValueFromDrag(((start - min) / (max - min)) * 2 - 1, dx, fullSweepPx)
   return min + ((travel + 1) / 2) * (max - min)
 }
 
@@ -219,6 +219,7 @@ function useAbsoluteInput(
   range: Range,
   step: number,
   onChange: ((value: number) => void) | undefined,
+  fullSweepPx: number,
 ): SVGProps<SVGSVGElement> & { ref: RefObject<SVGSVGElement | null> } {
   const ref = useRef<SVGSVGElement>(null)
   const drag = useRef<{ startX: number; startValue: number } | null>(null)
@@ -259,7 +260,7 @@ function useAbsoluteInput(
     },
     onPointerMove: (e: PointerEvent<SVGSVGElement>): void => {
       if (drag.current === null) return
-      onChange(valueFromDrag(drag.current.startValue, e.clientX - drag.current.startX, min, max))
+      onChange(valueFromDrag(drag.current.startValue, e.clientX - drag.current.startX, min, max, fullSweepPx))
     },
     onPointerUp: release,
     onPointerCancel: release,
@@ -300,7 +301,7 @@ function AbsoluteKnob({
 }: AbsoluteKnobProps) {
   const range: Range = { min, max }
   const clamped: number = clampTo(value, min, max)
-  const input = useAbsoluteInput(clamped, range, step, onChange)
+  const input = useAbsoluteInput(clamped, range, step, onChange, tone === "pump" ? PUMP_DRAG_FULL_SWEEP_PX : DRAG_FULL_SWEEP_PX)
   const grips: number[] = Array.from({ length: GRIP_COUNT }, (_: unknown, i: number) => i)
   return (
     <svg

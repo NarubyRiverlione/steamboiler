@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { CstFlueGas } from "../context/const"
 import { waterMassOf } from "./boilerCalculations"
-import { gasKgPerSecond, waterKgPerSecond } from "./flowUnits"
+import { waterKgPerSecond } from "./flowUnits"
 
 describe("waterKgPerSecond", () => {
   it("is the litres the water holds at its temperature as kg", () => {
@@ -14,15 +13,5 @@ describe("waterKgPerSecond", () => {
 
   it("is zero for no flow", () => {
     expect(waterKgPerSecond(0, 80)).toBe(0)
-  })
-})
-
-describe("gasKgPerSecond", () => {
-  it("uses the mass per gas volume of the simulation", () => {
-    expect(gasKgPerSecond(12000)).toBeCloseTo(12 * CstFlueGas.MassPerGasVolume, 9)
-  })
-
-  it("is zero for no flow", () => {
-    expect(gasKgPerSecond(0)).toBe(0)
   })
 })

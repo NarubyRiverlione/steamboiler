@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { Knob } from "./Knob"
-import { knobValueFromDrag } from "./knobTravel"
+import { knobValueFromDrag, PUMP_DRAG_FULL_SWEEP_PX } from "./knobTravel"
 
 const DEAD_ZONE = 0.05
 
@@ -121,6 +121,11 @@ describe("knobValueFromDrag", () => {
     expect(knobValueFromDrag(0.5, -30)).toBe(0)
   })
 
+  it("takes a longer drag for the same change on a pump knob", () => {
+    expect(knobValueFromDrag(0, 90, PUMP_DRAG_FULL_SWEEP_PX)).toBe(0.5)
+    expect(knobValueFromDrag(0, 30, PUMP_DRAG_FULL_SWEEP_PX)).toBe(0.17)
+  })
+
   it("stops at the ends of the travel", () => {
     expect(knobValueFromDrag(0.5, 500)).toBe(1)
     expect(knobValueFromDrag(-0.5, -500)).toBe(-1)
@@ -148,5 +153,16 @@ describe("Knob absolute", () => {
     fireEvent.pointerMove(knob, { clientX: -30, clientY: 0 })
     fireEvent.pointerUp(knob, { pointerId: 1 })
     expect(onChange.mock.calls).toEqual([[100], [0], [93], [73]])
+  })
+
+  it("turns a pump knob a third as far for the same drag", () => {
+    const onChange = vi.fn()
+    render(<Knob label="P" value={50} min={0} max={100} ends={["0", "100"]} onChange={onChange} tone="pump" />)
+    const knob: HTMLElement = screen.getByRole("slider", { name: "P" })
+    knob.setPointerCapture = vi.fn()
+    fireEvent.pointerDown(knob, { clientX: 0, clientY: 0, pointerId: 1 })
+    fireEvent.pointerMove(knob, { clientX: 90, clientY: 0 })
+    fireEvent.pointerUp(knob, { pointerId: 1 })
+    expect(onChange.mock.calls).toEqual([[75]])
   })
 })
