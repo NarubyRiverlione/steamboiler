@@ -67,11 +67,17 @@ describe("keyboard", () => {
     expect(where()).toBe("/")
   })
 
-  it("leaves the keys to a field or knob in use", () => {
+  it("leaves the keys to a field in use", () => {
     renderAt("/boiler", undefined, <input aria-label="field" />)
     fireEvent.keyDown(screen.getByLabelText("field"), { key: "ArrowRight", bubbles: true })
     fireEvent.keyDown(screen.getByLabelText("field"), { key: "Escape", bubbles: true })
     expect(where()).toBe("/boiler")
+  })
+
+  it("lets Left and Right change the page from a focused knob", () => {
+    renderAt("/boiler", undefined, <div role="slider" tabIndex={0} aria-label="knob" aria-valuenow={0} />)
+    fireEvent.keyDown(screen.getByRole("slider", { name: "knob" }), { key: "ArrowRight", bubbles: true })
+    expect(where()).toBe("/deaerator")
   })
 
   it("leaves the arrows to a focused button but not Esc", () => {

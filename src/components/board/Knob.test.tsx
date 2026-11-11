@@ -60,21 +60,21 @@ describe("Knob centre-zero", () => {
     expect(container.querySelector(".board-knob-arc")).not.toBeNull()
   })
 
-  it("turns with the arrow keys and centres with Home", () => {
+  it("turns with Up and Down, centres with Home and ignores Left and Right", () => {
     const onChange = vi.fn()
     const knob: HTMLElement = renderRateKnob(0.2, onChange)
-    fireEvent.keyDown(knob, { key: "ArrowRight" })
     fireEvent.keyDown(knob, { key: "ArrowUp" })
-    fireEvent.keyDown(knob, { key: "ArrowLeft" })
     fireEvent.keyDown(knob, { key: "ArrowDown" })
     fireEvent.keyDown(knob, { key: "Home" })
     fireEvent.keyDown(knob, { key: "a" })
-    expect(onChange.mock.calls).toEqual([[0.3], [0.3], [0.1], [0.1], [0]])
+    fireEvent.keyDown(knob, { key: "ArrowRight" })
+    fireEvent.keyDown(knob, { key: "ArrowLeft" })
+    expect(onChange.mock.calls).toEqual([[0.3], [0.1], [0]])
   })
 
   it("stops at the ends of the travel", () => {
     const onChange = vi.fn()
-    fireEvent.keyDown(renderRateKnob(0.95, onChange), { key: "ArrowRight" })
+    fireEvent.keyDown(renderRateKnob(0.95, onChange), { key: "ArrowUp" })
     expect(onChange).toHaveBeenCalledWith(1)
   })
 
@@ -143,6 +143,7 @@ describe("Knob absolute", () => {
     const onChange = vi.fn()
     render(<Knob label="K" value={98} min={0} max={100} ends={["0", "100"]} step={5} onChange={onChange} />)
     const knob: HTMLElement = screen.getByRole("slider", { name: "K" })
+    fireEvent.keyDown(knob, { key: "ArrowUp" })
     fireEvent.keyDown(knob, { key: "ArrowRight" })
     fireEvent.keyDown(knob, { key: "Home" })
     fireEvent.keyDown(knob, { key: "x" })

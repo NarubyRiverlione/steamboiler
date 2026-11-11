@@ -86,9 +86,7 @@ function CentreZeroKnob({ label, value, deadZone, onChange, size = 150 }: Omit<C
 
   const onKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
     const steps: Record<string, number | undefined> = {
-      ArrowRight: value + RATE_STEP,
       ArrowUp: value + RATE_STEP,
-      ArrowLeft: value - RATE_STEP,
       ArrowDown: value - RATE_STEP,
       Home: 0,
     }
@@ -185,6 +183,7 @@ export function Knob(props: KnobProps) {
 }
 
 const DEFAULT_STEP = 5
+const WHEEL_INTERVAL_MS = 50
 
 const clampTo = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v))
 
@@ -202,9 +201,7 @@ const angleOf = (v: number, { min, max }: Range): number =>
 // Target value of a key, or undefined when the key does nothing
 function keyTarget(key: string, value: number, step: number, { min, max }: Range): number | undefined {
   const targets: Record<string, number | undefined> = {
-    ArrowRight: value + step,
     ArrowUp: value + step,
-    ArrowLeft: value - step,
     ArrowDown: value - step,
     Home: min,
     End: max,
@@ -223,6 +220,7 @@ function useAbsoluteInput(
 ): SVGProps<SVGSVGElement> & { ref: RefObject<SVGSVGElement | null> } {
   const ref = useRef<SVGSVGElement>(null)
   const drag = useRef<{ startX: number; startValue: number } | null>(null)
+  const lastWheel = useRef<number>(0)
   const { min, max }: Range = range
 
   // The wheel listener is not passive, so the page does not scroll while the knob turns
@@ -231,6 +229,10 @@ function useAbsoluteInput(
     if (node === null || onChange === undefined) return
     const onWheel = (e: WheelEvent): void => {
       e.preventDefault()
+      // A trackpad swipe sends dozens of events: one step per WHEEL_INTERVAL_MS
+      const now: number = Date.now()
+      if (now - lastWheel.current < WHEEL_INTERVAL_MS) return
+      lastWheel.current = now
       onChange(clampTo(value + (e.deltaY < 0 ? step : -step), min, max))
     }
     node.addEventListener("wheel", onWheel, { passive: false })
