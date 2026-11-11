@@ -36,7 +36,7 @@ describe("toReportHtml", () => {
 
   test("has one panel per definition, grouped by subsystem", () => {
     expect(html.match(/<figure class="panel kind-/g)).toHaveLength(panels.length)
-    for (const group of ["Boiler", "Turbine", "Condenser", "Hotwell", "Loop"])
+    for (const group of ["Boiler", "Turbine", "Condenser", "Hotwell", "Deaerator", "Loop"])
       expect(html).toContain(`<h2>${group}</h2>`)
     for (const title of [
       "Temperature",
@@ -57,7 +57,7 @@ describe("toReportHtml", () => {
     panels.filter((p) => p.group === group && p.row === row).map((p) => p.title)
 
   test("renders each declared row on its own line, in the layout of the tickets", () => {
-    expect(html.match(/<div class="grid-row"/g)).toHaveLength(8)
+    expect(html.match(/<div class="grid-row"/g)).toHaveLength(10)
     expect(rowTitles("Turbine", 1)).toEqual(["Bypass valve", "Turbine valve", "Steam flow"])
     expect(rowTitles("Turbine", 2)).toEqual(["RPM", "Frequency", "Electric output"])
     expect(rowTitles("Turbine", 3)).toEqual(["Extraction steam", "Tap pressure"])
@@ -92,6 +92,12 @@ describe("toReportHtml", () => {
     expect(html).toContain('querySelectorAll(".panel")')
   })
 
+  test("header has a lock-cursor switch, toggled by L and by clicking a chart", () => {
+    expect(html).toContain('<input type="checkbox" id="lock" role="switch">')
+    expect(html).toContain('e.key.toLowerCase() !== "l"')
+    expect(html).toContain('svg.addEventListener("click"')
+  })
+
   test("drops the combined Loop flows and valve panels but keeps the water inventory", () => {
     const loop = panels.filter((p) => p.group === "Loop").map((p) => p.title)
     expect(loop).toEqual(["Water inventory"])
@@ -116,6 +122,12 @@ describe("toReportHtml", () => {
         Condenser: { ...state.Condenser, hotwellWaterVolume: CstSimulation.CstCondenser.TotalVolume },
       }),
     ).toBe(100)
+  })
+
+  test("the deaerator values have their own group, in two rows", () => {
+    const deaerator = panels.filter((p) => p.group === "Deaerator")
+    expect(deaerator.map((p) => p.row)).toEqual([1, 1, 1, 1, 2, 2, 2])
+    expect(deaerator.find((p) => p.title === "Deaerator pressure")?.limit).toBe(4)
   })
 
   test("valves are plotted in percent and the hotwell is gone from the condenser group", () => {
@@ -147,9 +159,9 @@ describe("toReportHtml", () => {
 
   test("every flow chart has its own colour, different from the volume blue", () => {
     const flows = panels.filter((p) => p.kind === "flow")
-    expect(flows).toHaveLength(6)
+    expect(flows).toHaveLength(7)
     const palettes = flows.map((p) => p.palette)
-    expect(new Set(palettes).size).toBe(6)
+    expect(new Set(palettes).size).toBe(7)
     expect(palettes).not.toContain(undefined)
     for (const palette of palettes) expect(html).toContain(`.kind-${String(palette)} {`)
     expect(html).toContain('<figure class="panel kind-flowIntake"')
@@ -196,9 +208,11 @@ describe("toReportHtml heating rate", () => {
     expect(heatingRate.series[0].value(state)).toBeCloseTo(state.Boiler.heatingRate * 60, 9)
   })
 
-  test("draws the 24 K/min limit as a line on that chart only", () => {
+  test("draws a limit line only on the charts that declare one", () => {
     expect(heatingRate?.limit).toBe(24)
-    expect(html.match(/<line class="limit"/g)).toHaveLength(1)
+    expect(html.match(/<line class="limit"/g)).toHaveLength(
+      panels.filter((p) => p.limit !== undefined).length,
+    )
   })
 
   test("keeps the limit inside the plot even when the rate stays far below it", () => {

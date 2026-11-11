@@ -23,7 +23,9 @@ panel list is the `panels` array), `sim/scenarios/` (one file per scenario, regi
 ## Report
 
 The report is hand-rolled SVG (no CDN, opens offline). Hovering any panel moves a synced
-crosshair across all panels; dashed lines mark operator actions and shaded bands mark relief valve
+crosshair across all panels. Clicking a chart, pressing `L` or flipping the header's **Lock cursor**
+switch freezes the crosshair and readouts so you can scroll to other panels; flip the switch or press `L` to
+unlock. Dashed lines mark operator actions and shaded bands mark relief valve
 lifts, which are also listed with open and close time and vented mass. A panel with a `limit` draws it as a red
 dashed line and keeps it on the axis: the Boiler **Heating rate** chart (K/min) shows the 24 K/min
 heating-rate limit. Lifts are recorded per tick
@@ -31,7 +33,7 @@ heating-rate limit. Lifts are recorded per tick
 `pnpm sim:serve` serves it on `0.0.0.0:4174` (`PORT` to override) and prints the LAN URLs; the
 file is re-read per request, so re-run `pnpm sim` and refresh. `pnpm sim:view` does both.
 
-Panels are grouped Boiler, Turbine, Condenser, Hotwell and Loop (the list is the `panels` array in
+Panels are grouped Boiler, Turbine, Condenser, Hotwell, Deaerator and Loop (the list is the `panels` array in
 `sim/report.ts`). The **Turbine** speed row reads RPM, Frequency (derived from rpm), Electric output (the load carried). The **Turbine** steam flow panel uses semantic colours (bypass red, turbine
 green, total blue); every other flow chart is one hue per chart. The **Loop** group's water
 inventory shows a total that should stay flat
