@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
+import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
 import Condenser from "./Condenser"
 
 type Ctx = ContextType<typeof PowerPlantContext>
@@ -29,44 +30,55 @@ function renderCondenser(patch: Partial<PowerPlantState["Condenser"]> = {}) {
   return fns
 }
 
-function clickValve(label: string, direction: "Open" | "Close"): void {
-  const valve: HTMLElement =
-    screen.getByRole("meter", { name: `${label} knob` }).closest(".board-valve") ?? document.body
-  fireEvent.click(within(valve).getByRole("button", { name: direction }))
+// Turn a valve knob to an end; the first ramp tick dispatches one ramp step (#41)
+function turnValve(label: string, key: "End" | "Home"): void {
+  fireEvent.keyDown(screen.getByRole("slider", { name: `${label} knob` }), { key })
+  act(() => {
+    vi.advanceTimersByTime(RAMP_TICK_MS)
+  })
 }
 
 describe("Condenser page", () => {
   it("toggles the air extraction pump and the SJAE, showing their state", () => {
     const fns = renderCondenser({ isAirExtractionPumpEnabled: true, isSjaeEnabled: false })
-    const car: HTMLElement = screen.getByRole("button", { name: "STOP" })
-    expect(car.getAttribute("aria-pressed")).toBe("true")
+    const car: HTMLElement = screen.getByRole("switch", { name: "Air extraction pump" })
+    expect(car.getAttribute("aria-checked")).toBe("true")
     fireEvent.click(car)
-    const sjae: HTMLElement = screen.getByRole("button", { name: "ENABLE" })
-    expect(sjae.getAttribute("aria-pressed")).toBe("false")
+    const sjae: HTMLElement = screen.getByRole("switch", { name: "Steam jet air extraction" })
+    expect(sjae.getAttribute("aria-checked")).toBe("false")
     fireEvent.click(sjae)
     expect(fns.toggleAirExtractionPump).toHaveBeenCalledTimes(1)
     expect(fns.toggleSjae).toHaveBeenCalledTimes(1)
   })
 
-  it("steps each of the five valves with its own step", () => {
-    const fns = renderCondenser()
-    clickValve("SJAE valve", "Open")
-    clickValve("Recirculation pump", "Close")
-    clickValve("Condensation pump", "Open")
-    clickValve("Makeup", "Open")
-    clickValve("Reject", "Close")
-    expect(fns.adjustSjaeValvePosition).toHaveBeenCalledWith(0.05)
-    expect(fns.adjustRecirculationPumpValvePosition).toHaveBeenCalledWith(-0.05)
-    expect(fns.adjustCondensationPumpValvePosition).toHaveBeenCalledWith(0.05)
-    expect(fns.adjustMakeupValvePosition).toHaveBeenCalledWith(0.05)
-    expect(fns.adjustRejectValvePosition).toHaveBeenCalledWith(-0.05)
+  it("turns each of the five valve knobs and ramps its own action", () => {
+    vi.useFakeTimers()
+    const fns = renderCondenser({
+      sjaeValvePosition: 0.5,
+      recirculationPumpValvePosition: 0.5,
+      condensationPumpValvePosition: 0.5,
+      makeupValvePosition: 0.5,
+      rejectValvePosition: 0.5,
+    })
+    turnValve("SJAE valve", "End")
+    turnValve("Recirculation pump", "Home")
+    turnValve("Condensation pump", "End")
+    turnValve("Makeup", "End")
+    turnValve("Reject", "Home")
+    expect(fns.adjustSjaeValvePosition).toHaveBeenCalledWith(RAMP_STEP)
+    expect(fns.adjustRecirculationPumpValvePosition).toHaveBeenCalledWith(-RAMP_STEP)
+    expect(fns.adjustCondensationPumpValvePosition).toHaveBeenCalledWith(RAMP_STEP)
+    expect(fns.adjustMakeupValvePosition).toHaveBeenCalledWith(RAMP_STEP)
+    expect(fns.adjustRejectValvePosition).toHaveBeenCalledWith(-RAMP_STEP)
+    vi.useRealTimers()
   })
 
   it("shows flow rates of the valves that have one", () => {
-    renderCondenser({ recirculationPumpValvePosition: 0.5, makeupValvePosition: 0.2, rejectValvePosition: 1 })
-    expect(screen.getByLabelText("Recirculation pump flow").textContent).toBe("3700.0 l/s")
-    expect(screen.getByLabelText("Makeup flow").textContent).toBe("10.0 l/s")
-    expect(screen.getByLabelText("Reject flow").textContent).toBe("50.0 l/s")
+    renderCondenser({ hotwellTemperature: 40, recirculationPumpValvePosition: 0.5, condensationPumpValvePosition: 0.5, makeupValvePosition: 0.2, rejectValvePosition: 1 })
+    expect(screen.getByLabelText("Condensation pump flow").textContent).toBe("148.8 kg/s")
+    expect(screen.getByLabelText("Recirculation pump flow").textContent).toBe("3693.4 kg/s")
+    expect(screen.getByLabelText("Makeup flow").textContent).toBe("9.9 kg/s")
+    expect(screen.getByLabelText("Reject flow").textContent).toBe("49.6 kg/s")
   })
 
   it("has the pressure gauge and the hotwell level gauge", () => {
@@ -75,8 +87,29 @@ describe("Condenser page", () => {
     expect(screen.getByRole("meter", { name: "Hotwell level gauge" }).getAttribute("aria-valuenow")).toBe(
       "70",
     )
-    expect(screen.getByLabelText("Hotwell level").textContent).toBe("0.7")
-    expect(screen.getByLabelText("Hotwell level change").textContent).toContain("Δ")
+    expect(screen.getByLabelText("Hotwell level").textContent).toBe("0.70")
+  })
+
+  it("shows the pump flows in kg/s and no % open", () => {
+    renderCondenser({ condensationPumpValvePosition: 0.5, recirculationPumpValvePosition: 1 })
+    expect(screen.getByLabelText("Condensation pump flow").textContent).toBe("149.7 kg/s")
+    expect(screen.queryByLabelText("Condensation pump position")).toBeNull()
+    expect(screen.queryByLabelText("Recirculation pump position")).toBeNull()
+  })
+
+  it("shows the hotwell level change in kg/s, + when filling", () => {
+    renderCondenser({ deltaWaterMass: 0.5 })
+    expect(screen.getByLabelText("Hotwell level change").textContent).toBe("+5.0 kg/s")
+  })
+
+  it("shows a draining hotwell with a minus sign", () => {
+    renderCondenser({ deltaWaterMass: -0.25 })
+    expect(screen.getByLabelText("Hotwell level change").textContent).toBe("-2.5 kg/s")
+  })
+
+  it("shows no sign for a hotwell change that rounds to zero", () => {
+    renderCondenser({ deltaWaterMass: -0.0001 })
+    expect(screen.getByLabelText("Hotwell level change").textContent).toBe("0.0 kg/s")
   })
 
   it("lights the pressure High and Low lamps outside the band", () => {
@@ -92,8 +125,7 @@ describe("Condenser page", () => {
   })
 
   it("shows the status readouts", () => {
-    renderCondenser({ steamMass: 1234.4, hotwellTemperature: 41.26, pressure: 31.2, returnRate: 12.34 })
-    expect(screen.getByLabelText("Steam volume").textContent).toBe("1234 l")
+    renderCondenser({ hotwellTemperature: 41.26, pressure: 31.2, returnRate: 12.34 })
     expect(screen.getByLabelText("Hotwell temperature").textContent).toBe("41.3 °C")
     expect(screen.getByLabelText("Pressure").textContent).toBe("31 mBar")
     expect(screen.getByLabelText("Return flow").textContent).toBe("12.3 kg")

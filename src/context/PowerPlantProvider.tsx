@@ -83,6 +83,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       payload: { isAirExtractionPumpEnabled: !state.Condenser.isAirExtractionPumpEnabled },
     })
   }
+  const toggleDeaeratorVent = () => {
+    dispatch({ type: "TOGGLE_DEAERATOR_VENT" })
+  }
   const toggleSjae = () => {
     dispatch({
       type: "SET_SJAE_ENABLED",
@@ -106,6 +109,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
       payload: { condensationPumpValvePosition: position },
     })
+  }
+  const adjustFeedPumpValvePosition = (position: number) => {
+    dispatch({ type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: position } })
   }
   const adjustMakeupValvePosition = (position: number) => {
     dispatch({ type: "SET_MAKEUP_VALVE_POSITION", payload: { makeupValvePosition: position } })
@@ -135,6 +141,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         selectRunUpPoint,
         setLoadSetpoint,
         toggleGeneratorBreaker,
+        // deaerator actions
+        toggleDeaeratorVent,
+        adjustFeedPumpValvePosition,
         // condenser actions
         toggleAirExtractionPump,
         toggleSjae,

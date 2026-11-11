@@ -13,13 +13,13 @@ import PowerPlantState from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
 import { holdLoop } from "./loop-operator"
 import { atWorkingPressure } from "./pressure-hold"
-import { heatUp, openMainSteam } from "./steps"
+import { heatUp, openMainSteam, startUpVent } from "./steps"
 
 const { RunUpPoints } = CstSimulation.CstTurbine
 
 export const StartupSettings = {
   SettlingTime: 600, // sim-seconds in Hold at sync speed before the run ends: the same window turbine-sync judges
-  Duration: 5800, // sim-seconds: pressure build to ~1234 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~4836 s) and the settling time
+  Duration: 6500, // sim-seconds: pressure build to ~1870 s (the deaerator warm-up draws about 12 t of boiler steam, #119; ~1234 s before), the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5470 s) and the settling time
 }
 
 // At working pressure: from Free, select the first point above the speed and start Ramp up; in Hold at a point
@@ -37,8 +37,9 @@ function runUp({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
 // With steam flowing, the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md).
 // The boiler level hold waits for working pressure: the cold fill already holds the right mass (ADR 0018)
 export function startupOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
-  if (!state.Turbine.mainSteamValve) return []
-  return [...runUp(state), ...holdLoop(state, time, atWorkingPressure(state.Boiler.pressure))]
+  const vent: PowerPlantAction[] = startUpVent(state, time)
+  if (!state.Turbine.mainSteamValve) return vent
+  return [...vent, ...runUp(state), ...holdLoop(state, time, atWorkingPressure(state.Boiler.pressure))]
 }
 
 export const turbineRunup: Scenario = {

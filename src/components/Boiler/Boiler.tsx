@@ -6,9 +6,9 @@ import { CstSimulation } from "../../context/const"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
-import { LensButton } from "../board/LensButton"
+import { TurnSwitch } from "../board/TurnSwitch"
 import { Knob } from "../board/Knob"
-import { LevelGauge } from "../board/LevelGauge"
+import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 
@@ -19,6 +19,7 @@ const {
     ReliefClosePressure,
     HeatingRateLimit,
     BurnerLowLowLevel,
+    WorkingLevel,
     GasRateDeadZone,
   },
   CstTurbine: { ValveRatingPressure },
@@ -42,6 +43,7 @@ function Boiler() {
         gasFlow,
         gasRateCommand,
         waterVolume,
+        deltaWaterMass,
         temperature,
         pressure,
         energyDelta,
@@ -65,6 +67,7 @@ function Boiler() {
 
   const smoothPressure: number = useEMA(pressure, 0.01)
   const smoothEnergyDelta: number = useEMA(energyDelta / 1e3, 0.01)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.01)
   const [advanced, setAdvanced] = useState<boolean>(false)
   const gasTrend: string =
     gasRateCommand > GasRateDeadZone
@@ -214,33 +217,31 @@ function Boiler() {
             deadZone={GasRateDeadZone}
             onChange={setGasRate}
           />
-          <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} widest="12000 l/s" />
+          <Display label="Gas flow" text={`${gasFlow.toFixed(0)} L/s`} widest="99999 L/s" />
           <span className="board-rate-indicator" role="status" aria-label="Gas trend">
             {gasTrend}
           </span>
         </div>
 
         <div className="board-cluster">
-          <div className="board-instrument">
-            <span className="board-instrument-label">Water volume</span>
-            <LevelGauge
-              label="Drum level gauge"
-              value={(waterVolume / TotalVolume) * 100}
-              zones={LEVEL_ZONES}
-              ticks={LEVEL_TICKS}
-            />
-            <Display
-              label="Water volume"
-              text={`${waterVolume.toFixed(0)} l ${(waterVolume / TotalVolume).toFixed(2)}`}
-              widest="99999 l 1.00"
-            />
-          </div>
+          <LevelInstrument
+            label="Drum level"
+            fraction={waterVolume / TotalVolume}
+            change={smoothWaterChange}
+            zones={LEVEL_ZONES}
+            ticks={LEVEL_TICKS}
+            target={WorkingLevel}
+          />
           <div className="board-group">
             <h3 className="board-group-title">Water Valve Control</h3>
+            <TurnSwitch
+              label="Drain valve"
+              offLabel="CLOSED"
+              onLabel="OPEN"
+              on={drainValveOpen}
+              onToggle={toggleDrainValve}
+            />
             <span className="board-readout-label">Drain Valve</span>
-            <LensButton pressed={drainValveOpen} onClick={toggleDrainValve} widest="Closed">
-              {drainValveOpen ? "Open" : "Closed"}
-            </LensButton>
           </div>
         </div>
       </div>

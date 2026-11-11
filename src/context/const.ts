@@ -13,6 +13,7 @@ export const CstSimulation = {
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
     ReliefOpenPressure: 178, // bar, the relief valve lifts fully (2 bar margin for one tick's rise)
     ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
+    WorkingLevel: 0.5, // share of TotalVolume, the level the drum holds at 165 bar: the target line on the level gauge (ADR 0018)
     BurnerLowLowLevel: 0.2, // share of TotalVolume, below it the burner trips (UNVERIFIED estimate, see design-basis.md)
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
     MetalMass: 100e3, // kg of drum and tube steel, at the water temperature (one lump)
@@ -24,25 +25,23 @@ export const CstSimulation = {
   CstCondenser: {
     TotalVolume: 50e3, // liters (about 3 min of full-gas condensate below normal level, see design-basis.md)
     HotwellStartVolume: 35e3, // liter (70%, the normal level)
-    MaxVacuum: 1000, // mbar = minimum pressure 13 mbar absolute
-    VacuumDecayRate: 5, // mbar per second when pump is off
+    HotwellNormalLevel: 0.7, // share of TotalVolume, the target line on the level gauge (design-basis.md)
     OptimalPressure: 31, // mBar, centre of the band on the vacuum readout: the design vacuum (ADR 0032)
     OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
     VacuumLimit: 327, // mbar absolute, turbine trip above it (-0.7 kg/cm² gauge, see design-basis.md)
-    CAR_MaxVacuum: 800, // mbar vacuum  (70-90 kPa vacuum = 11-31 kPa absolute pressure)
-    CAR_TimeNeeded: 15, // seconds to reach max vacuum
-    SJAE_VacuumIncreaseRate: 10, // mbar per second at 100% valve position
-    SJAE_MaxPressureDifference: 20, // mbar above AirExtractionPump.MaxVacuum
+    ShellVolume: 450, // m³ steam space of the shell with the exhaust neck and casing (UNVERIFIED, ADR 0035)
+    AirLeakRate: 0.0022, // kg/s of air in-leakage, 3.75 SCFM (ASME PTC 12.2 Table 10-1, ADR 0035)
+    CAR_Capacity: 26, // m³/s of air: over-dimensioned utility, pulls 1 bar to the design vacuum in about 60 s (design-basis.md)
+    SJAE_Capacity: 0.96, // m³/s at the full valve (HEI holding example, ADR 0035)
+    SJAE_SuctionLimit: 170, // mbar absolute: above it the ejector breaks and removes nothing (EPRI §8.3.8)
+    HoodReliefPressure: 1353, // mbar absolute: the atmospheric relief diaphragm, the ceiling of the condenser pressure
     SJAE_ValveStep: 5, // % per click open/close
     RecirculationPump_MaxFlowRate: 7400, // l/s: single pass at the rated load with 10 °C water, rise 8.5 K (ADR 0032, design-basis.md)
-    RecirculationPump_Step: 5,
+    RecirculationPump_Step: 1, // % per wheel notch or arrow key: a pump is set finely
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
     HeatExchangerUA: 27000, // kW/K at the full cooling water flow: terminal temperature difference 6 K at the rated load; scales with flow^0.5 (ADR 0032)
     CondensationPump_MaxFlowRate: 300, // l/s (typical 160 - 270 l/s)
-    CondensationPump_Step: 5,
-    PressureMultiplier: 0.8, // steam volume adds pressure
-    SteamVolumeBaseLine: 1000,
-    LeakingRate: 0.01, // kg/s (typical 0.005 to 0.015 kg/s )
+    CondensationPump_Step: 1, // % per wheel notch or arrow key: a pump is set finely
     Makeup_MaxFlowRate: 50, // l/s demineralised water into the hotwell
     Makeup_Temperature: 20, // Celsius
     Makeup_Step: 5, // % per click open/close
@@ -99,12 +98,38 @@ export const CstHeater = {
   TerminalTemperatureDifference: 2, // K, the Return leaves this far below the saturation temperature of the heater pressure (1.7-2.8 K sourced, weak)
 }
 
+// Deaerator vessel (ADR 0036, ADR 0037, figures in docs/plant/design-basis.md and docs/plant/deaerator.md); all estimates
+// to confirm in the headless runner
+export const CstDeaerator = {
+  TotalVolume: 150e3, // liters: 5 minutes of rated feedwater (192 kg/s) from the 50% working level down to the 38% low-low trip
+  WorkingLevel: 0.5, // share of TotalVolume the vessel holds at 3 bar: the target line on the level gauge (ADR 0037)
+  LowLowLevel: 0.12, // share of TotalVolume: below it the boiler feed pump trips; 5 minutes of rated feedwater (38% of the volume) below the 50% working level (#112, design-basis.md)
+  FeedPump_Step: 1, // % per wheel notch or arrow key; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
+  StartLevel: 0.38, // share of TotalVolume filled cold at ambient: ends at 50% at 3 bar (ADR 0037)
+  Pressure: 3, // bar, held by the steam inlet valve (about 134 °C)
+  ExtractionValveCapacity: 60, // kg/s the extraction valve passes: over-dimensioned, about 35 kg/s are needed at rated flow (design-basis.md)
+  ExtractionOpeningRange: 0.5, // share of the setpoint the tap pressure must rise above it for the non-return valve to pass its full capacity: flow rises with the pressure margin, so no step when the tap crosses 3 bar (design-basis.md)
+  LetDownCapacity: 50, // kg/s the let-down valve passes at the boiler working pressure; scales with the boiler pressure like the steam valves (ADR 0026)
+  // Air, vents and relief (ADR 0038, #120); tuning values set in the headless runner, recorded in design-basis.md
+  SafeToClosePressure: 0.05, // bar of air partial pressure below which the safe-to-close lamp lights (5% of the cold air)
+  SafeToCloseRelease: 0.075, // bar: a lit lamp goes out only above this, so the heating of the closed vessel (the air pressure rises with the temperature) does not flicker it
+  StartUpVentArea: 0.06, // m², effective flow area (discharge coefficient included) of the manual start-up vent
+  OperatingVentArea: 0.0001, // m², the small fixed orifice that is always open: about 0.08 kg/s of steam at 3 bar, 0.04% of the rated feedwater
+  ReliefPressure: 4, // bar absolute, where the relief valve lifts: the 3 bar setpoint plus about 33% (owner, #40)
+  ReliefReseatPressure: 3.6, // bar absolute, where it seats again (10% blowdown)
+  ReliefCapacity: 120, // kg/s of mixture at the lift pressure: 110% of what both steam valves can pass (60 + 50 kg/s), like ADR 0005
+}
+
 export const CstPhysics = {
   Water_SpecificHeat: 4.18, // kJ/kg°C (used as fallback for temperatures below 80°C)
   Steel_SpecificHeat: 0.5, // kJ/kg·K, carbon steel
   GasEnergyDensity: 35000, // kJ/m³: LOWER heating value of natural gas (water leaves as vapour), at 25 °C combustion and 0 °C metering, 1 atm (IS 14504 Table 5: methane 35.8 MJ/m³ less inerts; owner decision, ADR 0029)
   AtmosphericPressure_mBar: 1013.25, // mbar
   AmbientTemperature: 20, // Celsius, the plant at rest and the floor of heat loss
+  AirGasConstant: 287.05, // J/(kg·K), specific gas constant of dry air
+  UniversalGasConstant: 8314.46, // J/(kmol·K)
+  AirMolarMass: 28.96, // kg/kmol
+  WaterMolarMass: 18.015, // kg/kmol
 }
 
 // Flue gas, boiler stage and economizer (ADR 0029, figures in docs/plant/design-basis.md and

@@ -1,10 +1,10 @@
-/** Board keyboard: Page Down or Right and Page Up or Left cycle the parts, Esc returns to the overview. A field or knob in use keeps its keys. */
+/** Board keyboard: Page Down or Right and Page Up or Left cycle the parts, Esc returns to the overview. A field in use keeps its keys; a knob only keeps Up, Down, Home and End, so the arrows always change the page. */
 
 import { useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { OVERVIEW_PATH, neighbourPath } from "./plantParts"
 
-const OWN_KEYS = "input, textarea, select, [contenteditable], [role='slider'], [role='spinbutton']"
+const OWN_KEYS = "input, textarea, select, [contenteditable], [role='spinbutton']"
 
 // A focused button or link keeps the arrows (Close and Open on the pages not yet migrated), not Esc
 const OWN_ARROWS = "button, a[href]"

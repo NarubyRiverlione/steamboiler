@@ -128,11 +128,24 @@ describe("invariant checks", () => {
       ).toEqual([])
     })
 
-    test("allows steam generation for 120 s after gas reaches 0, not after", () => {
-      const name = "natural cooldown stops steam generation"
-      const steaming = (time: number) => off(time, { deltaSteamMass: 1 })
-      expect(check(name, [on(0), steaming(10), steaming(129)])).toEqual([])
-      expect(check(name, [on(0), steaming(10), steaming(130)])).toHaveLength(1)
+    // Gas off at both samples, 1 s apart: the water and metal cool from 300 °C by the given drop
+    const flashing = (drop: number, deltaSteamMass: number): Sample[] => [
+      off(0, { temperature: 300 }),
+      off(1, { temperature: 300 - drop, deltaSteamMass }),
+    ]
+    const name = "natural cooldown steam comes from stored heat"
+
+    test("accepts a flash paid for by the water cooling", () => {
+      // 1 kg/s takes about 1.4 MW of latent heat; 10 K of the 3e4 kg of water and the steel releases far more
+      expect(check(name, flashing(10, 1))).toEqual([])
+    })
+
+    test("flags steam made without a matching cooling, from the first second of the cooldown", () => {
+      expect(check(name, flashing(0, 1))).toHaveLength(1)
+    })
+
+    test("ignores steam while the gas is on", () => {
+      expect(check(name, [on(0, { temperature: 300 }), on(1, { temperature: 300, deltaSteamMass: 1 })])).toEqual([])
     })
   })
 })

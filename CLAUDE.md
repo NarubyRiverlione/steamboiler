@@ -7,8 +7,7 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Rules
 
 - **Branches**: every ticket on its own branch or worktree from `dev`, merged back locally (no pull request) once its
-  gate passes; never commit on `dev` directly. A `UI design` ticket branches from `ui` and merges into `ui`, not `dev`
-  (merge `dev` into `ui` first); `ui` merges into `dev` once, when #85 is done. Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
+  gate passes; never commit on `dev` directly, except a regenerated `ROADMAP.md` (`pnpm roadmap`). Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
   (`main` = milestone releases, auto-deployed to GitHub Pages). Gates per merge: `docs/dev/branching.md`.
 - **Realism**: never add a magic number to speed up a process; playability comes from sizing utilities.
   Record every over-dimensioned utility or deliberate reduction in `docs/plant/design-basis.md`.

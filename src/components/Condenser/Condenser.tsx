@@ -2,11 +2,12 @@
 
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
+import { waterKgPerSecond } from "../../utils/flowUnits"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
-import { LensButton } from "../board/LensButton"
-import { LevelGauge } from "../board/LevelGauge"
+import { TurnSwitch } from "../board/TurnSwitch"
+import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
@@ -14,13 +15,16 @@ import { ValveControl } from "../board/ValveControl"
 const {
   CstCondenser: {
     TotalVolume,
+    HotwellNormalLevel,
     OptimalPressure,
     OptimalPressureBellWidth,
     VacuumLimit,
     SJAE_ValveStep,
     RecirculationPump_Step,
     CondensationPump_Step,
+    CondensationPump_MaxFlowRate,
     RecirculationPump_MaxFlowRate,
+    RecirculationPump_IntakeTemperature,
     Makeup_Step,
     Makeup_MaxFlowRate,
     Reject_Step,
@@ -51,7 +55,6 @@ function Condenser() {
         rejectValvePosition,
         deltaWaterMass,
         pressure, // mbar
-        steamMass,
         hotwellWaterVolume,
         hotwellTemperature,
         returnRate,
@@ -69,7 +72,7 @@ function Condenser() {
 
   const smoothIntake: number = useEMA(intakeFlowRate, 0.01)
   const hotwellLevel: number = useEMA(hotwellWaterVolume / TotalVolume, 0.1)
-  const smoothDelta: number = useEMA(deltaWaterMass, 0.5)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.5)
 
   return (
     <PanelFrame
@@ -77,10 +80,6 @@ function Condenser() {
         <>
           <h3 className="board-group-title board-section">Condenser Status</h3>
           <div className="board-readouts">
-            <div className="board-readout">
-              <span>Steam volume</span>
-              <Display label="Steam volume" text={`${steamMass.toFixed(0)} l`} widest="99999 l" />
-            </div>
             <div className="board-readout">
               <span>Hotwell temperature</span>
               <Display
@@ -131,34 +130,34 @@ function Condenser() {
             </span>
           </div>
 
-          <div className="board-instrument">
-            <span className="board-instrument-label">Hotwell level</span>
-            <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
-            <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} widest="100.0" />
-            <Display label="Hotwell level change" text={`Δ ${smoothDelta.toFixed(1)}`} widest="Δ -99.9" />
-          </div>
+          <LevelInstrument label="Hotwell level" fraction={hotwellLevel} change={smoothWaterChange} target={HotwellNormalLevel} />
         </div>
 
         <div className="board-group">
           <h3 className="board-group-title">Pressure Control</h3>
           <div className="board-group-cols">
             <div className="board-instrument">
+              <TurnSwitch
+                label="Air extraction pump"
+                offLabel="STOP"
+                onLabel="RUN"
+                tone="machine"
+                on={isAirExtractionPumpEnabled}
+                onToggle={toggleAirExtractionPump}
+              />
               <span className="board-readout-label">Air Extraction Pump (CAR)</span>
-              <LensButton
-                pressed={isAirExtractionPumpEnabled}
-                onClick={toggleAirExtractionPump}
-                widest="START"
-              >
-                {isAirExtractionPumpEnabled ? "STOP" : "START"}
-              </LensButton>
             </div>
             <div className="board-instrument">
+              <TurnSwitch
+                label="Steam jet air extraction"
+                offLabel="OFF"
+                onLabel="ON"
+                tone="machine"
+                on={isSjaeEnabled}
+                onToggle={toggleSjae}
+              />
               <span className="board-readout-label">Steam Jet Air Extraction (SJAE)</span>
-              <LensButton pressed={isSjaeEnabled} onClick={toggleSjae} widest="DISABLE">
-                {isSjaeEnabled ? "DISABLE" : "ENABLE"}
-              </LensButton>
               <ValveControl
-                knob
                 Label="SJAE valve"
                 Caption="Position:"
                 Position={sjaeValvePosition}
@@ -174,12 +173,12 @@ function Condenser() {
         <div className="board-group">
           <h3 className="board-group-title">Recirculation Pump</h3>
           <ValveControl
-            knob
             Label="Recirculation pump"
+            Pump
             Caption="Flow rate:"
             Position={recirculationPumpValvePosition}
-            Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
-            ValueWidest="9999.9 l/s"
+            Value={`${waterKgPerSecond(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature).toFixed(1)} kg/s`}
+            ValueWidest="9999.9 kg/s"
             Step={RecirculationPump_Step}
             cbAdjust={adjustRecirculationPumpValvePosition}
           />
@@ -187,10 +186,12 @@ function Condenser() {
         <div className="board-group">
           <h3 className="board-group-title">Condensation Pump</h3>
           <ValveControl
-            knob
             Label="Condensation pump"
+            Pump
             Caption="Flow rate:"
             Position={condensationPumpValvePosition}
+            Value={`${waterKgPerSecond(condensationPumpValvePosition * CondensationPump_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
+            ValueWidest="9999.9 kg/s"
             Step={CondensationPump_Step}
             cbAdjust={adjustCondensationPumpValvePosition}
           />
@@ -199,22 +200,20 @@ function Condenser() {
           <h3 className="board-group-title">Hotwell Makeup &amp; Reject</h3>
           <div className="board-group-cols">
             <ValveControl
-              knob
               Label="Makeup"
               Caption="Makeup:"
               Position={makeupValvePosition}
-              Value={`${(makeupValvePosition * Makeup_MaxFlowRate).toFixed(1)} l/s`}
-              ValueWidest="9999.9 l/s"
+              Value={`${waterKgPerSecond(makeupValvePosition * Makeup_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
+              ValueWidest="9999.9 kg/s"
               Step={Makeup_Step}
               cbAdjust={adjustMakeupValvePosition}
             />
             <ValveControl
-              knob
               Label="Reject"
               Caption="Reject:"
               Position={rejectValvePosition}
-              Value={`${(rejectValvePosition * Reject_MaxFlowRate).toFixed(1)} l/s`}
-              ValueWidest="9999.9 l/s"
+              Value={`${waterKgPerSecond(rejectValvePosition * Reject_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
+              ValueWidest="9999.9 kg/s"
               Step={Reject_Step}
               cbAdjust={adjustRejectValvePosition}
             />

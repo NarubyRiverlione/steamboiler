@@ -139,8 +139,28 @@ describe("cold initial state", () => {
   })
 
   test("stays exactly at rest for 10 min with nothing running", () => {
-    for (const { state } of runScenario(rest)) expect(state).toEqual(cold)
-    expect(finalState(rest)).toEqual(cold)
+    // The condenser pressure and air are the sum of a vapour and an air term and drift by rounding only
+    // The deaerator's air and pressure are sums too (ADR 0038): the cold air at atmospheric pressure, no vent flow
+    const sameButSums = (state: typeof cold) => {
+      expect(state.Condenser.pressure).toBeCloseTo(cold.Condenser.pressure, 2)
+      expect(state.Condenser.airMass).toBeCloseTo(cold.Condenser.airMass, 2)
+      expect(state.Deaerator.pressure).toBeCloseTo(cold.Deaerator.pressure, 6)
+      expect(state.Deaerator.airMass).toBeCloseTo(cold.Deaerator.airMass, 6)
+      // a boiler at exactly atmospheric pressure against a vessel a rounding error below it passes a flow of 1e-17 kg/s
+      expect(state.Deaerator.letDownFlow).toBeCloseTo(0, 9)
+      const zeroed = { pressure: 0, airMass: 0, airPressure: 0, saturationPressure: 0, waterVolume: 0, letDownFlow: 0, letDownValvePosition: 0 }
+      expect({
+        ...state,
+        Condenser: { ...state.Condenser, pressure: 0, airMass: 0 },
+        Deaerator: { ...state.Deaerator, ...zeroed },
+      }).toEqual({
+        ...cold,
+        Condenser: { ...cold.Condenser, pressure: 0, airMass: 0 },
+        Deaerator: { ...cold.Deaerator, ...zeroed },
+      })
+    }
+    for (const { state } of runScenario(rest)) sameButSums(state)
+    sameButSums(finalState(rest))
   })
 })
 
@@ -177,6 +197,10 @@ describe("scenario registry", () => {
       "max-output",
       "return-stop",
       "turbine-trip",
+      "vacuum-loss",
+      "sjae-closed-load",
+      "deaerator-vent-closed",
+      "deaerator-vent-open",
     ])
     for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })

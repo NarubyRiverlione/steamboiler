@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstSimulation } from "./const"
+import { CstDeaerator, CstSimulation } from "./const"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -189,6 +189,41 @@ describe("powerPlantReducer", () => {
       expect(pump(0.1, tripped(lowLow)).condensationPumpTripped).toBe(false)
       expect(pump(0.1, tripped(lowLow - 0.01)).condensationPumpTripped).toBe(true)
       expect(pump(-0.1, tripped(lowLow)).condensationPumpTripped).toBe(true)
+    })
+  })
+
+  describe("feed pump (#112)", () => {
+    const lowLow = CstDeaerator.LowLowLevel
+    const atLevel = (level: number, extra: Partial<PowerPlantState["Deaerator"]> = {}): PowerPlantState => ({
+      ...base,
+      Deaerator: { ...base.Deaerator, waterVolume: level * CstDeaerator.TotalVolume, ...extra },
+    })
+    const pump = (delta: number, state: PowerPlantState): PowerPlantState["Deaerator"] =>
+      reduce({ type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: delta } }, state).Deaerator
+
+    test("moves by its delta and stays within 0..1", () => {
+      const opened = pump(0.25, atLevel(0.5))
+      expect(opened.feedPumpValvePosition).toBe(0.25)
+      expect(pump(-0.1, { ...base, Deaerator: opened }).feedPumpValvePosition).toBeCloseTo(0.15)
+      expect(pump(5, atLevel(0.5)).feedPumpValvePosition).toBe(1)
+      expect(pump(-5, { ...base, Deaerator: opened }).feedPumpValvePosition).toBe(0)
+    })
+
+    test("opening is refused below low-low and the state is unchanged", () => {
+      const state = atLevel(lowLow - 0.01)
+      expect(reduce({ type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: 0.1 } }, state)).toBe(state)
+    })
+
+    test("opening is allowed at low-low and closing below it", () => {
+      expect(pump(0.1, atLevel(lowLow)).feedPumpValvePosition).toBe(0.1)
+      expect(pump(-0.1, atLevel(lowLow - 0.01, { feedPumpValvePosition: 0.3 })).feedPumpValvePosition).toBeCloseTo(0.2)
+    })
+
+    test("a successful opening clears the trip flag; a refused one and a closing leave it set", () => {
+      const tripped = (level: number): PowerPlantState => atLevel(level, { feedPumpTripped: true })
+      expect(pump(0.1, tripped(lowLow)).feedPumpTripped).toBe(false)
+      expect(pump(0.1, tripped(lowLow - 0.01)).feedPumpTripped).toBe(true)
+      expect(pump(-0.1, tripped(lowLow)).feedPumpTripped).toBe(true)
     })
   })
 
@@ -421,6 +456,22 @@ describe("powerPlantReducer", () => {
       const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, withTurbine({ rpm: CstTurbine.SyncRPM })).Turbine
       expect(closed.generatorBreaker).toBe(true)
       expect(closed.loadSetpoint).toBe(0)
+    })
+  })
+
+  describe("deaerator", () => {
+    test("the start-up vent opens and closes on the toggle, and nothing else changes", () => {
+      const opened: PowerPlantState = reduce({ type: "TOGGLE_DEAERATOR_VENT" })
+      expect(opened.Deaerator.startUpVentOpen).toBe(true)
+      expect({ ...opened.Deaerator, startUpVentOpen: false }).toEqual(base.Deaerator)
+      expect(reduce({ type: "TOGGLE_DEAERATOR_VENT" }, opened).Deaerator.startUpVentOpen).toBe(false)
+      expect(opened.Boiler).toBe(base.Boiler)
+    })
+
+    test("the cold plant starts with the vent shut and the vessel full of air at atmospheric pressure", () => {
+      expect(base.Deaerator.startUpVentOpen).toBe(false)
+      expect(base.Deaerator.airMass).toBeGreaterThan(100)
+      expect(base.Deaerator.pressure).toBeCloseTo(1.01325, 5)
     })
   })
 

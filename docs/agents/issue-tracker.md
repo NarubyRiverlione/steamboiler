@@ -22,7 +22,7 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
   - `P3` **Experience and project health**: improves what exists. Scenarios on the existing plant, tests, CI, tooling, and protections or alarms the owner promoted.
   - `P4` **Parked**: a scope expansion (a new component, system, protection, alarm or feature) or a nice-to-have the owner set aside. Parked until the owner promotes it.
   - `P5` **UI and UX**: anything that only changes the app's presentation, a new UI-only feature included. Not parked: triaged and worked after everything else.
-- **`UI design`**: a ticket that belongs to the UI redo (ADR 0015). It is blocked by #85, the foundation of the rebuild. This label says what the ticket belongs to; the `P` label still says what kind of work it is. It also routes the branch: a `UI design` ticket branches from and merges into `ui`, not `dev` ([branching.md](../dev/branching.md)).
+- **`UI design`**: a ticket that belongs to the UI redo (ADR 0015). It is blocked by #85, the foundation of the rebuild. This label says what the ticket belongs to; the `P` label still says what kind of work it is. It does not affect the branch: like every ticket it branches from and merges into `dev` ([branching.md](../dev/branching.md)).
 - **Mixed tickets**: a ticket with a sim part and a UI part gets the label of its sim part. When the UI part can wait, split it off as a `P5` ticket.
 - **Bugs** are sorted by effect: broken is `P1`, wrong physics `P2`, cosmetic `P5`.
 - **Parked ideas**: a `P4` ticket stays `needs-triage` until it is promoted to `P1`–`P3` or `P5`; triage it then. Promoting is the owner's decision to widen the scope; the ticket then gets the label of what it is.

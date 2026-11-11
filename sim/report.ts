@@ -1,4 +1,4 @@
-import { CstSimulation } from "../src/context/const"
+import { CstDeaerator, CstSimulation } from "../src/context/const"
 import PowerPlantState from "../src/context/PowerPlantState"
 import { saturationTemperature } from "../src/utils/condenserCalculation"
 import { generatorFrequency } from "../src/utils/turbineCalculations"
@@ -12,7 +12,15 @@ export type Kind = "temperature" | "pressure" | "volume" | "flow" | "valve" | "o
 // row: panels sharing a row number render on one line; a group without rows keeps the auto-filling grid.
 // Flow charts each get their own hue; every other chart uses its kind's colour.
 export type Palette =
-  Kind | "flowSteam" | "flowExtraction" | "flowIntake" | "flowReturn" | "flowCondensation" | "flowGas" | "inventory"
+  | Kind
+  | "flowSteam"
+  | "flowExtraction"
+  | "flowDeaerator"
+  | "flowIntake"
+  | "flowReturn"
+  | "flowCondensation"
+  | "flowGas"
+  | "inventory"
 
 export type Panel = {
   group: string
@@ -192,6 +200,22 @@ export const panels: Panel[] = [
   },
   {
     group: "Condenser",
+    row: 4,
+    title: "Air in the shell",
+    kind: "volume",
+    unit: "kg",
+    series: one("Air mass", (s) => s.Condenser.airMass),
+  },
+  {
+    group: "Condenser",
+    row: 4,
+    title: "Vented through the hood relief",
+    kind: "volume",
+    unit: "kg",
+    series: one("Vented", (s) => s.Condenser.ventedTotal),
+  },
+  {
+    group: "Condenser",
     row: 1,
     title: "Cooling water valve",
     kind: "valve",
@@ -276,6 +300,87 @@ export const panels: Panel[] = [
     unit: "°C",
     series: one("Hotwell temperature", (s) => s.Condenser.hotwellTemperature),
   },
+  // Deaerator: level is the water volume over its TotalVolume; the flag lines are 0/1
+  {
+    group: "Deaerator",
+    row: 1,
+    title: "Deaerator pressure",
+    kind: "pressure",
+    unit: "bar",
+    series: [
+      { label: "Total", value: (s) => s.Deaerator.pressure },
+      { label: "Air", value: (s) => s.Deaerator.airPressure },
+      { label: "Saturation", value: (s) => s.Deaerator.saturationPressure },
+    ],
+    limit: CstDeaerator.ReliefPressure,
+  },
+  {
+    group: "Deaerator",
+    row: 1,
+    title: "Deaerator level",
+    kind: "volume",
+    unit: "%",
+    series: one("Level", (s) => (s.Deaerator.waterVolume / CstDeaerator.TotalVolume) * 100),
+  },
+  {
+    group: "Deaerator",
+    row: 1,
+    title: "Deaerator temperature",
+    kind: "temperature",
+    unit: "°C",
+    series: one("Temperature", (s) => s.Deaerator.temperature),
+  },
+  {
+    group: "Deaerator",
+    row: 1,
+    title: "Deaerator steam flows",
+    kind: "flow",
+    palette: "flowDeaerator",
+    unit: "kg/s",
+    series: [
+      { label: "Extraction", value: (s) => s.Deaerator.extractionFlow },
+      { label: "Let-down", value: (s) => s.Deaerator.letDownFlow },
+    ],
+  },
+  {
+    group: "Deaerator",
+    row: 2,
+    title: "Feed pump valve",
+    kind: "valve",
+    unit: "%",
+    series: one("Feed pump valve", (s) => s.Deaerator.feedPumpValvePosition * 100),
+  },
+  {
+    group: "Deaerator",
+    row: 2,
+    title: "Deaerator steam valves",
+    kind: "valve",
+    unit: "%",
+    series: [
+      { label: "Extraction", value: (s) => s.Deaerator.extractionValvePosition * 100 },
+      { label: "Let-down", value: (s) => s.Deaerator.letDownValvePosition * 100 },
+    ],
+  },
+  {
+    group: "Deaerator",
+    row: 2,
+    title: "Deaerator vents and relief",
+    kind: "other",
+    unit: "0/1",
+    series: [
+      { label: "Start-up vent open", value: (s) => (s.Deaerator.startUpVentOpen ? 1 : 0) },
+      { label: "Relief open", value: (s) => (s.Deaerator.reliefValveOpen ? 1 : 0) },
+      { label: "Safe to close", value: (s) => (s.Deaerator.safeToClose ? 1 : 0) },
+    ],
+  },
+  {
+    group: "Deaerator",
+    row: 2,
+    title: "Steam vented",
+    kind: "other",
+    unit: "kg",
+    series: one("Vented total", (s) => s.Deaerator.ventedTotal),
+  },
   // The closed water loop: boiler → steam → condenser → hotwell → condensation pump → boiler
   {
     group: "Loop",
@@ -286,7 +391,6 @@ export const panels: Panel[] = [
     series: [
       { label: "Boiler water", value: (s) => s.Boiler.waterMass },
       { label: "Boiler steam", value: (s) => s.Boiler.steamMass },
-      { label: "Condenser steam", value: (s) => s.Condenser.steamMass },
       { label: "Hotwell", value: (s) => s.Condenser.hotwellWaterMass },
       { label: "Total excl. makeup, reject, drain, vent", value: loopWater },
     ],
@@ -426,6 +530,8 @@ const fmt = (v) => !Number.isFinite(v) ? String(v) : Math.abs(v) >= 1000 ? Math.
 const clock = (s) => Math.floor(s / 60) + ":" + String(Math.round(s % 60)).padStart(2, "0")
 const figures = [...document.querySelectorAll(".panel")]
 const status = document.getElementById("cursor")
+const lockBox = document.getElementById("lock")
+let locked = false
 
 function show(i) {
   const t = times[i]
@@ -450,7 +556,7 @@ function show(i) {
     })
   })
   const here = actions.filter((a) => Math.abs(a.at - t) < (times[1] - times[0] || 1) / 2)
-  status.textContent = "t = " + clock(t) + " (" + t + " s)" + (here.length ? " — " + here.map((a) => a.type).join(", ") : "")
+  status.textContent = (locked ? "\u{1F512} " : "") + "t = " + clock(t) + " (" + t + " s)" + (here.length ? " — " + here.map((a) => a.type).join(", ") : "")
 }
 
 let current = times.length - 1
@@ -462,9 +568,18 @@ const nearest = (svg, clientX) => {
   times.forEach((tt, i) => { if (Math.abs(tt - t) < Math.abs(times[best] - t)) best = i })
   return best
 }
+const setLocked = (on) => { locked = on; lockBox.checked = on; show(current) }
+lockBox.addEventListener("change", () => setLocked(lockBox.checked))
+document.addEventListener("keydown", (e) => {
+  if (e.key.toLowerCase() !== "l" || e.ctrlKey || e.metaKey || e.altKey) return
+  e.preventDefault()
+  setLocked(!locked)
+})
 for (const svg of document.querySelectorAll(".panel svg")) {
-  svg.addEventListener("pointermove", (e) => { current = nearest(svg, e.clientX); show(current) })
+  svg.addEventListener("pointermove", (e) => { if (locked) return; current = nearest(svg, e.clientX); show(current) })
+  svg.addEventListener("click", (e) => { if (locked) return; current = nearest(svg, e.clientX); setLocked(true) })
   svg.addEventListener("keydown", (e) => {
+    if (locked) return
     const step = e.shiftKey ? 10 : 1
     if (e.key === "ArrowRight") current = Math.min(times.length - 1, current + step)
     else if (e.key === "ArrowLeft") current = Math.max(0, current - step)
@@ -503,6 +618,10 @@ const PALETTE: Record<Palette, { light: string[]; dark: string[] }> = {
   flowExtraction: {
     light: ["#7a5af8", "#b8a9fb", "#5925dc", "#d9d1fd", "#6938ef"],
     dark: ["#9b8afb", "#d9d1fd", "#7a5af8", "#ebe9fe", "#6938ef"],
+  },
+  flowDeaerator: {
+    light: ["#0e9384", "#5fe9d0", "#107569", "#99f6e0", "#0a7c6f"],
+    dark: ["#2ed3b7", "#99f6e0", "#0e9384", "#ccfbef", "#0a7c6f"],
   },
   flowIntake: {
     light: ["#06aed4", "#67e3f9", "#0e7090", "#a5f0fc", "#088ab2"],
@@ -579,7 +698,9 @@ header { position: sticky; top: 0; z-index: 1; background: var(--surface); paddi
 h1 { font-size: 20px; margin: 0 0 4px; }
 h2 { font-size: 15px; margin: 24px 0 8px; color: var(--text-secondary); }
 .meta, .hint { color: var(--text-secondary); margin: 0; }
-#cursor { font-variant-numeric: tabular-nums; font-weight: 600; margin-top: 6px; }
+#cursor { font-variant-numeric: tabular-nums; font-weight: 600; margin: 6px 0 0; }
+.cursor-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lock { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; color: var(--text-secondary); }
 details { margin-top: 8px; color: var(--text-secondary); }
 details li { font-variant-numeric: tabular-nums; }
 .grid-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 12px; }
@@ -620,7 +741,9 @@ const liftLine = ({ open, close, vented }: Lift): string => {
 // The first sample with the burner trip set, as a report line (empty when it never tripped)
 const burnerTripLine = (samples: Sample[]): string => {
   const tripped = samples.find((s) => s.state.Boiler.burnerTripped)
-  return tripped === undefined ? "" : `<p class="meta">Burner trip at ${clock(tripped.time)}: gas shut off, water below the burner low-low level</p>`
+  return tripped === undefined
+    ? ""
+    : `<p class="meta">Burner trip at ${clock(tripped.time)}: gas shut off, water below the burner low-low level</p>`
 }
 
 export function toReportHtml(scenario: Scenario, samples: Sample[], lifts: Lift[] = []): string {
@@ -641,7 +764,9 @@ export function toReportHtml(scenario: Scenario, samples: Sample[], lifts: Lift[
       const figures = (inRow?: number) =>
         panels
           .map((p, i) =>
-            p.group === group && p.row === inRow ? renderPanel(p, i, times, values[i], actionTimes, lifts) : "",
+            p.group === group && p.row === inRow
+              ? renderPanel(p, i, times, values[i], actionTimes, lifts)
+              : "",
           )
           .join("")
       const rows = [
@@ -676,8 +801,9 @@ export function toReportHtml(scenario: Scenario, samples: Sample[], lifts: Lift[
 <header>
 <h1>${escapeHtml(scenario.name)}</h1>
 <p class="meta">${escapeHtml(scenario.description)} · ${clock(times[times.length - 1] ?? 0)} sim-time · ${String(samples.length)} samples every ${String(scenario.sampleEvery)} s · x-axis in minutes · dashed lines = operator actions · shaded bands = relief valve lifts</p>
-<p class="hint">Hover a chart (or focus it and use ← →, Shift for ×10) to read all panels at one time.</p>
-<p id="cursor"></p>
+<p class="hint">Hover a chart (or focus it and use ← →, Shift for ×10) to read all panels at one time. Click a chart or press L to lock the cursor, then scroll; flip the switch or press L to unlock.</p>
+<div class="cursor-row"><p id="cursor"></p>
+<label class="lock"><input type="checkbox" id="lock" role="switch"> Lock cursor (L)</label></div>
 </header>
 <details><summary>Operator actions (${String(scenario.actions.length)})</summary><ul>${actionList}</ul></details>
 <details><summary>Relief valve lifts (${String(lifts.length)})</summary><ul>${lifts.map(liftLine).join("")}</ul></details>

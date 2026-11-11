@@ -14,7 +14,7 @@ The owner's 10% and 95% were first proposed as working setpoints. Real plants re
 - **10% and 95% as working setpoints:** rejected. The level would wander 85 points before anything reacted, the pump would run into cavitation before makeup helped, and 95% is a brim-full hotwell with flooded tubes.
 - **Everything in the operator:** rejected. A trip or clamp that the operator can leave out is not a protection; scenarios and the app must get the same behaviour.
 - **Alarms at 25% and 85%:** left out. The sim has no hotwell alarm infrastructure; filed as #59.
-- **Enlarging the hotwell, a deaerator-driven condensate trim, closing the condenser steam inlet on high-high:** out of scope. #53 already sized the hotwell, the sim has no deaerator, and the steam-inlet claim is unverified.
+- **Enlarging the hotwell, a deaerator-driven condensate trim, closing the condenser steam inlet on high-high:** out of scope. #53 already sized the hotwell, the deaerator of #119 ([ADR 0036](0036-deaerator-is-a-steam-heated-tank.md)) sits after the hotwell and changes none of its protections, and the steam-inlet claim is unverified.
 
 ## Consequences
 
@@ -22,3 +22,4 @@ The owner's 10% and 95% were first proposed as working setpoints. Real plants re
 - `bypass-loop`: the level settles inside the band (within a small proportional offset past the upper edge) and makeup and reject are occasional, where on/off with hysteresis swung the level between 53% and 99.96% with reject open in 39% of the samples. Current figures: [headless-runner.md](../dev/headless-runner.md), `pnpm sim bypass-loop`.
 - The tick sets the trip flag whenever the level is below low-low, also at a cold start with a near-empty hotwell and a pump that was never open. The flag then only means "the level is below low-low and the operator has not reopened the pump yet".
 - `CondenserState` gains `condensationPumpTripped`.
+- The boiler feed pump (#112) follows the same rule for the deaerator: `DeaeratorTick` trips it below the 12% low-low (valve shut, `feedPumpTripped` set), the reducer refuses to open it there, and an opening clears the flag.

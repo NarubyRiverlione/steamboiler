@@ -1,9 +1,10 @@
-import { CstPhysics, CstSimulation } from "./const"
+import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
+import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
-import { hotwellLevel } from "../utils/condenserCalculation"
+import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
 import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
-import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
+import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { runTicks } from "./PowerPlantBatch"
 import { isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
@@ -52,7 +53,9 @@ export const makeInitialState = (): PowerPlantState => ({
     hotwellWaterMass: startHotwellMass,
     hotwellWaterVolume: CstSimulation.CstCondenser.HotwellStartVolume,
     hotwellTemperature: AmbientTemperature, // Celsius
-    steamMass: 0, // Start at 0
+    // kg: the shell full of air at atmospheric pressure, less the vapour of the ambient hotwell (Cold state, ADR 0035)
+    airMass: airMassOf(CstPhysics.AtmosphericPressure_mBar - vapourPressureAt(AmbientTemperature), AmbientTemperature),
+    ventedTotal: 0,
     intakeFlowRate: 0,
     returnRate: 0,
     condensationRate: 0,
@@ -70,6 +73,7 @@ export const makeInitialState = (): PowerPlantState => ({
     rejectTotal: 0,
     deltaWaterMass: 0,
   },
+  Deaerator: makeColdDeaerator(), // filled cold to 38% at ambient (ADR 0037)
   Heater: {
     extractionFlow: 0, // kg/s
     tapPressure: 0, // bar
@@ -105,6 +109,10 @@ const withCondenser = (state: PowerPlantState, patch: Partial<CondenserState>): 
   ...state,
   Condenser: { ...state.Condenser, ...patch },
 })
+const withDeaerator = (state: PowerPlantState, patch: Partial<DeaeratorState>): PowerPlantState => ({
+  ...state,
+  Deaerator: { ...state.Deaerator, ...patch },
+})
 const withTurbine = (state: PowerPlantState, patch: Partial<TurbineState>): PowerPlantState => ({
   ...state,
   Turbine: { ...state.Turbine, ...patch },
@@ -135,6 +143,18 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     })
   },
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
+  //#endregion
+
+  //#region Deaerator
+  // The start-up vent is an operator action; the warning flags follow at the next tick
+  TOGGLE_DEAERATOR_VENT: (state) => withDeaerator(state, { startUpVentOpen: !state.Deaerator.startUpVentOpen }),
+  // Below low-low the feed pump may not be opened, closing is always allowed; an opening clears the trip flag
+  SET_FEED_PUMP_VALVE_POSITION: (state, { payload }) => {
+    const { feedPumpValvePosition: current, feedPumpTripped, waterVolume } = state.Deaerator
+    const requested: number = clamp(current + payload.feedPumpValvePosition, 0, 1)
+    if (requested > current && deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel) return state
+    return withDeaerator(state, { feedPumpValvePosition: requested, feedPumpTripped: feedPumpTripped && requested <= current })
+  },
   //#endregion
 
   //#region Condenser

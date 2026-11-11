@@ -21,6 +21,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Turbine and generator, phases 1–5 | [plant/turbine.md](plant/turbine.md) |
 | Condenser, vacuum system, hotwell | [plant/condenser.md](plant/condenser.md) |
 | Water loop: boundary flows, level targets, control | [plant/feedwater-loop.md](plant/feedwater-loop.md) |
+| Deaerator: 3 bar steam control, cold fill, air, vents, relief valve, boiler feed pump | [plant/deaerator.md](plant/deaerator.md) |
 
 ## The code (reference)
 
@@ -31,7 +32,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Test layers, scenario definition, definition of done | [dev/testing.md](dev/testing.md) |
 | The UI board: `--board-*` tokens, primitives, how a part page is built | [dev/ui-board.md](dev/ui-board.md) |
 | Self-hosted fonts and their licences | [dev/fonts.md](dev/fonts.md) |
-| Branches (`dev` for work, `ui` for the UI redo, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
+| Branches (`dev` for work, `main` for releases), CI and GitHub Pages deployment | [dev/branching.md](dev/branching.md) |
 
 ## Decisions
 
@@ -50,7 +51,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0011](adr/0011-hotwell-protections-in-the-tick.md) | Hotwell protections live in the tick; the working band is operator policy |
 | [0012](adr/0012-dev-branch-main-for-releases.md) | `dev` is the working branch; `main` holds milestone releases |
 | [0013](adr/0013-release-by-pull-request.md) | Releases reach `main` by pull request, gated by CI |
-| [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates; UI tickets go through a temporary `ui` branch |
+| [0014](adr/0014-ticket-branches-and-test-gates.md) | Every ticket on its own branch; merges into `dev` and `main` are test gates |
 | [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style: the analog control-room board (with a [boiler mockup](adr/0015-boiler-panel-mockup.html) and a [full board mockup](adr/0015-full-board-mockup.html)) |
 | [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
 | [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |
@@ -71,6 +72,11 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0032](adr/0032-limited-condenser-and-stream-enthalpy.md) | The condenser is a limited exchanger, and every stream enters at its real enthalpy |
 | [0033](adr/0033-gas-is-a-rate-knob.md) | The gas is set by a latching rate knob, and the gas never jumps |
 | [0034](adr/0034-playback-speed-is-ticks-per-second.md) | Playback speed is ticks per wall-clock second, never `DeltaTime` |
+| [0035](adr/0035-condenser-pressure-is-vapour-plus-air.md) | The condenser pressure is shell vapour pressure plus air pressure; the vacuum system removes volume, not pressure |
+| [0036](adr/0036-deaerator-is-a-steam-heated-tank.md) | The deaerator is a steam-heated tank on the feedwater path, held at 3 bar |
+| [0037](adr/0037-deaerator-cold-fill-at-38-percent.md) | The deaerator is filled cold to about 38% so it ends at 50% hot |
+| [0038](adr/0038-deaerator-air-and-vents.md) | The deaerator holds one amount of air and has two vents; mistakes cost steam, never damage |
+| [0039](adr/0039-latching-controls-are-turn-switches.md) | A control that holds a state is a turn switch with fixed legends; a pushbutton acts or selects |
 
 ## Research (dated, frozen)
 

@@ -211,8 +211,12 @@ Hotwell water sent out of the loop to storage when the hotwell is too full.
 _Avoid_: Dump, overflow
 
 **Return**:
-Hotwell water pumped through the extraction heater and the economizer into the boiler by the condensation pump. The extraction heater heats it with turbine steam first, and the heater drain joins it after the heater; the economizer then heats it with flue gas. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
+Hotwell water pumped by the condensation pump into the deaerator, which heats it to 3 bar with turbine or boiler steam and passes it on through the extraction heater and the economizer into the boiler. The heater drain cascades back into the deaerator; the economizer heats the water with flue gas. Limited by what the hotwell holds and the room left in the boiler; whatever cannot be returned stays in the hotwell.
 _Avoid_: Feedwater, refill
+
+**Deaerator**:
+The steam-heated feedwater tank between the hotwell and the boiler, held at 3 bar (about 134 °C). Steam comes from the turbine tap first and from the boiler through the **let-down valve** for the rest (split range). See [plant/deaerator.md](docs/plant/deaerator.md).
+_Avoid_: Feedwater tank, open heater
 
 **Hotwell level**:
 How full the hotwell is, as the water volume over the hotwell's total volume. Measured on volume, not mass, as a real level gauge does.

@@ -1,28 +1,38 @@
-import { CstSimulation } from "../../src/context/const"
+import { CstDeaerator, CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
+import { deaeratorLevel } from "../../src/context/Deaerator/DeaeratorTick"
+import { getWaterSpecificVolume } from "../../src/utils/steamTable"
 import { atWorkingPressure, holdPressureWithGas, PressureHoldSettings } from "./pressure-hold"
 import { steerGas } from "./gas"
-import { isAdjustTime, StartGas } from "./steps"
+import { isAdjustTime, StartGas, startUpVent } from "./steps"
 
 // An operator holding the closed water loop, decided from state alone (see docs/plant/feedwater-loop.md).
 // Valve actions are deltas, so the operator asks for the difference to the position it wants.
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
+const { DeltaTime } = CstSimulation
 
 export const LoopSettings = {
   BypassLoadOpening: 0.1, // bypass position once the main steam valve opens: 20 kg/s, close to the turbine's ~18 kg/s at sync speed
   SjaeOpening: 1, // SJAE valve position once there is steam
+  CoolingWaterMinimum: 0.1, // the cooling water never goes below it: a surge of steam (load rejection) must find the exchanger running
+  CoolingWaterOpening: 0.1, // cooling water valve position when the main steam valve opens: the bypass steam has somewhere to condense at once
   CondensationPumpOpening: 0.1, // condensation pump position when the main steam valve opens
+  FeedPumpOpening: 0.1, // boiler feed pump position when the main steam valve opens (#112)
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // the level the scenarios judge the hold by: target ± band
-  LevelGain: 1, // pump position per unit of level error: 0.05 of level trims 0.05 of the pump (15 L/s)
+  LevelGain: 1, // feed pump position per unit of drum level error: 0.05 of level trims 0.05 of the pump (15 L/s)
+  DeaeratorLevelTarget: 0.5, // fraction of the deaerator volume: the working level
+  DeaeratorLevelBand: 0.05, // the level the scenarios judge the deaerator hold by: target ± band
+  DeaeratorLevelGain: 2, // condensation pump position per second per unit of deaerator level error: plain level feedback, no feedforward (#112)
+  DeaeratorLevelDamping: 60, // condensation pump position per unit of level rate (share of the volume per second): damps the integrating vessel
   HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (normal level 70%)
   HotwellBandHigh: 0.75, // reject opens above the working band
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
-  CondenserSteamHigh: 100, // kg in the condenser: more cooling water
-  CondenserSteamLow: 10, // kg: less cooling water
+  CondenserPressureHigh: 33, // mbar condenser pressure: more cooling water (the design vacuum is 31 mbar)
+  CondenserPressureLow: 28, // mbar: less cooling water
   GasBackOffPressure: 120, // bar: from here the knob goes down towards the heat-up gas, since the gas takes about 30 s to come back from full and the pressure rises 1 bar/s (#15)
   ValveNudge: 0.02, // position change per adjustment
   AdjustEvery: 1, // sim-seconds between gas, pump and cooling adjustments
@@ -47,8 +57,13 @@ const toPosition = (
   make: (delta: number) => PowerPlantAction,
 ): PowerPlantAction[] => (current === wanted ? [] : [make(wanted - current)])
 
-// At pressure: main steam valve open, bypass and condensation pump to their start positions
-function openMainSteam({ Turbine, Condenser }: PowerPlantState): PowerPlantAction[] {
+const feedPumpPayload = (feedPumpValvePosition: number): PowerPlantAction => ({
+  type: "SET_FEED_PUMP_VALVE_POSITION",
+  payload: { feedPumpValvePosition },
+})
+
+// At pressure: main steam valve open, bypass and both pumps to their start positions
+function openMainSteam({ Turbine, Condenser, Deaerator }: PowerPlantState): PowerPlantAction[] {
   if (Turbine.mainSteamValve) return []
   return [
     { type: "TOGGLE_MAIN_STEAM_VALVE" },
@@ -57,6 +72,14 @@ function openMainSteam({ Turbine, Condenser }: PowerPlantState): PowerPlantActio
       payload: { bypassValvePosition },
     })),
     ...toPosition(
+      Condenser.recirculationPumpValvePosition,
+      S.CoolingWaterOpening,
+      (recirculationPumpValvePosition) => ({
+        type: "SET_RECIRCULATION_PUMP_VALVE_POSITION",
+        payload: { recirculationPumpValvePosition },
+      }),
+    ),
+    ...toPosition(
       Condenser.condensationPumpValvePosition,
       S.CondensationPumpOpening,
       (condensationPumpValvePosition) => ({
@@ -64,6 +87,7 @@ function openMainSteam({ Turbine, Condenser }: PowerPlantState): PowerPlantActio
         payload: { condensationPumpValvePosition },
       }),
     ),
+    ...toPosition(Deaerator.feedPumpValvePosition, S.FeedPumpOpening, feedPumpPayload),
   ]
 }
 
@@ -99,15 +123,27 @@ function startSteam(state: PowerPlantState): PowerPlantAction[] {
   ]
 }
 
-// Feedforward feedwater control (#74): the Return costs heat, so the pump follows the steam leaving the boiler and the
-// level only trims it. The pump position that returns the steam flow, plus LevelGain per unit of level error. The steam
-// the heater takes comes back as its drain, not through the pump (#88), so the pump returns the rest.
-function holdBoilerLevel({ Boiler, Condenser, Heater, Turbine }: PowerPlantState): PowerPlantAction[] {
+// Feedforward feedwater control (#74): the Return costs heat, so the feed pump follows the steam leaving the boiler and the
+// drum level only trims it. All the steam that leaves the boiler (turbine, bypass and the let-down steam to the deaerator)
+// comes back through the feed pump (#112), in litres at the deaerator temperature, plus LevelGain per unit of level error.
+function holdBoilerLevel({ Boiler, Deaerator, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
-  const steamOut = Turbine.turbineSteamFlowOut + Turbine.bypassSteamFlowOut - Heater.extractionFlow
-  const feedforward = steamOut / CstCondenser.CondensationPump_MaxFlowRate
+  const steamOut = Turbine.turbineSteamFlowOut + Turbine.bypassSteamFlowOut + Deaerator.letDownFlow
+  const feedforward = (steamOut * getWaterSpecificVolume(Deaerator.temperature)) / CstCondenser.CondensationPump_MaxFlowRate
   const wanted = Math.max(0, Math.min(1, feedforward + S.LevelGain * (S.BoilerLevelTarget - level)))
+  return toPosition(Deaerator.feedPumpValvePosition, wanted, feedPumpPayload)
+}
+
+// Plain level feedback on the deaerator (#112), no feedforward from the feed pump: the condensation pump moves by the level
+// error (integral action) and against the level rate (damping), each second, so it settles where the Return matches the feed
+function holdDeaeratorLevel({ Condenser, Deaerator, Turbine }: PowerPlantState): PowerPlantAction[] {
+  if (!Turbine.mainSteamValve) return []
+  const error = S.DeaeratorLevelTarget - deaeratorLevel(Deaerator.waterVolume)
+  const levelRate =
+    (Deaerator.deltaWaterMass / DeltaTime) * getWaterSpecificVolume(Deaerator.temperature) / CstDeaerator.TotalVolume
+  const step = S.DeaeratorLevelGain * S.AdjustEvery * error - S.DeaeratorLevelDamping * levelRate
+  const wanted = Math.max(0, Math.min(1, Condenser.condensationPumpValvePosition + step))
   return toPosition(Condenser.condensationPumpValvePosition, wanted, (condensationPumpValvePosition) => ({
     type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
     payload: { condensationPumpValvePosition },
@@ -116,8 +152,9 @@ function holdBoilerLevel({ Boiler, Condenser, Heater, Turbine }: PowerPlantState
 
 function holdCondensing({ Condenser }: PowerPlantState): PowerPlantAction[] {
   const direction =
-    Condenser.steamMass > S.CondenserSteamHigh ? 1 : Condenser.steamMass < S.CondenserSteamLow ? -1 : 0
-  const delta = nudge(Condenser.recirculationPumpValvePosition, direction)
+    Condenser.pressure > S.CondenserPressureHigh ? 1 : Condenser.pressure < S.CondenserPressureLow ? -1 : 0
+  const position = Condenser.recirculationPumpValvePosition
+  const delta = direction < 0 && position <= S.CoolingWaterMinimum ? 0 : nudge(position, direction)
   return delta === 0
     ? []
     : [{ type: "SET_RECIRCULATION_PUMP_VALVE_POSITION", payload: { recirculationPumpValvePosition: delta } }]
@@ -148,12 +185,12 @@ export function holdLoop(
 ): PowerPlantAction[] {
   const adjustNow = isAdjustTime(time, S.AdjustEvery)
   const gas = state.Turbine.mainSteamValve ? holdPressureWithGas(state, gasCeiling) : []
-  const level = holdLevel ? holdBoilerLevel(state) : []
+  const level = holdLevel ? [...holdBoilerLevel(state), ...holdDeaeratorLevel(state)] : []
   return [...holdHotwell(state), ...(adjustNow ? [...gas, ...level, ...holdCondensing(state)] : [])]
 }
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
-  return [...startSteam(state), ...holdLoop(state, time)]
+  return [...startUpVent(state, time), ...startSteam(state), ...holdLoop(state, time)]
 }
 
 // The loop operator with its hotwell hold taken away, for edge scenarios that force makeup and reject themselves
@@ -161,4 +198,14 @@ export function loopOperatorWithoutHotwellHold(state: PowerPlantState, time: num
   return loopOperator(state, time).filter(
     (a) => a.type !== "SET_MAKEUP_VALVE_POSITION" && a.type !== "SET_REJECT_VALVE_POSITION",
   )
+}
+
+// The loop operator that never touches the deaerator start-up vent: the vessel stays full of air (#120)
+export function loopOperatorWithoutVent(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return loopOperator(state, time).filter((a) => a.type !== "TOGGLE_DEAERATOR_VENT")
+}
+
+// The loop operator that opens the start-up vent at the start and never closes it: the air goes, then steam is lost (#120)
+export function loopOperatorLeavingVentOpen(state: PowerPlantState, time: number): PowerPlantAction[] {
+  return loopOperator(state, time).filter((a) => a.type !== "TOGGLE_DEAERATOR_VENT" || !state.Deaerator.startUpVentOpen)
 }

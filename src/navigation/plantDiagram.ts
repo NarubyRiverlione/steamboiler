@@ -2,6 +2,8 @@
 
 import type { PartId } from "./plantParts"
 
+export type NodeSymbol = "valve" | "pump"
+
 export type Medium = "heat" | "steam" | "water" | "cooling" | "power" | "vacuum"
 
 export type DiagramNode = {
@@ -18,6 +20,12 @@ export type DiagramNode = {
   readonly part?: PartId
   // The node that carries the part's alarm LED
   readonly led?: true
+  // Drawn as the industry symbol (centred in the box, the box only joins the pipes and takes the click) instead of a box
+  readonly symbol?: NodeSymbol
+  // The way the flow runs through a symbol; right when left out
+  readonly flow?: "left" | "down"
+  // Where a symbol's name stands; above when left out
+  readonly label?: "left"
 }
 
 type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
@@ -59,21 +67,23 @@ export const NODES: readonly DiagramNode[] = [
     id: "msv",
     name: ["Main steam", "valve"],
     x: 820,
-    y: 146,
+    y: 161,
     w: 120,
-    h: 54,
+    h: 24,
     medium: "steam",
     part: "turbine",
+    symbol: "valve",
   },
   {
     id: "turbinevalve",
     name: ["Turbine valve"],
     x: 1000,
-    y: 146,
+    y: 161,
     w: 130,
-    h: 54,
+    h: 24,
     medium: "steam",
     part: "turbine",
+    symbol: "valve",
   },
   {
     id: "turbine",
@@ -88,7 +98,17 @@ export const NODES: readonly DiagramNode[] = [
   },
   { id: "generator", name: ["Generator"], x: 1370, y: 146, w: 120, h: 54, medium: "power", part: "turbine" },
   { id: "load", name: ["Load"], x: 1550, y: 150, w: 80, h: 46, medium: "power", round: true },
-  { id: "bypass", name: ["Bypass valve"], x: 820, y: 250, w: 120, h: 44, medium: "steam", part: "turbine" },
+  {
+    id: "bypass",
+    name: ["Bypass valve"],
+    x: 900,
+    y: 260,
+    w: 120,
+    h: 24,
+    medium: "steam",
+    part: "turbine",
+    symbol: "valve",
+  },
   { id: "drain", name: ["Drain"], x: 370, y: 250, w: 100, h: 40, medium: "water", part: "boiler" },
   {
     id: "condenser",
@@ -110,6 +130,7 @@ export const NODES: readonly DiagramNode[] = [
     h: 36,
     medium: "vacuum",
     part: "condenser",
+    symbol: "pump",
   },
   { id: "sjae", name: ["SJAE"], x: 920, y: 362, w: 190, h: 36, medium: "vacuum", part: "condenser" },
   {
@@ -121,6 +142,8 @@ export const NODES: readonly DiagramNode[] = [
     h: 50,
     medium: "cooling",
     part: "condenser",
+    symbol: "pump",
+    flow: "left",
   },
   {
     id: "coolin",
@@ -146,14 +169,51 @@ export const NODES: readonly DiagramNode[] = [
   {
     id: "condpump",
     name: ["Condensation", "pump"],
-    x: 820,
-    y: 480,
+    x: 1030,
+    y: 481,
     w: 140,
     h: 54,
     medium: "water",
     part: "condenser",
+    symbol: "pump",
+    flow: "left",
   },
-  { id: "heater", name: ["Extraction heater"], x: 560, y: 480, w: 160, h: 54, medium: "steam" },
+  {
+    id: "deaerator",
+    name: ["Deaerator"],
+    x: 860,
+    y: 470,
+    w: 120,
+    h: 76,
+    medium: "water",
+    part: "deaerator",
+  },
+  {
+    id: "feedpump",
+    name: ["Boiler feed pump"],
+    x: 700,
+    y: 486,
+    w: 140,
+    h: 44,
+    medium: "water",
+    part: "deaerator",
+    symbol: "pump",
+    flow: "left",
+  },
+  {
+    id: "letdown",
+    name: ["Let-down", "valve"],
+    x: 735,
+    y: 330,
+    w: 90,
+    h: 44,
+    medium: "steam",
+    part: "deaerator",
+    symbol: "valve",
+    flow: "down",
+    label: "left",
+  },
+  { id: "heater", name: ["Extraction heater"], x: 510, y: 480, w: 150, h: 54, medium: "steam" },
   { id: "storagein", name: ["Storage"], x: 1420, y: 462, w: 100, h: 34, medium: "water", round: true },
   { id: "storageout", name: ["Storage"], x: 1420, y: 520, w: 100, h: 34, medium: "water", round: true },
 ]
@@ -173,20 +233,25 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "steam", d: "M820 62 L889 62" },
   { medium: "steam", d: "M940 173 L999 173" },
   { medium: "steam", d: "M1130 173 L1189 173" },
-  { medium: "steam", d: "M880 200 L880 249" },
-  { medium: "steam", d: "M940 272 L1220 272 L1220 309" },
+  { medium: "steam", d: "M880 185 L880 272 L899 272" },
+  { medium: "steam", d: "M780 173 L780 329" },
+  { medium: "steam", d: "M780 374 L780 440 L920 440 L920 469" },
+  { medium: "steam", d: "M585 440 L779 440" },
+  { medium: "steam", d: "M1020 272 L1220 272 L1220 309" },
   { medium: "steam", d: "M1280 200 L1280 309" },
-  { medium: "steam", d: "M1220 200 L1220 224 L890 224 A10 10 0 0 0 870 224 L640 224 L640 479" },
+  { medium: "steam", d: "M1220 200 L1220 224 L890 224 A10 10 0 0 0 870 224 L790 224 A10 10 0 0 0 770 224 L585 224 L585 479" },
   { medium: "water", d: "M420 200 L420 249" },
   { medium: "water", d: "M1220 420 L1220 469" },
   { medium: "water", d: "M1280 420 L1280 469" },
-  { medium: "water", d: "M1190 508 L961 508" },
-  { medium: "water", d: "M820 508 L721 508" },
-  { medium: "water", d: "M560 508 L331 508" },
+  { medium: "water", d: "M1190 508 L1171 508" },
+  { medium: "water", d: "M1029 508 L981 508" },
+  { medium: "water", d: "M859 508 L841 508" },
+  { medium: "water", d: "M699 508 L661 508" },
+  { medium: "water", d: "M509 508 L331 508" },
   { medium: "water", d: "M330 472 L490 472 L490 201" },
   { medium: "water", d: "M1420 479 L1311 494" },
   { medium: "water", d: "M1310 522 L1419 537" },
-  { medium: "water", d: "M640 534 L640 566 L500 566 L500 509" },
+  { medium: "water", d: "M610 535 L610 570 L900 570 L900 547" },
   { medium: "cooling", d: "M1525 337 L1491 337" },
   { medium: "cooling", d: "M1370 337 L1311 337" },
   { medium: "cooling", d: "M1310 398 L1369 398" },
@@ -211,10 +276,11 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 395, y: 230, text: "drain", anchor: "middle" },
   { x: 1210, y: 450, text: "condensate", anchor: "end" },
   { x: 1292, y: 450, text: "exhaust moisture" },
-  { x: 770, y: 498, text: "Return", anchor: "middle", bold: true },
+  { x: 1005, y: 498, text: "Return", anchor: "middle", bold: true },
   { x: 445, y: 498, text: "hotter Return", anchor: "middle", bold: true },
   { x: 502, y: 350, text: "hottest Return", anchor: "start", bold: true },
-  { x: 652, y: 560, text: "heater drain, pumped forward" },
+  { x: 760, y: 562, text: "heater drain", anchor: "middle" },
+  { x: 772, y: 300, text: "auxiliary steam", anchor: "end" },
   { x: 1365, y: 470, text: "makeup", anchor: "middle" },
   { x: 1365, y: 545, text: "reject", anchor: "middle" },
   { x: 1340, y: 390, text: "heat", anchor: "middle" },
@@ -222,7 +288,7 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 1520, y: 164, text: "electricity", anchor: "middle" },
   { x: 1150, y: 325, text: "vacuum", anchor: "middle" },
   { x: 1150, y: 371, text: "vacuum", anchor: "middle" },
-  { x: 840, y: 372, text: "motive steam", anchor: "end" },
+  { x: 915, y: 398, text: "motive steam", anchor: "end" },
   { x: 640, y: 650, text: "Dashed: the air preheater, parked in #90." },
 ]
 

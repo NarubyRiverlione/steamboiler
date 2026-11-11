@@ -11,7 +11,7 @@ One reducer and one provider for the whole plant.
 - `PowerPlantReducer` (`src/context/`) is the only state-transition point. It handles user actions, the tick and `LOAD_STATE`, which replaces the whole state with a UI preset (#24). The preset list is `src/context/startPresets.ts`; the shape check that rejects a stale snapshot is `src/utils/stateShape.ts`, shared with the headless runner.
 - `PowerPlantProvider` owns the simulation loop and exposes state through `PowerPlantContext`.
 - Simulation core is pure functions, decoupled from React: `PowerPlantTick` calls `BoilerTick`, `TurbineTick`, `CondenserTick` (in `src/context/<Subsystem>/`). Order per tick: the relief valve vents (`BoilerVent`), the main steam valve closes on low pressure (`MainSteamValveLowPressureClosure`), remove bypass steam, `TurbineTick`, remove turbine steam, `CondenserTick` with those same-tick flows, then `BoilerTick` with the return.
-- Physics lives in `src/utils/` (`boilerCalculations`, `condenserCalculation`, `turbineCalculations`, `steamTable`, `steamData`).
+- Physics lives in `src/utils/` (`boilerCalculations`, `condenserCalculation`, `turbineCalculations`, `steamTable`, `steamData`). Display helpers (`formatSigned`, `flowUnits`: l/s design values shown as kg/s, #123) sit beside them.
 - State is immutable. Every update creates a new state object.
 - Display-only values are calculated in components, not stored in state. `useEMA` smooths readouts.
 
@@ -35,7 +35,7 @@ flowchart TD
 
 `simulationReducer` (`SimulationReducer.ts`) wraps the plant reducer with state kept outside `PowerPlantState`: the tick count (the simulated clock, `ticks × DeltaTime`) and the playback speed. In the same step as a batch it applies the alarm rule: an alarm from the annunciator's list (`navigation/alarms.ts`, the single source) that comes on stops the batch on that tick and drops the speed to 1x. `LOAD_STATE` (a preset) resets the clock and the speed.
 
-The header (`navigation/TimeControl.tsx`) shows the clock and the plain speed selector in its `clock` and `speed` slots. The selector disables speeds above 1x while an annunciator tile flashes (unacknowledged). #86 restyles both.
+The header (`navigation/TimeControl.tsx`) shows the clock (an LCD `Display`, flashing while paused) and the speed selector in its `clock` and `speed` slots. The selector disables speeds above 1x while an annunciator tile flashes (unacknowledged).
 
 Each subsystem uses an energy balance:
 
@@ -87,7 +87,7 @@ scripts/roadmap.ts                    # generates ROADMAP.md from the GitHub iss
 ## Numerical stability
 
 - Boiler pressure is the saturation pressure of the water temperature ([ADR 0001](../adr/0001-boiler-pressure-follows-saturation.md)); the flash that restores the steam inventory each tick is solved implicitly, because an explicit step oscillates near the critical point.
-- Vacuum build-up and decay rates need careful tuning.
+- Vacuum build-up is the air inventory of the shell (ADR 0035); see condenser.md.
 - Edge cases: empty boiler, temperatures or pressures beyond the table, very small steam mass (minimum threshold before it affects pressure).
 
 ## Testing and commands

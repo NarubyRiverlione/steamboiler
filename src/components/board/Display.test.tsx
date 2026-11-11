@@ -15,6 +15,13 @@ describe("Display", () => {
     expect(screen.getByLabelText("Pressure").classList.contains("board-display-alarm")).toBe(true)
   })
 
+  it("flashes only when asked to", () => {
+    const { rerender } = render(<Display label="Clock" text="0:00:00" />)
+    expect(screen.getByLabelText("Clock").classList.contains("board-display-flash")).toBe(false)
+    rerender(<Display label="Clock" text="0:00:00" flashing />)
+    expect(screen.getByLabelText("Clock").classList.contains("board-display-flash")).toBe(true)
+  })
+
   it("keeps the width of its widest text, whatever it shows now", () => {
     render(<Display label="Position" text="0 % Open" widest="100 % Open" />)
     const lcd: HTMLElement = screen.getByLabelText("Position")

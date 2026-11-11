@@ -24,13 +24,13 @@ function renderBoiler(patch: Partial<PowerPlantState["Boiler"]> = {}) {
 describe("Boiler page", () => {
   it("turns the gas knob with the keyboard and passes the command on", () => {
     const fns = renderBoiler({ gasRateCommand: 0.5 })
-    fireEvent.keyDown(screen.getByRole("slider", { name: "Gas knob" }), { key: "ArrowRight" })
+    fireEvent.keyDown(screen.getByRole("slider", { name: "Gas knob" }), { key: "ArrowUp" })
     expect(fns.setGasRate).toHaveBeenCalledWith(0.6)
   })
 
   it("shows the actual gas flow on the LCD, not the knob position", () => {
     renderBoiler({ gasFlow: 6000, gasRateCommand: -0.5 })
-    expect(screen.getByLabelText("Gas flow").textContent).toBe("6000 l/s")
+    expect(screen.getByLabelText("Gas flow").textContent).toBe("6000 L/s")
     expect(screen.getByRole("slider", { name: "Gas knob" }).getAttribute("aria-valuenow")).toBe("-0.5")
   })
 
@@ -51,9 +51,9 @@ describe("Boiler page", () => {
 
   it("toggles the drain valve and shows its state", () => {
     const fns = renderBoiler({ drainValveOpen: true })
-    const button: HTMLElement = screen.getByRole("button", { name: "Open" })
-    expect(button.getAttribute("aria-pressed")).toBe("true")
-    fireEvent.click(button)
+    const drain: HTMLElement = screen.getByRole("switch", { name: "Drain valve" })
+    expect(drain.getAttribute("aria-checked")).toBe("true")
+    fireEvent.click(drain)
     expect(fns.toggleDrainValve).toHaveBeenCalledTimes(1)
   })
 
@@ -62,6 +62,31 @@ describe("Boiler page", () => {
     expect(document.querySelectorAll("rect[data-tone='alarm']").length).toBe(1)
     expect(screen.getByRole("meter", { name: "Pressure gauge" })).toBeTruthy()
     expect(screen.getByRole("meter", { name: "Drum level gauge" }).getAttribute("aria-valuenow")).toBe("35")
+  })
+
+  it("shows the drum water change in kg/s, + when filling", () => {
+    renderBoiler({ deltaWaterMass: 0.5 })
+    expect(screen.getByLabelText("Drum level change").textContent).toBe("+5.0 kg/s")
+  })
+
+  it("shows a draining drum with a minus sign", () => {
+    renderBoiler({ deltaWaterMass: -0.25 })
+    expect(screen.getByLabelText("Drum level change").textContent).toBe("-2.5 kg/s")
+  })
+
+  it("shows a steady drum as 0.0 with no sign, also for a tiny drift", () => {
+    renderBoiler({ deltaWaterMass: 0 })
+    expect(screen.getByLabelText("Drum level change").textContent).toBe("0.0 kg/s")
+  })
+
+  it("does not show a sign for a drift that rounds to zero", () => {
+    renderBoiler({ deltaWaterMass: -0.0001 })
+    expect(screen.getByLabelText("Drum level change").textContent).toBe("0.0 kg/s")
+  })
+
+  it("no longer shows the drum volume in litres", () => {
+    renderBoiler({ waterVolume: 35e3 })
+    expect(screen.queryByLabelText("Water volume")).toBeNull()
   })
 
   it("lights the alarm lamps from the flags", () => {

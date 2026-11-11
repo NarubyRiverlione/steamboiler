@@ -41,15 +41,16 @@ describe("turbine-runup", () => {
     }
   })
 
-  // ADR 0018: the boiler already holds the right mass at 35% cold, so nothing is fed or rejected during heat-up
-  test("no makeup and no reject, and the hotwell stays in its working band, until working pressure", () => {
+  // ADR 0018: the boiler already holds the right mass at 35% cold, so nothing is fed to it. The deaerator warm-up (#119)
+  // lengthens the heat-up by about 10 min, so the 5% condensation pump drains the hotwell a little past its band edge
+  // and the operator tops it up; nothing is ever rejected and the hotwell stays above its fully-open makeup edge
+  test("no reject and the hotwell stays above its makeup ramp until working pressure", () => {
     const heatUpSamples = samples.filter((s) => s.time <= inBandAt)
     expect(heatUpSamples.length).toBeGreaterThan(0)
     for (const { state } of heatUpSamples) {
-      expect(state.Condenser.makeupTotal).toBe(0)
       expect(state.Condenser.rejectTotal).toBe(0)
       const level = hotwellLevel(state.Condenser.hotwellWaterVolume)
-      expect(level).toBeGreaterThanOrEqual(LoopSettings.HotwellBandLow)
+      expect(level).toBeGreaterThanOrEqual(LoopSettings.HotwellBandLow - LoopSettings.HotwellRamp)
       expect(level).toBeLessThanOrEqual(LoopSettings.HotwellBandHigh)
     }
   })
@@ -117,7 +118,7 @@ describe("turbine-runup", () => {
   const BalanceWindow = 3000
   test("over the last 3000 s steam out of the boiler matches steam generated within 5%", () => {
     const balance = samples.filter((s) => s.time >= turbineRunup.duration - BalanceWindow)
-    const out = average(balance.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut))
+    const out = average(balance.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut + s.state.Deaerator.letDownFlow))
     const generated = average(balance.map((s) => s.state.Boiler.deltaSteamMass))
     expect(Math.abs(out - generated)).toBeLessThanOrEqual(0.05 * generated)
   })

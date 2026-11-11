@@ -9,7 +9,7 @@ The rows come from general plant knowledge, not from a research note, so their e
 | **Steam** | Superheater, with spray attemperators to control its temperature | Very large: output, exhaust wetness, and a new control task | No ticket |
 | | Reheat, where steam goes back to the boiler between turbine stages | Large, but only after a superheater | No ticket |
 | **Feedwater** | Deaerator | Moderate | #40, parked |
-| | Separate boiler feed pump; today one condensation pump pushes from the hotwell into 165 bar | Moderate, and a good operator task | Departure in [ADR 0031](../adr/0031-one-extraction-heater.md) |
+| | Boiler feed pump head and feed control valve; the feed pump of #112 is a flow actuator with no head | Moderate, and a good operator task | Departure in [ADR 0031](../adr/0031-one-extraction-heater.md) |
 | | Five to eight heaters instead of one | Efficiency only | Deliberate in [ADR 0031](../adr/0031-one-extraction-heater.md) |
 | **Flue gas** | Air preheater | Efficiency | #90, parked |
 | **Firing** | Air and flue gas fans, furnace purge, flame detection | Mainly a start-up sequence | No ticket |

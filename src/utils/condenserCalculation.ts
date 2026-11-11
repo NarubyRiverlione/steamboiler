@@ -3,121 +3,50 @@ import { CstPhysics, CstSimulation } from "../context/const"
 import { waterMassOf } from "./boilerCalculations"
 import { getBoilingPoint, getSaturationEnthalpies } from "./steamTable"
 
-// Air Extraction Pump (CAR) behavior
-const calcCARvacuum = (isAirExtractionPumpEnabled: boolean, previousVacuum: number) => {
-  // Check if air extraction pump is enabled, if not the potential vacuum decay is handled in a separated function
-  if (!isAirExtractionPumpEnabled) return 0
+const PaPerMbar = 100
+const KelvinOffset = 273.15
 
-  const {
-    CstCondenser: { CAR_MaxVacuum, CAR_TimeNeeded },
-  } = CstSimulation
-  // vacuum already below CAR max (because of SJAE)
-  if (previousVacuum > CAR_MaxVacuum) return 0
-
-  // Calculate vacuum increase based on time needed to reach max vacuum
-  const vacuumIncreaseRate = (CAR_MaxVacuum / CAR_TimeNeeded) * CstSimulation.DeltaTime // mbar per second
-
-  // Gradually increase vacuum (more negative pressure)
-  const limitedVacuum = Math.min(CAR_MaxVacuum, previousVacuum + vacuumIncreaseRate)
-  return limitedVacuum
+// Air mass (kg) in the shell that makes the given air pressure (mbar) at the shell temperature (°C): P·V = m·R·T
+export function airMassOf(airPressure: number, temperature: number): number {
+  const { ShellVolume } = CstSimulation.CstCondenser
+  return (airPressure * PaPerMbar * ShellVolume) / (CstPhysics.AirGasConstant * (temperature + KelvinOffset))
 }
 
-// Steam Jet Air Extraction (SJAE) behavior
-const calcSJAEvacuum = (
-  isSjaeEnabled: boolean,
-  sjaeValvePosition: number,
-  vacuumAfterCAR: number,
-  boilerPressure: number,
-  previousVacuum: number,
-): { newIsSjaeEnabled: boolean; vacuumAfterSJAE: number } => {
-  // Check if SJAE is enabled, handle potential vacuum decay in separated function
-  if (!isSjaeEnabled) return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
-
-  // Check if SJAE should be automatically disabled
-  if (boilerPressure <= CstSimulation.CstTurbine.MainSteamValveMinimumPressure) {
-    // Not enough steam pressure to use  SJAE
-    return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
-  }
-
-  const {
-    CstTurbine: { MaxSteamRemovalRate },
-    CstCondenser: { CAR_MaxVacuum, SJAE_MaxPressureDifference, SJAE_VacuumIncreaseRate, MaxVacuum },
-  } = CstSimulation
-
-  // Calculate max allowed vacuum for SJAE
-  const minVacuumNeeded = CAR_MaxVacuum - SJAE_MaxPressureDifference
-
-  // Check if pressure is too high for SJAE
-  if (previousVacuum < minVacuumNeeded) {
-    // Pressure too high, disable SJAE
-    return { newIsSjaeEnabled: false, vacuumAfterSJAE: vacuumAfterCAR }
-  }
-
-  // Calculate vacuum increase based on steam flow and valve position
-  const steamFlowEffect = Math.min(1, boilerPressure / MaxSteamRemovalRate)
-
-  // Combine effects for final vacuum increase
-  const vacuumIncreaseRate = SJAE_VacuumIncreaseRate * sjaeValvePosition * steamFlowEffect
-
-  // Apply vacuum increase (limited by max allowed vacuum)
-  const vacuumAfterSJAE = Math.min(MaxVacuum, previousVacuum + vacuumIncreaseRate * CstSimulation.DeltaTime)
-  return { newIsSjaeEnabled: true, vacuumAfterSJAE }
+// Air pressure (mbar) of the air mass (kg) in the shell at the shell temperature (°C)
+export function airPressureOf(airMass: number, temperature: number): number {
+  const { ShellVolume } = CstSimulation.CstCondenser
+  return (airMass * CstPhysics.AirGasConstant * (temperature + KelvinOffset)) / ShellVolume / PaPerMbar
 }
 
-const decayVacuum = (
-  isAirExtractionPumpEnabled: boolean,
-  isSjaeEnabled: boolean,
-  vacuumAfterSJAE: number,
-  previousVacuum: number,
-) => {
-  const {
-    DeltaTime,
-    CstCondenser: { VacuumDecayRate },
-  } = CstSimulation
-
-  if (vacuumAfterSJAE !== 0) return vacuumAfterSJAE
-
-  if (isAirExtractionPumpEnabled && isSjaeEnabled) return previousVacuum
-
-  const vacuumDecay = VacuumDecayRate * DeltaTime // mbar per second
-
-  const vacuumAfterDecay = Math.max(previousVacuum - vacuumDecay, 0)
-  return vacuumAfterDecay
-}
-
-/* Pressure below atmospheric by   CAR & SJAE behavior
- * Vacuum decay is handled in a separated function
- * @param condenserState Current state of the condenser
- * @param boilerPressure Current pressure in the boiler (bar)
- * @returns New pressure and SJAE status
+/**
+ * The air inventory after one tick (ADR 0035). In: the constant in-leakage. Out: the vacuum system removes volume,
+ * S·ρ_air(P_air, T) = S·m/V kg/s, so the removal is proportional to the air there is. Taken implicitly, so a pump much
+ * larger than the shell stays stable. The air extraction pump always removes; the SJAE only with enough motive steam
+ * and while the shell is under its suction limit (it breaks above), and scales with its valve.
+ * @returns The new air mass (kg) and whether the SJAE is still enabled
  */
-
-export function calculateVacuumByReducers(
+export function calculateAirInventory(
   condenserState: CondenserState,
   boilerPressure: number,
-): { vacuumByReducers: number; newIsSjaeEnabled: boolean } {
-  const previousVacuum = CstPhysics.AtmosphericPressure_mBar - condenserState.pressure
+): { airMass: number; newIsSjaeEnabled: boolean } {
+  const {
+    DeltaTime,
+    CstTurbine: { MainSteamValveMinimumPressure },
+    CstCondenser: { ShellVolume, AirLeakRate, CAR_Capacity, SJAE_Capacity, SJAE_SuctionLimit },
+  } = CstSimulation
 
-  const vacuumAfterCAR = calcCARvacuum(condenserState.isAirExtractionPumpEnabled, previousVacuum)
+  const newIsSjaeEnabled: boolean =
+    condenserState.isSjaeEnabled &&
+    boilerPressure > MainSteamValveMinimumPressure &&
+    condenserState.pressure < SJAE_SuctionLimit
+  const pump: number = condenserState.isAirExtractionPumpEnabled ? CAR_Capacity : 0
+  const ejector: number = newIsSjaeEnabled ? SJAE_Capacity * condenserState.sjaeValvePosition : 0
 
-  const { vacuumAfterSJAE, newIsSjaeEnabled } = calcSJAEvacuum(
-    condenserState.isSjaeEnabled,
-    condenserState.sjaeValvePosition,
-    vacuumAfterCAR,
-    boilerPressure,
-    previousVacuum,
-  )
-  const vacuumAfterDecay = decayVacuum(
-    condenserState.isAirExtractionPumpEnabled,
-    newIsSjaeEnabled,
-    vacuumAfterSJAE,
-    previousVacuum,
-  )
-
-  return {
-    vacuumByReducers: vacuumAfterDecay, // mBar
-    newIsSjaeEnabled,
-  }
+  const removalRate: number = (pump + ejector) / ShellVolume // 1/s
+  // Air only leaks in while the shell is under atmospheric pressure
+  const leak: number = condenserState.pressure < CstPhysics.AtmosphericPressure_mBar ? AirLeakRate : 0
+  const airMass: number = (condenserState.airMass + leak * DeltaTime) / (1 + removalRate * DeltaTime)
+  return { airMass, newIsSjaeEnabled }
 }
 
 // Saturation temperature (°C) at the condenser pressure (mbar absolute)
@@ -162,76 +91,131 @@ export function condenserHeatCapacity(coolingWaterFlow: number, saturationTemp: 
   return effectiveness * capacityRate * Math.max(0, saturationTemp - RecirculationPump_IntakeTemperature)
 }
 
+export type SteamStream = { flow: number; enthalpy: number }
+
+const SolverIterations = 40
+const PressureSearchMin = 1 // mbar
+const PressureSearchMax = 2000 // mbar
+
+// Saturation pressure (mbar) at a temperature (°C): the inverse of the boiling point, by bisection
+export function vapourPressureAt(temperature: number): number {
+  let low: number = PressureSearchMin
+  let high: number = PressureSearchMax
+  for (let i = 0; i < SolverIterations; i++) {
+    const mid: number = (low + high) / 2
+    if (saturationTemperature(mid) < temperature) low = mid
+    else high = mid
+  }
+  return high
+}
+
 /**
- * Calculates the condensation of steam in a limited heat exchanger at the saturation temperature of the condenser
- * pressure. The cooling water takes at most Q = ε·ṁ·cp·(Tsat − Tin); first the heat the intake carries above saturated
- * vapour, then the latent heat of the vapour it condenses. The condensate leaves at the saturation temperature.
+ * Heat (kW) the exchanger must take to condense the streams at the shell vapour pressure (mbar): every kg condenses to
+ * saturated liquid, so a stream gives flow·(h − hf). Moisture is already liquid and costs nothing; the heat above
+ * saturated vapour is part of h.
+ */
+export function condensingDemand(streams: SteamStream[], vapourPressure: number): number {
+  const { liquid } = getSaturationEnthalpies(vapourPressure / MbarPerBar)
+  return streams.reduce((sum: number, { flow, enthalpy }) => sum + flow * Math.max(0, enthalpy - liquid), 0)
+}
+
+/**
+ * The shell vapour pressure (mbar) at which the exchanger takes exactly the heat the streams bring (ADR 0035). The
+ * exchanger heat rises with the saturation temperature and the demand falls with it, so there is one root, found by
+ * bisection between the floor and the ceiling. The floor is the vapour pressure of the hotter of the intake water and
+ * the hotwell water: with nothing to condense the shell cannot be cooler than the water in it. If the exchanger
+ * cannot take the heat even at the ceiling the pressure sits at the ceiling.
+ */
+export function solveShellVapourPressure(
+  streams: SteamStream[],
+  coolingWaterFlow: number,
+  ceiling: number,
+  hotwellTemperature: number,
+): number {
+  const floor: number = vapourPressureAt(
+    Math.max(CstSimulation.CstCondenser.RecirculationPump_IntakeTemperature, hotwellTemperature),
+  )
+  const top: number = Math.max(floor, ceiling)
+  const surplus = (pressure: number): number =>
+    condensingDemand(streams, pressure) - condenserHeatCapacity(coolingWaterFlow, saturationTemperature(pressure))
+
+  if (condensingDemand(streams, floor) <= 0) return floor
+  if (surplus(top) > 0) return top
+  let low: number = floor
+  let high: number = top
+  for (let i = 0; i < SolverIterations; i++) {
+    const mid: number = (low + high) / 2
+    if (surplus(mid) > 0) low = mid
+    else high = mid
+  }
+  return high
+}
+
+/**
+ * Condenses the streams at the shell vapour pressure. The cooling water takes at most Q = ε·ṁ·cp·(Tsat − Tin); below the
+ * ceiling that covers the intake exactly. At the ceiling it covers only a share of the vapour: the rest, and whatever
+ * does not fit in the hotwell, leaves through the hood relief (vented). The condensate leaves at the saturation
+ * temperature. There is no steam pool: the shell holds no vapour inventory (ADR 0035).
  *
- * @param currentSteamMass kg, Current steam mass in the condenser (vapour only)
- * @param currentLiquidMass kg, Current liquid mass in the hotwell
+ * @param streams The turbine exhaust and bypass steam, flow (kg/s) and enthalpy (kJ/kg)
  * @param recirculationPumpValvePosition Valve position of the recirculation pump (0-1)
- * @param condenserPressure absolute pressure in the condenser (mbar)
- * @param hotwellRoom kg of water the hotwell can still take at its temperature, limits the condensation
- * @param excessHeat kJ the intake carried above saturated vapour this tick, taken from the cooling water first
- * @returns New steam and liquid masses (kg), the condensate temperature (saturation temperature, °C) and the cooling
- * water outlet temperature (°C)
+ * @param vapourPressure Shell vapour pressure (mbar)
+ * @param hotwellRoom kg of water the hotwell can still take at its temperature
+ * @returns Mass (kg) that entered the hotwell (moisture and condensate), the mass vented, the condensate temperature
+ * (saturation temperature, °C) and the cooling water outlet temperature (°C)
  */
 export function calculateCondensation(
-  currentSteamMass: number,
-  currentLiquidMass: number,
+  streams: SteamStream[],
   recirculationPumpValvePosition: number,
-  condenserPressure: number,
+  vapourPressure: number,
   hotwellRoom: number,
-  excessHeat = 0,
-): {
-  steamMassAfterCondensation: number
-  waterMassAfterCondensation: number
-  newOutletTemperature: number
-  coolingWaterOutletTemperature: number
-} {
+): { condensed: number; vented: number; newOutletTemperature: number; coolingWaterOutletTemperature: number } {
   const {
     DeltaTime,
     CstCondenser: { RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature },
   } = CstSimulation
 
-  // 1. Condensate leaves at the saturation temperature of the condenser pressure
-  const saturationTemp: number = saturationTemperature(condenserPressure)
-
-  // 2. Cooling water flow and the heat the exchanger can give it this tick (kJ)
+  const saturationTemp: number = saturationTemperature(vapourPressure)
   const coolingWaterFlow: number = recirculationPumpValvePosition * RecirculationPump_MaxFlowRate
-  const capacity: number = condenserHeatCapacity(coolingWaterFlow, saturationTemp) * DeltaTime
+  const capacity: number = condenserHeatCapacity(coolingWaterFlow, saturationTemp) * DeltaTime // kJ
 
-  // 3. The intake's extra heat first, the rest condenses vapour: never more than the steam there is or the hotwell room
-  const excessTaken: number = Math.min(capacity, excessHeat)
-  const latentHeat: number = latentHeatAt(condenserPressure)
-  const massCondensed: number = (capacity - excessTaken) / latentHeat
-  const condensedMass: number = Math.min(currentSteamMass, massCondensed, hotwellRoom)
+  // Moisture goes straight to the hotwell, the vapour (with the heat above saturated vapour) must be condensed
+  const latentHeat: number = latentHeatAt(vapourPressure)
+  let moisture = 0
+  let vapour = 0
+  let excessHeat = 0
+  for (const { flow, enthalpy } of streams) {
+    const { quality, excessHeat: excess } = splitStreamAtCondenser(enthalpy, vapourPressure)
+    moisture += flow * (1 - quality) * DeltaTime
+    vapour += flow * quality * DeltaTime
+    excessHeat += flow * excess * DeltaTime
+  }
+  const demand: number = vapour * latentHeat + excessHeat
+  const heatTaken: number = Math.min(capacity, demand)
+  const vapourCondensed: number = demand > 0 ? (vapour * heatTaken) / demand : vapour
 
-  // 4. The cooling water carries the heat actually taken
-  const heatTaken: number = excessTaken + condensedMass * latentHeat
+  const arriving: number = moisture + vapourCondensed
+  const condensed: number = Math.max(0, Math.min(arriving, hotwellRoom))
+  const vented: number = Math.max(0, vapour - vapourCondensed + (arriving - condensed))
+
   const capacityRate: number = coolingWaterFlow * CstPhysics.Water_SpecificHeat * DeltaTime
   const coolingWaterOutletTemperature: number =
     capacityRate > 0 ? RecirculationPump_IntakeTemperature + heatTaken / capacityRate : RecirculationPump_IntakeTemperature
 
-  return {
-    steamMassAfterCondensation: Math.max(currentSteamMass - condensedMass, 0),
-    waterMassAfterCondensation: Math.max(currentLiquidMass + condensedMass, 0),
-    newOutletTemperature: saturationTemp,
-    coolingWaterOutletTemperature,
-  }
+  return { condensed, vented, newOutletTemperature: saturationTemp, coolingWaterOutletTemperature }
 }
 
 // The Return: the pump volume (L), in kg at the hotwell temperature, limited by what the hotwell holds and the room
-// (kg) left in the boiler. Whatever cannot be returned stays in the hotwell.
+// (kg) left in the deaerator. Whatever cannot be returned stays in the hotwell.
 export function CalculateCondensationFlow(
   condensationPumpValvePosition: number,
   waterMassAfterCondensation: number,
   hotwellTemperature: number,
-  boilerRoom: number,
+  deaeratorRoom: number,
 ): { condensatePumpMass: number; newHotwellWaterMass: number } {
   const pumpFlowRate = condensationPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate
   const pumpMass = waterMassOf(pumpFlowRate * CstSimulation.DeltaTime, hotwellTemperature)
-  const condensatePumpMass = Math.max(0, Math.min(pumpMass, waterMassAfterCondensation, boilerRoom))
+  const condensatePumpMass = Math.max(0, Math.min(pumpMass, waterMassAfterCondensation, deaeratorRoom))
   const newHotwellWaterMass = waterMassAfterCondensation - condensatePumpMass
 
   return { condensatePumpMass, newHotwellWaterMass }
