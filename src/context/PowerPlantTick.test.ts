@@ -113,6 +113,13 @@ describe("PowerPlantTick boiler feed pump (#112)", () => {
     expect(next.Boiler.waterMass).toBeCloseTo(start.Boiler.waterMass + next.Deaerator.outflowMass, 2)
   })
 
+  test("the drum water change is the net of the feed inflow and the steam flashed (#121)", () => {
+    const start = feeding(50_000)
+    const next = PowerPlantTick(start)
+    expect(next.Boiler.deltaWaterMass).toBeCloseTo(next.Boiler.waterMass - start.Boiler.waterMass, 6)
+    expect(next.Boiler.deltaWaterMass).toBeGreaterThan(0) // the feed pump fills the drum
+  })
+
   test("a full boiler takes nothing, the water stays in the deaerator", () => {
     const next = PowerPlantTick(feeding(CstBoiler.TotalVolume))
     expect(next.Deaerator.outflowMass).toBe(0)

@@ -123,10 +123,15 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   }
 
   // The economizer heats the feedwater with the flue gas; it arrives from the heater
-  const boilerNewState: BoilerState = BoilerTick(boilerRemovedSteam, {
+  const boilerTicked: BoilerState = BoilerTick(boilerRemovedSteam, {
     flow: deaerator.outflow.mass / CstSimulation.DeltaTime,
     temperature: feedwaterTemperature,
   })
+  // The net change over the tick against the previous state: the feed inflow joined before BoilerTick, so it would cancel out (#121)
+  const boilerNewState: BoilerState = {
+    ...boilerTicked,
+    deltaWaterMass: boilerTicked.waterMass - state.Boiler.waterMass,
+  }
 
   const heaterNewState: HeaterState = {
     extractionFlow: extraction.flow,
