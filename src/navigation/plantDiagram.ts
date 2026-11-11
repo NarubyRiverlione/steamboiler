@@ -2,7 +2,7 @@
 
 import type { PartId } from "./plantParts"
 
-export type NodeSymbol = "valve" | "check" | "pump"
+export type NodeSymbol = "valve" | "pump"
 
 export type Medium = "heat" | "steam" | "water" | "cooling" | "power" | "vacuum"
 
@@ -214,7 +214,6 @@ export const NODES: readonly DiagramNode[] = [
     flow: "down",
     label: "right",
   },
-  { id: "nrv", name: ["Non-return", "valve"], x: 620, y: 418, w: 90, h: 44, medium: "steam", symbol: "check" },
   { id: "heater", name: ["Extraction heater"], x: 510, y: 480, w: 150, h: 54, medium: "steam" },
   { id: "storagein", name: ["Storage"], x: 1420, y: 462, w: 100, h: 34, medium: "water", round: true },
   { id: "storageout", name: ["Storage"], x: 1420, y: 520, w: 100, h: 34, medium: "water", round: true },
@@ -238,8 +237,7 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "steam", d: "M880 185 L880 259" },
   { medium: "steam", d: "M780 173 L780 329" },
   { medium: "steam", d: "M780 374 L780 440 L920 440 L920 469" },
-  { medium: "steam", d: "M585 440 L619 440" },
-  { medium: "steam", d: "M711 440 L779 440" },
+  { medium: "steam", d: "M585 440 L779 440" },
   { medium: "steam", d: "M940 272 L1220 272 L1220 309" },
   { medium: "steam", d: "M1280 200 L1280 309" },
   { medium: "steam", d: "M1220 200 L1220 224 L890 224 A10 10 0 0 0 870 224 L790 224 A10 10 0 0 0 770 224 L585 224 L585 479" },

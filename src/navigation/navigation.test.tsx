@@ -163,10 +163,10 @@ describe("plant overview", () => {
     expect(where()).toBe("/deaerator")
   })
 
-  it("draws the let-down valve and the extraction non-return valve, and no pass-through", () => {
+  it("draws the let-down valve, and no non-return valve and no pass-through", () => {
     renderAt("/")
     expect(screen.getByText("Let-down")).toBeTruthy()
-    expect(screen.getByText("Non-return")).toBeTruthy()
+    expect(screen.queryByText("Non-return")).toBeNull()
     expect(NODES.some((node: DiagramNode) => /pass-through/i.test(node.name.join(" ")))).toBe(false)
   })
 
@@ -175,7 +175,6 @@ describe("plant overview", () => {
     ["turbinevalve", "valve"],
     ["bypass", "valve"],
     ["letdown", "valve"],
-    ["nrv", "check"],
     ["condpump", "pump"],
     ["feedpump", "pump"],
     ["recirc", "pump"],

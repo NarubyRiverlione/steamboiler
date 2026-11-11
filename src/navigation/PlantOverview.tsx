@@ -13,14 +13,6 @@ const GLYPH_HALF = 18
 
 function glyphPaths(symbol: NodeSymbol): ReactNode {
   if (symbol === "valve") return <path d="M-16 -11 L16 11 L16 -11 L-16 11 Z" />
-  if (symbol === "check") {
-    return (
-      <>
-        <path d="M-14 -11 L10 0 L-14 11 Z" />
-        <path d="M10 -13 L10 13" />
-      </>
-    )
-  }
   return (
     <>
       <circle r={GLYPH_HALF} />
