@@ -170,7 +170,6 @@ function Condenser() {
             Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
             ValueWidest="9999.9 l/s"
             Step={RecirculationPump_Step}
-            FlowOnly
             cbAdjust={adjustRecirculationPumpValvePosition}
           />
         </div>
@@ -183,7 +182,6 @@ function Condenser() {
             Value={`${(condensationPumpValvePosition * CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
             ValueWidest="9999.9 l/s"
             Step={CondensationPump_Step}
-            FlowOnly
             cbAdjust={adjustCondensationPumpValvePosition}
           />
         </div>

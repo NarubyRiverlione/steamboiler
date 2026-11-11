@@ -51,6 +51,8 @@ export function SteamFlowGroup({
         />
         <ValveControl
           Label="Turbine valve"
+          Value={`${turbine.turbineSteamFlowOut.toFixed(1)} kg/s`}
+          ValueWidest="999.9 kg/s"
           Position={turbine.turbineValvePosition}
           Step={TurbineValveStep}
           cbAdjust={onAdjustTurbine}

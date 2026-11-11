@@ -55,6 +55,13 @@ describe("Turbine page", () => {
     expect(screen.getByLabelText("Bypass valve flow").textContent).toBe("12.3 kg/s")
   })
 
+  it("shows the turbine valve flow and no % open on either valve", () => {
+    renderTurbine({ turbineSteamFlowOut: 45.67 })
+    expect(screen.getByLabelText("Turbine valve flow").textContent).toBe("45.7 kg/s")
+    expect(screen.queryByLabelText("Turbine valve position")).toBeNull()
+    expect(screen.queryByLabelText("Bypass valve position")).toBeNull()
+  })
+
   it("toggles the main steam valve, lit while open", () => {
     const fns = renderTurbine({ mainSteamValve: true })
     const msv: HTMLElement = within(screen.getByRole("group", { name: "Main steam valve" })).getByRole(

@@ -116,7 +116,6 @@ function Deaerator() {
             Value={`${(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
             ValueWidest="9999.9 l/s"
             Step={CstDeaerator.FeedPump_Step}
-            FlowOnly
             cbAdjust={adjustFeedPumpValvePosition}
           />
           <Lamp lit={feedPumpTripped} label="Feed pump trip" title="The deaerator level fell below low-low: open the pump again once the level is back" />
