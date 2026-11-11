@@ -24,6 +24,7 @@ type AbsoluteKnobProps = {
   readonly onChange?: (value: number) => void // makes the knob a slider
   readonly step?: number // value per arrow key press or wheel notch, default 5
   readonly actual?: number // second pointer: the real position while the knob shows the command
+  readonly tone?: "valve" | "pump" // pump: a blue rim, so a pump knob reads apart from a valve knob
 }
 
 type CentreZeroKnobProps = {
@@ -295,6 +296,7 @@ function AbsoluteKnob({
   onChange,
   step = DEFAULT_STEP,
   actual,
+  tone = "valve",
 }: AbsoluteKnobProps) {
   const range: Range = { min, max }
   const clamped: number = clampTo(value, min, max)
@@ -303,6 +305,7 @@ function AbsoluteKnob({
   return (
     <svg
       {...input}
+      className={tone === "pump" ? `${input.className ?? ""} board-knob-pump` : input.className}
       viewBox="0 0 170 170"
       width={size}
       height={size}

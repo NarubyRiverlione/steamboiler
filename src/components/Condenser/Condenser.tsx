@@ -165,6 +165,7 @@ function Condenser() {
           <h3 className="board-group-title">Recirculation Pump</h3>
           <ValveControl
             Label="Recirculation pump"
+            Pump
             Caption="Flow rate:"
             Position={recirculationPumpValvePosition}
             Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
@@ -177,6 +178,7 @@ function Condenser() {
           <h3 className="board-group-title">Condensation Pump</h3>
           <ValveControl
             Label="Condensation pump"
+            Pump
             Caption="Flow rate:"
             Position={condensationPumpValvePosition}
             Value={`${(condensationPumpValvePosition * CondensationPump_MaxFlowRate).toFixed(1)} l/s`}

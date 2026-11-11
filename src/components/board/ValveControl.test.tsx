@@ -46,6 +46,14 @@ afterEach(() => {
 })
 
 describe("ValveControl", () => {
+  it("marks a pump knob so it reads apart from a valve knob", () => {
+    const { unmount } = render(<ValveControl Label="P" Position={0} Step={5} cbAdjust={vi.fn()} Pump />)
+    expect(screen.getByRole("slider", { name: "P knob" }).classList.contains("board-knob-pump")).toBe(true)
+    unmount()
+    render(<ValveControl Label="V" Position={0} Step={5} cbAdjust={vi.fn()} />)
+    expect(screen.getByRole("slider", { name: "V knob" }).classList.contains("board-knob-pump")).toBe(false)
+  })
+
   it("shows only the flow when there is one: no position LCD, the position is on the knob", () => {
     render(<ValveControl Label="P" Value="5.0 l/s" Position={0.5} Step={5} cbAdjust={vi.fn()} />)
     expect(screen.getByLabelText("P flow").textContent).toBe("5.0 l/s")

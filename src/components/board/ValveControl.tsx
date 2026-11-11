@@ -17,10 +17,11 @@ type ValveControlProps = {
   readonly Position: number // 0..1, how much the valve is actually open
   readonly Step: number // percent per arrow key press or wheel notch
   readonly cbAdjust: (delta: number) => void // change of position as a fraction, the actions add it to the position
+  readonly Pump?: boolean // a pump knob has its own cap tint
   readonly Caption?: string // visible heading of the knob, when it differs from Label
 }
 
-export function ValveControl({ Label, Value, ValueWidest, Position, Step, cbAdjust, Caption }: ValveControlProps) {
+export function ValveControl({ Label, Value, ValueWidest, Position, Step, cbAdjust, Caption, Pump = false }: ValveControlProps) {
   const { commanded, command } = useValveRamp(Position, cbAdjust)
   const percent: number = Math.round(Position * 100)
   return (
@@ -35,6 +36,7 @@ export function ValveControl({ Label, Value, ValueWidest, Position, Step, cbAdju
         ends={["0", "100"]}
         step={Step}
         size={100}
+        tone={Pump ? "pump" : "valve"}
         onChange={(value: number) => {
           command(value / 100)
         }}

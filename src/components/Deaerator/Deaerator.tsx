@@ -111,6 +111,7 @@ function Deaerator() {
           <h3 className="board-group-title">Boiler Feed Pump</h3>
           <ValveControl
             Label="Feed pump"
+            Pump
             Caption="Flow rate:"
             Position={feedPumpValvePosition}
             Value={`${(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
