@@ -4,7 +4,7 @@ The feedwater tank between the hotwell and the boiler, as built in #119: [ADR 00
 
 ## Path
 
-hotwell → condensation pump → **deaerator** → heater → economizer → boiler. The heater stays in series after the deaerator; its drain cascades back into the deaerator ([turbine.md](turbine.md#extraction-heater-88)).
+hotwell → condensation pump → **deaerator** → feed pump → heater → economizer → boiler. The heater stays in series after the deaerator; its drain cascades back into the deaerator ([turbine.md](turbine.md#extraction-heater-88)).
 
 ## The vessel
 
@@ -21,7 +21,9 @@ One lumped tank, perfectly mixed (ADR 0019 style): water mass in kg, one tempera
 | `extractionFlow`, `extractionValvePosition` | kg/s taken at the turbine tap, and the share of the valve capacity it is |
 | `letDownFlow`, `letDownValvePosition` | kg/s taken from the boiler through the let-down valve, and the share of its capacity |
 | `tapDemand` | kg/s the pressure loop asks of the tap for the next tick |
-| `outflowMass` | kg that left toward the boiler over the last tick |
+| `outflowMass` | kg the feed pump delivered toward the boiler over the last tick |
+| `feedPumpValvePosition`, `feedPumpTripped` | the boiler feed pump: valve position 0-1, and the low-low trip flag |
+| `deltaWaterMass` | kg change of the vessel over the last tick, the level trend |
 
 ## Pressure control: one loop, split range
 
@@ -31,9 +33,14 @@ Each tick the heat needed to bring the stored water and everything that enters (
 - **Let-down valve (auxiliary line):** boiler steam through a pressure-reducing valve, for what the tap did not give (turbine closed, tripped, low load, cold start). Its capacity `LetDownCapacity` (50 kg/s) scales with the boiler pressure like the steam valves ([ADR 0026](../adr/0026-valve-flow-follows-pressure.md)), and it passes nothing while the boiler pressure is at or below the deaerator pressure: the pressure needed at start-up falls out of the physics. It is shut while the burner low-low trip holds (a tripped boiler gives no steam away; the trip latches, so the valve does not chatter). The bypass does not feed the deaerator.
 - The steam of both valves mixes into the water at its own enthalpy (tap: the tap enthalpy; let-down: saturated vapour at the boiler pressure, throttled at constant enthalpy). It never cools the water: with nothing to heat the demand is zero and the temperature may drift above the setpoint (a hot drain with no Return).
 
-## Outflow (pass-through until #112)
+## Boiler feed pump (#112)
 
-What leaves toward the boiler is what entered plus the steam that heated it: **out = intake + heater drain + condensed steam**. The steam that heats the *stored* water stays in the tank, so the level rises while it warms (below); once hot the stored water takes no more and the level stays put. The boiler receives the outflow in the same tick, after the heater has heated it ([feedwater-loop.md](feedwater-loop.md#return-and-capacity)). The let-down steam leaves the boiler as steam and comes back in the outflow as water. This is a deliberate simplification until the feed pump of #112 ([design-basis.md](design-basis.md)).
+hotwell → condensation pump → **deaerator** → feed pump → heater → economizer → boiler. All the steam condenses into the tank; the **boiler feed pump** takes the water out at its valve position (`feedPumpValvePosition` × `CondensationPump_MaxFlowRate` 300 L/s × tick, litres converted to kg at the water temperature) and delivers it to the boiler, after the heater has heated it ([feedwater-loop.md](feedwater-loop.md#return-and-capacity)). It is limited by the water held and by the room in the boiler: a full boiler stops it ([ADR 0004](../adr/0004-return-stops-at-full-boiler.md)). Like the condensation pump it is a flow actuator, with no head (ADR 0030); the rated 192 kg/s is about 206 L/s at 134 °C, 69% of the valve, so no new capacity.
+
+- **Trip:** below `LowLowLevel` (12% of the volume, [design-basis.md](design-basis.md)) the valve is shut and `feedPumpTripped` set; nothing is delivered. Opening is refused (`SET_FEED_PUMP_VALVE_POSITION`) while the level is below it, closing is always allowed, and the flag clears on the next successful opening, as for the hotwell ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)).
+- **Levels:** the feed pump holds the **drum** level, the condensation pump holds the **deaerator** level. Steady, the feed pump flow is the condensation pump flow plus the heating steam (tap and let-down) and the heater drain; the vessel absorbs the difference in a transient.
+- **Condensation pump limit:** the Return stops at a full deaerator, so a full boiler backs up through the deaerator into the hotwell. The room is the vessel volume less the water at its temperature, less the steam and drain that join in the same tick.
+- **Control:** in the scenarios the loop operator holds both levels ([feedwater-loop.md](feedwater-loop.md#control)): the feed pump by the steam leaving the boiler plus `LevelGain` × the drum level error, the condensation pump by plain level feedback on the deaerator level (no feedforward from the feed pump flow). The page has the feed pump control and its trip lamp; the overview schemas are #118.
 
 ## Air, vents and relief (ADR 0038, #120)
 
@@ -70,4 +77,4 @@ The heater takes the deaerator outflow as its feedwater (flow and temperature of
 
 ## Not yet
 
-No dump valve and no level protections: the level is not limited, only the `deaerator within capacity` invariant checks it. No O₂ reading or penalties (#114). No feed pump (#112).
+No dump valve and no high-level protection: only the feed pump has its low-low trip; the `deaerator within capacity` invariant checks the capacity. No O₂ reading or penalties (#114).

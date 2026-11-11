@@ -1,6 +1,7 @@
 import { gasRateOf } from "../src/context/Boiler/BoilerTick"
 import { describe, expect, it, test } from "vitest"
-import { CstSimulation } from "../src/context/const"
+import { CstDeaerator, CstSimulation } from "../src/context/const"
+import { getWaterSpecificVolume } from "../src/utils/steamTable"
 import { hotwellValvePositions, loopOperator, LoopSettings } from "./scenarios/loop-operator"
 import { holdPressureWithGas, PressureHoldSettings } from "./scenarios/pressure-hold"
 import { StartGas } from "./scenarios/steps"
@@ -115,6 +116,7 @@ describe("loopOperator", () => {
         type: "SET_CONDENSATION_PUMP_VALVE_POSITION",
         payload: { condensationPumpValvePosition: LoopSettings.CondensationPumpOpening },
       },
+      { type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: LoopSettings.FeedPumpOpening } },
       { type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } },
       { type: "SET_SJAE_VALVE_POSITION", payload: { sjaeValvePosition: LoopSettings.SjaeOpening } },
     ])
@@ -153,39 +155,76 @@ describe("loopOperator", () => {
     expect(types(cold)).not.toContain("ADJUST_STEAM_BYPASS_VALVE")
   })
 
-  describe("feedforward feedwater control (#74)", () => {
+  describe("feedforward feedwater control (#74, #112)", () => {
     const pump = (state: PowerPlantState): number | undefined =>
-      (
-        find(state, "SET_CONDENSATION_PUMP_VALVE_POSITION") as
-          { payload: { condensationPumpValvePosition: number } } | undefined
-      )?.payload.condensationPumpValvePosition
+      (find(state, "SET_FEED_PUMP_VALVE_POSITION") as { payload: { feedPumpValvePosition: number } } | undefined)?.payload
+        .feedPumpValvePosition
     const target = { pressure: PressureHoldSettings.Target }
     const atPump = (state: PowerPlantState, position: number): PowerPlantState => ({
       ...state,
-      Condenser: { ...state.Condenser, condensationPumpValvePosition: position },
+      Deaerator: { ...state.Deaerator, feedPumpValvePosition: position },
     })
 
-    test("a low level trims the pump open by the level gain", () => {
-      expect(pump(steaming({ ...target, waterVolume: boilerAt(0.4) }))).toBeCloseTo(
-        LoopSettings.LevelGain * 0.1,
-      )
+    test("a low level trims the feed pump open by the level gain", () => {
+      expect(pump(steaming({ ...target, waterVolume: boilerAt(0.4) }))).toBeCloseTo(LoopSettings.LevelGain * 0.1)
     })
 
-    test("a high level trims the pump shut, never below closed", () => {
+    test("a high level trims the feed pump shut, never below closed", () => {
       expect(pump(atPump(steaming({ ...target, waterVolume: boilerAt(0.6) }), 0.5))).toBeCloseTo(-0.5)
     })
 
-    test("at target level the pump follows the steam leaving the boiler", () => {
+    test("at target level the feed pump follows all the steam leaving the boiler, in litres at the deaerator temperature", () => {
       const flowing = steaming(
         { ...target, waterVolume: boilerAt(LoopSettings.BoilerLevelTarget) },
         { turbineSteamFlowOut: 120, bypassSteamFlowOut: 30 },
       )
-      expect(pump(flowing)).toBeCloseTo(150 / CstCondenser.CondensationPump_MaxFlowRate)
+      const withLetDown: PowerPlantState = { ...flowing, Deaerator: { ...flowing.Deaerator, letDownFlow: 10, temperature: 134 } }
+      expect(pump(withLetDown)).toBeCloseTo((160 * getWaterSpecificVolume(134)) / CstCondenser.CondensationPump_MaxFlowRate)
     })
 
     test("asks for nothing once the pump is where the control wants it", () => {
       const state = steaming({ ...target, waterVolume: boilerAt(LoopSettings.BoilerLevelTarget) })
       expect(pump(state)).toBeUndefined()
+    })
+  })
+
+  describe("deaerator level feedback on the condensation pump (#112)", () => {
+    const pump = (state: PowerPlantState): number | undefined =>
+      (find(state, "SET_CONDENSATION_PUMP_VALVE_POSITION") as { payload: { condensationPumpValvePosition: number } } | undefined)
+        ?.payload.condensationPumpValvePosition
+    const target = { pressure: PressureHoldSettings.Target, waterVolume: boilerAt(LoopSettings.BoilerLevelTarget) }
+    const deaerator = (
+      level: number,
+      deltaWaterMass = 0,
+      position = 0.3,
+    ): PowerPlantState => {
+      const state = steaming(target)
+      return {
+        ...state,
+        Deaerator: { ...state.Deaerator, waterVolume: level * CstDeaerator.TotalVolume, deltaWaterMass },
+        Condenser: { ...state.Condenser, condensationPumpValvePosition: position },
+      }
+    }
+
+    test("a low level opens the pump by the gain, a high level closes it", () => {
+      expect(pump(deaerator(0.4))).toBeCloseTo(LoopSettings.DeaeratorLevelGain * 0.1 * LoopSettings.AdjustEvery)
+      expect(pump(deaerator(0.6))).toBeCloseTo(-LoopSettings.DeaeratorLevelGain * 0.1 * LoopSettings.AdjustEvery)
+    })
+
+    test("a rising level damps it: the pump closes a little with the level at target", () => {
+      expect(pump(deaerator(LoopSettings.DeaeratorLevelTarget, 5))).toBeLessThan(0)
+    })
+
+    test("does not follow the feed pump flow: at target and steady it asks for nothing whatever the feed pump does", () => {
+      const state = deaerator(LoopSettings.DeaeratorLevelTarget)
+      expect(pump(state)).toBeUndefined()
+      expect(pump({ ...state, Deaerator: { ...state.Deaerator, feedPumpValvePosition: 0.9 } })).toBeUndefined()
+    })
+
+    test("holds nothing before the main steam valve opens", () => {
+      const state = deaerator(0.4)
+      // below working pressure, so the operator does not open the main steam valve (and the pumps) either
+      expect(pump({ ...state, Boiler: { ...state.Boiler, pressure: 5 }, Turbine: { ...state.Turbine, mainSteamValve: false } })).toBeUndefined()
     })
   })
 
@@ -195,9 +234,9 @@ describe("loopOperator", () => {
       gasFlow: StartGas,
       waterVolume: boilerAt(0.4),
     })
-    expect(types(low, 0.5)).not.toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
+    expect(types(low, 0.5)).not.toContain("SET_FEED_PUMP_VALVE_POSITION")
     expect(types(low, 0.5)).not.toContain("SET_GAS_RATE")
-    expect(types(low, 1)).toContain("SET_CONDENSATION_PUMP_VALVE_POSITION")
+    expect(types(low, 1)).toContain("SET_FEED_PUMP_VALVE_POSITION")
     expect(types(low, 1)).toContain("SET_GAS_RATE")
   })
 

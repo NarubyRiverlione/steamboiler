@@ -16,13 +16,13 @@ describe("return-stop", () => {
   test("runs at full gas, with the economizer heating the Return before the stop", () => {
     const flowing = before[before.length - 1].state
     expect(flowing.Boiler.gasFlow).toBe(CstBoiler.MaxGasFlow)
-    expect(flowing.Condenser.returnRate).toBeGreaterThan(0)
-    expect(flowing.Boiler.returnTemperatureOut).toBeGreaterThan(flowing.Condenser.hotwellTemperature + 30)
+    expect(flowing.Deaerator.outflowMass).toBeGreaterThan(0)
+    expect(flowing.Boiler.returnTemperatureOut).toBeGreaterThan(flowing.Deaerator.temperature + 30)
   })
 
-  test("the Return stops, the economizer recovers nothing and the efficiency falls to about 79% in one tick", () => {
+  test("the feed pump stops, the economizer recovers nothing and the efficiency falls to about 79% in one tick", () => {
     for (const { state } of after) {
-      expect(state.Condenser.returnRate).toBe(0)
+      expect(state.Deaerator.outflowMass).toBe(0)
       // nothing flows to the economizer, which reads the temperature of the water it would get: the deaerator's
       expect(state.Boiler.returnTemperatureOut).toBe(state.Deaerator.temperature)
     }

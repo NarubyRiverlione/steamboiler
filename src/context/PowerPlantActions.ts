@@ -18,6 +18,7 @@ type PowerPlantAction =
   | { type: "SET_LOAD_SETPOINT"; payload: { loadSetpoint: number } }
   // Deaerator Actions
   | { type: "TOGGLE_DEAERATOR_VENT" } // the manual start-up vent, open or closed
+  | { type: "SET_FEED_PUMP_VALVE_POSITION"; payload: { feedPumpValvePosition: number } } // the boiler feed pump (#112)
   // Condenser Actions
   | { type: "SET_AIR_EXTRACTION_PUMP_ENABLED"; payload: { isAirExtractionPumpEnabled: boolean } }
   | { type: "SET_SJAE_ENABLED"; payload: { isSjaeEnabled: boolean } }
