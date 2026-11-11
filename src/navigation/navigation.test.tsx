@@ -11,6 +11,13 @@ import PlantOverview from "./PlantOverview"
 import AppRoutes from "./AppRoutes"
 import PowerPlantProvider from "../context/PowerPlantProvider"
 import { neighbourPath, partAlarms } from "./plantParts"
+import { LABELS, NODES, type DiagramNode } from "./plantDiagram"
+
+function nodeById(id: string): DiagramNode {
+  const found: DiagramNode | undefined = NODES.find((node: DiagramNode) => node.id === id)
+  if (found === undefined) throw new Error("no node " + id)
+  return found
+}
 
 function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>
@@ -141,6 +148,31 @@ describe("plant overview", () => {
     state.Deaerator.safeToClose = true
     renderAt("/", state)
     expect(screen.getByRole("img", { name: "Deaerator safe to close: on" })).toBeTruthy()
+  })
+
+  it("draws the boiler feed pump after the deaerator, linking to the deaerator page", () => {
+    renderAt("/")
+    const deaerator: DiagramNode = nodeById("deaerator")
+    const pump: DiagramNode = nodeById("feedpump")
+    const heater: DiagramNode = nodeById("heater")
+    expect(pump.x).toBeLessThan(deaerator.x)
+    expect(heater.y).toBeLessThan(pump.y)
+    fireEvent.click(screen.getByRole("link", { name: "Boiler feed pump, opens Deaerator" }))
+    expect(where()).toBe("/deaerator")
+  })
+
+  it("draws the let-down valve and the extraction non-return valve, and no pass-through", () => {
+    renderAt("/")
+    expect(screen.getByText("Let-down")).toBeTruthy()
+    expect(screen.getByText("Non-return")).toBeTruthy()
+    expect(NODES.some((node: DiagramNode) => /pass-through/i.test(node.name.join(" ")))).toBe(false)
+  })
+
+  it("labels the auxiliary steam, the extraction steam and the heater drain cascade", () => {
+    const texts: string[] = LABELS.map((label: { text: string }) => label.text)
+    expect(texts).toContain("auxiliary steam")
+    expect(texts).toContain("extraction steam")
+    expect(texts).toContain("heater drain")
   })
 
   it("shows the extraction heater and the air preheater without a link", () => {

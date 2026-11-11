@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 730" width="1480" role="img" aria-labelledby="t d">
   <title id="t">The plant as built</title>
-  <desc id="d">Water and steam run round one loop: boiler, main steam valve, turbine, condenser, hotwell, condensation pump, back to the boiler. Gas heat enters at the top left and leaves through the stack and the cooling water.</desc>
+  <desc id="d">Water and steam run round one loop: boiler, main steam valve, turbine, condenser, hotwell, condensation pump, deaerator, boiler feed pump, extraction heater, back to the boiler. The deaerator is heated by turbine tap steam through a non-return valve and by boiler steam through a let-down valve (the auxiliary line); the heater drain cascades back into it. Gas heat enters at the top left and leaves through the stack and the cooling water.</desc>
   <style>
     :root { --bg: #ffffff; --fg: #24292f; }
     @media (prefers-color-scheme: dark) { :root { --bg: #0d1117; --fg: #e6edf3; } }
@@ -66,6 +66,13 @@
   <path class="line l-steam" d="M700 260 L700 329" marker-end="url(#a-steam)"/>
   <path class="line l-steam" d="M760 355 L1040 355 L1040 419" marker-end="url(#a-steam)"/>
   <path class="line l-steam" d="M1100 260 L1100 419" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M1070 260 L1070 300 L711 300 A10 10 0 0 0 691 300 L615 300 A10 10 0 0 0 595 300 L550 300 L550 379" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M550 425 L550 623" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M550 345 L420 345 L420 499" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M605 230 L605 449" marker-end="url(#a-steam)"/>
+  <path class="line l-steam" d="M605 495 L605 623" marker-end="url(#a-steam)"/>
+  <text class="label mid" x="900" y="292">extraction steam</text>
+  <text class="label" text-anchor="end" x="595" y="270">auxiliary steam</text>
   <text class="label mid" x="440" y="220">steam</text>
   <text class="label mid" x="900" y="345">vapour</text>
   <text class="label" x="1112" y="345">exhaust</text>
@@ -75,19 +82,29 @@
   <rect class="n-cooling" x="1010" y="420" width="120" height="110" rx="14"/><text class="name" x="1070" y="475">Condenser</text>
   <rect class="n-water" x="1010" y="610" width="120" height="90" rx="14"/><text class="name" x="1070" y="655">Hotwell</text>
   <rect class="n-water" x="640" y="625" width="140" height="60" rx="3"/><text class="name" x="710" y="646.5">Condensation</text><text class="name" x="710" y="663.5">pump</text>
+  <rect class="n-water" x="500" y="625" width="120" height="60" rx="14"/><text class="name" x="560" y="655">Deaerator</text>
+  <rect class="n-water" x="360" y="630" width="120" height="50" rx="3"/><text class="name" x="420" y="646.5">Boiler feed</text><text class="name" x="420" y="663.5">pump</text>
+  <rect class="n-steam" x="360" y="500" width="120" height="50" rx="3"/><text class="name" x="420" y="516.5">Extraction</text><text class="name" x="420" y="533.5">heater</text>
+  <rect class="n-steam" x="505" y="380" width="90" height="44" rx="3"/><text class="name" x="550" y="393.5">Non-return</text><text class="name" x="550" y="410.5">valve</text>
+  <rect class="n-steam" x="560" y="450" width="90" height="44" rx="3"/><text class="name" x="605" y="463.5">Let-down</text><text class="name" x="605" y="480.5">valve</text>
   <rect class="n-water" x="1240" y="595" width="100" height="40" rx="20"/><text class="name" x="1290" y="615">Storage</text>
   <rect class="n-water" x="1240" y="670" width="100" height="40" rx="20"/><text class="name" x="1290" y="690">Storage</text>
   <path class="line l-water" d="M200 260 L200 339" marker-end="url(#a-water)"/>
   <path class="line l-water" d="M1040 530 L1040 609" marker-end="url(#a-water)"/>
   <path class="line l-water" d="M1100 530 L1100 609" marker-end="url(#a-water)"/>
   <path class="line l-water" d="M1010 655 L781 655" marker-end="url(#a-water)"/>
-  <path class="line l-water" d="M640 655 L270 655 L270 261" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M640 655 L621 655" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M499 655 L481 655" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M420 629 L420 551" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M359 525 L270 525 L270 261" marker-end="url(#a-water)"/>
+  <path class="line l-water" d="M481 535 L510 535 L510 623" marker-end="url(#a-water)"/>
   <path class="line l-water" d="M1240 615 L1131 630" marker-end="url(#a-water)"/>
   <path class="line l-water" d="M1130 680 L1239 690" marker-end="url(#a-water)"/>
   <text class="label mid" x="170" y="305">drain</text>
   <text class="label" text-anchor="end" x="1030" y="575">condensate</text>
   <text class="label" x="1112" y="575">exhaust moisture</text>
-  <text class="label mid strong" x="450" y="645">Return</text>
+  <text class="label mid strong" x="700" y="615">Return</text>
+  <text class="label" x="428" y="590">heater drain</text>
   <text class="label mid" x="1185" y="612">makeup</text>
   <text class="label mid" x="1185" y="705">reject</text>
 
@@ -116,6 +133,6 @@
   <path class="line l-vacuum dash" d="M690 508 L759 508" marker-end="url(#a-vacuum)"/>
   <text class="label mid" x="970" y="432">vacuum</text>
   <text class="label mid" x="970" y="498">vacuum</text>
-  <text class="label mid" x="620" y="500">motive steam from</text>
-  <text class="label mid" x="620" y="518">the boiler, none taken</text>
+  <text class="label mid" x="725" y="535">motive steam from</text>
+  <text class="label mid" x="725" y="553">the boiler, none taken</text>
 </svg>
