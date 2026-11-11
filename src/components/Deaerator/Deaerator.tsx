@@ -5,7 +5,7 @@ import { CstDeaerator, CstSimulation } from "../../context/const"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
-import { LensButton } from "../board/LensButton"
+import { TurnSwitch } from "../board/TurnSwitch"
 import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
@@ -115,10 +115,14 @@ function Deaerator() {
             <h3 className="board-group-title">Vents</h3>
             <div className="board-group-cols">
               <div className="board-instrument">
+                <TurnSwitch
+                  label="Start-up vent"
+                  offLabel="CLOSED"
+                  onLabel="OPEN"
+                  on={startUpVentOpen}
+                  onToggle={toggleDeaeratorVent}
+                />
                 <span className="board-readout-label">Start-up vent</span>
-                <LensButton pressed={startUpVentOpen} onClick={toggleDeaeratorVent} widest="CLOSE">
-                  {startUpVentOpen ? "CLOSE" : "OPEN"}
-                </LensButton>
                 <Lamp
                   lit={safeToClose}
                   tone="ok"

@@ -51,15 +51,17 @@ describe("Deaerator page", () => {
     expect(screen.getByLabelText("Deaerator level change").textContent).toBe("-2.5 kg/s")
   })
 
-  it("opens the start-up vent from OPEN and closes it from CLOSE", () => {
+  it("toggles the start-up vent from its switch", () => {
     const shut = renderDeaerator({ startUpVentOpen: false })
-    fireEvent.click(screen.getByRole("button", { name: "OPEN" }))
+    const vent: HTMLElement = screen.getByRole("switch", { name: "Start-up vent" })
+    expect(vent.getAttribute("aria-checked")).toBe("false")
+    fireEvent.click(vent)
     expect(shut.toggleDeaeratorVent).toHaveBeenCalledTimes(1)
   })
 
-  it("offers CLOSE while the vent is open", () => {
+  it("shows the vent switch on OPEN while the vent is open", () => {
     renderDeaerator({ startUpVentOpen: true })
-    expect(screen.getByRole("button", { name: "CLOSE" })).toBeTruthy()
+    expect(screen.getByRole("switch", { name: "Start-up vent" }).getAttribute("aria-checked")).toBe("true")
   })
 
   it("lights the safe-to-close lamp from the state", () => {
