@@ -3,6 +3,7 @@
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import formatSigned from "../../utils/formatSigned"
+import { waterKgPerSecond } from "../../utils/flowUnits"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
@@ -22,6 +23,7 @@ const {
     RecirculationPump_Step,
     CondensationPump_Step,
     RecirculationPump_MaxFlowRate,
+    RecirculationPump_IntakeTemperature,
     Makeup_Step,
     Makeup_MaxFlowRate,
     Reject_Step,
@@ -172,8 +174,8 @@ function Condenser() {
             Label="Recirculation pump"
             Caption="Flow rate:"
             Position={recirculationPumpValvePosition}
-            Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
-            ValueWidest="9999.9 l/s"
+            Value={`${waterKgPerSecond(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature).toFixed(1)} kg/s`}
+            ValueWidest="9999.9 kg/s"
             Step={RecirculationPump_Step}
             cbAdjust={adjustRecirculationPumpValvePosition}
           />
@@ -195,8 +197,8 @@ function Condenser() {
               Label="Makeup"
               Caption="Makeup:"
               Position={makeupValvePosition}
-              Value={`${(makeupValvePosition * Makeup_MaxFlowRate).toFixed(1)} l/s`}
-              ValueWidest="9999.9 l/s"
+              Value={`${waterKgPerSecond(makeupValvePosition * Makeup_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
+              ValueWidest="9999.9 kg/s"
               Step={Makeup_Step}
               cbAdjust={adjustMakeupValvePosition}
             />
@@ -204,8 +206,8 @@ function Condenser() {
               Label="Reject"
               Caption="Reject:"
               Position={rejectValvePosition}
-              Value={`${(rejectValvePosition * Reject_MaxFlowRate).toFixed(1)} l/s`}
-              ValueWidest="9999.9 l/s"
+              Value={`${waterKgPerSecond(rejectValvePosition * Reject_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
+              ValueWidest="9999.9 kg/s"
               Step={Reject_Step}
               cbAdjust={adjustRejectValvePosition}
             />

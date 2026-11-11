@@ -74,10 +74,10 @@ describe("Condenser page", () => {
   })
 
   it("shows flow rates of the valves that have one", () => {
-    renderCondenser({ recirculationPumpValvePosition: 0.5, makeupValvePosition: 0.2, rejectValvePosition: 1 })
-    expect(screen.getByLabelText("Recirculation pump flow").textContent).toBe("3700.0 l/s")
-    expect(screen.getByLabelText("Makeup flow").textContent).toBe("10.0 l/s")
-    expect(screen.getByLabelText("Reject flow").textContent).toBe("50.0 l/s")
+    renderCondenser({ hotwellTemperature: 40, recirculationPumpValvePosition: 0.5, makeupValvePosition: 0.2, rejectValvePosition: 1 })
+    expect(screen.getByLabelText("Recirculation pump flow").textContent).toBe("3693.4 kg/s")
+    expect(screen.getByLabelText("Makeup flow").textContent).toBe("9.9 kg/s")
+    expect(screen.getByLabelText("Reject flow").textContent).toBe("49.6 kg/s")
   })
 
   it("has the pressure gauge and the hotwell level gauge", () => {

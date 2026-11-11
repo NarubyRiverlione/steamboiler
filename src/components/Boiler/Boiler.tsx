@@ -4,6 +4,7 @@ import { useState, type SyntheticEvent } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
 import formatSigned from "../../utils/formatSigned"
+import { gasKgPerSecond } from "../../utils/flowUnits"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
@@ -217,7 +218,7 @@ function Boiler() {
             deadZone={GasRateDeadZone}
             onChange={setGasRate}
           />
-          <Display label="Gas flow" text={`${gasFlow.toFixed(0)} l/s`} widest="12000 l/s" />
+          <Display label="Gas flow" text={`${gasKgPerSecond(gasFlow).toFixed(1)} kg/s`} widest="999.9 kg/s" />
           <span className="board-rate-indicator" role="status" aria-label="Gas trend">
             {gasTrend}
           </span>

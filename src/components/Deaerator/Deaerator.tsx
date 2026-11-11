@@ -9,6 +9,7 @@ import { LevelGauge } from "../board/LevelGauge"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
+import { waterKgPerSecond } from "../../utils/flowUnits"
 import { warningText } from "./warningText"
 
 const PRESSURE_MAX = 5 // bar, top of the dial: the relief valve lifts at 4
@@ -117,8 +118,8 @@ function Deaerator() {
             Label="Feed pump"
             Caption="Flow rate:"
             Position={feedPumpValvePosition}
-            Value={`${(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
-            ValueWidest="9999.9 l/s"
+            Value={`${waterKgPerSecond(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate, temperature).toFixed(1)} kg/s`}
+            ValueWidest="9999.9 kg/s"
             Step={CstDeaerator.FeedPump_Step}
             cbAdjust={adjustFeedPumpValvePosition}
           />
