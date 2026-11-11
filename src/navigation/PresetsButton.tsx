@@ -10,7 +10,7 @@ const BOARD_KEYS: readonly string[] = ["Escape", "PageUp", "PageDown"]
 
 function PresetsButton() {
   const { dispatch } = usePowerPlant()
-  const { clearAcknowledgements } = useAnnunciator()
+  const { clearLatches } = useAnnunciator()
   const [isOpen, setOpen] = useState<boolean>(false)
   const dialogRef = useRef<HTMLDivElement>(null)
   const returnFocus = useRef<HTMLElement | null>(null)
@@ -30,7 +30,7 @@ function PresetsButton() {
   }
   const choose = (preset: StartPreset): void => {
     dispatch({ type: "LOAD_STATE", payload: { state: presetState(preset) } })
-    clearAcknowledgements()
+    clearLatches()
     close()
   }
 

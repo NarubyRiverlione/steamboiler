@@ -17,7 +17,7 @@ The rows come from general plant knowledge, not from a research note, so their e
 | **Boiler** | Real drum and tubes: circulation, swell and shrink, a drum level in mm, a separate metal temperature | Almost none on output and efficiency. Very large on behaviour: harder level control, level trips with real meaning, real thermal stress | Deliberately left out ([ADR 0019](../adr/0019-boiler-is-one-lumped-vessel.md)); changing it needs a new ADR and a ticket |
 | **Turbine** | Separate HP, IP and LP casings; moisture separators | Partly follows from the superheater | Separators are a departure in [ADR 0031](../adr/0031-one-extraction-heater.md) |
 | | Gland seal steam, lube oil, turning gear | Start-up and shutdown steps | No ticket |
-| | Overspeed trip | Protection | #72 |
+| | Second (mechanical) overspeed trip stage and a pre-trip alarm | Protection | The one trip at `MaxRPM` is in ([ADR 0040](../adr/0040-turbine-trip-on-overspeed.md), #72) |
 | **Electrical** | Synchronising to a real grid, excitation, transformer | Operator task | Sync is planned as phase 5 in [turbine.md](turbine.md) |
 | | Plant's own power use: pumps and fans take about 5 to 10% of output | Small and cheap to add; turns gross output into net | No ticket |
 | **Cooling** | Cooling tower or river; the cooling water is always 10 °C | Seasonal effect on vacuum | No ticket |

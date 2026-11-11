@@ -4,6 +4,7 @@ import {
   calculateValveAdjustment,
   isAboveMainSteamValveMinimum,
   isAboveVacuumLimit,
+  isAtOverspeed,
   isAtSyncSpeed,
   isWithinHoldWindow,
   loadAfter,
@@ -56,9 +57,9 @@ function TurbineTick(
     generatorBreaker, // Update breaker status
   }
 
-  // Above the vacuum limit an open valve trips (ADR 0003)
+  // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) an open valve trips
   const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
-  if (isAboveVacuumLimit(condenserPressure) && currentPosition > 0) return { ...ticked, ...turbineTrip }
+  if ((isAboveVacuumLimit(condenserPressure) || isAtOverspeed(newRPM)) && currentPosition > 0) return { ...ticked, ...turbineTrip }
 
   // Otherwise the Ramp up / Hold PID may move the valve, never past the cap; an opening clears the trip flag
   const pid = updateTurbineValve(turbineState, newRPM, maxTurbineValvePosition(currentPosition, condenserPressure))

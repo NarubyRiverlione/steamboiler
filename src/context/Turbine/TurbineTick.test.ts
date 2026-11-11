@@ -137,6 +137,50 @@ describe("TurbineTick", () => {
     })
   })
 
+  describe("overspeed trip (ADR 0040)", () => {
+    const { MaxRPM } = CstSimulation.CstTurbine
+    // Free mode, breaker open, valve open and steam flowing: the unloaded rotor accelerates
+    const open: TurbineState = {
+      ...initialState,
+      mainSteamValve: true,
+      turbineValvePosition: 0.5,
+      turbineSteamFlowOut: 50,
+      pidIntegralError: 3,
+      speedReference: 3000,
+    }
+
+    it("does not trip just below the limit", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM - 50 }, 165, 31)
+      expect(result.rpm).toBeLessThan(MaxRPM)
+      expect(result.turbineTripped).toBe(false)
+      expect(result.turbineValvePosition).toBe(0.5)
+    })
+
+    it("trips when the speed reaches the limit with the valve open, with the full set of trip values", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM, speedMode: "hold", runUpPoint: 3000 }, 165, 31)
+      expect(result.rpm).toBeGreaterThanOrEqual(MaxRPM)
+      expect(result).toMatchObject({
+        turbineValvePosition: 0,
+        speedMode: "free",
+        pidIntegralError: 0,
+        speedReference: 0,
+        turbineTripped: true,
+      })
+    })
+
+    it("leaves the bypass valve and the main steam valve alone", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM, bypassValvePosition: 0.4 }, 165, 31)
+      expect(result.bypassValvePosition).toBe(0.4)
+      expect(result.mainSteamValve).toBe(true)
+    })
+
+    it("changes nothing with the valve shut", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM + 100, turbineValvePosition: 0 }, 165, 31)
+      expect(result.turbineTripped).toBe(false)
+      expect(result.speedMode).toBe("free")
+    })
+  })
+
   it("should calculate RPM based on steam flow and boiler pressure", () => {
     // Arrange
     const testState: TurbineState = {

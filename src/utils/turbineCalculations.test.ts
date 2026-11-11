@@ -7,6 +7,7 @@ import {
   generatorFrequency,
   isAboveVacuumLimit,
   isAtSyncSpeed,
+  isAtOverspeed,
   loadAfter,
   loadSetpointRefusal,
   maxTurbineValvePosition,
@@ -225,5 +226,16 @@ describe("calculateRPM", () => {
 
   test("RatedEnthalpyDrop matches the steam table at 165 bar and the 31 mbar design vacuum", () => {
     expect(Math.abs(getIsentropicEnthalpyDrop(165, 0.031) - RatedEnthalpyDrop)).toBeLessThan(RatedEnthalpyDrop * 0.005)
+  })
+})
+
+describe("overspeed limit", () => {
+  const limit = CstTurbine.MaxRPM
+
+  test("isAtOverspeed is true at the limit and above, false just below", () => {
+    expect(isAtOverspeed(limit)).toBe(true)
+    expect(isAtOverspeed(limit + 0.1)).toBe(true)
+    expect(isAtOverspeed(limit - 0.1)).toBe(false)
+    expect(isAtOverspeed(0)).toBe(false)
   })
 })

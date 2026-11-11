@@ -1,29 +1,41 @@
-/** Annunciator state of the UI layer: which tiles are lit and flashing, ACK and TEST. Nothing here reaches the simulation. */
+/** Annunciator state of the UI layer: which tiles are lit and flashing, ACK and RESET (latching). Nothing here reaches the simulation. */
 
 import { useState, type ReactNode } from "react"
 import usePowerPlant from "../context/PowerPlantContext"
 import { ALARMS, type Alarm, type AlarmId } from "./alarms"
 import { AnnunciatorContext, type AnnunciatorValue } from "./useAnnunciator"
 
+type LatchState = "flashing" | "steady"
+type Latches = Readonly<Partial<Record<AlarmId, LatchState>>>
+
 export function AnnunciatorProvider({ children }: { readonly children: ReactNode }) {
   const { state } = usePowerPlant()
-  const [acked, setAcked] = useState<readonly AlarmId[]>([])
-  const [testing, setTesting] = useState<boolean>(false)
+  const [latches, setLatches] = useState<Latches>({})
   const active: readonly AlarmId[] = ALARMS.filter((a: Alarm) => a.active(state)).map((a: Alarm) => a.id)
 
-  // A cleared flag forgets its acknowledgement, so the next trip flashes again (adjusted while rendering, not in an effect)
-  const stillActive: readonly AlarmId[] = acked.filter((id: AlarmId) => active.includes(id))
-  if (stillActive.length !== acked.length) setAcked(stillActive)
+  // A new trip flashes; a flashing tile whose flag clears goes dark; a steady one stays latched (adjusted while rendering, not in an effect)
+  const next: Partial<Record<AlarmId, LatchState>> = {}
+  for (const a of ALARMS) {
+    const current: LatchState | undefined = latches[a.id]
+    if (current === "steady") next[a.id] = "steady"
+    else if (active.includes(a.id)) next[a.id] = "flashing"
+  }
+  const changed: boolean = ALARMS.some((a: Alarm) => next[a.id] !== latches[a.id])
+  if (changed) setLatches(next)
 
   const value: AnnunciatorValue = {
     tiles: ALARMS.map((a: Alarm) => {
-      const on: boolean = active.includes(a.id)
-      return { id: a.id, label: a.label, part: a.part, severity: a.severity, lit: on || testing, flashing: on && !testing && !acked.includes(a.id) }
+      const latch: LatchState | undefined = next[a.id]
+      return { id: a.id, label: a.label, part: a.part, severity: a.severity, lit: latch !== undefined, flashing: latch === "flashing" }
     }),
-    testing,
-    acknowledge: (): void => { setAcked(active); },
-    clearAcknowledgements: (): void => { setAcked([]); },
-    setTesting,
+    acknowledge: (): void => {
+      setLatches((prev: Latches) => Object.fromEntries(Object.keys(prev).map((id: string) => [id, "steady"])))
+    },
+    // RESET: a steady tile goes dark only when its flag is clear
+    reset: (): void => {
+      setLatches((prev: Latches) => Object.fromEntries(Object.entries(prev).filter(([id, l]) => l === "flashing" || active.includes(id as AlarmId))))
+    },
+    clearLatches: (): void => { setLatches({}); },
   }
 
   return <AnnunciatorContext.Provider value={value}>{children}</AnnunciatorContext.Provider>

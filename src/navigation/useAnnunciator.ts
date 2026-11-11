@@ -15,11 +15,12 @@ export type Tile = {
 
 export type AnnunciatorValue = {
   readonly tiles: readonly Tile[]
-  readonly testing: boolean
+  // Flashing tiles become steady
   readonly acknowledge: () => void
-  // Forgets every acknowledgement (a loaded preset is a fresh plant)
-  readonly clearAcknowledgements: () => void
-  readonly setTesting: (on: boolean) => void
+  // Darkens the steady tiles whose flag is clear
+  readonly reset: () => void
+  // Forgets every latched tile (a loaded preset is a fresh plant)
+  readonly clearLatches: () => void
 }
 
 export const AnnunciatorContext = createContext<AnnunciatorValue | undefined>(undefined)
