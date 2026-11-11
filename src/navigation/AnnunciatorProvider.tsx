@@ -18,7 +18,7 @@ export function AnnunciatorProvider({ children }: { readonly children: ReactNode
   const value: AnnunciatorValue = {
     tiles: ALARMS.map((a: Alarm) => {
       const on: boolean = active.includes(a.id)
-      return { id: a.id, label: a.label, part: a.part, lit: on || testing, flashing: on && !testing && !acked.includes(a.id) }
+      return { id: a.id, label: a.label, part: a.part, severity: a.severity, lit: on || testing, flashing: on && !testing && !acked.includes(a.id) }
     }),
     testing,
     acknowledge: (): void => { setAcked(active); },

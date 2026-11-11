@@ -9,7 +9,7 @@ Decided in #40 (start-up discussion, 2026-11-09); built in #120 (the numbers and
 - **Vent closed with air present:** steam cannot push the air out, pressure climbs while the temperature lags saturation, heating is slow, and above the relief pressure the relief valve lifts and loses steam.
 - **No damage and no O₂ penalties.** Those are the P4 ticket #114.
 - **Safe-to-close lamp** comes from the air amount (air partial pressure below a small threshold), not from a separate rule.
-- **Warnings, not trips:** the sim exposes two flags (closed with air present; open with no air left). The yellow annunciator tile belongs to the owner's annunciator ticket (#115, #116).
+- **Warnings, not trips:** the sim exposes two flags (closed with air present; open with no air left). The yellow annunciator tile belongs to #116; it declares `severity: "warning"` in `alarms.ts` (the severity colours are built, #115).
 - **Panel:** own page with temperature, pressure, saturation pressure (the gap to pressure is the air), level %, lamp, vent control and warning text. The overview shows temperature, level % and the lamp while the start-up vent is open.
 
 ## Answered (owner, 2026-11-10)

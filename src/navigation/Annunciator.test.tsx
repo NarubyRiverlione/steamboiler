@@ -112,6 +112,27 @@ describe("Annunciator", () => {
     expect(screen.getByTestId("where").textContent).toBe("/turbine")
   })
 
+  it("colours a tile by its alarm severity: warning yellow, error red", () => {
+    render(tree(stateWith({})))
+    expect(tile("Heating rate over limit").className).toContain("board-tile-warning")
+    for (const name of ["Burner trip", "Condensation pump trip", "Turbine trip"]) {
+      expect(tile(name).className).toContain("board-tile-error")
+      expect(tile(name).className).not.toContain("board-tile-warning")
+    }
+  })
+
+  it("keeps the severity colour class while flashing and while steady", () => {
+    render(tree(stateWith({ heat: true, burner: true })))
+    expect(flashing("Heating rate over limit")).toBe(true)
+    expect(tile("Heating rate over limit").className).toContain("board-tile-warning")
+    expect(tile("Burner trip").className).toContain("board-tile-error")
+    fireEvent.click(screen.getByRole("button", { name: "ACK" }))
+    expect(flashing("Heating rate over limit")).toBe(false)
+    expect(lit("Heating rate over limit")).toBe(true)
+    expect(tile("Heating rate over limit").className).toContain("board-tile-warning")
+    expect(tile("Burner trip").className).toContain("board-tile-error")
+  })
+
   it("throws a clear error outside the provider", () => {
     expect(() => render(<MemoryRouter><Annunciator /></MemoryRouter>)).toThrow(/AnnunciatorProvider/)
   })
