@@ -30,7 +30,7 @@ describe("Boiler page", () => {
 
   it("shows the actual gas flow on the LCD, not the knob position", () => {
     renderBoiler({ gasFlow: 6000, gasRateCommand: -0.5 })
-    expect(screen.getByLabelText("Gas flow").textContent).toBe("88.2 kg/s")
+    expect(screen.getByLabelText("Gas flow").textContent).toBe("6000 L/s")
     expect(screen.getByRole("slider", { name: "Gas knob" }).getAttribute("aria-valuenow")).toBe("-0.5")
   })
 

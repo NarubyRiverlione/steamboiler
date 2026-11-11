@@ -2,13 +2,12 @@
 
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
-import formatSigned from "../../utils/formatSigned"
 import { waterKgPerSecond } from "../../utils/flowUnits"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { LensButton } from "../board/LensButton"
-import { LevelGauge } from "../board/LevelGauge"
+import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
@@ -22,6 +21,7 @@ const {
     SJAE_ValveStep,
     RecirculationPump_Step,
     CondensationPump_Step,
+    CondensationPump_MaxFlowRate,
     RecirculationPump_MaxFlowRate,
     RecirculationPump_IntakeTemperature,
     Makeup_Step,
@@ -129,12 +129,7 @@ function Condenser() {
             </span>
           </div>
 
-          <div className="board-instrument">
-            <span className="board-instrument-label">Hotwell level</span>
-            <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
-            <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} widest="100.0" />
-            <Display label="Hotwell level change" text={formatSigned(smoothWaterChange, 1, "kg/s")} widest="-999.9 kg/s" />
-          </div>
+          <LevelInstrument label="Hotwell level" fraction={hotwellLevel} change={smoothWaterChange} />
         </div>
 
         <div className="board-group">
@@ -172,6 +167,7 @@ function Condenser() {
           <h3 className="board-group-title">Recirculation Pump</h3>
           <ValveControl
             Label="Recirculation pump"
+            Pump
             Caption="Flow rate:"
             Position={recirculationPumpValvePosition}
             Value={`${waterKgPerSecond(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature).toFixed(1)} kg/s`}
@@ -184,8 +180,11 @@ function Condenser() {
           <h3 className="board-group-title">Condensation Pump</h3>
           <ValveControl
             Label="Condensation pump"
+            Pump
             Caption="Flow rate:"
             Position={condensationPumpValvePosition}
+            Value={`${waterKgPerSecond(condensationPumpValvePosition * CondensationPump_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
+            ValueWidest="9999.9 kg/s"
             Step={CondensationPump_Step}
             cbAdjust={adjustCondensationPumpValvePosition}
           />
