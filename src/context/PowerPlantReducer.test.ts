@@ -259,6 +259,42 @@ describe("powerPlantReducer", () => {
       expect(reduce(act(-5), opened).Turbine[field]).toBe(0)
     })
 
+    describe("overspeed limit", () => {
+      const limit = CstSimulation.CstTurbine.MaxRPM
+      // a good vacuum, so only the speed can refuse
+      const atRpm = (rpm: number, turbineValvePosition = 0): PowerPlantState => ({
+        ...base,
+        Condenser: { ...base.Condenser, pressure: CstCondenser.VacuumLimit },
+        Turbine: { ...base.Turbine, rpm, turbineValvePosition },
+      })
+      const turbineValve = (delta: number, state: PowerPlantState) =>
+        reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: delta } }, state).Turbine
+
+      test("opening is refused at the limit and above, and the state is unchanged", () => {
+        for (const rpm of [limit, limit + 1]) {
+          const state = atRpm(rpm, 0.2)
+          expect(reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 0.1 } }, state)).toBe(state)
+        }
+      })
+
+      test("opening is allowed just below the limit", () => {
+        expect(turbineValve(0.1, atRpm(limit - 0.1)).turbineValvePosition).toBe(0.1)
+      })
+
+      test("closing is always allowed", () => {
+        expect(turbineValve(-0.1, atRpm(limit + 100, 0.3)).turbineValvePosition).toBeCloseTo(0.2)
+      })
+
+      test("a successful opening clears the trip flag; a refused one leaves it set", () => {
+        const tripped = (rpm: number): PowerPlantState => {
+          const state = atRpm(rpm)
+          return { ...state, Turbine: { ...state.Turbine, turbineTripped: true } }
+        }
+        expect(turbineValve(0.1, tripped(limit - 1)).turbineTripped).toBe(false)
+        expect(turbineValve(0.1, tripped(limit)).turbineTripped).toBe(true)
+      })
+    })
+
     describe("vacuum limit", () => {
       const limit = CstCondenser.VacuumLimit
       const atCondenser = (pressure: number, turbineValvePosition = 0): PowerPlantState => ({

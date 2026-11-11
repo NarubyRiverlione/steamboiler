@@ -51,6 +51,9 @@ export const isAboveMainSteamValveMinimum = (boilerPressure: number): boolean =>
 // True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit
 
+// True when the turbine speed (rpm) is at or above the overspeed limit MaxRPM: an open valve trips, an opening is refused (ADR 0040)
+export const isAtOverspeed = (rpm: number): boolean => rpm >= CstTurbine.MaxRPM
+
 // Highest turbine valve position allowed: above the vacuum limit the valve may close but not open further
 export const maxTurbineValvePosition = (currentPosition: number, condenserPressure: number): number =>
   isAboveVacuumLimit(condenserPressure) ? currentPosition : 1

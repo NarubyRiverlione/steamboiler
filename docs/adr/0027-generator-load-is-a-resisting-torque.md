@@ -15,7 +15,7 @@ Before this, the electric output came from steam flow, so the no-load flow repor
 - **Load rate:** the load moves towards the setpoint at one fixed rate, `LoadRate` = 3% of rated output per minute (about 3.9 MW/min), up and down. The source is coal units, see [the research note](../research/2026-11-generator-load-rate.md).
 - **Breaker:** the ±2 rpm rule stays for closing and auto-open. When the breaker opens for any reason (by hand or by the speed leaving the window) the load and the load setpoint drop to 0 on that tick; a reclose does not bring the load back without an operator action.
 - **Failures need no special logic.** Steam that cannot carry the load, or a vacuum trip with load on, makes the speed fall and ends at the ±2 rpm breaker rule. There is no breaker-on-trip rule, reverse power protection or runback.
-- **No overspeed protection for a lost load in Free until #72.** With Hold on, a lost load is pulled back by the PID; in Free nothing stops the speed.
+- **A lost load in Free is caught by the overspeed trip** ([ADR 0040](0040-turbine-trip-on-overspeed.md), #72). With Hold on, a lost load is pulled back by the PID; in Free the turbine trips at `MaxRPM`.
 
 ## Considered options
 
