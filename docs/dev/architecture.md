@@ -11,7 +11,7 @@ One reducer and one provider for the whole plant.
 - `PowerPlantReducer` (`src/context/`) is the only state-transition point. It handles user actions, the tick and `LOAD_STATE`, which replaces the whole state with a UI preset (#24). The preset list is `src/context/startPresets.ts`; the shape check that rejects a stale snapshot is `src/utils/stateShape.ts`, shared with the headless runner.
 - `PowerPlantProvider` owns the simulation loop and exposes state through `PowerPlantContext`.
 - Simulation core is pure functions, decoupled from React: `PowerPlantTick` calls `BoilerTick`, `TurbineTick`, `CondenserTick` (in `src/context/<Subsystem>/`). Order per tick: the relief valve vents (`BoilerVent`), the main steam valve closes on low pressure (`MainSteamValveLowPressureClosure`), remove bypass steam, `TurbineTick`, remove turbine steam, `CondenserTick` with those same-tick flows, then `BoilerTick` with the return.
-- Physics lives in `src/utils/` (`boilerCalculations`, `condenserCalculation`, `turbineCalculations`, `steamTable`, `steamData`).
+- Physics lives in `src/utils/` (`boilerCalculations`, `condenserCalculation`, `turbineCalculations`, `steamTable`, `steamData`). Display helpers (`formatSigned`, `flowUnits`: l/s design values shown as kg/s, #123) sit beside them.
 - State is immutable. Every update creates a new state object.
 - Display-only values are calculated in components, not stored in state. `useEMA` smooths readouts.
 

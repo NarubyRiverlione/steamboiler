@@ -68,8 +68,8 @@ describe("Deaerator page", () => {
   })
 
   it("shows the feed pump flow and lights the trip lamp from the state", () => {
-    renderDeaerator({ feedPumpValvePosition: 0.5, feedPumpTripped: true })
-    expect(screen.getByText("150.0 l/s")).toBeTruthy()
+    renderDeaerator({ temperature: 134, feedPumpValvePosition: 0.5, feedPumpTripped: true })
+    expect(screen.getByLabelText("Feed pump flow").textContent).toBe("139.7 kg/s")
     expect(screen.getByRole("img", { name: "Feed pump trip: on" })).toBeTruthy()
   })
 

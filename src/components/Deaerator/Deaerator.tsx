@@ -10,6 +10,7 @@ import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
+import { waterKgPerSecond } from "../../utils/flowUnits"
 import { warningText } from "./warningText"
 
 const STEAM_SOURCE_MIN_FLOW = 0.5 // kg/s, about 1% of a valve: below it the source lamp stays off
@@ -97,8 +98,8 @@ function Deaerator() {
             Pump
             Caption="Flow rate:"
             Position={feedPumpValvePosition}
-            Value={`${(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
-            ValueWidest="9999.9 l/s"
+            Value={`${waterKgPerSecond(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate, temperature).toFixed(1)} kg/s`}
+            ValueWidest="9999.9 kg/s"
             Step={CstDeaerator.FeedPump_Step}
             cbAdjust={adjustFeedPumpValvePosition}
           />
