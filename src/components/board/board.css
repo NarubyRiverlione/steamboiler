@@ -526,11 +526,6 @@ body {
   transform: translateY(2px);
 }
 
-/* Fixed width: the widest label in ch, plus the padding (the label font is not monospace, so ch is an average) */
-.board-lens-fixed {
-  min-width: calc(var(--board-lens-chars) * 1ch + 1.5rem);
-}
-
 .board-lens-small {
   font-size: 0.85rem;
 }
@@ -1063,35 +1058,6 @@ path.board-zone {
   box-shadow: 0 3px 4px rgba(0, 0, 0, 0.45);
 }
 
-.board-guard {
-  display: block;
-  width: 100%;
-  height: 58px;
-  border: 5px solid #bbb;
-  border-radius: 10px;
-  background: #2f3b4a;
-  color: #ff8a7a;
-  font-family: var(--board-font-stencil);
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-}
-
-.board-guard:active {
-  transform: translateY(2px);
-}
-
-.board-guard:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.board-guard-closed {
-  background: var(--board-lens-lit-bg);
-  color: var(--board-text);
-}
-
 .board-condenser-top {
   display: grid;
   grid-template-columns: 1fr 1.6fr;
@@ -1251,4 +1217,144 @@ path.board-zone {
   stroke: var(--board-zone-ok);
   stroke-width: 3;
   stroke-linecap: round;
+}
+
+/* Two-position turn switch (#124): the knob look of the gas knob, two lens-plate legends, an optional flip cover */
+.board-switch {
+  width: 300px;
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+
+.board-switch:focus-visible {
+  outline: none;
+}
+
+.board-switch:focus-visible .board-switch-cap {
+  stroke: var(--board-focus-ring);
+  stroke-width: 4;
+}
+
+.board-switch-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.board-switch-valve .board-switch-rim {
+  fill: var(--board-knob-valve-rim);
+}
+
+.board-switch-machine .board-switch-rim {
+  fill: var(--board-knob-pump-rim);
+}
+
+.board-switch-breaker .board-switch-rim {
+  fill: var(--board-knob-gas-rim);
+}
+
+.board-switch-rim {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 1;
+}
+
+.board-switch-cap {
+  fill: var(--board-knob-rate-cap);
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 2;
+}
+
+.board-switch-tick {
+  stroke: var(--board-text);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.6;
+}
+
+.board-switch-tick-major {
+  stroke-width: 2.5;
+  opacity: 1;
+}
+
+.board-switch-lever {
+  transition: transform 140ms ease-out;
+}
+
+.board-switch-grip {
+  fill: var(--board-knob-pointer);
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.board-switch-stripe,
+.board-switch-hub {
+  fill: var(--board-knob-cap);
+}
+
+.board-switch-plate rect {
+  fill: var(--board-lens-bg);
+  stroke: var(--board-lens-bezel);
+  stroke-width: 3;
+}
+
+.board-switch-plate text {
+  fill: #000;
+  font-family: var(--board-font-stencil);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.board-switch-plate-lit {
+  filter: drop-shadow(0 0 4px var(--board-lens-lit-glow));
+}
+
+.board-switch-plate-lit rect {
+  fill: var(--board-lens-lit-bg);
+}
+
+/* The flip cover: a translucent red plate hinged at the bottom; lifted it is a foreshortened strip */
+.board-switch-cover > rect:first-child {
+  fill: rgba(214, 40, 30, 0.42);
+  stroke: rgba(120, 15, 15, 0.9);
+  stroke-width: 3;
+}
+
+.board-switch-cover-shine {
+  fill: rgba(255, 255, 255, 0.28);
+}
+
+.board-switch-cover-tab {
+  fill: rgba(120, 15, 15, 0.9);
+}
+
+.board-switch-cover-hinge {
+  fill: #555;
+}
+
+.board-switch-cover text {
+  fill: rgba(90, 10, 10, 0.9);
+  font-family: var(--board-font-stencil);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.board-switch-cover.board-switch-cover-up > rect:first-child {
+  fill: rgba(214, 40, 30, 0.8);
+  stroke-width: 2;
+}
+
+.board-switch-cover-up text {
+  fill: #fff;
+  font-size: 8px;
+}
+
+.board-switch-in-housing {
+  display: grid;
+  justify-items: center;
+  padding: 0.3rem 0;
+  border-radius: 4px;
+  background: var(--board-panel-bg);
 }

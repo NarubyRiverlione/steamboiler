@@ -6,7 +6,7 @@ import { waterKgPerSecond } from "../../utils/flowUnits"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
-import { LensButton } from "../board/LensButton"
+import { TurnSwitch } from "../board/TurnSwitch"
 import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
@@ -137,20 +137,26 @@ function Condenser() {
           <h3 className="board-group-title">Pressure Control</h3>
           <div className="board-group-cols">
             <div className="board-instrument">
+              <TurnSwitch
+                label="Air extraction pump"
+                offLabel="STOP"
+                onLabel="RUN"
+                tone="machine"
+                on={isAirExtractionPumpEnabled}
+                onToggle={toggleAirExtractionPump}
+              />
               <span className="board-readout-label">Air Extraction Pump (CAR)</span>
-              <LensButton
-                pressed={isAirExtractionPumpEnabled}
-                onClick={toggleAirExtractionPump}
-                widest="START"
-              >
-                {isAirExtractionPumpEnabled ? "STOP" : "START"}
-              </LensButton>
             </div>
             <div className="board-instrument">
+              <TurnSwitch
+                label="Steam jet air extraction"
+                offLabel="OFF"
+                onLabel="ON"
+                tone="machine"
+                on={isSjaeEnabled}
+                onToggle={toggleSjae}
+              />
               <span className="board-readout-label">Steam Jet Air Extraction (SJAE)</span>
-              <LensButton pressed={isSjaeEnabled} onClick={toggleSjae} widest="DISABLE">
-                {isSjaeEnabled ? "DISABLE" : "ENABLE"}
-              </LensButton>
               <ValveControl
                 Label="SJAE valve"
                 Caption="Position:"

@@ -51,9 +51,9 @@ describe("Boiler page", () => {
 
   it("toggles the drain valve and shows its state", () => {
     const fns = renderBoiler({ drainValveOpen: true })
-    const button: HTMLElement = screen.getByRole("button", { name: "Open" })
-    expect(button.getAttribute("aria-pressed")).toBe("true")
-    fireEvent.click(button)
+    const drain: HTMLElement = screen.getByRole("switch", { name: "Drain valve" })
+    expect(drain.getAttribute("aria-checked")).toBe("true")
+    fireEvent.click(drain)
     expect(fns.toggleDrainValve).toHaveBeenCalledTimes(1)
   })
 
