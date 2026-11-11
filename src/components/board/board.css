@@ -671,7 +671,7 @@ path.board-zone {
 
 .board-boiler-main {
   display: grid;
-  grid-template-columns: 1fr 1.4fr 1fr;
+  grid-template-columns: 1fr auto 1.6fr; /* the gas column is only a knob and an LCD, so the drum cluster keeps its row */
   gap: 1rem;
   align-items: start;
 }
