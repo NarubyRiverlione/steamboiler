@@ -1,11 +1,12 @@
-/** The Deaerator page on the board: temperature, pressure, saturation pressure, level, the safe-to-close lamp, the start-up vent control, the warning text (ADR 0038) and the boiler feed pump with its trip lamp (#112). */
+/** The Deaerator page on the board: temperature, pressure, saturation pressure, the level instrument, the safe-to-close lamp, the start-up vent control, the warning text (ADR 0038) and the boiler feed pump with its trip lamp (#112). */
 
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstDeaerator, CstSimulation } from "../../context/const"
+import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { LensButton } from "../board/LensButton"
-import { LevelGauge } from "../board/LevelGauge"
+import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
@@ -26,6 +27,7 @@ function Deaerator() {
         pressure,
         saturationPressure,
         waterVolume,
+        deltaWaterMass,
         startUpVentOpen,
         reliefValveOpen,
         safeToClose,
@@ -39,7 +41,8 @@ function Deaerator() {
     adjustFeedPumpValvePosition,
   } = usePowerPlant()
 
-  const level: number = (waterVolume / CstDeaerator.TotalVolume) * 100
+  const level: number = waterVolume / CstDeaerator.TotalVolume
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.5)
   const warning: string = warningText(warnVentClosedWithAir, warnVentOpenNoAir)
 
   return (
@@ -55,10 +58,6 @@ function Deaerator() {
             <div className="board-readout">
               <span>Saturation pressure</span>
               <Display label="Saturation pressure" text={`${saturationPressure.toFixed(2)} bar`} widest="9.99 bar" />
-            </div>
-            <div className="board-readout">
-              <span>Level</span>
-              <Display label="Level" text={`${level.toFixed(1)} %`} widest="100.0 %" />
             </div>
             <span className="board-readout-values">
               <Lamp lit={reliefValveOpen} label="Relief open" title="The 4 bar relief valve is lifted" />
@@ -84,10 +83,7 @@ function Deaerator() {
             />
             <Display label="Pressure" text={`${pressure.toFixed(2)} bar`} widest="9.99 bar" />
           </div>
-          <div className="board-instrument">
-            <span className="board-instrument-label">Level</span>
-            <LevelGauge label="Deaerator level gauge" value={level} />
-          </div>
+          <LevelInstrument label="Deaerator level" fraction={level} change={smoothWaterChange} />
         </div>
 
         <div className="board-group">
@@ -120,6 +116,7 @@ function Deaerator() {
             Value={`${(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
             ValueWidest="9999.9 l/s"
             Step={CstDeaerator.FeedPump_Step}
+            FlowOnly
             cbAdjust={adjustFeedPumpValvePosition}
           />
           <Lamp lit={feedPumpTripped} label="Feed pump trip" title="The deaerator level fell below low-low: open the pump again once the level is back" />

@@ -18,9 +18,10 @@ type ValveControlProps = {
   readonly Step: number // percent per arrow key press or wheel notch
   readonly cbAdjust: (delta: number) => void // change of position as a fraction, the actions add it to the position
   readonly Caption?: string // visible heading of the knob, when it differs from Label
+  readonly FlowOnly?: boolean // pumps: only the flow LCD, the position is on the knob's blue marker
 }
 
-export function ValveControl({ Label, Value, ValueWidest, Position, Step, cbAdjust, Caption }: ValveControlProps) {
+export function ValveControl({ Label, Value, ValueWidest, Position, Step, cbAdjust, Caption, FlowOnly = false }: ValveControlProps) {
   const { commanded, command } = useValveRamp(Position, cbAdjust)
   const percent: number = Math.round(Position * 100)
   return (
@@ -41,7 +42,7 @@ export function ValveControl({ Label, Value, ValueWidest, Position, Step, cbAdju
       />
       <div className="board-valve-values">
         {Value !== undefined && <Display label={`${Label} flow`} text={Value} widest={ValueWidest} />}
-        <Display label={`${Label} position`} text={`${String(percent)} % Open`} widest="100 % Open" />
+        {!FlowOnly && <Display label={`${Label} position`} text={`${String(percent)} % Open`} widest="100 % Open" />}
       </div>
     </div>
   )

@@ -2,12 +2,11 @@
 
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
-import formatSigned from "../../utils/formatSigned"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { LensButton } from "../board/LensButton"
-import { LevelGauge } from "../board/LevelGauge"
+import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
@@ -21,6 +20,7 @@ const {
     SJAE_ValveStep,
     RecirculationPump_Step,
     CondensationPump_Step,
+    CondensationPump_MaxFlowRate,
     RecirculationPump_MaxFlowRate,
     Makeup_Step,
     Makeup_MaxFlowRate,
@@ -127,12 +127,7 @@ function Condenser() {
             </span>
           </div>
 
-          <div className="board-instrument">
-            <span className="board-instrument-label">Hotwell level</span>
-            <LevelGauge label="Hotwell level gauge" value={hotwellLevel * 100} />
-            <Display label="Hotwell level" text={hotwellLevel.toFixed(1)} widest="100.0" />
-            <Display label="Hotwell level change" text={formatSigned(smoothWaterChange, 1, "kg/s")} widest="-999.9 kg/s" />
-          </div>
+          <LevelInstrument label="Hotwell level" fraction={hotwellLevel} change={smoothWaterChange} />
         </div>
 
         <div className="board-group">
@@ -175,6 +170,7 @@ function Condenser() {
             Value={`${(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate).toFixed(1)} l/s`}
             ValueWidest="9999.9 l/s"
             Step={RecirculationPump_Step}
+            FlowOnly
             cbAdjust={adjustRecirculationPumpValvePosition}
           />
         </div>
@@ -184,7 +180,10 @@ function Condenser() {
             Label="Condensation pump"
             Caption="Flow rate:"
             Position={condensationPumpValvePosition}
+            Value={`${(condensationPumpValvePosition * CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
+            ValueWidest="9999.9 l/s"
             Step={CondensationPump_Step}
+            FlowOnly
             cbAdjust={adjustCondensationPumpValvePosition}
           />
         </div>

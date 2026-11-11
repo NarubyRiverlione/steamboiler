@@ -46,6 +46,13 @@ afterEach(() => {
 })
 
 describe("ValveControl", () => {
+  it("shows only the flow for a pump: no position LCD, the position is on the knob", () => {
+    render(<ValveControl Label="P" Value="5.0 l/s" Position={0.5} Step={5} cbAdjust={vi.fn()} FlowOnly />)
+    expect(screen.getByLabelText("P flow").textContent).toBe("5.0 l/s")
+    expect(screen.queryByLabelText("P position")).toBeNull()
+    expect(screen.getByRole("slider", { name: "P knob" }).getAttribute("aria-valuenow")).toBe("50")
+  })
+
   it("is a named slider with the position as value, no Close and Open buttons and no bar", () => {
     render(<Harness start={0.25} />)
     expect(knob().getAttribute("aria-valuenow")).toBe("25")

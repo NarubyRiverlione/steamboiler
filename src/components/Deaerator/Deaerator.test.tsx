@@ -25,12 +25,23 @@ function renderDeaerator(patch: Partial<PowerPlantState["Deaerator"]> = {}) {
 }
 
 describe("Deaerator page", () => {
-  it("shows temperature, pressure, saturation pressure and level", () => {
+  it("shows temperature, pressure, saturation pressure", () => {
     renderDeaerator({ temperature: 133.5, pressure: 3.05, saturationPressure: 3, waterVolume: 75_000 })
     expect(screen.getByLabelText("Temperature").textContent).toBe("133.5 °C")
     expect(screen.getByLabelText("Pressure").textContent).toBe("3.05 bar")
     expect(screen.getByLabelText("Saturation pressure").textContent).toBe("3.00 bar")
-    expect(screen.getByLabelText("Level").textContent).toBe("50.0 %")
+  })
+
+  it("shows the level as a fraction with the gauge and the signed change in kg/s", () => {
+    renderDeaerator({ waterVolume: 75_000, deltaWaterMass: 0.5 })
+    expect(screen.getByRole("meter", { name: "Deaerator level gauge" }).getAttribute("aria-valuenow")).toBe("50")
+    expect(screen.getByLabelText("Deaerator level").textContent).toBe("0.50")
+    expect(screen.getByLabelText("Deaerator level change").textContent).toBe("+5.0 kg/s")
+  })
+
+  it("shows a draining deaerator with a minus sign", () => {
+    renderDeaerator({ deltaWaterMass: -0.25 })
+    expect(screen.getByLabelText("Deaerator level change").textContent).toBe("-2.5 kg/s")
   })
 
   it("opens the start-up vent from OPEN and closes it from CLOSE", () => {

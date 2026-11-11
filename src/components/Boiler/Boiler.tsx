@@ -3,13 +3,12 @@
 import { useState, type SyntheticEvent } from "react"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSimulation } from "../../context/const"
-import formatSigned from "../../utils/formatSigned"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { LensButton } from "../board/LensButton"
 import { Knob } from "../board/Knob"
-import { LevelGauge } from "../board/LevelGauge"
+import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 
@@ -224,16 +223,13 @@ function Boiler() {
         </div>
 
         <div className="board-cluster">
-          <div className="board-instrument">
-            <span className="board-instrument-label">Drum level</span>
-            <LevelGauge
-              label="Drum level gauge"
-              value={(waterVolume / TotalVolume) * 100}
-              zones={LEVEL_ZONES}
-              ticks={LEVEL_TICKS}
-            />
-            <Display label="Drum water change" text={formatSigned(smoothWaterChange, 1, "kg/s")} widest="-999.9 kg/s" />
-          </div>
+          <LevelInstrument
+            label="Drum level"
+            fraction={waterVolume / TotalVolume}
+            change={smoothWaterChange}
+            zones={LEVEL_ZONES}
+            ticks={LEVEL_TICKS}
+          />
           <div className="board-group">
             <h3 className="board-group-title">Water Valve Control</h3>
             <span className="board-readout-label">Drain Valve</span>
