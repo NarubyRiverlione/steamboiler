@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 import type { ContextType } from "react"
@@ -9,6 +9,8 @@ import type PowerPlantState from "../context/PowerPlantState"
 import { AnnunciatorProvider } from "./AnnunciatorProvider"
 import Annunciator from "./Annunciator"
 import { useAnnunciator } from "./useAnnunciator"
+import { isSpeedLocked } from "./speedLock"
+import { masterLights } from "./masterLights"
 
 function Clear() {
   const { clearLatches } = useAnnunciator()
@@ -46,10 +48,12 @@ function tree(state: PowerPlantState) {
   )
 }
 
-const tile = (name: string): HTMLElement => screen.getByRole("button", { name })
+const tile = (name: string): HTMLElement => screen.getByRole("button", { name, hidden: true })
 const flashing = (name: string): boolean => tile(name).className.includes("board-tile-flash")
 const ack = (): void => { fireEvent.click(screen.getByRole("button", { name: "ACK" })) }
 const reset = (): void => { fireEvent.click(screen.getByRole("button", { name: "RESET" })) }
+const toggle = (): HTMLElement => screen.getByRole("button", { name: "Annunciator" })
+const master = (kind: "error" | "warning"): string => screen.getByRole("img", { name: new RegExp("Master " + kind) }).getAttribute("data-state") ?? ""
 const lit = (name: string): boolean => tile(name).className.includes("board-tile-lit")
 
 describe("Annunciator", () => {
@@ -191,7 +195,115 @@ describe("Annunciator", () => {
     expect(screen.getByTestId("where").textContent).toBe("/condenser")
   })
 
+  it("starts folded with a keyboard-operable toggle that sets aria-expanded", () => {
+    render(tree(stateWith({})))
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+    expect(screen.queryByRole("button", { name: "Turbine trip" })).toBeNull()
+    fireEvent.click(toggle())
+    expect(toggle().getAttribute("aria-expanded")).toBe("true")
+    expect(screen.getByRole("button", { name: "Turbine trip" })).toBeTruthy()
+    fireEvent.click(toggle())
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+  })
+
+  it("folds on Esc, on an outside click, and after opening a part, but not on a click inside", () => {
+    render(tree(stateWith({})))
+    fireEvent.click(toggle())
+    fireEvent.mouseDown(screen.getByRole("button", { name: "ACK" }))
+    expect(toggle().getAttribute("aria-expanded")).toBe("true")
+    fireEvent.keyDown(document.body, { key: "Escape" })
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+    fireEvent.click(toggle())
+    fireEvent.mouseDown(document.body)
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+    fireEvent.click(toggle())
+    fireEvent.click(screen.getByRole("button", { name: "Turbine trip" }))
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+  })
+
+  it("groups the tiles by owning part", () => {
+    render(tree(stateWith({})))
+    fireEvent.click(toggle())
+    const group = (name: string): HTMLElement => screen.getByRole("region", { name })
+    expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip"])
+    expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(3)
+    expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)
+    expect(screen.queryByRole("region", { name: "Deaerator" })).toBeNull()
+  })
+
+  it("never opens the panel by itself when an annunciation arrives", () => {
+    const { rerender } = render(tree(stateWith({})))
+    rerender(tree(stateWith({ turbine: true })))
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+    expect(master("error")).toBe("flashing")
+  })
+
+  it("drives the master lights: off, flashing, steady, red over yellow", () => {
+    const { rerender } = render(tree(stateWith({})))
+    expect([master("error"), master("warning")]).toEqual(["off", "off"])
+    rerender(tree(stateWith({ heat: true })))
+    expect([master("error"), master("warning")]).toEqual(["off", "flashing"])
+    ack()
+    expect([master("error"), master("warning")]).toEqual(["off", "steady"])
+    rerender(tree(stateWith({ heat: true, turbine: true })))
+    expect([master("error"), master("warning")]).toEqual(["flashing", "off"])
+    ack()
+    expect([master("error"), master("warning")]).toEqual(["steady", "off"])
+  })
+
+  it("flashes a master while any tile of its severity is unacknowledged", () => {
+    const { rerender } = render(tree(stateWith({ turbine: true })))
+    ack()
+    rerender(tree(stateWith({ turbine: true, burner: true })))
+    expect(master("error")).toBe("flashing")
+  })
+
+  it("ACK and RESET work while folded", () => {
+    const { rerender } = render(tree(stateWith({ turbine: true })))
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+    ack()
+    expect(master("error")).toBe("steady")
+    rerender(tree(stateWith({})))
+    reset()
+    expect(master("error")).toBe("off")
+  })
+
+  it("keeps the speed lock following flashing while folded", () => {
+    function Probe() {
+      return <p data-testid="locked">{String(isSpeedLocked(useAnnunciator().tiles))}</p>
+    }
+    const locked = (): string => screen.getByTestId("locked").textContent ?? ""
+    const probed = (state: PowerPlantState) => {
+      const value = { state, dispatch: (): void => undefined } as unknown as ContextType<typeof PowerPlantContext>
+      return (
+        <PowerPlantContext.Provider value={value}>
+          <MemoryRouter>
+            <AnnunciatorProvider>
+              <Annunciator />
+              <Probe />
+            </AnnunciatorProvider>
+          </MemoryRouter>
+        </PowerPlantContext.Provider>
+      )
+    }
+    render(probed(stateWith({ turbine: true })))
+    expect(toggle().getAttribute("aria-expanded")).toBe("false")
+    expect(locked()).toBe("true")
+    ack()
+    expect(locked()).toBe("false")
+  })
+
   it("throws a clear error outside the provider", () => {
     expect(() => render(<MemoryRouter><Annunciator /></MemoryRouter>)).toThrow(/AnnunciatorProvider/)
+  })
+})
+
+describe("masterLights", () => {
+  const t = (severity: "error" | "warning", lit: boolean, flashing: boolean) => ({ id: "burnerTripped", label: "x", part: "boiler", severity, lit, flashing }) as const
+  it("is off without tiles", () => {
+    expect(masterLights([])).toEqual({ error: "off", warning: "off" })
+  })
+  it("lets red hide yellow", () => {
+    expect(masterLights([t("error", true, false), t("warning", true, true)])).toEqual({ error: "steady", warning: "off" })
   })
 })
