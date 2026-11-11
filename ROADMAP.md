@@ -40,6 +40,6 @@ Next: the first ticket with nothing under Waiting on.
 | 16 | [#104](https://github.com/NarubyRiverlione/steamboiler/issues/104) Turbine RPM: horizontal bar gauge (generic LinearGauge component) | P5 | ready-for-agent |  |  |
 | 17 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | P5 | ready-for-agent |  |  |
 | 18 | [#107](https://github.com/NarubyRiverlione/steamboiler/issues/107) Boiler: precision pressure dial (150–180 bar, 165 at 12 o'clock) and a new green band on the main dial | P5 | needs-triage |  |  |
-| 19 | [#116](https://github.com/NarubyRiverlione/steamboiler/issues/116) Latching annunciations with RESET replacing TEST | P5 | ready-for-agent |  | [#117](https://github.com/NarubyRiverlione/steamboiler/issues/117) |
-| 20 | [#117](https://github.com/NarubyRiverlione/steamboiler/issues/117) Collapsible annunciator panel with master error and warning lights | P5 | ready-for-agent | [#116](https://github.com/NarubyRiverlione/steamboiler/issues/116) |  |
-| 21 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | P5 | needs-triage |  |  |
+| 19 | [#117](https://github.com/NarubyRiverlione/steamboiler/issues/117) Collapsible annunciator panel with master error and warning lights | P5 | ready-for-agent |  |  |
+| 20 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | P5 | needs-triage |  |  |
+| 21 | [#126](https://github.com/NarubyRiverlione/steamboiler/issues/126) Dedicated reset for latched trips | P5 | needs-triage |  |  |
