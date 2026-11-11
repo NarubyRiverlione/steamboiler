@@ -6,7 +6,7 @@ import { CstSimulation } from "../../context/const"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
-import { LensButton } from "../board/LensButton"
+import { TurnSwitch } from "../board/TurnSwitch"
 import { Knob } from "../board/Knob"
 import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
@@ -234,10 +234,14 @@ function Boiler() {
           />
           <div className="board-group">
             <h3 className="board-group-title">Water Valve Control</h3>
+            <TurnSwitch
+              label="Drain valve"
+              offLabel="CLOSED"
+              onLabel="OPEN"
+              on={drainValveOpen}
+              onToggle={toggleDrainValve}
+            />
             <span className="board-readout-label">Drain Valve</span>
-            <LensButton pressed={drainValveOpen} onClick={toggleDrainValve} widest="Closed">
-              {drainValveOpen ? "Open" : "Closed"}
-            </LensButton>
           </div>
         </div>
       </div>

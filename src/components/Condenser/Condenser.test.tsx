@@ -41,11 +41,11 @@ function turnValve(label: string, key: "End" | "Home"): void {
 describe("Condenser page", () => {
   it("toggles the air extraction pump and the SJAE, showing their state", () => {
     const fns = renderCondenser({ isAirExtractionPumpEnabled: true, isSjaeEnabled: false })
-    const car: HTMLElement = screen.getByRole("button", { name: "STOP" })
-    expect(car.getAttribute("aria-pressed")).toBe("true")
+    const car: HTMLElement = screen.getByRole("switch", { name: "Air extraction pump" })
+    expect(car.getAttribute("aria-checked")).toBe("true")
     fireEvent.click(car)
-    const sjae: HTMLElement = screen.getByRole("button", { name: "ENABLE" })
-    expect(sjae.getAttribute("aria-pressed")).toBe("false")
+    const sjae: HTMLElement = screen.getByRole("switch", { name: "Steam jet air extraction" })
+    expect(sjae.getAttribute("aria-checked")).toBe("false")
     fireEvent.click(sjae)
     expect(fns.toggleAirExtractionPump).toHaveBeenCalledTimes(1)
     expect(fns.toggleSjae).toHaveBeenCalledTimes(1)

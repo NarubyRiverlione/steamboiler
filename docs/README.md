@@ -76,6 +76,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0036](adr/0036-deaerator-is-a-steam-heated-tank.md) | The deaerator is a steam-heated tank on the feedwater path, held at 3 bar |
 | [0037](adr/0037-deaerator-cold-fill-at-38-percent.md) | The deaerator is filled cold to about 38% so it ends at 50% hot |
 | [0038](adr/0038-deaerator-air-and-vents.md) | The deaerator holds one amount of air and has two vents; mistakes cost steam, never damage |
+| [0039](adr/0039-latching-controls-are-turn-switches.md) | A control that holds a state is a turn switch with fixed legends; a pushbutton acts or selects |
 
 ## Research (dated, frozen)
 
