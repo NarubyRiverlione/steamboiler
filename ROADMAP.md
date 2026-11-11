@@ -44,7 +44,7 @@ Next: the first ticket with nothing under Waiting on.
 | 15 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Hotwell level bar with green, orange and red zones | P5 | needs-triage |  |  |
 | 16 | [#99](https://github.com/NarubyRiverlione/steamboiler/issues/99) Mimic strip: live piping diagram on the analog board | P5 | ready-for-agent |  |  |
 | 17 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | P5 | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
-| 18 | [#104](https://github.com/NarubyRiverlione/steamboiler/issues/104) Turbine RPM: horizontal bar gauge instead of the round dial | P5 | needs-triage |  |  |
+| 18 | [#104](https://github.com/NarubyRiverlione/steamboiler/issues/104) Turbine RPM: horizontal bar gauge (generic LinearGauge component) | P5 | ready-for-agent |  |  |
 | 19 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | P5 | needs-triage |  |  |
 | 20 | [#107](https://github.com/NarubyRiverlione/steamboiler/issues/107) Boiler: precision pressure dial (150–180 bar, 165 at 12 o'clock) and a new green band on the main dial | P5 | needs-triage |  |  |
 | 21 | [#115](https://github.com/NarubyRiverlione/steamboiler/issues/115) Annunciator severity: red errors and yellow warnings | P5 | ready-for-agent |  | [#116](https://github.com/NarubyRiverlione/steamboiler/issues/116) [#117](https://github.com/NarubyRiverlione/steamboiler/issues/117) |
