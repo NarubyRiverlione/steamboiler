@@ -75,11 +75,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
       shaftWorkFraction(state.Turbine.rpm),
     ),
   }
-  // The deaerator passes the Return on to the boiler in the same tick, with the steam that heated it and the heater drain
-  // (until #112); that water takes room in the boiler first, so the pump stops short of a full boiler
-  const boilerRoom: number = Math.max(
+  // The condensation pump stops short of a full deaerator: the room (at the vessel temperature) less the steam and the heater
+  // drain that join the water in the same tick (the let-down steam of the last tick)
+  const deaeratorRoom: number = Math.max(
     0,
-    roomInKg(CstSimulation.CstBoiler.TotalVolume, state.Boiler.waterVolume, state.Boiler.temperature) -
+    roomInKg(CstDeaerator.TotalVolume, state.Deaerator.waterVolume, state.Deaerator.temperature) -
       (extraction.flow + tapFlow + state.Deaerator.letDownFlow) * CstSimulation.DeltaTime,
   )
   const condenserNewState: CondenserState = CondenserTick(
@@ -87,10 +87,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     state.Boiler.pressure,
     steamFromBypass,
     steamFromTurbine,
-    boilerRoom,
+    deaeratorRoom,
   )
 
-  // Deaerator: takes this tick's Return and the heater drain, holds 3 bar with the tap steam and the let-down valve
+  // Deaerator: takes this tick's Return and the heater drain, holds 3 bar with the tap steam and the let-down valve, and the
+  // feed pump delivers its outflow to the boiler
   const deaerator: DeaeratorResult = DeaeratorTick(state.Deaerator, {
     intake: { mass: condenserNewState.returnRate, temperature: condenserNewState.hotwellTemperature },
     drain: { mass: extraction.flow * CstSimulation.DeltaTime, enthalpy: drainEnthalpyOf(extraction.heaterPressure) },
@@ -100,6 +101,8 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
       steamMass: turbineResult.boilerState.steamMass,
       lowLevel: ventedBoiler.burnerTripped, // the low-low trip latches, so the valve does not chatter at the level
     },
+    // The feed pump stops short of a full boiler (ADR 0004)
+    boilerRoom: roomInKg(CstSimulation.CstBoiler.TotalVolume, state.Boiler.waterVolume, state.Boiler.temperature),
   })
   const deaeratorNewState: DeaeratorState = deaerator.state
 

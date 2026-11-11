@@ -1,13 +1,14 @@
-/** The Deaerator page on the board: temperature, pressure, saturation pressure, level, the safe-to-close lamp, the start-up vent control and the warning text (ADR 0038). */
+/** The Deaerator page on the board: temperature, pressure, saturation pressure, level, the safe-to-close lamp, the start-up vent control, the warning text (ADR 0038) and the boiler feed pump with its trip lamp (#112). */
 
 import usePowerPlant from "../../context/PowerPlantContext"
-import { CstDeaerator } from "../../context/const"
+import { CstDeaerator, CstSimulation } from "../../context/const"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { LensButton } from "../board/LensButton"
 import { LevelGauge } from "../board/LevelGauge"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
+import { ValveControl } from "../board/ValveControl"
 import { warningText } from "./warningText"
 
 const PRESSURE_MAX = 5 // bar, top of the dial: the relief valve lifts at 4
@@ -30,9 +31,12 @@ function Deaerator() {
         safeToClose,
         warnVentClosedWithAir,
         warnVentOpenNoAir,
+        feedPumpValvePosition,
+        feedPumpTripped,
       },
     },
     toggleDeaeratorVent,
+    adjustFeedPumpValvePosition,
   } = usePowerPlant()
 
   const level: number = (waterVolume / CstDeaerator.TotalVolume) * 100
@@ -105,6 +109,20 @@ function Deaerator() {
           <p className="board-warning" role="status" aria-label="Deaerator warning">
             {warning}
           </p>
+        </div>
+
+        <div className="board-group">
+          <h3 className="board-group-title">Boiler Feed Pump</h3>
+          <ValveControl
+            Label="Feed pump"
+            Caption="Flow rate:"
+            Position={feedPumpValvePosition}
+            Value={`${(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate).toFixed(1)} l/s`}
+            ValueWidest="9999.9 l/s"
+            Step={CstDeaerator.FeedPump_Step}
+            cbAdjust={adjustFeedPumpValvePosition}
+          />
+          <Lamp lit={feedPumpTripped} label="Feed pump trip" title="The deaerator level fell below low-low: open the pump again once the level is back" />
         </div>
       </div>
     </PanelFrame>

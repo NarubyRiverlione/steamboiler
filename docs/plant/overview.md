@@ -26,7 +26,7 @@ How the parts of the plant connect, what each one does, and where the energy com
 | Turbine valve | Sets the steam flow to the turbine | [turbine.md](turbine.md) |
 | Bypass valve | Sends steam straight to the condenser, past the turbine | [condenser.md](condenser.md#intakes) |
 | Turbine | Takes the enthalpy drop from boiler pressure to condenser pressure as shaft power, in one stage. The steam is saturated, as there is no superheater | [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried) |
-| Deaerator | Feedwater tank (150 m³) between the hotwell and the boiler, held at 3 bar (134 °C) by turbine tap steam first and boiler steam through a let-down valve for the rest; passes the water on to the boiler until the feed pump (#112) | [deaerator.md](deaerator.md) |
+| Deaerator | Feedwater tank (150 m³) between the hotwell and the boiler, held at 3 bar (134 °C) by turbine tap steam first and boiler steam through a let-down valve for the rest; the boiler feed pump takes the water out toward the boiler and trips on low-low (#112) | [deaerator.md](deaerator.md) |
 | Extraction heater | Takes steam from the turbine at a tap (about 5 bar at the rated flow) and heats the deaerator outflow to about 150 °C before the economizer; its drain cascades back into the deaerator. Passive: no controls | [turbine.md](turbine.md#extraction-heater-88) |
 | Generator | Turns shaft power into the load it carries, at 98% | [turbine.md](turbine.md#generator-load-71) |
 | Condenser | Condenses the vapour under vacuum. Cooling water carries the heat away | [condenser.md](condenser.md#energy-balance) |
@@ -34,7 +34,8 @@ How the parts of the plant connect, what each one does, and where the energy com
 | Air extraction pump | Pulls the first vacuum | [condenser.md](condenser.md#condenser-pressure-and-the-vacuum-system) |
 | SJAE | Builds the deep vacuum, driven by boiler pressure. It takes no steam or heat from the boiler in the model | [condenser.md](condenser.md#condenser-pressure-and-the-vacuum-system) |
 | Hotwell | Collects the condensate and the exhaust moisture. Makeup comes in here and reject goes out | [condenser.md](condenser.md#hotwell-makeup-and-reject) |
-| Condensation pump | Moves hotwell water into the boiler as the Return, the boiler's only water supply | [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
+| Condensation pump | Moves hotwell water into the deaerator as the Return; holds the deaerator level | [feedwater-loop.md](feedwater-loop.md#return-and-capacity) |
+| Boiler feed pump | Moves deaerator water into the boiler, the boiler's only water supply; holds the drum level | [deaerator.md](deaerator.md#boiler-feed-pump-112) |
 
 ## Where the energy comes from
 

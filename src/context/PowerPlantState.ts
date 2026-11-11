@@ -91,7 +91,10 @@ export type DeaeratorState = {
   extractionValvePosition: number // 0-1 (0-100%) open, derived from the flow it passes
   letDownFlow: number // kg/s of boiler steam taken through the let-down valve (auxiliary line)
   letDownValvePosition: number // 0-1 (0-100%) open, derived from the flow it passes
-  outflowMass: number // kg that left toward the boiler over the last tick (the pass-through until #112)
+  outflowMass: number // kg the feed pump delivered toward the boiler over the last tick
+  deltaWaterMass: number // kg change of the vessel over the last tick: the level trend the operator damps on
+  feedPumpValvePosition: number // 0-1 (0-100%) open: the boiler feed pump, a flow actuator (ADR 0030)
+  feedPumpTripped: boolean // set by the low-low trip, cleared by the next successful opening
 }
 
 type PowerPlantState = {

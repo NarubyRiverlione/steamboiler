@@ -30,71 +30,113 @@ const pumping = (boilerLitres: number, hotwellLitres = cold.Condenser.hotwellWat
 })
 
 describe("PowerPlantTick economizer (ADR 0029)", () => {
-  // Full gas on a boiler at 350 °C and a full pump: the economizer takes the flow the hotwell gives this tick, at the
-  // hotwell temperature, and the boiler reports what it did
+  // Full gas on a boiler at 350 °C, a hot deaerator at its working level and the feed pump at this position: the economizer
+  // takes the flow the feed pump gives this tick, at the temperature of the deaerator, and the boiler reports what it did
   const hot = (pump: number): PowerPlantState => {
     const start = pumping(50_000)
     return {
       ...start,
       Boiler: { ...start.Boiler, temperature: 350, gasFlow: CstBoiler.MaxGasFlow },
-      Condenser: { ...start.Condenser, condensationPumpValvePosition: pump },
+      Deaerator: { ...makeHotDeaerator(CstDeaerator.TotalVolume / 2), feedPumpValvePosition: pump },
     }
   }
 
-  test("heats the Return of the tick with the flue gas and reports the stack", () => {
+  test("heats the feedwater of the tick with the flue gas and reports the stack", () => {
     const next = PowerPlantTick(hot(1))
-    // the pump gives 300 l/s, more than the 171 kg/s the economizer is sized for: the stack is cooler than 160 °C
-    expect(next.Boiler.returnTemperatureOut).toBeGreaterThan(next.Condenser.hotwellTemperature + 50)
-    expect(next.Boiler.stackTemperature).toBeLessThan(160)
-    expect(next.Boiler.boilerEfficiency).toBeGreaterThan(0.93)
+    // the feed pump gives 300 l/s: the more water, the cooler the stack and the better the boiler
+    const small = PowerPlantTick(hot(0.2))
+    expect(next.Boiler.returnTemperatureOut).toBeGreaterThan(next.Deaerator.temperature + 30)
+    expect(next.Boiler.stackTemperature).toBeLessThan(small.Boiler.stackTemperature)
+    expect(next.Boiler.boilerEfficiency).toBeGreaterThan(small.Boiler.boilerEfficiency)
   })
 
-  test("with the pump shut nothing is recovered", () => {
+  test("with the feed pump shut nothing is recovered", () => {
     const next = PowerPlantTick(hot(0))
-    expect(next.Condenser.returnRate).toBe(0)
-    expect(next.Boiler.returnTemperatureOut).toBe(next.Condenser.hotwellTemperature)
+    expect(next.Deaerator.outflowMass).toBe(0)
+    expect(next.Boiler.returnTemperatureOut).toBeCloseTo(next.Deaerator.temperature, 6)
     expect(next.Boiler.boilerEfficiency).toBeCloseTo(0.79, 1)
   })
 })
 
 describe("PowerPlantTick return", () => {
-  test("the boiler receives the return in the same tick the hotwell gives it", () => {
+  // The condensation pump full open from a hotwell with this much water (litres) into a deaerator holding this much
+  const returning = (deaeratorLitres: number, hotwellLitres = 10_000): PowerPlantState => {
+    const start = pumping(50_000, hotwellLitres)
+    return { ...start, Deaerator: makeHotDeaerator(deaeratorLitres) }
+  }
+
+  test("the deaerator receives the return in the same tick the hotwell gives it", () => {
     // full pump: 300 l/s for one 0.1 s tick = 30 L = 29.946 kg at 20 °C
-    const start = pumping(50_000, 10_000)
+    const start = returning(CstDeaerator.TotalVolume / 2)
     const next = PowerPlantTick(start)
     expect(next.Condenser.returnRate).toBeCloseTo(30 / litresPerKg, 6)
     expect(next.Condenser.hotwellWaterMass).toBeCloseTo(start.Condenser.hotwellWaterMass - 30 / litresPerKg, 6)
-    expect(next.Boiler.waterMass).toBeCloseTo(start.Boiler.waterMass + 30 / litresPerKg, 2)
+    expect(next.Deaerator.waterMass).toBeGreaterThan(start.Deaerator.waterMass + 29)
+    expect(next.Boiler.waterMass).toBeCloseTo(start.Boiler.waterMass, 6) // the feed pump is shut: nothing reaches the boiler
   })
 
-  test("a full boiler takes no return, the water stays in the hotwell", () => {
-    const start = pumping(CstBoiler.TotalVolume, 10_000)
+  test("a full deaerator takes no return, the water stays in the hotwell", () => {
+    const start = returning(CstDeaerator.TotalVolume)
     const next = PowerPlantTick(start)
     expect(next.Condenser.returnRate).toBe(0)
     expect(next.Condenser.hotwellWaterMass).toBe(start.Condenser.hotwellWaterMass)
+  })
+
+  test("an empty hotwell returns nothing", () => {
+    const next = PowerPlantTick(returning(CstDeaerator.TotalVolume / 2, 0))
+    expect(next.Condenser.returnRate).toBe(0)
+  })
+})
+
+describe("PowerPlantTick boiler feed pump (#112)", () => {
+  // The feed pump full open from a hot deaerator at its working level into a boiler holding this much water (litres)
+  const feeding = (boilerLitres: number, boilerTemperature = AmbientTemperature): PowerPlantState => {
+    const start = pumping(boilerLitres)
+    return {
+      ...start,
+      Boiler: {
+        ...start.Boiler,
+        temperature: boilerTemperature,
+        waterMass: boilerLitres / getWaterSpecificVolume(boilerTemperature),
+        steamMass: calculateSteamInventory(boilerTemperature, boilerLitres),
+      },
+      Condenser: { ...start.Condenser, condensationPumpValvePosition: 0 },
+      Deaerator: { ...makeHotDeaerator(CstDeaerator.TotalVolume / 2), feedPumpValvePosition: 1 },
+    }
+  }
+
+  test("takes water from the deaerator and delivers it to the boiler, at the deaerator temperature", () => {
+    const start = feeding(50_000)
+    const next = PowerPlantTick(start)
+    expect(next.Deaerator.outflowMass).toBeGreaterThan(0)
+    expect(next.Deaerator.waterMass).toBeCloseTo(start.Deaerator.waterMass - next.Deaerator.outflowMass, 1)
+    expect(next.Boiler.waterMass).toBeCloseTo(start.Boiler.waterMass + next.Deaerator.outflowMass, 2)
+  })
+
+  test("a full boiler takes nothing, the water stays in the deaerator", () => {
+    const next = PowerPlantTick(feeding(CstBoiler.TotalVolume))
+    expect(next.Deaerator.outflowMass).toBe(0)
     expect(next.Boiler.waterVolume).toBeCloseTo(CstBoiler.TotalVolume, 2)
   })
 
   test("a nearly full boiler is filled to capacity, not past it", () => {
-    const next = PowerPlantTick(pumping(CstBoiler.TotalVolume - 5, 10_000))
-    expect(next.Condenser.returnRate).toBeCloseTo(5 / litresPerKg, 6)
-    expect(next.Boiler.waterVolume).toBeCloseTo(CstBoiler.TotalVolume, 2)
-  })
-
-  test("an empty hotwell returns nothing", () => {
-    const start = pumping(50_000, 0)
-    const next = PowerPlantTick(start)
-    expect(next.Condenser.returnRate).toBe(0)
-    expect(next.Boiler.waterMass).toBeCloseTo(start.Boiler.waterMass, 2)
+    const next = PowerPlantTick(feeding(CstBoiler.TotalVolume - 5))
+    expect(next.Deaerator.outflowMass).toBeCloseTo(5 / litresPerKg, 6)
+    expect(next.Boiler.waterVolume).toBeCloseTo(CstBoiler.TotalVolume, 0) // hot feedwater takes a little more room in a cold boiler
   })
 
   test("a hot boiler has less room: the same free volume takes fewer kg", () => {
-    const hot = pumping(CstBoiler.TotalVolume - 5, 10_000)
-    const hotBoiler: PowerPlantState = {
-      ...hot,
-      Boiler: { ...hot.Boiler, temperature: 300, waterMass: (CstBoiler.TotalVolume - 5) / getWaterSpecificVolume(300), waterVolume: CstBoiler.TotalVolume - 5, steamMass: calculateSteamInventory(300, CstBoiler.TotalVolume - 5) },
-    }
-    expect(PowerPlantTick(hotBoiler).Condenser.returnRate).toBeCloseTo(5 / getWaterSpecificVolume(300), 4)
+    const next = PowerPlantTick(feeding(CstBoiler.TotalVolume - 5, 300))
+    expect(next.Deaerator.outflowMass).toBeCloseTo(5 / getWaterSpecificVolume(300), 4)
+  })
+
+  test("trips below the low-low level and delivers nothing", () => {
+    const start = feeding(50_000)
+    const low: PowerPlantState = { ...start, Deaerator: { ...makeHotDeaerator(CstDeaerator.TotalVolume * (CstDeaerator.LowLowLevel - 0.01)), feedPumpValvePosition: 1 } }
+    const next = PowerPlantTick(low)
+    expect(next.Deaerator.feedPumpTripped).toBe(true)
+    expect(next.Deaerator.feedPumpValvePosition).toBe(0)
+    expect(next.Deaerator.outflowMass).toBe(0)
   })
 })
 
@@ -315,6 +357,7 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
       waterMass: 70_000,
       tapDemand: 35,
       outflowMass: returnRate > 0 ? (returnRate + 40) * CstSimulation.DeltaTime : 0,
+      feedPumpValvePosition: returnRate > 0 ? 0.65 : 0, // about 180 kg/s at 134 °C
     },
     Boiler: {
       ...cold.Boiler,

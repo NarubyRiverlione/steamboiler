@@ -126,7 +126,7 @@ describe("toReportHtml", () => {
 
   test("the deaerator values have their own group, in two rows", () => {
     const deaerator = panels.filter((p) => p.group === "Deaerator")
-    expect(deaerator.map((p) => p.row)).toEqual([1, 1, 1, 1, 2, 2, 2])
+    expect(deaerator.map((p) => p.row)).toEqual([1, 1, 1, 1, 2, 2, 2, 2])
     expect(deaerator.find((p) => p.title === "Deaerator pressure")?.limit).toBe(4)
   })
 

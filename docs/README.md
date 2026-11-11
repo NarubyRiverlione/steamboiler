@@ -21,7 +21,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Turbine and generator, phases 1–5 | [plant/turbine.md](plant/turbine.md) |
 | Condenser, vacuum system, hotwell | [plant/condenser.md](plant/condenser.md) |
 | Water loop: boundary flows, level targets, control | [plant/feedwater-loop.md](plant/feedwater-loop.md) |
-| Deaerator: 3 bar steam control, cold fill, air, vents, relief valve, pass-through | [plant/deaerator.md](plant/deaerator.md) |
+| Deaerator: 3 bar steam control, cold fill, air, vents, relief valve, boiler feed pump | [plant/deaerator.md](plant/deaerator.md) |
 
 ## The code (reference)
 

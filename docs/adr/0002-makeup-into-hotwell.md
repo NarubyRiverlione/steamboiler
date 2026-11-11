@@ -1,6 +1,6 @@
-# Makeup water enters at the hotwell; the boiler is fed only by the condensation pump
+# Makeup water enters at the hotwell; the boiler is fed only by the boiler feed pump
 
-Water from outside the loop (**makeup**) enters the condenser hotwell, never the boiler. Excess hotwell water leaves through a **reject** valve. The boiler fill valve is gone: the boiler gets water only as **return** from the condensation pump (by way of the deaerator, [ADR 0036](0036-deaerator-is-a-steam-heated-tank.md), #119), the way a real drum boiler gets its feedwater. The drain valve stays. Decided in #19, built in 5796c65.
+Water from outside the loop (**makeup**) enters the condenser hotwell, never the boiler. Excess hotwell water leaves through a **reject** valve. The boiler fill valve is gone: the boiler gets water only from the **boiler feed pump**, which takes it from the deaerator (#112); the condensation pump moves the **return** from the hotwell into the deaerator ([ADR 0036](0036-deaerator-is-a-steam-heated-tank.md), #119), the way a real drum boiler gets its feedwater. The drain valve stays. Decided in #19, built in 5796c65.
 
 ## Considered options
 
@@ -9,7 +9,7 @@ Water from outside the loop (**makeup**) enters the condenser hotwell, never the
 
 ## Consequences
 
-- Boiler level is a feedwater control problem: the condensation pump valve holds it, and in scenarios the operator hook does (targets in [feedwater-loop.md](../plant/feedwater-loop.md)).
-- Filling the boiler from empty goes through the hotwell and the condensation pump, so it needs that pump running.
+- Boiler level is a feedwater control problem: the feed pump valve holds it (the condensation pump holds the deaerator level), and in scenarios the operator hook does (targets in [feedwater-loop.md](../plant/feedwater-loop.md)).
+- Filling the boiler from empty goes through the hotwell, the condensation pump, the deaerator and the feed pump, so it needs both pumps running.
 - The loop has three boundary flows: makeup, reject and drain (the relief valve of #9 adds a fourth, see below). The water conservation invariant counts them through the `makeupTotal`, `rejectTotal` and `drainedTotal` totalizers. Any other change in total water is a model error (#10).
 - The only vent is the relief valve (#9), a fourth boundary flow counted through a `ventedTotal` totalizer. The sim models no leaks or continuous blowdown. Realistic cycle losses (0.5–1.5% of steam flow) would be a separate, deliberate feature.

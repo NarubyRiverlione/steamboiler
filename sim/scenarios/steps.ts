@@ -20,7 +20,7 @@ export const airPumpOn: ScenarioAction = {
 export const heatUp: ScenarioAction[] = [...rampGas(0, 0, StartGas), airPumpOn]
 
 // At pressure: open the main steam valve and hold the vacuum (SJAE on and open, recirculation pump
-// open so the exhaust condenses, condensation pump open so the condensate returns to the boiler),
+// open so the exhaust condenses, condensation pump and feed pump open so the condensate returns to the boiler),
 // then crack the bypass valve to build pressure (the turbine valve stays shut: a cracked turbine valve would spin the
 // rotor past MaxRPM before Ramp up could start, ADR 0021). The air extraction pump has pulled the condenser under
 // the vacuum limit by now (ADR 0003).
@@ -35,6 +35,10 @@ export const openMainSteam: ScenarioAction[] = [
   {
     at: AtPressure,
     action: { type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: 0.05 } },
+  },
+  {
+    at: AtPressure,
+    action: { type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: 0.05 } },
   },
   {
     at: AtPressure + 10,

@@ -177,6 +177,13 @@ export const invariants: Invariant[] = [
       within("return", Condenser.returnRate, CstCondenser.CondensationPump_MaxFlowRate * CstSimulation.DeltaTime),
     ),
   },
+  {
+    // The feed pump moves litres at the valve position; a kg of water is at most a litre, so the kg stay under the litres
+    name: "feed pump delivery within pump capacity",
+    check: everySample(({ Deaerator }) =>
+      within("feed", Deaerator.outflowMass, CstCondenser.CondensationPump_MaxFlowRate * CstSimulation.DeltaTime),
+    ),
+  },
   { name: "water is never created or lost", check: waterNeverCreated },
   { name: "natural cooldown never heats", check: cooldownNeverHeats },
   { name: "natural cooldown steam comes from stored heat", check: cooldownSteamFromStoredHeat },

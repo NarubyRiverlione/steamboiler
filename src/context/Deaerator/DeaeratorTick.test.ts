@@ -3,6 +3,7 @@ import { CstDeaerator, CstPhysics, CstSimulation } from "../const"
 import { DeaeratorInput, DeaeratorTick, makeColdDeaerator, makeHotDeaerator } from "./DeaeratorTick"
 import { DeaeratorState } from "../PowerPlantState"
 import { airMassInGasSpace, saturationPressureOf } from "../../utils/deaeratorCalculations"
+import { waterMassOf } from "../../utils/boilerCalculations"
 import { getBoilingPoint, getLiquidEnthalpy, getSaturationEnthalpies } from "../../utils/steamTable"
 
 const { DeltaTime } = CstSimulation
@@ -16,6 +17,7 @@ const input = (overrides: Partial<DeaeratorInput> = {}): DeaeratorInput => ({
   drain: { mass: 0, enthalpy: getLiquidEnthalpy(150) },
   tapSteam: { mass: 0, enthalpy: TapEnthalpy },
   boiler: { pressure: 165, steamMass: 5000, lowLevel: false },
+  boilerRoom: 1e9,
   ...overrides,
 })
 const energyOf = (mass: number, temperature: number): number => mass * getLiquidEnthalpy(temperature)
@@ -41,7 +43,8 @@ describe("DeaeratorTick", () => {
     expect(letDownMass).toBeCloseTo(0, 9)
     expect(state.extractionFlow).toBeCloseTo(asked, 9)
     expect(state.letDownValvePosition).toBeCloseTo(0, 9)
-    expect(outflow.mass).toBeCloseTo(intake.mass + state.extractionFlow * DeltaTime, 9)
+    expect(outflow.mass).toBe(0) // the feed pump is shut
+    expect(state.waterMass).toBeCloseTo(hotDeaerator().waterMass + intake.mass + state.extractionFlow * DeltaTime, 1) // less the vent
   })
 
   it("splits the range: the let-down valve makes up what the tap did not give", () => {
@@ -216,5 +219,43 @@ describe("DeaeratorTick air, vents and relief", () => {
     const before: DeaeratorState = heating(105, 0, { startUpVentOpen: true })
     const { state, outflow } = DeaeratorTick(before, idle())
     expect(state.waterMass + outflow.mass + (state.ventedTotal - before.ventedTotal)).toBeCloseTo(before.waterMass, 9)
+  })
+})
+
+describe("DeaeratorTick feed pump (#112)", () => {
+  const pumping = (volume: number = HotVolume, position = 0.5): DeaeratorState => ({ ...makeHotDeaerator(volume), feedPumpValvePosition: position })
+
+  it("takes the valve position of the pump flow out of the water at the water temperature", () => {
+    const { state, outflow } = DeaeratorTick(pumping(), input())
+    const litres: number = 0.5 * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate * DeltaTime
+    expect(outflow.mass).toBeCloseTo(waterMassOf(litres, state.temperature), 9)
+    expect(state.outflowMass).toBe(outflow.mass)
+    expect(outflow.temperature).toBe(state.temperature)
+  })
+
+  it("takes no more than the boiler has room for", () => {
+    const { outflow } = DeaeratorTick(pumping(), input({ boilerRoom: 1 }))
+    expect(outflow.mass).toBe(1)
+  })
+
+  it("trips below the low-low level: valve shut, flag set, nothing delivered", () => {
+    const low: DeaeratorState = pumping(CstDeaerator.TotalVolume * (CstDeaerator.LowLowLevel - 0.01))
+    const { state, outflow } = DeaeratorTick(low, input())
+    expect(state.feedPumpTripped).toBe(true)
+    expect(state.feedPumpValvePosition).toBe(0)
+    expect(outflow.mass).toBe(0)
+  })
+
+  it("stays tripped until the operator opens it again", () => {
+    const { state } = DeaeratorTick({ ...pumping(), feedPumpTripped: true }, input())
+    expect(state.feedPumpTripped).toBe(true)
+    expect(state.outflowMass).toBe(0)
+  })
+
+  it("conserves water: the vessel loses what the pump delivers", () => {
+    const before: DeaeratorState = pumping()
+    const { state, outflow } = DeaeratorTick(before, input({ intake: { mass: 5, temperature: 30 } }))
+    expect(state.deltaWaterMass).toBeCloseTo(state.waterMass - before.waterMass, 9)
+    expect(state.waterMass + outflow.mass + (state.ventedTotal - before.ventedTotal)).toBeCloseTo(before.waterMass + 5 + state.letDownFlow * DeltaTime + state.extractionFlow * DeltaTime, 6)
   })
 })

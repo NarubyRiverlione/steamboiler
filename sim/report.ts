@@ -345,6 +345,14 @@ export const panels: Panel[] = [
   {
     group: "Deaerator",
     row: 2,
+    title: "Feed pump valve",
+    kind: "valve",
+    unit: "%",
+    series: one("Feed pump valve", (s) => s.Deaerator.feedPumpValvePosition * 100),
+  },
+  {
+    group: "Deaerator",
+    row: 2,
     title: "Deaerator steam valves",
     kind: "valve",
     unit: "%",

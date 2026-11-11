@@ -21,7 +21,7 @@ import { CstSimulation } from "../const"
  * @param boilerPressure Boiler pressure (bar), the motive steam of the SJAE
  * @param steamFromBypass Bypass steam flow (kg/s) and its enthalpy (kJ/kg)
  * @param steamFromTurbine Turbine exhaust flow (kg/s) and its enthalpy (kJ/kg), what the shaft left in it
- * @param boilerRoom kg of liquid the boiler can still take, limits the return
+ * @param deaeratorRoom kg of liquid the deaerator can still take, limits the return
  * @returns Action to update the condenser state
  */
 export function CondenserTick(
@@ -29,7 +29,7 @@ export function CondenserTick(
   boilerPressure: number,
   steamFromBypass: { flow: number; enthalpy: number },
   steamFromTurbine: { flow: number; enthalpy: number },
-  boilerRoom: number,
+  deaeratorRoom: number,
 ): CondenserState {
   const { DeltaTime, CstCondenser } = CstSimulation
 
@@ -99,12 +99,12 @@ export function CondenserTick(
   const pumpTripped: boolean = condenserState.condensationPumpTripped || level < HotwellLowLow
   const pumpValvePosition: number = pumpTripped ? 0 : condenserState.condensationPumpValvePosition
 
-  // Condensation pump transfer: the return, limited by the hotwell and the room in the boiler
+  // Condensation pump transfer: the return, limited by the hotwell and the room in the deaerator
   const { condensatePumpMass, newHotwellWaterMass } = CalculateCondensationFlow(
     pumpValvePosition,
     exchange.mass,
     exchange.temperature,
-    boilerRoom,
+    deaeratorRoom,
   )
 
   return {

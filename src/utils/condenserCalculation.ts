@@ -206,16 +206,16 @@ export function calculateCondensation(
 }
 
 // The Return: the pump volume (L), in kg at the hotwell temperature, limited by what the hotwell holds and the room
-// (kg) left in the boiler. Whatever cannot be returned stays in the hotwell.
+// (kg) left in the deaerator. Whatever cannot be returned stays in the hotwell.
 export function CalculateCondensationFlow(
   condensationPumpValvePosition: number,
   waterMassAfterCondensation: number,
   hotwellTemperature: number,
-  boilerRoom: number,
+  deaeratorRoom: number,
 ): { condensatePumpMass: number; newHotwellWaterMass: number } {
   const pumpFlowRate = condensationPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate
   const pumpMass = waterMassOf(pumpFlowRate * CstSimulation.DeltaTime, hotwellTemperature)
-  const condensatePumpMass = Math.max(0, Math.min(pumpMass, waterMassAfterCondensation, boilerRoom))
+  const condensatePumpMass = Math.max(0, Math.min(pumpMass, waterMassAfterCondensation, deaeratorRoom))
   const newHotwellWaterMass = waterMassAfterCondensation - condensatePumpMass
 
   return { condensatePumpMass, newHotwellWaterMass }
