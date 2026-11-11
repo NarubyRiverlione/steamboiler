@@ -2,6 +2,8 @@
 
 import type { PartId } from "./plantParts"
 
+export type NodeSymbol = "valve" | "check" | "pump"
+
 export type Medium = "heat" | "steam" | "water" | "cooling" | "power" | "vacuum"
 
 export type DiagramNode = {
@@ -18,6 +20,12 @@ export type DiagramNode = {
   readonly part?: PartId
   // The node that carries the part's alarm LED
   readonly led?: true
+  // Drawn as the industry symbol (centred in the box, the box only joins the pipes and takes the click) instead of a box
+  readonly symbol?: NodeSymbol
+  // The way the flow runs through a symbol; right when left out
+  readonly flow?: "left" | "down"
+  // Where a symbol's name stands; above when left out
+  readonly label?: "below" | "right"
 }
 
 type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
@@ -59,21 +67,23 @@ export const NODES: readonly DiagramNode[] = [
     id: "msv",
     name: ["Main steam", "valve"],
     x: 820,
-    y: 146,
+    y: 161,
     w: 120,
-    h: 54,
+    h: 24,
     medium: "steam",
     part: "turbine",
+    symbol: "valve",
   },
   {
     id: "turbinevalve",
     name: ["Turbine valve"],
     x: 1000,
-    y: 146,
+    y: 161,
     w: 130,
-    h: 54,
+    h: 24,
     medium: "steam",
     part: "turbine",
+    symbol: "valve",
   },
   {
     id: "turbine",
@@ -88,7 +98,18 @@ export const NODES: readonly DiagramNode[] = [
   },
   { id: "generator", name: ["Generator"], x: 1370, y: 146, w: 120, h: 54, medium: "power", part: "turbine" },
   { id: "load", name: ["Load"], x: 1550, y: 150, w: 80, h: 46, medium: "power", round: true },
-  { id: "bypass", name: ["Bypass valve"], x: 820, y: 250, w: 120, h: 44, medium: "steam", part: "turbine" },
+  {
+    id: "bypass",
+    name: ["Bypass valve"],
+    x: 820,
+    y: 260,
+    w: 120,
+    h: 24,
+    medium: "steam",
+    part: "turbine",
+    symbol: "valve",
+    label: "below",
+  },
   { id: "drain", name: ["Drain"], x: 370, y: 250, w: 100, h: 40, medium: "water", part: "boiler" },
   {
     id: "condenser",
@@ -110,6 +131,7 @@ export const NODES: readonly DiagramNode[] = [
     h: 36,
     medium: "vacuum",
     part: "condenser",
+    symbol: "pump",
   },
   { id: "sjae", name: ["SJAE"], x: 920, y: 362, w: 190, h: 36, medium: "vacuum", part: "condenser" },
   {
@@ -121,6 +143,8 @@ export const NODES: readonly DiagramNode[] = [
     h: 50,
     medium: "cooling",
     part: "condenser",
+    symbol: "pump",
+    flow: "left",
   },
   {
     id: "coolin",
@@ -152,6 +176,8 @@ export const NODES: readonly DiagramNode[] = [
     h: 54,
     medium: "water",
     part: "condenser",
+    symbol: "pump",
+    flow: "left",
   },
   {
     id: "deaerator",
@@ -163,9 +189,32 @@ export const NODES: readonly DiagramNode[] = [
     medium: "water",
     part: "deaerator",
   },
-  { id: "feedpump", name: ["Boiler feed pump"], x: 700, y: 486, w: 140, h: 44, medium: "water", part: "deaerator" },
-  { id: "letdown", name: ["Let-down", "valve"], x: 735, y: 330, w: 90, h: 44, medium: "steam", part: "deaerator" },
-  { id: "nrv", name: ["Non-return", "valve"], x: 620, y: 418, w: 90, h: 44, medium: "steam" },
+  {
+    id: "feedpump",
+    name: ["Boiler feed pump"],
+    x: 700,
+    y: 486,
+    w: 140,
+    h: 44,
+    medium: "water",
+    part: "deaerator",
+    symbol: "pump",
+    flow: "left",
+  },
+  {
+    id: "letdown",
+    name: ["Let-down", "valve"],
+    x: 735,
+    y: 330,
+    w: 90,
+    h: 44,
+    medium: "steam",
+    part: "deaerator",
+    symbol: "valve",
+    flow: "down",
+    label: "right",
+  },
+  { id: "nrv", name: ["Non-return", "valve"], x: 620, y: 418, w: 90, h: 44, medium: "steam", symbol: "check" },
   { id: "heater", name: ["Extraction heater"], x: 510, y: 480, w: 150, h: 54, medium: "steam" },
   { id: "storagein", name: ["Storage"], x: 1420, y: 462, w: 100, h: 34, medium: "water", round: true },
   { id: "storageout", name: ["Storage"], x: 1420, y: 520, w: 100, h: 34, medium: "water", round: true },
@@ -186,7 +235,7 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "steam", d: "M820 62 L889 62" },
   { medium: "steam", d: "M940 173 L999 173" },
   { medium: "steam", d: "M1130 173 L1189 173" },
-  { medium: "steam", d: "M880 200 L880 249" },
+  { medium: "steam", d: "M880 185 L880 259" },
   { medium: "steam", d: "M780 173 L780 329" },
   { medium: "steam", d: "M780 374 L780 440 L920 440 L920 469" },
   { medium: "steam", d: "M585 440 L619 440" },

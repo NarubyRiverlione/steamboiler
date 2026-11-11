@@ -10,7 +10,7 @@ import { Route, Routes } from "react-router-dom"
 import PlantOverview from "./PlantOverview"
 import AppRoutes from "./AppRoutes"
 import PowerPlantProvider from "../context/PowerPlantProvider"
-import { neighbourPath, partAlarms } from "./plantParts"
+import { PARTS, neighbourPath, partAlarms } from "./plantParts"
 import { LABELS, NODES, type DiagramNode } from "./plantDiagram"
 
 function nodeById(id: string): DiagramNode {
@@ -168,6 +168,33 @@ describe("plant overview", () => {
     expect(screen.getByText("Let-down")).toBeTruthy()
     expect(screen.getByText("Non-return")).toBeTruthy()
     expect(NODES.some((node: DiagramNode) => /pass-through/i.test(node.name.join(" ")))).toBe(false)
+  })
+
+  it.each([
+    ["msv", "valve"],
+    ["turbinevalve", "valve"],
+    ["bypass", "valve"],
+    ["letdown", "valve"],
+    ["nrv", "check"],
+    ["condpump", "pump"],
+    ["feedpump", "pump"],
+    ["recirc", "pump"],
+    ["car", "pump"],
+  ])("draws %s as the %s symbol, still a link when it has a page", (id: string, symbol: string) => {
+    expect(nodeById(id).symbol).toBe(symbol)
+    renderAt("/")
+    const node: DiagramNode = nodeById(id)
+    const link: HTMLElement | null = node.part === undefined ? null : screen.getByRole("link", { name: node.name.join(" ") + ", opens " + PARTS[node.part].name })
+    if (link !== null) {
+      expect(link.querySelector("circle, path.board-node-hit, rect.board-node-hit")).not.toBeNull()
+      expect(link.querySelector("rect.board-node-box")).toBeNull()
+    }
+  })
+
+  it("keeps boxes for the nodes without a symbol", () => {
+    renderAt("/")
+    const link: HTMLElement = screen.getByRole("link", { name: "Deaerator, opens Deaerator" })
+    expect(link.querySelector("rect.board-node-box")).not.toBeNull()
   })
 
   it("labels the auxiliary steam, the extraction steam and the heater drain cascade", () => {
