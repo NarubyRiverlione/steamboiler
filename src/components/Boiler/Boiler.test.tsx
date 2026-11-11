@@ -24,7 +24,7 @@ function renderBoiler(patch: Partial<PowerPlantState["Boiler"]> = {}) {
 describe("Boiler page", () => {
   it("turns the gas knob with the keyboard and passes the command on", () => {
     const fns = renderBoiler({ gasRateCommand: 0.5 })
-    fireEvent.keyDown(screen.getByRole("slider", { name: "Gas knob" }), { key: "ArrowRight" })
+    fireEvent.keyDown(screen.getByRole("slider", { name: "Gas knob" }), { key: "ArrowUp" })
     expect(fns.setGasRate).toHaveBeenCalledWith(0.6)
   })
 

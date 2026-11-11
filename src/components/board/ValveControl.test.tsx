@@ -90,15 +90,32 @@ describe("ValveControl", () => {
     expect(knob().getAttribute("aria-valuenow")).toBe("0")
   })
 
-  it("changes the command by Step with arrow keys and wheel", () => {
+  it("changes the command by Step with Up, Down and the wheel, and ignores Left and Right", () => {
     render(<Harness start={0.5} />)
-    fireEvent.keyDown(knob(), { key: "ArrowRight" })
+    fireEvent.keyDown(knob(), { key: "ArrowUp" })
     expect(knob().getAttribute("aria-valuenow")).toBe("55")
+    fireEvent.keyDown(knob(), { key: "ArrowRight" })
     fireEvent.keyDown(knob(), { key: "ArrowLeft" })
-    fireEvent.keyDown(knob(), { key: "ArrowLeft" })
+    expect(knob().getAttribute("aria-valuenow")).toBe("55")
+    fireEvent.keyDown(knob(), { key: "ArrowDown" })
+    fireEvent.keyDown(knob(), { key: "ArrowDown" })
     expect(knob().getAttribute("aria-valuenow")).toBe("45")
     fireEvent.wheel(knob(), { deltaY: -100 })
     expect(knob().getAttribute("aria-valuenow")).toBe("50")
+  })
+
+  it("takes one wheel step per 50 ms, so a trackpad swipe turns the knob slowly", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(10_000)
+    render(<Harness start={0.5} />)
+    fireEvent.wheel(knob(), { deltaY: -100 })
+    fireEvent.wheel(knob(), { deltaY: -100 })
+    fireEvent.wheel(knob(), { deltaY: -100 })
+    expect(knob().getAttribute("aria-valuenow")).toBe("55")
+    vi.setSystemTime(10_060)
+    fireEvent.wheel(knob(), { deltaY: -100 })
+    expect(knob().getAttribute("aria-valuenow")).toBe("60")
+    vi.useRealTimers()
   })
 
   it("ramps the actual position toward the command at 100 % per 15 real seconds", () => {

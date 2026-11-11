@@ -37,11 +37,11 @@ export const CstSimulation = {
     HoodReliefPressure: 1353, // mbar absolute: the atmospheric relief diaphragm, the ceiling of the condenser pressure
     SJAE_ValveStep: 5, // % per click open/close
     RecirculationPump_MaxFlowRate: 7400, // l/s: single pass at the rated load with 10 °C water, rise 8.5 K (ADR 0032, design-basis.md)
-    RecirculationPump_Step: 5,
+    RecirculationPump_Step: 1, // % per wheel notch or arrow key: a pump is set finely
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
     HeatExchangerUA: 27000, // kW/K at the full cooling water flow: terminal temperature difference 6 K at the rated load; scales with flow^0.5 (ADR 0032)
     CondensationPump_MaxFlowRate: 300, // l/s (typical 160 - 270 l/s)
-    CondensationPump_Step: 5,
+    CondensationPump_Step: 1, // % per wheel notch or arrow key: a pump is set finely
     Makeup_MaxFlowRate: 50, // l/s demineralised water into the hotwell
     Makeup_Temperature: 20, // Celsius
     Makeup_Step: 5, // % per click open/close
@@ -104,7 +104,7 @@ export const CstDeaerator = {
   TotalVolume: 150e3, // liters: 5 minutes of rated feedwater (192 kg/s) from the 50% working level down to the 38% low-low trip
   WorkingLevel: 0.5, // share of TotalVolume the vessel holds at 3 bar: the target line on the level gauge (ADR 0037)
   LowLowLevel: 0.12, // share of TotalVolume: below it the boiler feed pump trips; 5 minutes of rated feedwater (38% of the volume) below the 50% working level (#112, design-basis.md)
-  FeedPump_Step: 5, // % per click open/close; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
+  FeedPump_Step: 1, // % per wheel notch or arrow key; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
   StartLevel: 0.38, // share of TotalVolume filled cold at ambient: ends at 50% at 3 bar (ADR 0037)
   Pressure: 3, // bar, held by the steam inlet valve (about 134 °C)
   ExtractionValveCapacity: 60, // kg/s the extraction valve passes: over-dimensioned, about 35 kg/s are needed at rated flow (design-basis.md)
