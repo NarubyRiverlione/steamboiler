@@ -25,6 +25,7 @@ Decided in #40 (start-up discussion, 2026-11-09); built in #120 (the numbers and
 - **Relief valve:** lift at 4 bar, seat at 3.6 bar (10% blowdown, own estimate), 120 kg/s of mixture, decided on the pressure at the start of the tick.
 - **Lamp** lights below 0.05 bar of air and holds until 0.075 bar; the air pressure of a closed vessel rises with its temperature, and a lamp without the hold would flicker right after the operator closes the vent. The flags follow the lamp: closed with the lamp out, open with the lamp lit.
 - **Tuning values set in the headless runner:** the cold vessel holds 109 kg of air (0.99 bar over the 0.023 bar of vapour at 20 °C, 93 m³ of gas space, not a free number); lamp threshold 0.05 bar; operating vent 0.0001 m² (0.08 kg/s of steam at 3 bar); the start-up vent 0.06 m². Recorded in `design-basis.md`.
+- **A settled plant needs steady makeup (owner, 2026-11-11, seen after #112).** The operating vent loses about 0.08 kg/s whether or not air is left, since the sim has no air ingress and the orifice is fixed; makeup replaces it, so `makeupTotal` rises in the golden scenarios (from #120, not #112). Accepted as realistic: real deaerators vent continuously and the plant makes it up. A vent that throttles with the air left, or a vent condenser returning the steam, were considered and not built.
 - **Left open** the loop stalls the vessel at 100 °C only after the steam supply ends: the vent passes up to about 20 kg/s while steam is admitted, which costs the boiler its water (`deaerator-vent-open`).
 
 ## Consequences

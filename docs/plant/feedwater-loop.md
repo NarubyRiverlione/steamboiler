@@ -13,7 +13,7 @@ Water enters or leaves the loop in only four places. Everything else must conser
 | Drain | out of the boiler | `drainedTotal` |
 | Vent | steam out of the boiler to the atmosphere through the relief valve ([boiler.md](boiler.md#relief-valve)) | `ventedTotal` (kg) |
 
-The deaerator ([deaerator.md](deaerator.md)) holds water but is neither a boundary nor a source: its mass is part of the plant's water, so the invariant sums it with the boiler and the hotwell. The sim models no leaks or continuous blowdown, so any other change in total water is a model error. The water invariant in `sim/invariants.ts` sums kg and allows only floating-point rounding (1e-12 of the start mass, see [headless-runner.md](../dev/headless-runner.md#water-drift)).
+The deaerator ([deaerator.md](deaerator.md)) holds water but is neither a boundary nor a source: its mass is part of the plant's water, so the invariant sums it with the boiler and the hotwell. The sim models no leaks or continuous blowdown, so any other change in total water is a model error. The deaerator's operating vent is a continuous vent loss of about 0.08 kg/s ([deaerator.md](deaerator.md#air-vents-and-relief-adr-0038-120)), so **a settled plant needs a steady trickle of makeup** (the valve hovers near 0.2% open at the lower edge of the hotwell band); `makeupTotal` rising in `turbine-sync` and `turbine-load` is this, not a leak. The water invariant in `sim/invariants.ts` sums kg and allows only floating-point rounding (1e-12 of the start mass, see [headless-runner.md](../dev/headless-runner.md#water-drift)).
 
 ## Return and capacity
 
