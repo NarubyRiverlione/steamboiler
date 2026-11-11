@@ -2,7 +2,7 @@
   "Boiler": {
     "waterMass": 28769.376449277464,
     "waterVolume": 49991.097911152654,
-    "deltaWaterMass": -1.8680307767972408,
+    "deltaWaterMass": 0.08244919318894972,
     "temperature": 349.8041403773287,
     "pressure": 164.8965594218266,
     "gasFlow": 1100,
