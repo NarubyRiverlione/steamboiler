@@ -845,9 +845,12 @@ path.board-zone {
 :root {
   --board-tile-off-bg: #5a5a52;
   --board-tile-off-text: #3b3b3b;
-  --board-tile-lit-bg: #ff8a7a;
-  --board-tile-lit-text: #2b0000;
-  --board-tile-lit-glow: #ff4d3a;
+  --board-tile-error-bg: #ff8a7a;
+  --board-tile-error-text: #2b0000;
+  --board-tile-error-glow: #ff4d3a;
+  --board-tile-warning-bg: #ffd84a;
+  --board-tile-warning-text: #2b2000;
+  --board-tile-warning-glow: #ffb800;
   --board-annun-well: #1b1b1b;
 }
 
@@ -896,11 +899,20 @@ path.board-zone {
   outline-offset: 2px;
 }
 
-.board-tile-lit {
-  background: var(--board-tile-lit-bg);
-  color: var(--board-tile-lit-text);
+/* Lit colour per severity: red error, yellow warning */
+.board-tile-lit.board-tile-error {
+  background: var(--board-tile-error-bg);
+  color: var(--board-tile-error-text);
   box-shadow:
-    0 0 10px var(--board-tile-lit-glow),
+    0 0 10px var(--board-tile-error-glow),
+    inset 0 0 8px #ffffff;
+}
+
+.board-tile-lit.board-tile-warning {
+  background: var(--board-tile-warning-bg);
+  color: var(--board-tile-warning-text);
+  box-shadow:
+    0 0 10px var(--board-tile-warning-glow),
     inset 0 0 8px #ffffff;
 }
 

@@ -5,6 +5,10 @@ import { LensButton } from "../components/board/LensButton"
 import "../components/board/board.css"
 import { useAnnunciator, type Tile } from "./useAnnunciator"
 import { PARTS } from "./plantParts"
+import type { AlarmSeverity } from "./alarms"
+
+// Backlight colour class per severity
+const SEVERITY_CLASS: Record<AlarmSeverity, string> = { error: "board-tile-error", warning: "board-tile-warning" }
 
 function Annunciator() {
   const { tiles, testing, acknowledge, setTesting } = useAnnunciator()
@@ -17,7 +21,7 @@ function Annunciator() {
           <button
             key={tile.id}
             type="button"
-            className={["board-tile", tile.lit ? "board-tile-lit" : "", tile.flashing ? "board-tile-flash" : ""].filter((c: string) => c !== "").join(" ")}
+            className={["board-tile", SEVERITY_CLASS[tile.severity], tile.lit ? "board-tile-lit" : "", tile.flashing ? "board-tile-flash" : ""].filter((c: string) => c !== "").join(" ")}
             title={"Open " + PARTS[tile.part].name}
             onClick={() => void navigate(PARTS[tile.part].path)}
           >

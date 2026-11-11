@@ -1,13 +1,14 @@
 /** The annunciator context and its hook; the provider is in AnnunciatorProvider.tsx. */
 
 import { createContext, useContext } from "react"
-import type { AlarmId } from "./alarms"
+import type { AlarmId, AlarmSeverity } from "./alarms"
 import type { PartId } from "./plantParts"
 
 export type Tile = {
   readonly id: AlarmId
   readonly label: string
   readonly part: PartId
+  readonly severity: AlarmSeverity
   readonly lit: boolean
   readonly flashing: boolean
 }
