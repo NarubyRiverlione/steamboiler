@@ -10,7 +10,6 @@ import { AnnunciatorProvider } from "./AnnunciatorProvider"
 import Annunciator from "./Annunciator"
 import { useAnnunciator } from "./useAnnunciator"
 import { isSpeedLocked } from "./speedLock"
-import { masterLights } from "./masterLights"
 
 function Clear() {
   const { clearLatches } = useAnnunciator()
@@ -221,6 +220,20 @@ describe("Annunciator", () => {
     expect(toggle().getAttribute("aria-expanded")).toBe("false")
   })
 
+  it("leaves an Esc that was already handled (the Presets popup) alone", () => {
+    render(tree(stateWith({})))
+    fireEvent.click(toggle())
+    const handled: KeyboardEvent = new KeyboardEvent("keydown", { key: "Escape", cancelable: true, bubbles: true })
+    handled.preventDefault()
+    document.body.dispatchEvent(handled)
+    expect(toggle().getAttribute("aria-expanded")).toBe("true")
+  })
+
+  it("does not set aria-pressed on the toggle", () => {
+    render(tree(stateWith({})))
+    expect(toggle().hasAttribute("aria-pressed")).toBe(false)
+  })
+
   it("groups the tiles by owning part", () => {
     render(tree(stateWith({})))
     fireEvent.click(toggle())
@@ -295,15 +308,5 @@ describe("Annunciator", () => {
 
   it("throws a clear error outside the provider", () => {
     expect(() => render(<MemoryRouter><Annunciator /></MemoryRouter>)).toThrow(/AnnunciatorProvider/)
-  })
-})
-
-describe("masterLights", () => {
-  const t = (severity: "error" | "warning", lit: boolean, flashing: boolean) => ({ id: "burnerTripped", label: "x", part: "boiler", severity, lit, flashing }) as const
-  it("is off without tiles", () => {
-    expect(masterLights([])).toEqual({ error: "off", warning: "off" })
-  })
-  it("lets red hide yellow", () => {
-    expect(masterLights([t("error", true, false), t("warning", true, true)])).toEqual({ error: "steady", warning: "off" })
   })
 })

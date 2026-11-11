@@ -12,12 +12,16 @@ import { masterLights, type MasterLights, type MasterState } from "./masterLight
 // Backlight colour class per severity
 const SEVERITY_CLASS: Record<AlarmSeverity, string> = { error: "board-tile-error", warning: "board-tile-warning" }
 
+const PANEL_ID = "annunciator-panel"
+
 const MASTER_LABEL: Record<AlarmSeverity, string> = { error: "Master error", warning: "Master warning" }
 
+// Backlight classes of a tile or master light
+const lightClass = (base: string, severity: AlarmSeverity, lit: boolean, flashing: boolean): string =>
+  [base, SEVERITY_CLASS[severity], lit ? "board-tile-lit" : "", flashing ? "board-tile-flash" : ""].filter((c: string) => c !== "").join(" ")
+
 function MasterLight({ severity, state }: { readonly severity: AlarmSeverity; readonly state: MasterState }) {
-  const className: string = ["board-master", SEVERITY_CLASS[severity], state !== "off" ? "board-tile-lit" : "", state === "flashing" ? "board-tile-flash" : ""]
-    .filter((c: string) => c !== "")
-    .join(" ")
+  const className: string = lightClass("board-master", severity, state !== "off", state === "flashing")
   return <span role="img" className={className} aria-label={MASTER_LABEL[severity] + " " + state} data-state={state} />
 }
 
@@ -32,7 +36,8 @@ function Annunciator() {
   useEffect(() => {
     if (!open) return undefined
     const onKey = (event: KeyboardEvent): void => {
-      if (event.key !== "Escape") return
+      // A handled Esc (the Presets popup closing) is left to its owner
+      if (event.key !== "Escape" || event.defaultPrevented) return
       event.preventDefault()
       setOpen(false)
     }
@@ -53,12 +58,11 @@ function Annunciator() {
       <div className="board-annun-bar">
         <LensButton
           small
-          pressed={open}
           onClick={() => {
             setOpen((prev: boolean) => !prev)
           }}
           aria-expanded={open}
-          aria-controls="annunciator-panel"
+          aria-controls={PANEL_ID}
         >
           Annunciator
         </LensButton>
@@ -73,7 +77,7 @@ function Annunciator() {
           RESET
         </LensButton>
       </div>
-      <div id="annunciator-panel" className="board-annun-panel" hidden={!open}>
+      <div id={PANEL_ID} className="board-annun-panel" hidden={!open}>
         {PART_IDS.map((part: PartId) => {
           const partTiles: readonly Tile[] = tiles.filter((tile: Tile) => tile.part === part)
           if (partTiles.length === 0) return null
@@ -85,7 +89,7 @@ function Annunciator() {
                   <button
                     key={tile.id}
                     type="button"
-                    className={["board-tile", SEVERITY_CLASS[tile.severity], tile.lit ? "board-tile-lit" : "", tile.flashing ? "board-tile-flash" : ""].filter((c: string) => c !== "").join(" ")}
+                    className={lightClass("board-tile", tile.severity, tile.lit, tile.flashing)}
                     title={"Open " + PARTS[tile.part].name}
                     onClick={() => {
                       setOpen(false)
