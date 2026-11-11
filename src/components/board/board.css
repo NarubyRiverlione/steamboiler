@@ -1097,6 +1097,26 @@ path.board-zone {
   grid-template-columns: 1fr auto 1fr;
 }
 
+.board-deaerator-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* The four lamps (safe to close, relief open, boiler, turbine) stack LED over label and sit at the bottom of equal-height cells (labels stay on top), so they sit on the corners of a square */
+.board-deaerator-side .board-lamp {
+  flex-direction: column;
+  text-align: center;
+}
+
+.board-deaerator-side .board-group .board-group-cols {
+  align-items: stretch;
+}
+
+.board-deaerator-side .board-instrument {
+  align-content: space-between;
+}
+
 .board-condenser-bottom {
   display: grid;
   grid-template-columns: 1fr 1fr 2fr;

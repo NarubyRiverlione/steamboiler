@@ -15,7 +15,12 @@ function renderDeaerator(patch: Partial<PowerPlantState["Deaerator"]> = {}) {
   state.Deaerator = { ...state.Deaerator, ...patch }
   const toggleDeaeratorVent = vi.fn()
   const adjustFeedPumpValvePosition = vi.fn()
-  const value = { state, dispatch: vi.fn(), toggleDeaeratorVent, adjustFeedPumpValvePosition } as unknown as Ctx
+  const value = {
+    state,
+    dispatch: vi.fn(),
+    toggleDeaeratorVent,
+    adjustFeedPumpValvePosition,
+  } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
       <Deaerator />
@@ -34,7 +39,9 @@ describe("Deaerator page", () => {
 
   it("shows the level as a fraction with the gauge and the signed change in kg/s", () => {
     renderDeaerator({ waterVolume: 75_000, deltaWaterMass: 0.5 })
-    expect(screen.getByRole("meter", { name: "Deaerator level gauge" }).getAttribute("aria-valuenow")).toBe("50")
+    expect(screen.getByRole("meter", { name: "Deaerator level gauge" }).getAttribute("aria-valuenow")).toBe(
+      "50",
+    )
     expect(screen.getByLabelText("Deaerator level").textContent).toBe("0.50")
     expect(screen.getByLabelText("Deaerator level change").textContent).toBe("+5.0 kg/s")
   })
@@ -88,5 +95,23 @@ describe("warningText", () => {
     expect(warningText(false, false)).toBe("")
     expect(warningText(true, false)).toMatch(/closed with air/)
     expect(warningText(false, true)).toMatch(/no air left/)
+  })
+
+  it("lights the Turbine lamp on tap flow and the Boiler lamp on let-down flow", () => {
+    renderDeaerator({ extractionFlow: 20, letDownFlow: 0 })
+    expect(screen.getByRole("img", { name: "Turbine: on" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Boiler: off" })).toBeTruthy()
+  })
+
+  it("lights the Boiler lamp alone when only the let-down valve passes steam", () => {
+    renderDeaerator({ extractionFlow: 0, letDownFlow: 10 })
+    expect(screen.getByRole("img", { name: "Boiler: on" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Turbine: off" })).toBeTruthy()
+  })
+
+  it("keeps both source lamps off below the small-flow threshold", () => {
+    renderDeaerator({ extractionFlow: 0.2, letDownFlow: 0.2 })
+    expect(screen.getByRole("img", { name: "Boiler: off" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Turbine: off" })).toBeTruthy()
   })
 })
