@@ -246,7 +246,7 @@
   gap: 0.5rem;
 }
 
-/* Two rows together as tall as the ACK/TEST column: compact LCDs */
+/* Two rows together as tall as the ACK/RESET column: compact LCDs */
 .board-header-values .board-display {
   min-height: 0;
   padding: 0.1rem 0.5rem;
@@ -841,7 +841,7 @@ path.board-zone {
   opacity: 0.45;
 }
 
-/* Annunciator: tiles flash until acknowledged (ACK), all light while TEST is held */
+/* Annunciator: tiles flash until acknowledged (ACK), latch until RESET */
 :root {
   --board-tile-off-bg: #5a5a52;
   --board-tile-off-text: #3b3b3b;
@@ -861,7 +861,7 @@ path.board-zone {
   align-items: stretch;
 }
 
-/* ACK above TEST, beside the tiles */
+/* ACK above RESET, beside the tiles */
 .board-annun-buttons {
   flex-direction: column;
   justify-content: center;

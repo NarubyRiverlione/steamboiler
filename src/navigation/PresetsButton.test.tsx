@@ -16,9 +16,9 @@ function Keys() {
 
 function setup() {
   const dispatch = vi.fn()
-  const clearAcknowledgements = vi.fn()
+  const clearLatches = vi.fn()
   const plant = { state: makeInitialState(), dispatch } as unknown as ContextType<typeof PowerPlantContext>
-  const annunciator = { clearAcknowledgements } as unknown as AnnunciatorValue
+  const annunciator = { clearLatches } as unknown as AnnunciatorValue
   render(
     <PowerPlantContext.Provider value={plant}>
       <AnnunciatorContext.Provider value={annunciator}>
@@ -26,7 +26,7 @@ function setup() {
       </AnnunciatorContext.Provider>
     </PowerPlantContext.Provider>,
   )
-  return { dispatch, clearAcknowledgements }
+  return { dispatch, clearLatches }
 }
 
 const open = (): void => { fireEvent.click(screen.getByRole("button", { name: "Presets" })) }
@@ -40,17 +40,17 @@ describe("Presets button and popup", () => {
     for (const label of ["Cold & dark", "Hot standby", "At pressure"]) expect(screen.getByRole("button", { name: new RegExp(label) })).toBeTruthy()
   })
 
-  it.each(START_PRESETS.map((p: StartPreset) => [p.label, p] as const))("choosing %s loads its state, clears acks and closes", (label: string, preset: StartPreset) => {
-    const { dispatch, clearAcknowledgements } = setup()
+  it.each(START_PRESETS.map((p: StartPreset) => [p.label, p] as const))("choosing %s loads its state, clears latches and closes", (label: string, preset: StartPreset) => {
+    const { dispatch, clearLatches } = setup()
     open()
     fireEvent.click(screen.getByRole("button", { name: new RegExp(label) }))
     expect(dispatch).toHaveBeenCalledExactlyOnceWith({ type: "LOAD_STATE", payload: { state: presetState(preset) } })
-    expect(clearAcknowledgements).toHaveBeenCalledOnce()
+    expect(clearLatches).toHaveBeenCalledOnce()
     expect(screen.queryByRole("dialog")).toBeNull()
   })
 
   it("closes without changing the plant via the close button, Escape and a click outside", () => {
-    const { dispatch, clearAcknowledgements } = setup()
+    const { dispatch, clearLatches } = setup()
     open()
     fireEvent.click(screen.getByRole("button", { name: "Close" }))
     expect(screen.queryByRole("dialog")).toBeNull()
@@ -61,7 +61,7 @@ describe("Presets button and popup", () => {
     fireEvent.click(screen.getByTestId("presets-backdrop"))
     expect(screen.queryByRole("dialog")).toBeNull()
     expect(dispatch).not.toHaveBeenCalled()
-    expect(clearAcknowledgements).not.toHaveBeenCalled()
+    expect(clearLatches).not.toHaveBeenCalled()
   })
 
   it("a click inside the popup does not close it", () => {
@@ -90,7 +90,7 @@ describe("Presets button and popup", () => {
 
   it("keeps the board keys (Esc, Page Up/Down) from navigating while the popup is open", () => {
     const plant = { state: makeInitialState(), dispatch: vi.fn() } as unknown as ContextType<typeof PowerPlantContext>
-    const annunciator = { clearAcknowledgements: vi.fn() } as unknown as AnnunciatorValue
+    const annunciator = { clearLatches: vi.fn() } as unknown as AnnunciatorValue
     render(
       <PowerPlantContext.Provider value={plant}>
         <AnnunciatorContext.Provider value={annunciator}>

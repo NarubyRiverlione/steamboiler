@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 import type { ContextType } from "react"
@@ -8,6 +8,12 @@ import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
 import { AnnunciatorProvider } from "./AnnunciatorProvider"
 import Annunciator from "./Annunciator"
+import { useAnnunciator } from "./useAnnunciator"
+
+function Clear() {
+  const { clearLatches } = useAnnunciator()
+  return <button type="button" onClick={clearLatches}>clear-latches</button>
+}
 
 function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>
@@ -33,6 +39,7 @@ function tree(state: PowerPlantState) {
             <Route path="*" element={<Annunciator />} />
           </Routes>
           <Where />
+          <Clear />
         </AnnunciatorProvider>
       </MemoryRouter>
     </PowerPlantContext.Provider>
@@ -41,6 +48,8 @@ function tree(state: PowerPlantState) {
 
 const tile = (name: string): HTMLElement => screen.getByRole("button", { name })
 const flashing = (name: string): boolean => tile(name).className.includes("board-tile-flash")
+const ack = (): void => { fireEvent.click(screen.getByRole("button", { name: "ACK" })) }
+const reset = (): void => { fireEvent.click(screen.getByRole("button", { name: "RESET" })) }
 const lit = (name: string): boolean => tile(name).className.includes("board-tile-lit")
 
 describe("Annunciator", () => {
@@ -59,9 +68,9 @@ describe("Annunciator", () => {
     expect(lit("Burner trip")).toBe(false)
   })
 
-  it("stops the flashing on ACK but keeps the tile lit while the flag is set", () => {
+  it("makes a flashing tile steady on ACK and leaves a tile that trips later flashing", () => {
     const { rerender } = render(tree(stateWith({ turbine: true })))
-    fireEvent.click(screen.getByRole("button", { name: "ACK" }))
+    ack()
     expect(lit("Turbine trip")).toBe(true)
     expect(flashing("Turbine trip")).toBe(false)
     rerender(tree(stateWith({ turbine: true, burner: true })))
@@ -69,39 +78,74 @@ describe("Annunciator", () => {
     expect(flashing("Turbine trip")).toBe(false)
   })
 
-  it("goes dark when the flag clears and flashes again on the next trip", () => {
+  it("goes dark when the flag clears while still flashing", () => {
     const { rerender } = render(tree(stateWith({ turbine: true })))
-    fireEvent.click(screen.getByRole("button", { name: "ACK" }))
     rerender(tree(stateWith({})))
     expect(lit("Turbine trip")).toBe(false)
+    expect(flashing("Turbine trip")).toBe(false)
+  })
+
+  it("stays lit and steady when the flag clears while steady", () => {
+    const { rerender } = render(tree(stateWith({ turbine: true })))
+    ack()
+    rerender(tree(stateWith({})))
+    expect(lit("Turbine trip")).toBe(true)
+    expect(flashing("Turbine trip")).toBe(false)
+  })
+
+  it("ignores RESET while the flag is still set", () => {
+    render(tree(stateWith({ turbine: true })))
+    ack()
+    reset()
+    expect(lit("Turbine trip")).toBe(true)
+    expect(flashing("Turbine trip")).toBe(false)
+  })
+
+  it("darkens a steady tile on RESET once its flag is clear", () => {
+    const { rerender } = render(tree(stateWith({ turbine: true })))
+    ack()
+    rerender(tree(stateWith({})))
+    reset()
+    expect(lit("Turbine trip")).toBe(false)
+  })
+
+  it("does not darken a flashing tile on RESET", () => {
+    render(tree(stateWith({ turbine: true })))
+    reset()
+    expect(flashing("Turbine trip")).toBe(true)
+  })
+
+  it("stays steady when the flag re-trips while the tile is latched", () => {
+    const { rerender } = render(tree(stateWith({ turbine: true })))
+    ack()
+    rerender(tree(stateWith({})))
+    rerender(tree(stateWith({ turbine: true })))
+    expect(lit("Turbine trip")).toBe(true)
+    expect(flashing("Turbine trip")).toBe(false)
+  })
+
+  it("flashes again on a trip after RESET", () => {
+    const { rerender } = render(tree(stateWith({ turbine: true })))
+    ack()
+    rerender(tree(stateWith({})))
+    reset()
     rerender(tree(stateWith({ turbine: true })))
     expect(flashing("Turbine trip")).toBe(true)
   })
 
-  it("lights every tile while TEST is held, without flashing, and restores them after", () => {
-    render(tree(stateWith({})))
-    const test: HTMLElement = screen.getByRole("button", { name: "TEST" })
-    fireEvent.pointerDown(test)
-    expect(test.getAttribute("aria-pressed")).toBe("true")
-    expect(lit("Heating rate over limit")).toBe(true)
-    expect(lit("Condensation pump trip")).toBe(true)
-    expect(flashing("Burner trip")).toBe(false)
-    fireEvent.pointerUp(test)
-    expect(lit("Heating rate over limit")).toBe(false)
+  it("clears flashing and steady tiles together when a preset loads", () => {
+    render(tree(stateWith({ turbine: true, burner: true })))
+    fireEvent.click(tile("Turbine trip"))
+    ack()
+    fireEvent.click(screen.getByRole("button", { name: "clear-latches" }))
+    expect(flashing("Turbine trip")).toBe(true)
+    expect(flashing("Burner trip")).toBe(true)
   })
 
-  it("lights on TEST via the keyboard and ends it on key up or blur", () => {
+  it("has a RESET button and no TEST button", () => {
     render(tree(stateWith({})))
-    const test: HTMLElement = screen.getByRole("button", { name: "TEST" })
-    fireEvent.keyDown(test, { key: " " })
-    expect(lit("Burner trip")).toBe(true)
-    fireEvent.keyUp(test, { key: " " })
-    expect(lit("Burner trip")).toBe(false)
-    fireEvent.keyDown(test, { key: "Enter" })
-    expect(lit("Burner trip")).toBe(true)
-    act(() => { test.blur(); })
-    fireEvent.pointerLeave(test)
-    expect(lit("Burner trip")).toBe(false)
+    expect(screen.getByRole("button", { name: "RESET" })).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "TEST" })).toBeNull()
   })
 
   it("opens the part that owns the alarm", () => {
