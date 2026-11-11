@@ -8,26 +8,31 @@ Order: a ticket comes after every open ticket blocking it, otherwise by priority
 A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`, and sits in that priority's section.
 Next: the first ticket with nothing under Waiting on.
 
+## P2: realism in scope
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 1 | [#112](https://github.com/NarubyRiverlione/steamboiler/issues/112) Boiler feed pump after the deaerator | P2 | ready-for-agent |  | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) [#118](https://github.com/NarubyRiverlione/steamboiler/issues/118) |
+
 ## P3: experience and project health
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P3 | ready-for-agent |  |  |
-| 2 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
-| 3 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P3 | ready-for-agent |  |  |
-| 4 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | ready-for-agent |  |  |
-| 5 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | ready-for-agent |  |  |
-| 6 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
-| 7 | [#103](https://github.com/NarubyRiverlione/steamboiler/issues/103) Restore the real heating-rate limit (about 100 K/h) and retune the cold-start scenarios | P3 | ready-for-agent |  |  |
+| 2 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P3 | ready-for-agent |  |  |
+| 3 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P3 | needs-triage |  |  |
+| 4 | [#59](https://github.com/NarubyRiverlione/steamboiler/issues/59) Hotwell level alarms at 25% and 85% | P3 | ready-for-agent |  |  |
+| 5 | [#62](https://github.com/NarubyRiverlione/steamboiler/issues/62) Boiler high-level protection | P3 | ready-for-agent |  |  |
+| 6 | [#72](https://github.com/NarubyRiverlione/steamboiler/issues/72) Turbine overspeed trip at 110% | P3 | ready-for-agent |  |  |
+| 7 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
+| 8 | [#103](https://github.com/NarubyRiverlione/steamboiler/issues/103) Restore the real heating-rate limit (about 100 K/h) and retune the cold-start scenarios | P3 | ready-for-agent |  |  |
 
 ## P4: parked
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 8 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
-| 9 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
-| 10 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
-| 11 | [#112](https://github.com/NarubyRiverlione/steamboiler/issues/112) Boiler feed pump after the deaerator | P4 | needs-triage |  | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) [#118](https://github.com/NarubyRiverlione/steamboiler/issues/118) |
+| 9 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
+| 10 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
+| 11 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
 | 12 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P4 | needs-triage | [#112](https://github.com/NarubyRiverlione/steamboiler/issues/112) |  |
 | 13 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | P4 | needs-triage |  |  |
 
