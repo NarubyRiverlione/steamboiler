@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 import type { ContextType } from "react"
+import { CstSimulation } from "../context/const"
 import { PowerPlantContext } from "../context/PowerPlantContext"
 import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
@@ -12,8 +13,9 @@ function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>
 }
 
-function stateWith(flags: { heat?: boolean; burner?: boolean; pump?: boolean; turbine?: boolean }): PowerPlantState {
+function stateWith(flags: { heat?: boolean; burner?: boolean; pump?: boolean; turbine?: boolean; hotwellLevel?: number }): PowerPlantState {
   const state: PowerPlantState = makeInitialState()
+  if (flags.hotwellLevel !== undefined) state.Condenser.hotwellWaterVolume = flags.hotwellLevel * CstSimulation.CstCondenser.TotalVolume
   state.Boiler.heatingRateOverLimit = flags.heat === true
   state.Boiler.burnerTripped = flags.burner === true
   state.Condenser.condensationPumpTripped = flags.pump === true
@@ -44,7 +46,7 @@ const lit = (name: string): boolean => tile(name).className.includes("board-tile
 describe("Annunciator", () => {
   it("has one tile per alarm flag, all dark while nothing is set", () => {
     render(tree(stateWith({})))
-    for (const name of ["Heating rate over limit", "Burner trip", "Condensation pump trip", "Turbine trip"]) {
+    for (const name of ["Heating rate over limit", "Burner trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high"]) {
       expect(lit(name)).toBe(false)
       expect(flashing(name)).toBe(false)
     }
@@ -115,6 +117,7 @@ describe("Annunciator", () => {
   it("colours a tile by its alarm severity: warning yellow, error red", () => {
     render(tree(stateWith({})))
     expect(tile("Heating rate over limit").className).toContain("board-tile-warning")
+    for (const name of ["Hotwell level low", "Hotwell level high"]) expect(tile(name).className).toContain("board-tile-warning")
     for (const name of ["Burner trip", "Condensation pump trip", "Turbine trip"]) {
       expect(tile(name).className).toContain("board-tile-error")
       expect(tile(name).className).not.toContain("board-tile-warning")
@@ -131,6 +134,17 @@ describe("Annunciator", () => {
     expect(lit("Heating rate over limit")).toBe(true)
     expect(tile("Heating rate over limit").className).toContain("board-tile-warning")
     expect(tile("Burner trip").className).toContain("board-tile-error")
+  })
+
+  it("lights each hotwell tile from the level and opens the condenser", () => {
+    const { rerender } = render(tree(stateWith({ hotwellLevel: 0.2 })))
+    expect(lit("Hotwell level low")).toBe(true)
+    expect(lit("Hotwell level high")).toBe(false)
+    rerender(tree(stateWith({ hotwellLevel: 0.9 })))
+    expect(lit("Hotwell level low")).toBe(false)
+    expect(lit("Hotwell level high")).toBe(true)
+    fireEvent.click(tile("Hotwell level high"))
+    expect(screen.getByTestId("where").textContent).toBe("/condenser")
   })
 
   it("throws a clear error outside the provider", () => {

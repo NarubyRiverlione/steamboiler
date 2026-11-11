@@ -50,6 +50,8 @@ The hotwell temperature is the mass-weighted mix of the existing hotwell water, 
 
 Two protections act in `CondenserTick` ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)): below `HotwellLowLow` (10% of the volume) the condensation pump trips (`condensationPumpTripped`, valve shut, no return), and from `HotwellHighHigh` (95%) the reject flows fully open without changing the stored valve position. The reducer refuses to open the pump while the level is below low-low.
 
+Two annunciator alarms warn ahead of them (#59), rows of `navigation/alarms.ts` owned by the condenser: "Hotwell level low" below `HotwellLow` (25%) and "Hotwell level high" from `HotwellHigh` (85%). They are derived from the level, so there is no state, deadband or latch, and the tick is unchanged. The limits are our own numbers ([design basis](design-basis.md)).
+
 Loop targets, the working band and the operator that holds them are in [feedwater-loop.md](feedwater-loop.md).
 
 ## Intakes
