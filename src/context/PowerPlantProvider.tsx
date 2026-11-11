@@ -110,6 +110,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       payload: { condensationPumpValvePosition: position },
     })
   }
+  const adjustFeedPumpValvePosition = (position: number) => {
+    dispatch({ type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: position } })
+  }
   const adjustMakeupValvePosition = (position: number) => {
     dispatch({ type: "SET_MAKEUP_VALVE_POSITION", payload: { makeupValvePosition: position } })
   }
@@ -140,6 +143,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         toggleGeneratorBreaker,
         // deaerator actions
         toggleDeaeratorVent,
+        adjustFeedPumpValvePosition,
         // condenser actions
         toggleAirExtractionPump,
         toggleSjae,

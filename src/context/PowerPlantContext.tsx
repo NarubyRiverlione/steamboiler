@@ -23,6 +23,7 @@ type PowerPlantContextType = {
   setLoadSetpoint: (loadSetpoint: number) => void
   // Deaerator
   toggleDeaeratorVent: () => void
+  adjustFeedPumpValvePosition: (amount: number) => void
   // Condenser
   toggleAirExtractionPump: () => void
   toggleSjae: () => void

@@ -1,5 +1,5 @@
-import { CstPhysics, CstSimulation } from "./const"
-import { makeColdDeaerator } from "./Deaerator/DeaeratorTick"
+import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
+import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
 import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
@@ -148,6 +148,13 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#region Deaerator
   // The start-up vent is an operator action; the warning flags follow at the next tick
   TOGGLE_DEAERATOR_VENT: (state) => withDeaerator(state, { startUpVentOpen: !state.Deaerator.startUpVentOpen }),
+  // Below low-low the feed pump may not be opened, closing is always allowed; an opening clears the trip flag
+  SET_FEED_PUMP_VALVE_POSITION: (state, { payload }) => {
+    const { feedPumpValvePosition: current, feedPumpTripped, waterVolume } = state.Deaerator
+    const requested: number = clamp(current + payload.feedPumpValvePosition, 0, 1)
+    if (requested > current && deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel) return state
+    return withDeaerator(state, { feedPumpValvePosition: requested, feedPumpTripped: feedPumpTripped && requested <= current })
+  },
   //#endregion
 
   //#region Condenser

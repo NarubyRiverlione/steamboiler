@@ -2,7 +2,8 @@
  * Deaerator vessel (ADR 0036, ADR 0037): a lumped tank between the hotwell and the boiler, heated by steam to hold 3 bar.
  * The steam comes from the turbine tap first and from the boiler through the let-down valve for what the tap cannot give
  * (split range on one pressure loop). The tap steam of a tick is decided before the condenser runs, so it follows the demand
- * of the last tick; the let-down valve makes up the rest of this tick's demand. Pure function, no React.
+ * of the last tick; the let-down valve makes up the rest of this tick's demand. The boiler feed pump (#112) takes the water out
+ * of the vessel toward the boiler and trips on the low-low level. Pure function, no React.
  */
 import { CstDeaerator, CstPhysics, CstSimulation } from "../const"
 import { DeaeratorState } from "../PowerPlantState"
@@ -16,16 +17,20 @@ const { DeltaTime } = CstSimulation
 const SetTemperature: number = getBoilingPoint(CstDeaerator.Pressure)
 const SetEnthalpy: number = getLiquidEnthalpy(SetTemperature)
 
+// Deaerator level as a fraction (0-1) of the vessel volume; volumetric like the hotwell's (ADR 0007)
+export const deaeratorLevel = (waterVolume: number): number => waterVolume / CstDeaerator.TotalVolume
+
 export type DeaeratorInput = {
   intake: { mass: number; temperature: number } // kg of Return from the hotwell this tick, and its temperature
   drain: { mass: number; enthalpy: number } // kg of heater drain this tick, and its enthalpy (kJ/kg)
   tapSteam: { mass: number; enthalpy: number } // kg of steam the tap gave through the non-return valve this tick, and its enthalpy
   boiler: { pressure: number; steamMass: number; lowLevel: boolean } // bar, kg of steam the let-down valve may draw from, and the burner low-low trip of the boiler (the valve is shut while it holds)
+  boilerRoom: number // kg of liquid the boiler can still take: the feed pump stops short of a full boiler (ADR 0004)
 }
 
 export type DeaeratorResult = {
   state: DeaeratorState
-  outflow: { mass: number; temperature: number } // kg toward the boiler this tick, and its temperature
+  outflow: { mass: number; temperature: number } // kg the feed pump delivered toward the boiler this tick, and its temperature
   letDownMass: number // kg of steam taken from the boiler this tick
 }
 
@@ -62,6 +67,9 @@ export function makeColdDeaerator(): DeaeratorState {
     letDownFlow: 0,
     letDownValvePosition: 0,
     outflowMass: 0,
+    deltaWaterMass: 0,
+    feedPumpValvePosition: 0,
+    feedPumpTripped: false,
   }
 }
 
@@ -91,11 +99,12 @@ export function letDownCapacity(boilerPressure: number, deaeratorPressure: numbe
 
 /**
  * One tick of the vessel. The heat that brings the stored water and the inflow to the setpoint is the steam demand; the
- * tap supplies it first, the let-down valve the rest. The steam that heats the stored water stays in the tank (the level
- * rises); the rest leaves with the inflow: out = intake + drain + the steam that heated them (until #112).
+ * tap supplies it first, the let-down valve the rest. All the steam condenses into the tank; the feed pump takes the water
+ * out toward the boiler at the valve position, limited by the water held and the room in the boiler, and trips below the
+ * low-low level (the valve shut, the flag set until the next successful opening).
  */
 export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): DeaeratorResult {
-  const { intake, drain, tapSteam, boiler } = input
+  const { intake, drain, tapSteam, boiler, boilerRoom } = input
   const storedEnthalpy: number = getLiquidEnthalpy(state.temperature)
   const intakeEnthalpy: number = getLiquidEnthalpy(intake.temperature)
 
@@ -123,11 +132,6 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
     letDownMass * letDownEnthalpy
   const temperature: number = getLiquidTemperature(totalEnthalpy / totalMass)
 
-  // The share of the steam that heated the stored water stays; the rest passes through with the inflow
-  const retained: number = demand > 0 && steamMass > 0 ? steamMass * Math.min(1, contentDemand / demand) : 0
-  const mixedMass: number = state.waterMass + retained
-  const outflowMass: number = totalMass - mixedMass
-
   // Vents and relief (ADR 0038): flows from the pressure at the start of the tick, the mixture of air and steam of the gas space
   const gas: VentGas = ventGasOf(state.airPressure, state.saturationPressure, state.temperature)
   const reliefOpen: boolean = state.reliefValveOpen ? state.pressure > CstDeaerator.ReliefReseatPressure : state.pressure >= CstDeaerator.ReliefPressure
@@ -138,9 +142,16 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
   const steamOut: number = ventedMixture * (1 - gas.airShare)
 
   // The vented steam leaves the mixed water as saturated vapour: everything that is left is cooler by its latent heat
-  const waterMass: number = mixedMass - steamOut
+  const mixedMass: number = totalMass - steamOut
   const waterEnthalpy: number = (totalEnthalpy - steamOut * getSaturationEnthalpies(saturationPressureOf(temperature)).vapor) / (totalMass - steamOut)
   const waterTemperature: number = steamOut > 0 ? getLiquidTemperature(waterEnthalpy) : temperature
+
+  // Feed pump: the valve position in litres, taken at the water temperature; low-low shuts it, as the hotwell's pump (ADR 0011)
+  const feedPumpTripped: boolean = state.feedPumpTripped || deaeratorLevel(state.waterVolume) < CstDeaerator.LowLowLevel
+  const feedPumpValvePosition: number = feedPumpTripped ? 0 : state.feedPumpValvePosition
+  const pumpMass: number = waterMassOf(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate * DeltaTime, waterTemperature)
+  const outflowMass: number = Math.max(0, Math.min(pumpMass, mixedMass, boilerRoom))
+  const waterMass: number = mixedMass - outflowMass
   const waterVolume: number = waterVolumeOf(waterMass, waterTemperature)
   const airMass: number = state.airMass - airOut
   const saturationPressure: number = saturationPressureOf(waterTemperature)
@@ -165,6 +176,9 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
       letDownFlow: letDownMass / DeltaTime,
       letDownValvePosition: Math.min(1, letDownMass / DeltaTime / CstDeaerator.LetDownCapacity),
       outflowMass,
+      deltaWaterMass: waterMass - state.waterMass,
+      feedPumpValvePosition,
+      feedPumpTripped,
     },
     outflow: { mass: outflowMass, temperature: waterTemperature },
     letDownMass,

@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
 import Deaerator from "./Deaerator"
+import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
 import { warningText } from "./warningText"
 
 type Ctx = ContextType<typeof PowerPlantContext>
@@ -13,13 +14,14 @@ function renderDeaerator(patch: Partial<PowerPlantState["Deaerator"]> = {}) {
   const state: PowerPlantState = makeInitialState()
   state.Deaerator = { ...state.Deaerator, ...patch }
   const toggleDeaeratorVent = vi.fn()
-  const value = { state, dispatch: vi.fn(), toggleDeaeratorVent } as unknown as Ctx
+  const adjustFeedPumpValvePosition = vi.fn()
+  const value = { state, dispatch: vi.fn(), toggleDeaeratorVent, adjustFeedPumpValvePosition } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
       <Deaerator />
     </PowerPlantContext.Provider>,
   )
-  return { toggleDeaeratorVent }
+  return { toggleDeaeratorVent, adjustFeedPumpValvePosition }
 }
 
 describe("Deaerator page", () => {
@@ -45,6 +47,23 @@ describe("Deaerator page", () => {
   it("lights the safe-to-close lamp from the state", () => {
     renderDeaerator({ safeToClose: true })
     expect(screen.getByRole("img", { name: "Safe to close: on" })).toBeTruthy()
+  })
+
+  it("shows the feed pump flow and lights the trip lamp from the state", () => {
+    renderDeaerator({ feedPumpValvePosition: 0.5, feedPumpTripped: true })
+    expect(screen.getByText("150.0 l/s")).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Feed pump trip: on" })).toBeTruthy()
+  })
+
+  it("steps the feed pump valve from its control", () => {
+    vi.useFakeTimers()
+    const { adjustFeedPumpValvePosition } = renderDeaerator({ feedPumpValvePosition: 0.5 })
+    fireEvent.keyDown(screen.getByRole("slider", { name: "Feed pump knob" }), { key: "End" })
+    act(() => {
+      vi.advanceTimersByTime(RAMP_TICK_MS)
+    })
+    expect(adjustFeedPumpValvePosition).toHaveBeenCalledWith(RAMP_STEP)
+    vi.useRealTimers()
   })
 
   it("shows the warning text of the flag that is set", () => {

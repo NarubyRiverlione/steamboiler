@@ -22,3 +22,4 @@ The owner's 10% and 95% were first proposed as working setpoints. Real plants re
 - `bypass-loop`: the level settles inside the band (within a small proportional offset past the upper edge) and makeup and reject are occasional, where on/off with hysteresis swung the level between 53% and 99.96% with reject open in 39% of the samples. Current figures: [headless-runner.md](../dev/headless-runner.md), `pnpm sim bypass-loop`.
 - The tick sets the trip flag whenever the level is below low-low, also at a cold start with a near-empty hotwell and a pump that was never open. The flag then only means "the level is below low-low and the operator has not reopened the pump yet".
 - `CondenserState` gains `condensationPumpTripped`.
+- The boiler feed pump (#112) follows the same rule for the deaerator: `DeaeratorTick` trips it below the 12% low-low (valve shut, `feedPumpTripped` set), the reducer refuses to open it there, and an opening clears the flag.
