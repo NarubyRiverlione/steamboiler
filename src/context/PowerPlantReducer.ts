@@ -4,7 +4,7 @@ import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "..
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
 import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
-import PowerPlantState, { BoilerState, CondenserState, TurbineState } from "./PowerPlantState"
+import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { runTicks } from "./PowerPlantBatch"
 import { isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
@@ -109,6 +109,10 @@ const withCondenser = (state: PowerPlantState, patch: Partial<CondenserState>): 
   ...state,
   Condenser: { ...state.Condenser, ...patch },
 })
+const withDeaerator = (state: PowerPlantState, patch: Partial<DeaeratorState>): PowerPlantState => ({
+  ...state,
+  Deaerator: { ...state.Deaerator, ...patch },
+})
 const withTurbine = (state: PowerPlantState, patch: Partial<TurbineState>): PowerPlantState => ({
   ...state,
   Turbine: { ...state.Turbine, ...patch },
@@ -139,6 +143,11 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     })
   },
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
+  //#endregion
+
+  //#region Deaerator
+  // The start-up vent is an operator action; the warning flags follow at the next tick
+  TOGGLE_DEAERATOR_VENT: (state) => withDeaerator(state, { startUpVentOpen: !state.Deaerator.startUpVentOpen }),
   //#endregion
 
   //#region Condenser

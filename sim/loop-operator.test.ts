@@ -69,8 +69,17 @@ describe("loopOperator", () => {
   const find = (state: PowerPlantState, type: PowerPlantAction["type"]) =>
     loopOperator(state, 0).find((a) => a.type === type)
 
-  test("does nothing to a cold plant at target levels", () => {
-    expect(loopOperator(withCondenser({ hotwellWaterVolume: hotwellAt(0.7) }), 0)).toEqual([])
+  test("opens the deaerator start-up vent at t=0 on a vessel full of air, and nothing else at target levels (#120)", () => {
+    expect(loopOperator(withCondenser({ hotwellWaterVolume: hotwellAt(0.7) }), 0)).toEqual([{ type: "TOGGLE_DEAERATOR_VENT" }])
+  })
+
+  test("closes the start-up vent once the safe-to-close lamp is lit, and never opens it later", () => {
+    const air = { ...cold, Deaerator: { ...cold.Deaerator, startUpVentOpen: true } }
+    expect(types(air, 5)).not.toContain("TOGGLE_DEAERATOR_VENT")
+    const lit = { ...air, Deaerator: { ...air.Deaerator, safeToClose: true } }
+    expect(types(lit, 5)).toContain("TOGGLE_DEAERATOR_VENT")
+    const closed = { ...cold, Deaerator: { ...cold.Deaerator, startUpVentOpen: false } }
+    expect(types(closed, 5)).not.toContain("TOGGLE_DEAERATOR_VENT")
   })
 
   test("between main-steam-valve pressure and working pressure: the main steam valve stays shut, only the SJAE restarts", () => {
@@ -212,7 +221,7 @@ describe("loopOperator", () => {
           rejectValvePosition: reject,
         }),
         0,
-      )
+      ).filter((a) => a.type !== "TOGGLE_DEAERATOR_VENT")
     const payloads = (fraction: number, makeup = 0, reject = 0): number[] =>
       valves(fraction, makeup, reject).flatMap((a) =>
         a.type === "SET_MAKEUP_VALVE_POSITION"

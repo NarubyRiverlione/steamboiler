@@ -1,3 +1,5 @@
+import PowerPlantAction from "../../src/context/PowerPlantActions"
+import PowerPlantState from "../../src/context/PowerPlantState"
 import { ScenarioAction } from "../scenario"
 import { rampGas } from "./gas"
 
@@ -43,3 +45,11 @@ export const openMainSteam: ScenarioAction[] = [
 // True on the ticks that fall on a whole multiple of `every` sim-seconds: an operator's adjustment moments
 export const isAdjustTime = (time: number, every: number): boolean =>
   Number.isInteger(Math.round(time * 1e6) / 1e6 / every)
+
+// The deaerator start-up vent as the operator works it (#120): opened at t=0 on a vessel full of air, closed once the
+// safe-to-close lamp lights. A vessel without air (a snapshot) is left alone.
+export function startUpVent({ Deaerator }: PowerPlantState, time: number): PowerPlantAction[] {
+  const toggle: PowerPlantAction = { type: "TOGGLE_DEAERATOR_VENT" }
+  if (Deaerator.startUpVentOpen) return Deaerator.safeToClose ? [toggle] : []
+  return time === 0 && !Deaerator.safeToClose ? [toggle] : []
+}

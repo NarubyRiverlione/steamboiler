@@ -1,6 +1,7 @@
 import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import { Scenario } from "../scenario"
 import { setGasCommand } from "./gas"
+import { startUpVent } from "./steps"
 
 // Full gas for an hour with everything closed: the relief valve holds the pressure until the burner trips on low water
 export const boilerLow: Scenario = {
@@ -11,4 +12,5 @@ export const boilerLow: Scenario = {
   sampleEvery: 10,
   initial: makeInitialState(),
   actions: [{ at: 0, action: setGasCommand(1) }],
+  operator: startUpVent,
 }

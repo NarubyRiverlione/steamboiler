@@ -46,10 +46,12 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
 
   // Deaerator tap (ADR 0036): the non-return valve passes steam in proportion to the pressure margin of the heater line at
   // the tap over the setpoint (nothing at or below it, so no backflow), and only what the turbine has left after the
-  // heater. It follows the demand of the last tick.
+  // heater. It follows the demand of the last tick. Air raises the vessel pressure above the setpoint, and the tap
+  // cannot push steam into a vessel above its own pressure.
+  const tapBackPressure: number = Math.max(CstDeaerator.Pressure, state.Deaerator.pressure)
   const tapOpening: number = Math.min(
     1,
-    Math.max(0, (extraction.heaterPressure - CstDeaerator.Pressure) / (CstDeaerator.Pressure * CstDeaerator.ExtractionOpeningRange)),
+    Math.max(0, (extraction.heaterPressure - tapBackPressure) / (tapBackPressure * CstDeaerator.ExtractionOpeningRange)),
   )
   const tapFlow: number = Math.min(
     state.Deaerator.tapDemand,

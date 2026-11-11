@@ -105,6 +105,14 @@ export const CstDeaerator = {
   ExtractionValveCapacity: 60, // kg/s the extraction valve passes: over-dimensioned, about 35 kg/s are needed at rated flow (design-basis.md)
   ExtractionOpeningRange: 0.5, // share of the setpoint the tap pressure must rise above it for the non-return valve to pass its full capacity: flow rises with the pressure margin, so no step when the tap crosses 3 bar (design-basis.md)
   LetDownCapacity: 50, // kg/s the let-down valve passes at the boiler working pressure; scales with the boiler pressure like the steam valves (ADR 0026)
+  // Air, vents and relief (ADR 0038, #120); tuning values set in the headless runner, recorded in design-basis.md
+  SafeToClosePressure: 0.05, // bar of air partial pressure below which the safe-to-close lamp lights (5% of the cold air)
+  SafeToCloseRelease: 0.075, // bar: a lit lamp goes out only above this, so the heating of the closed vessel (the air pressure rises with the temperature) does not flicker it
+  StartUpVentArea: 0.06, // m², effective flow area (discharge coefficient included) of the manual start-up vent
+  OperatingVentArea: 0.0001, // m², the small fixed orifice that is always open: about 0.08 kg/s of steam at 3 bar, 0.04% of the rated feedwater
+  ReliefPressure: 4, // bar absolute, where the relief valve lifts: the 3 bar setpoint plus about 33% (owner, #40)
+  ReliefReseatPressure: 3.6, // bar absolute, where it seats again (10% blowdown)
+  ReliefCapacity: 120, // kg/s of mixture at the lift pressure: 110% of what both steam valves can pass (60 + 50 kg/s), like ADR 0005
 }
 
 export const CstPhysics = {
@@ -114,6 +122,9 @@ export const CstPhysics = {
   AtmosphericPressure_mBar: 1013.25, // mbar
   AmbientTemperature: 20, // Celsius, the plant at rest and the floor of heat loss
   AirGasConstant: 287.05, // J/(kg·K), specific gas constant of dry air
+  UniversalGasConstant: 8314.46, // J/(kmol·K)
+  AirMolarMass: 28.96, // kg/kmol
+  WaterMolarMass: 18.015, // kg/kmol
 }
 
 // Flue gas, boiler stage and economizer (ADR 0029, figures in docs/plant/design-basis.md and

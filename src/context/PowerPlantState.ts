@@ -76,7 +76,16 @@ export type DeaeratorState = {
   waterMass: number // kg, the state; volume and level are derived from it
   waterVolume: number // liters, derived: mass x specific volume at the water temperature
   temperature: number // Celsius, the water and the outflow
-  pressure: number // bar, the saturation pressure of the water (no air yet, ADR 0036); the controlled value
+  pressure: number // bar, the total pressure: air pressure plus the saturation pressure of the water (ADR 0038)
+  saturationPressure: number // bar, of the water temperature; the gap to the pressure is the air
+  airMass: number // kg of non-condensable air in the vessel; the vessel starts full of air at atmospheric pressure (ADR 0038)
+  airPressure: number // bar, the air partial pressure at the water temperature, derived from airMass
+  startUpVentOpen: boolean // the manual start-up vent, an operator action
+  reliefValveOpen: boolean // the 4 bar relief valve, decided on the pressure at the start of each tick (full lift, then reseats)
+  ventedTotal: number // kg of steam the vents and the relief let out since start (totalizer): leaves the water balance, returns as makeup demand
+  safeToClose: boolean // the lamp: the air partial pressure is under SafeToClosePressure
+  warnVentClosedWithAir: boolean // flag: the start-up vent is closed while air is present
+  warnVentOpenNoAir: boolean // flag: the start-up vent is open with no air left, so steam is lost
   extractionFlow: number // kg/s of turbine steam taken at the tap through the non-return valve
   tapDemand: number // kg/s the pressure loop asks of the tap for the next tick (the extraction follows the last tick's demand, like the heater)
   extractionValvePosition: number // 0-1 (0-100%) open, derived from the flow it passes

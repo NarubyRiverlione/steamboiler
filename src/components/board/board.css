@@ -355,6 +355,22 @@
   stroke-width: 3;
 }
 
+.board-warning {
+  margin: 8px 0 0;
+  min-height: 3em;
+  max-width: 28em;
+  color: var(--board-lcd-alarm);
+  font-family: var(--board-font-label);
+  font-size: 14px;
+}
+
+.board-node-value {
+  fill: var(--board-text);
+  font-family: var(--board-font-lcd);
+  font-size: 14px;
+  text-anchor: middle;
+}
+
 .board-node-name {
   fill: var(--board-text);
   font-size: 16px;

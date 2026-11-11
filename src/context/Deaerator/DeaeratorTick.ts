@@ -7,7 +7,8 @@
 import { CstDeaerator, CstPhysics, CstSimulation } from "../const"
 import { DeaeratorState } from "../PowerPlantState"
 import { getBoilingPoint, getLiquidEnthalpy, getLiquidTemperature, getSaturationEnthalpies } from "../../utils/steamTable"
-import { calculateBoilerPressure, valveFlowFactor, waterMassOf, waterVolumeOf } from "../../utils/boilerCalculations"
+import { valveFlowFactor, waterMassOf, waterVolumeOf } from "../../utils/boilerCalculations"
+import { airMassInGasSpace, airPressureOf, orificeFlow, saturationPressureOf, ventGasOf, VentGas } from "../../utils/deaeratorCalculations"
 
 const { DeltaTime } = CstSimulation
 
@@ -28,20 +29,55 @@ export type DeaeratorResult = {
   letDownMass: number // kg of steam taken from the boiler this tick
 }
 
-// The vessel as filled cold: the cold fill level of the total volume, at ambient (ADR 0037)
+// Warnings and lamp from the air amount (ADR 0038): the lamp is the air partial pressure under the threshold (a lit lamp
+// holds up to the release pressure); the flags are the two mistakes, the start-up vent closed while air is present and open
+// with none left
+function lampAndFlags(airPressure: number, startUpVentOpen: boolean, wasSafe: boolean) {
+  const limit: number = wasSafe ? CstDeaerator.SafeToCloseRelease : CstDeaerator.SafeToClosePressure
+  const safeToClose: boolean = airPressure < limit
+  return { safeToClose, warnVentClosedWithAir: !startUpVentOpen && !safeToClose, warnVentOpenNoAir: startUpVentOpen && safeToClose }
+}
+
+// The vessel as filled cold: the cold fill level of the total volume, at ambient, full of air at atmospheric pressure (ADR 0037, ADR 0038)
 export function makeColdDeaerator(): DeaeratorState {
   const volume: number = CstDeaerator.TotalVolume * CstDeaerator.StartLevel
+  const temperature: number = CstPhysics.AmbientTemperature
+  const saturationPressure: number = saturationPressureOf(temperature)
+  const airPressure: number = CstPhysics.AtmosphericPressure_mBar / 1e3 - saturationPressure
   return {
-    waterMass: waterMassOf(volume, CstPhysics.AmbientTemperature),
+    waterMass: waterMassOf(volume, temperature),
     waterVolume: volume,
-    temperature: CstPhysics.AmbientTemperature,
-    pressure: calculateBoilerPressure(CstPhysics.AmbientTemperature),
+    temperature,
+    pressure: saturationPressure + airPressure,
+    saturationPressure,
+    airMass: airMassInGasSpace(airPressure, temperature, volume),
+    airPressure,
+    startUpVentOpen: false,
+    reliefValveOpen: false,
+    ventedTotal: 0,
+    ...lampAndFlags(airPressure, false, false),
     extractionFlow: 0,
     tapDemand: CstDeaerator.ExtractionValveCapacity, // a cold vessel asks for all the steam the valve passes
     extractionValvePosition: 0,
     letDownFlow: 0,
     letDownValvePosition: 0,
     outflowMass: 0,
+  }
+}
+
+// The vessel as it stands once hot: at the 3 bar setpoint with the air out and the start-up vent shut, at the volume given (litres)
+export function makeHotDeaerator(volume: number): DeaeratorState {
+  const waterMass: number = waterMassOf(volume, SetTemperature)
+  return {
+    ...makeColdDeaerator(),
+    waterMass,
+    waterVolume: volume,
+    temperature: SetTemperature,
+    pressure: CstDeaerator.Pressure,
+    saturationPressure: CstDeaerator.Pressure,
+    airMass: 0,
+    airPressure: 0,
+    ...lampAndFlags(0, false, true),
   }
 }
 
@@ -89,15 +125,40 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
 
   // The share of the steam that heated the stored water stays; the rest passes through with the inflow
   const retained: number = demand > 0 && steamMass > 0 ? steamMass * Math.min(1, contentDemand / demand) : 0
-  const waterMass: number = state.waterMass + retained
-  const outflowMass: number = totalMass - waterMass
+  const mixedMass: number = state.waterMass + retained
+  const outflowMass: number = totalMass - mixedMass
+
+  // Vents and relief (ADR 0038): flows from the pressure at the start of the tick, the mixture of air and steam of the gas space
+  const gas: VentGas = ventGasOf(state.airPressure, state.saturationPressure, state.temperature)
+  const reliefOpen: boolean = state.reliefValveOpen ? state.pressure > CstDeaerator.ReliefReseatPressure : state.pressure >= CstDeaerator.ReliefPressure
+  const ventArea: number = CstDeaerator.OperatingVentArea + (state.startUpVentOpen ? CstDeaerator.StartUpVentArea : 0)
+  const reliefFlow: number = reliefOpen ? (CstDeaerator.ReliefCapacity * state.pressure) / CstDeaerator.ReliefPressure : 0
+  const ventedMixture: number = (orificeFlow(ventArea, gas.density, state.pressure) + reliefFlow) * DeltaTime
+  const airOut: number = Math.min(state.airMass, ventedMixture * gas.airShare)
+  const steamOut: number = ventedMixture * (1 - gas.airShare)
+
+  // The vented steam leaves the mixed water as saturated vapour: everything that is left is cooler by its latent heat
+  const waterMass: number = mixedMass - steamOut
+  const waterEnthalpy: number = (totalEnthalpy - steamOut * getSaturationEnthalpies(saturationPressureOf(temperature)).vapor) / (totalMass - steamOut)
+  const waterTemperature: number = steamOut > 0 ? getLiquidTemperature(waterEnthalpy) : temperature
+  const waterVolume: number = waterVolumeOf(waterMass, waterTemperature)
+  const airMass: number = state.airMass - airOut
+  const saturationPressure: number = saturationPressureOf(waterTemperature)
+  const airPressure: number = airPressureOf(airMass, waterTemperature, waterVolume)
 
   return {
     state: {
       waterMass,
-      waterVolume: waterVolumeOf(waterMass, temperature),
-      temperature,
-      pressure: calculateBoilerPressure(temperature),
+      waterVolume,
+      temperature: waterTemperature,
+      pressure: saturationPressure + airPressure,
+      saturationPressure,
+      airMass,
+      airPressure,
+      startUpVentOpen: state.startUpVentOpen,
+      reliefValveOpen: reliefOpen,
+      ventedTotal: state.ventedTotal + steamOut,
+      ...lampAndFlags(airPressure, state.startUpVentOpen, state.safeToClose),
       extractionFlow: tapMass / DeltaTime,
       tapDemand: Math.min(CstDeaerator.ExtractionValveCapacity, Math.max(0, demand) / (tapSteam.enthalpy - SetEnthalpy) / DeltaTime),
       extractionValvePosition: Math.min(1, tapMass / DeltaTime / CstDeaerator.ExtractionValveCapacity),
@@ -105,7 +166,7 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
       letDownValvePosition: Math.min(1, letDownMass / DeltaTime / CstDeaerator.LetDownCapacity),
       outflowMass,
     },
-    outflow: { mass: outflowMass, temperature },
+    outflow: { mass: outflowMass, temperature: waterTemperature },
     letDownMass,
   }
 }

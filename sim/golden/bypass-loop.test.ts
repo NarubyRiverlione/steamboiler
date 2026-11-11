@@ -120,8 +120,12 @@ describe("bypass-loop assertions", () => {
     }
   })
 
-  test("makeup is only an occasional top-up", () => {
-    expect(openShare((s) => s.Condenser.makeupValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
+  test("makeup only covers the steam the deaerator's operating vent loses (#120)", () => {
+    const [first, last] = [steady[0].state, steady[steady.length - 1].state]
+    const made: number = last.Condenser.makeupTotal - first.Condenser.makeupTotal
+    const lost: number = last.Deaerator.ventedTotal - first.Deaerator.ventedTotal
+    expect(lost).toBeGreaterThan(0)
+    expect(made).toBeLessThanOrEqual(lost * 1.5)
   })
 
   test("reject is only occasional: the loop creates no water to dump", () => {

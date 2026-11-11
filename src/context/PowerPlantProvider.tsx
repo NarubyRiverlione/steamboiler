@@ -83,6 +83,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
       payload: { isAirExtractionPumpEnabled: !state.Condenser.isAirExtractionPumpEnabled },
     })
   }
+  const toggleDeaeratorVent = () => {
+    dispatch({ type: "TOGGLE_DEAERATOR_VENT" })
+  }
   const toggleSjae = () => {
     dispatch({
       type: "SET_SJAE_ENABLED",
@@ -135,6 +138,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         selectRunUpPoint,
         setLoadSetpoint,
         toggleGeneratorBreaker,
+        // deaerator actions
+        toggleDeaeratorVent,
         // condenser actions
         toggleAirExtractionPump,
         toggleSjae,

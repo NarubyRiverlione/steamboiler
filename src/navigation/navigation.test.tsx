@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { MemoryRouter, useLocation } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 import type { ContextType, ReactNode } from "react"
@@ -26,6 +26,7 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
           <Route path="/" element={<Layout />}>
             <Route index element={<PlantOverview />} />
             <Route path="boiler" element={<p>boiler page</p>} />
+            <Route path="deaerator" element={<p>deaerator page</p>} />
             <Route path="condenser" element={<p>condenser page</p>} />
             <Route path="turbine" element={<p>turbine page</p>} />
           </Route>
@@ -40,11 +41,13 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
 const where = (): string | null => screen.getByTestId("where").textContent
 
 describe("keyboard", () => {
-  it("cycles Boiler, Condenser, Turbine with Page Down and Right, and back with Page Up and Left", () => {
+  it("cycles Boiler, Deaerator, Condenser, Turbine with Page Down and Right, and back with Page Up and Left", () => {
     renderAt("/")
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/boiler")
     fireEvent.keyDown(window, { key: "ArrowRight" })
+    expect(where()).toBe("/deaerator")
+    fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/condenser")
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/turbine")
@@ -54,6 +57,8 @@ describe("keyboard", () => {
     expect(where()).toBe("/turbine")
     fireEvent.keyDown(window, { key: "ArrowLeft" })
     expect(where()).toBe("/condenser")
+    fireEvent.keyDown(window, { key: "PageUp" })
+    expect(where()).toBe("/deaerator")
   })
 
   it("returns to the overview on Esc", () => {
@@ -105,6 +110,31 @@ describe("plant overview", () => {
     renderAt("/")
     fireEvent.click(screen.getByRole("link", { name: "Turbine, opens Turbine" }))
     expect(where()).toBe("/turbine")
+  })
+
+  it("shows the deaerator's temperature and level, and its page link", () => {
+    const state: PowerPlantState = makeInitialState()
+    state.Deaerator.temperature = 133.5
+    state.Deaerator.waterVolume = 75_000
+    renderAt("/", state)
+    expect(screen.getByText("134 °C")).toBeTruthy()
+    expect(screen.getByText("50 %")).toBeTruthy()
+    fireEvent.click(screen.getByRole("link", { name: "Deaerator, opens Deaerator" }))
+    expect(where()).toBe("/deaerator")
+  })
+
+  it("shows the safe-to-close lamp only while the start-up vent is open", () => {
+    const state: PowerPlantState = makeInitialState()
+    renderAt("/", state)
+    expect(screen.queryByRole("img", { name: /Deaerator safe to close/ })).toBeNull()
+    cleanup()
+    state.Deaerator.startUpVentOpen = true
+    renderAt("/", state)
+    expect(screen.getByRole("img", { name: "Deaerator safe to close: off" })).toBeTruthy()
+    cleanup()
+    state.Deaerator.safeToClose = true
+    renderAt("/", state)
+    expect(screen.getByRole("img", { name: "Deaerator safe to close: on" })).toBeTruthy()
   })
 
   it("shows the extraction heater and the air preheater without a link", () => {
@@ -161,7 +191,7 @@ describe("partAlarms", () => {
     const state: PowerPlantState = makeInitialState()
     state.Boiler.burnerTripped = true
     state.Condenser.condensationPumpTripped = true
-    expect(partAlarms(state)).toEqual({ boiler: true, condenser: true, turbine: false })
+    expect(partAlarms(state)).toEqual({ boiler: true, deaerator: false, condenser: true, turbine: false })
     state.Boiler.burnerTripped = false
     state.Boiler.heatingRateOverLimit = true
     expect(partAlarms(state).boiler).toBe(true)

@@ -16,6 +16,8 @@ type PowerPlantAction =
   | { type: "SELECT_RUN_UP_POINT"; payload: { runUpPoint: number } }
   | { type: "TOGGLE_GENERATOR_BREAKER" }
   | { type: "SET_LOAD_SETPOINT"; payload: { loadSetpoint: number } }
+  // Deaerator Actions
+  | { type: "TOGGLE_DEAERATOR_VENT" } // the manual start-up vent, open or closed
   // Condenser Actions
   | { type: "SET_AIR_EXTRACTION_PUMP_ENABLED"; payload: { isAirExtractionPumpEnabled: boolean } }
   | { type: "SET_SJAE_ENABLED"; payload: { isSjaeEnabled: boolean } }
