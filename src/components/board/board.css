@@ -67,6 +67,7 @@
   --board-water: #1971c2;
   --board-level-glass: #eef3f7;
   --board-level-housing: #bdbdbd;
+  --board-level-target: #1b1b1b; /* the line at the level a vessel should hold, until the green and orange bands */
   --board-mimic-bg: #c9c9c3;
   --board-mimic-heat: #d9480f;
   --board-mimic-steam: #9c36b5;
@@ -608,6 +609,12 @@ path.board-zone {
 
 .board-level-fill {
   fill: var(--board-water);
+}
+
+.board-level-target {
+  stroke: var(--board-level-target);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
 }
 
 .board-level-tick {

@@ -13,6 +13,7 @@ export const CstSimulation = {
     DesignTemperature: 357, // Celsius, saturation at design pressure (IAPWS-IF97: 357.0°C at 180 bar)
     ReliefOpenPressure: 178, // bar, the relief valve lifts fully (2 bar margin for one tick's rise)
     ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
+    WorkingLevel: 0.5, // share of TotalVolume, the level the drum holds at 165 bar: the target line on the level gauge (ADR 0018)
     BurnerLowLowLevel: 0.2, // share of TotalVolume, below it the burner trips (UNVERIFIED estimate, see design-basis.md)
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
     MetalMass: 100e3, // kg of drum and tube steel, at the water temperature (one lump)
@@ -24,6 +25,7 @@ export const CstSimulation = {
   CstCondenser: {
     TotalVolume: 50e3, // liters (about 3 min of full-gas condensate below normal level, see design-basis.md)
     HotwellStartVolume: 35e3, // liter (70%, the normal level)
+    HotwellNormalLevel: 0.7, // share of TotalVolume, the target line on the level gauge (design-basis.md)
     OptimalPressure: 31, // mBar, centre of the band on the vacuum readout: the design vacuum (ADR 0032)
     OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
     VacuumLimit: 327, // mbar absolute, turbine trip above it (-0.7 kg/cm² gauge, see design-basis.md)
@@ -100,6 +102,7 @@ export const CstHeater = {
 // to confirm in the headless runner
 export const CstDeaerator = {
   TotalVolume: 150e3, // liters: 5 minutes of rated feedwater (192 kg/s) from the 50% working level down to the 38% low-low trip
+  WorkingLevel: 0.5, // share of TotalVolume the vessel holds at 3 bar: the target line on the level gauge (ADR 0037)
   LowLowLevel: 0.12, // share of TotalVolume: below it the boiler feed pump trips; 5 minutes of rated feedwater (38% of the volume) below the 50% working level (#112, design-basis.md)
   FeedPump_Step: 5, // % per click open/close; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
   StartLevel: 0.38, // share of TotalVolume filled cold at ambient: ends at 50% at 3 bar (ADR 0037)

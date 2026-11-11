@@ -88,7 +88,7 @@ function Deaerator() {
             />
             <Display label="Pressure" text={`${pressure.toFixed(2)} bar`} widest="9.99 bar" />
           </div>
-          <LevelInstrument label="Deaerator level" fraction={level} change={smoothWaterChange} />
+          <LevelInstrument label="Deaerator level" fraction={level} change={smoothWaterChange} target={CstDeaerator.WorkingLevel} />
         </div>
 
         <div className="board-group">

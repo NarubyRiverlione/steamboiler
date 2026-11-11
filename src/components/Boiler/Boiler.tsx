@@ -19,6 +19,7 @@ const {
     ReliefClosePressure,
     HeatingRateLimit,
     BurnerLowLowLevel,
+    WorkingLevel,
     GasRateDeadZone,
   },
   CstTurbine: { ValveRatingPressure },
@@ -229,6 +230,7 @@ function Boiler() {
             change={smoothWaterChange}
             zones={LEVEL_ZONES}
             ticks={LEVEL_TICKS}
+            target={WorkingLevel}
           />
           <div className="board-group">
             <h3 className="board-group-title">Water Valve Control</h3>
