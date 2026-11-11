@@ -28,4 +28,4 @@ The numbers: 3 bar and the 38% cold fill (ADR 0037) were checked in the headless
 - [ADR 0031](0031-one-extraction-heater.md) is edited: the drain goes to the deaerator and "#40 stays parked" goes. [ADR 0002](0002-makeup-into-hotwell.md) gains the deaerator on the path from the hotwell to the boiler; makeup still enters the hotwell. [ADR 0011](0011-hotwell-protections-in-the-tick.md) no longer says the sim has no deaerator.
 - `feedwater-loop.md`, `turbine.md`, `condenser.md` and a new `deaerator.md` change in the same commit as the build.
 - The loop invariants must still close with the new vessel.
-- Drawing it in the overview schemas is #118; the O₂ readout and corrosion are #114.
+- Drawn in the overview schemas in #118; the O₂ readout and corrosion are #114.

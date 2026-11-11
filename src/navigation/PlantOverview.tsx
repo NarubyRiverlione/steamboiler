@@ -1,14 +1,63 @@
+import type { ReactNode } from "react"
 /** Plant overview: the plant to be (ADR 0029) as an SVG, drawn from plantDiagram.ts. A part with controls links to its page and carries an alarm LED. The only live values are the deaerator's: temperature, level and, while the start-up vent is open, the safe-to-close lamp (ADR 0038). */
 
 import { Link } from "react-router-dom"
 import { PanelFrame } from "../components/board/PanelFrame"
 import { Led } from "../components/board/Led"
 import usePowerPlant from "../context/PowerPlantContext"
-import { DIAGRAM_HEIGHT, DIAGRAM_WIDTH, LABELS, MEDIA, NODES, PIPES, type DiagramNode } from "./plantDiagram"
+import { DIAGRAM_HEIGHT, DIAGRAM_WIDTH, LABELS, MEDIA, NODES, PIPES, type DiagramNode, type NodeSymbol } from "./plantDiagram"
 import { CstDeaerator } from "../context/const"
 import { PARTS, partAlarms } from "./plantParts"
 
+const GLYPH_HALF = 18
+
+function glyphPaths(symbol: NodeSymbol): ReactNode {
+  if (symbol === "valve") return <path d="M-16 -11 L16 11 L16 -11 L-16 11 Z" />
+  return (
+    <>
+      <circle r={GLYPH_HALF} />
+      <path d="M-7 -9 L9 0 L-7 9 Z" />
+    </>
+  )
+}
+
+// The industry symbol of a valve, check valve or pump, on a line through the node's box that joins the pipes
+function SymbolShape({ node, symbol }: { readonly node: DiagramNode; readonly symbol: NodeSymbol }) {
+  const cx: number = node.x + node.w / 2
+  const cy: number = node.y + node.h / 2
+  const down: boolean = node.flow === "down"
+  const transform: string =
+    "translate(" + String(cx) + " " + String(cy) + ")" + (down ? " rotate(90)" : node.flow === "left" ? " scale(-1 1)" : "")
+  const side: boolean = node.label === "left"
+  const labelAnchor: "end" | "middle" = side ? "end" : "middle"
+  const labelX: number = side ? cx - GLYPH_HALF - 8 : cx
+  const lineHeight = 18
+  const firstY: number =
+    side
+      ? cy + 5 - ((node.name.length - 1) * lineHeight) / 2
+      : cy - GLYPH_HALF - 6 - (node.name.length - 1) * lineHeight
+  return (
+    <>
+      <rect className="board-node-hit" x={node.x} y={node.y} width={node.w} height={node.h} />
+      {down ? (
+        <path className={"board-pipe board-medium-line-" + node.medium} d={"M" + String(cx) + " " + String(node.y) + " L" + String(cx) + " " + String(node.y + node.h)} />
+      ) : (
+        <path className={"board-pipe board-medium-line-" + node.medium} d={"M" + String(node.x) + " " + String(cy) + " L" + String(node.x + node.w) + " " + String(cy)} />
+      )}
+      <g className={"board-node-box board-node-symbol board-medium-" + node.medium} transform={transform}>
+        {glyphPaths(symbol)}
+      </g>
+      {node.name.map((line: string, index: number) => (
+        <text key={line} className="board-node-name" x={labelX} y={firstY + index * lineHeight} style={{ textAnchor: labelAnchor }}>
+          {line}
+        </text>
+      ))}
+    </>
+  )
+}
+
 function NodeShape({ node }: { readonly node: DiagramNode }) {
+  if (node.symbol !== undefined) return <SymbolShape node={node} symbol={node.symbol} />
   const lineHeight = 18
   const first: number = node.y + node.h / 2 + 6 - (node.name.length - 1) * (lineHeight / 2)
   return (

@@ -6,6 +6,8 @@ How the parts of the plant connect, what each one does, and where the energy com
 
 ![Schema of the plant as built: the water and steam loop, with gas heat coming in and the cooling water taking heat out](overview-schema.svg)
 
+The feedwater path is hotwell → condensation pump → deaerator → boiler feed pump → extraction heater → boiler. The deaerator is heated from two sides: turbine tap steam through a non-return valve (the extraction line; it passes nothing back into the turbine), and boiler steam through the let-down valve (the auxiliary steam line). The extraction heater stays in series after the feed pump, and its drain cascades back into the deaerator. The economizer and the parked air preheater are not in this schema; see the plant to be above.
+
 | Colour | Medium |
 |---|---|
 | Orange | Gas, and heat leaving as a loss |

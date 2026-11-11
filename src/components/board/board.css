@@ -468,6 +468,16 @@
   filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4));
 }
 
+.board-node .board-node-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.board-node .board-node-symbol {
+  filter: none;
+  stroke-linejoin: round;
+}
+
 .board-node:hover .board-node-box {
   fill: var(--board-panel-edge);
 }

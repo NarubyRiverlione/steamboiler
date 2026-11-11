@@ -10,7 +10,14 @@ import { Route, Routes } from "react-router-dom"
 import PlantOverview from "./PlantOverview"
 import AppRoutes from "./AppRoutes"
 import PowerPlantProvider from "../context/PowerPlantProvider"
-import { neighbourPath, partAlarms } from "./plantParts"
+import { PARTS, neighbourPath, partAlarms } from "./plantParts"
+import { LABELS, NODES, type DiagramNode } from "./plantDiagram"
+
+function nodeById(id: string): DiagramNode {
+  const found: DiagramNode | undefined = NODES.find((node: DiagramNode) => node.id === id)
+  if (found === undefined) throw new Error("no node " + id)
+  return found
+}
 
 function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>
@@ -141,6 +148,59 @@ describe("plant overview", () => {
     state.Deaerator.safeToClose = true
     renderAt("/", state)
     expect(screen.getByRole("img", { name: "Deaerator safe to close: on" })).toBeTruthy()
+  })
+
+  it("draws the boiler feed pump after the deaerator, linking to the deaerator page", () => {
+    renderAt("/")
+    const deaerator: DiagramNode = nodeById("deaerator")
+    const pump: DiagramNode = nodeById("feedpump")
+    const heater: DiagramNode = nodeById("heater")
+    expect(pump.x).toBeLessThan(deaerator.x)
+    expect(heater.x).toBeLessThan(pump.x)
+    expect(pump.y + pump.h / 2).toBe(deaerator.y + deaerator.h / 2)
+    expect(nodeById("condpump").y + nodeById("condpump").h / 2).toBe(deaerator.y + deaerator.h / 2)
+    fireEvent.click(screen.getByRole("link", { name: "Boiler feed pump, opens Deaerator" }))
+    expect(where()).toBe("/deaerator")
+  })
+
+  it("draws the let-down valve, and no non-return valve and no pass-through", () => {
+    renderAt("/")
+    expect(screen.getByText("Let-down")).toBeTruthy()
+    expect(screen.queryByText("Non-return")).toBeNull()
+    expect(NODES.some((node: DiagramNode) => /pass-through/i.test(node.name.join(" ")))).toBe(false)
+  })
+
+  it.each([
+    ["msv", "valve"],
+    ["turbinevalve", "valve"],
+    ["bypass", "valve"],
+    ["letdown", "valve"],
+    ["condpump", "pump"],
+    ["feedpump", "pump"],
+    ["recirc", "pump"],
+    ["car", "pump"],
+  ])("draws %s as the %s symbol, still a link when it has a page", (id: string, symbol: string) => {
+    expect(nodeById(id).symbol).toBe(symbol)
+    renderAt("/")
+    const node: DiagramNode = nodeById(id)
+    const link: HTMLElement | null = node.part === undefined ? null : screen.getByRole("link", { name: node.name.join(" ") + ", opens " + PARTS[node.part].name })
+    if (link !== null) {
+      expect(link.querySelector("circle, path.board-node-hit, rect.board-node-hit")).not.toBeNull()
+      expect(link.querySelector("rect.board-node-box")).toBeNull()
+    }
+  })
+
+  it("keeps boxes for the nodes without a symbol", () => {
+    renderAt("/")
+    const link: HTMLElement = screen.getByRole("link", { name: "Deaerator, opens Deaerator" })
+    expect(link.querySelector("rect.board-node-box")).not.toBeNull()
+  })
+
+  it("labels the auxiliary steam, the extraction steam and the heater drain cascade", () => {
+    const texts: string[] = LABELS.map((label: { text: string }) => label.text)
+    expect(texts).toContain("auxiliary steam")
+    expect(texts).toContain("extraction steam")
+    expect(texts).toContain("heater drain")
   })
 
   it("shows the extraction heater and the air preheater without a link", () => {
