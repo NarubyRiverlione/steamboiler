@@ -28,13 +28,14 @@ function SymbolShape({ node, symbol }: { readonly node: DiagramNode; readonly sy
   const down: boolean = node.flow === "down"
   const transform: string =
     "translate(" + String(cx) + " " + String(cy) + ")" + (down ? " rotate(90)" : node.flow === "left" ? " scale(-1 1)" : "")
-  const labelAnchor: "start" | "middle" = node.label === "right" ? "start" : "middle"
-  const labelX: number = node.label === "right" ? cx + GLYPH_HALF + 8 : cx
+  const side: boolean = node.label === "left"
+  const labelAnchor: "end" | "middle" = side ? "end" : "middle"
+  const labelX: number = side ? cx - GLYPH_HALF - 8 : cx
   const lineHeight = 18
   const firstY: number =
     node.label === "below"
       ? cy + GLYPH_HALF + 16
-      : node.label === "right"
+      : side
         ? cy + 5 - ((node.name.length - 1) * lineHeight) / 2
         : cy - GLYPH_HALF - 6 - (node.name.length - 1) * lineHeight
   return (
@@ -49,7 +50,7 @@ function SymbolShape({ node, symbol }: { readonly node: DiagramNode; readonly sy
         {glyphPaths(symbol)}
       </g>
       {node.name.map((line: string, index: number) => (
-        <text key={line} className="board-node-name" x={labelX} y={firstY + index * lineHeight} textAnchor={labelAnchor}>
+        <text key={line} className="board-node-name" x={labelX} y={firstY + index * lineHeight} style={{ textAnchor: labelAnchor }}>
           {line}
         </text>
       ))}

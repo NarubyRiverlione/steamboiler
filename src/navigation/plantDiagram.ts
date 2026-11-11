@@ -25,7 +25,7 @@ export type DiagramNode = {
   // The way the flow runs through a symbol; right when left out
   readonly flow?: "left" | "down"
   // Where a symbol's name stands; above when left out
-  readonly label?: "below" | "right"
+  readonly label?: "below" | "left"
 }
 
 type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
@@ -212,7 +212,7 @@ export const NODES: readonly DiagramNode[] = [
     part: "deaerator",
     symbol: "valve",
     flow: "down",
-    label: "right",
+    label: "left",
   },
   { id: "heater", name: ["Extraction heater"], x: 510, y: 480, w: 150, h: 54, medium: "steam" },
   { id: "storagein", name: ["Storage"], x: 1420, y: 462, w: 100, h: 34, medium: "water", round: true },
@@ -289,7 +289,7 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 1520, y: 164, text: "electricity", anchor: "middle" },
   { x: 1150, y: 325, text: "vacuum", anchor: "middle" },
   { x: 1150, y: 371, text: "vacuum", anchor: "middle" },
-  { x: 840, y: 372, text: "motive steam", anchor: "end" },
+  { x: 915, y: 398, text: "motive steam", anchor: "end" },
   { x: 640, y: 650, text: "Dashed: the air preheater, parked in #90." },
 ]
 
