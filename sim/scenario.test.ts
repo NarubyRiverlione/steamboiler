@@ -196,6 +196,7 @@ describe("scenario registry", () => {
       "low-pressure-close",
       "max-output",
       "return-stop",
+      "turbine-overspeed",
       "turbine-trip",
       "vacuum-loss",
       "sjae-closed-load",

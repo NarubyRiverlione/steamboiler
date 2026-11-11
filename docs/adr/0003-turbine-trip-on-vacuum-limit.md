@@ -17,3 +17,4 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 - Scenarios have to pull vacuum before they open the turbine valve: SJAE enabled and its valve opened once the boiler is above the main steam valve minimum pressure.
 - The bypass valve and the generator breaker are not affected.
 - The vacuum limit is no longer the only cause of a turbine trip: the main steam valve closing on low pressure with the turbine valve open trips the turbine the same way ([ADR 0026](0026-valve-flow-follows-pressure.md)).
+- Overspeed is a third cause: at or above `MaxRPM` with the valve open the turbine trips the same way ([ADR 0040](0040-turbine-trip-on-overspeed.md)).

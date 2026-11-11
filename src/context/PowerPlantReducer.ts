@@ -2,7 +2,7 @@ import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
 import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtOverspeed, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -203,11 +203,13 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     withTurbine(state, {
       bypassValvePosition: clamp(state.Turbine.bypassValvePosition + payload.bypassValvePosition, 0, 1),
     }),
-  // Above the vacuum limit the turbine may not take more steam: an opening is refused, closing is always allowed (ADR 0003)
+  // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) the turbine may not take more steam: an opening is refused, closing is always allowed
   ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) => {
-    const { turbineValvePosition: current, turbineTripped } = state.Turbine
+    const { turbineValvePosition: current, turbineTripped, rpm } = state.Turbine
     const requested = clamp(current + payload.turbineValvePosition, 0, 1)
     if (requested > maxTurbineValvePosition(current, state.Condenser.pressure)) return state
+    // At or above the overspeed limit the turbine may not take more steam either (ADR 0040)
+    if (requested > current && isAtOverspeed(rpm)) return state
     return withTurbine(state, {
       turbineValvePosition: requested,
       turbineTripped: turbineTrippedAfter(turbineTripped, current, requested),
