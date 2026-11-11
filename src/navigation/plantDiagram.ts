@@ -25,7 +25,7 @@ export type DiagramNode = {
   // The way the flow runs through a symbol; right when left out
   readonly flow?: "left" | "down"
   // Where a symbol's name stands; above when left out
-  readonly label?: "below" | "left"
+  readonly label?: "left"
 }
 
 type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
@@ -108,7 +108,6 @@ export const NODES: readonly DiagramNode[] = [
     medium: "steam",
     part: "turbine",
     symbol: "valve",
-    label: "below",
   },
   { id: "drain", name: ["Drain"], x: 370, y: 250, w: 100, h: 40, medium: "water", part: "boiler" },
   {

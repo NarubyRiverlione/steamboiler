@@ -33,11 +33,9 @@ function SymbolShape({ node, symbol }: { readonly node: DiagramNode; readonly sy
   const labelX: number = side ? cx - GLYPH_HALF - 8 : cx
   const lineHeight = 18
   const firstY: number =
-    node.label === "below"
-      ? cy + GLYPH_HALF + 16
-      : side
-        ? cy + 5 - ((node.name.length - 1) * lineHeight) / 2
-        : cy - GLYPH_HALF - 6 - (node.name.length - 1) * lineHeight
+    side
+      ? cy + 5 - ((node.name.length - 1) * lineHeight) / 2
+      : cy - GLYPH_HALF - 6 - (node.name.length - 1) * lineHeight
   return (
     <>
       <rect className="board-node-hit" x={node.x} y={node.y} width={node.w} height={node.h} />
