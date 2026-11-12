@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { OpenAt, turbineOverspeed } from "../scenarios/turbine-overspeed"
 
 const { MaxRPM } = CstSimulation.CstTurbine
 
 describe("turbine-overspeed", () => {
   // every tick, so the trip can be pinned to one tick
-  const samples = runScenario({ ...turbineOverspeed, sampleEvery: CstSimulation.DeltaTime })
+  const { samples } = runChecked(turbineOverspeed, { sampleEvery: CstSimulation.DeltaTime })
   const tripped = samples.findIndex((s) => s.state.Turbine.turbineTripped)
 
   test("the unloaded rotor accelerates once the valve opens", () => {

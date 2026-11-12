@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { vacuumLoss } from "../scenarios/vacuum-loss"
 
 const { VacuumLimit, AirLeakRate } = CstSimulation.CstCondenser
 
 describe("vacuum-loss", () => {
   // every tick, so the trip can be pinned to one tick
-  const samples = runScenario({ ...vacuumLoss, sampleEvery: CstSimulation.DeltaTime })
+  const { samples } = runChecked(vacuumLoss, { sampleEvery: CstSimulation.DeltaTime })
   const tripped = samples.findIndex((s) => s.state.Turbine.turbineTripped)
 
   test("with the pump and the SJAE off, the air builds up at exactly the in-leakage rate", () => {

@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenarioWithLifts } from "../scenario"
+import { firstTimeWhere } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { bypassLoop } from "../scenarios/bypass-loop"
 import { LoopSettings } from "../scenarios/loop-operator"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
 import { StartGas } from "../scenarios/steps"
-import { CstSimulation } from "../../src/context/const"
+import { CstDeaerator, CstSimulation } from "../../src/context/const"
+import { getBoilingPoint } from "../../src/utils/steamTable"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { CondenserTick } from "../../src/context/Condenser/CondenserTick"
 import { makeInitialState } from "../../src/context/PowerPlantReducer"
@@ -17,7 +19,8 @@ const SteadyWindow = 600 // sim-seconds at the end of the run that count as stea
 const SteadyShare = 0.05 // average steam out within this share of average steam generated
 const OccasionalFraction = 0.1 // a valve open in at most this share of the steady samples
 
-const { samples, lifts } = runScenarioWithLifts({ ...bypassLoop, sampleEvery: 1 })
+// The one run of the scenario, every second: its invariants, its snapshot and the goal checks below
+const { samples, lifts } = runChecked(bypassLoop, { sampleEvery: 1 })
 const SettleTime = bypassLoop.duration - SteadyWindow
 const valveOpenAt = firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve) ?? Infinity
 const steady = samples.filter((s) => s.time >= SettleTime)
@@ -133,5 +136,39 @@ describe("bypass-loop assertions", () => {
 
   test("reject is only occasional: the loop creates no water to dump", () => {
     expect(openShare((s) => s.Condenser.rejectValvePosition > 0)).toBeLessThanOrEqual(OccasionalFraction)
+  })
+})
+
+// The deaerator start-up vent opened and closed on time (#120, ADR 0038); the two mistakes are the edge scenarios
+// deaerator-vent-closed and deaerator-vent-open
+describe("bypass-loop deaerator vent opened and closed on time", () => {
+  const SetTemperature: number = getBoilingPoint(CstDeaerator.Pressure)
+  const firstTime = (condition: (s: (typeof samples)[number]) => boolean): number | undefined => samples.find(condition)?.time
+  const lampAt: number = firstTime((s) => s.state.Deaerator.safeToClose) ?? Infinity
+
+  test("the air is out when the lamp lights, long before the vessel is hot, and the operator closes the vent at once", () => {
+    expect(lampAt).toBeLessThan(firstTime((s) => s.state.Deaerator.temperature >= SetTemperature - 1) ?? 0)
+    const closedAt: number | undefined = firstTime((s) => s.time > 0 && !s.state.Deaerator.startUpVentOpen)
+    expect(closedAt).toBeGreaterThanOrEqual(lampAt)
+    expect(closedAt).toBeLessThanOrEqual(lampAt + 10)
+  })
+
+  test("the vessel heats to 133.5 °C and 3 bar with no relief lift and no warning once the vent is closed", () => {
+    const hot = samples.filter((s) => s.time > lampAt + 20)
+    expect(Math.max(...samples.map((s) => s.state.Deaerator.pressure))).toBeLessThan(CstDeaerator.ReliefPressure)
+    expect(samples.every((s) => !s.state.Deaerator.reliefValveOpen)).toBe(true)
+    expect(hot.every((s) => !s.state.Deaerator.warnVentClosedWithAir && !s.state.Deaerator.warnVentOpenNoAir)).toBe(true)
+    const last = samples[samples.length - 1].state.Deaerator
+    expect(last.temperature).toBeCloseTo(SetTemperature, 0)
+    expect(last.pressure).toBeCloseTo(CstDeaerator.Pressure, 1)
+  })
+
+  test("the steam lost at the start-up is a few hundred kg, then only the operating vent", () => {
+    const at = (time: number): number => samples.find((s) => s.time >= time)?.state.Deaerator.ventedTotal ?? NaN
+    expect(at(lampAt + 20)).toBeLessThan(300)
+    // 0.08 kg/s: about 50 kg in 600 s
+    const end: number = bypassLoop.duration - 10
+    expect(at(end) - at(end - 600)).toBeLessThan(100)
+    expect(at(end) - at(end - 600)).toBeGreaterThan(10)
   })
 })

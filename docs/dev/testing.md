@@ -7,8 +7,8 @@ Why: [ADR 0016](../adr/0016-scenario-definition-and-test-layers.md), [ADR 0023](
 | Layer | Script | Where | Checks | Cost |
 |---|---|---|---|---|
 | Unit | `pnpm test:unit` | `src/`, `scripts/`, `sim/` outside `golden/`, `edge/` and `perf/` | one function or one tick: formulas, reducer rules, operator functions, invariant checks on hand-built samples, snapshot loader | ~1 s |
-| Sim golden | `pnpm test:sim:golden` | `sim/golden/` | golden-path scenarios, their invariants, the stale-snapshot check (tolerant, ADR 0020) | ~5 s |
-| Sim edge | `pnpm test:sim:edge` | `sim/edge/` | edge scenarios and their invariants | ~2 s |
+| Sim golden | `pnpm test:sim:golden` | `sim/golden/` | golden-path scenarios, their invariants, the stale-snapshot check (tolerant, ADR 0020) | ~10 s |
+| Sim edge | `pnpm test:sim:edge` | `sim/edge/` | edge scenarios and their invariants | ~8 s |
 | UI | `pnpm test:ui` | `src/components/`, `src/navigation/` (`*.test.tsx`) | board components in jsdom: an action is dispatched, a tile lights from a flag; never SVG geometry | ~1 s |
 | Perf | `pnpm test:perf` | `sim/perf/` | the runner wall-clock guard | ~1 s |
 
@@ -20,10 +20,14 @@ A reproducible operator procedure from a known plant state, run through the real
 
 | Class | Pass rule |
 |---|---|
-| Golden path | all invariants and goal checks pass |
-| Edge | all invariants pass, except `expectedFailures` entries (`sim/invariant-matrix.ts`) naming a fixing ticket |
+| Golden path | all invariants, the golden-only invariants (no level alarm, no level trip) and goal checks pass |
+| Edge | all invariants pass, except `expectedFailures` entries (`sim/scenario-checks.ts`) naming a fixing ticket |
 
-The invariant matrix (every invariant on every scenario of a class) is `describeInvariants` in `sim/invariant-matrix.ts`, used by `sim/golden/invariants.test.ts` and `sim/edge/invariants.test.ts`.
+**One run per scenario.** A registered scenario runs once, in its own file `sim/<class>/<name>.test.ts`, through `runChecked` (`sim/scenario-checks.ts`). That one run carries everything: one test per invariant, the stale-snapshot check when the scenario is a snapshot source (`sim/snapshot-sources.ts`), and the file's goal checks. A run takes seconds and Vitest gives each file its own worker, so a second file that reruns a scenario repeats those seconds; the slowest file sets the wall time of the layer.
+
+- `runChecked` takes the registered scenario object unchanged; only `sampleEvery` may be finer, which only makes the invariants stricter. It refuses a modified scenario and refuses to run in any file but the scenario's own.
+- `sim/scenario-files.test.ts` (unit) fails when a registered scenario has no such file, so a new scenario cannot skip its invariants.
+- A goal check that needs a different start or a tick-resolution window runs a short sub-run from a state of the main run (`turbine-runup`'s run-up points, `turbine-sync`'s Hold engage), never the whole scenario again. A shortened run keeps only the timed actions inside it (`scheduleActions` rejects the rest).
 
 ## Definition of done
 

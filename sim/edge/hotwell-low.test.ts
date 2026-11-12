@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario } from "../scenario"
+import { firstTimeWhere } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { hotwellLow } from "../scenarios/hotwell-low"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { activeAlarms } from "../../src/context/Alarms"
@@ -8,7 +9,7 @@ import { CstSimulation } from "../../src/context/const"
 const { HotwellLowLow } = CstSimulation.CstCondenser
 
 describe("hotwell-low", () => {
-  const samples = runScenario(hotwellLow)
+  const { samples } = runChecked(hotwellLow)
   const trippedAt = firstTimeWhere(samples, (s) => s.Condenser.condensationPumpTripped)
 
   test("starts inside the working band with the pump running, makeup shut and reject open", () => {

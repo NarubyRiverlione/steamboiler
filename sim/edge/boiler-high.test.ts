@@ -2,13 +2,14 @@ import { describe, expect, test } from "vitest"
 import { activeAlarms } from "../../src/context/Alarms"
 import { CstSimulation } from "../../src/context/const"
 import { boilerLevel } from "../../src/utils/boilerCalculations"
-import { firstTimeWhere, runScenario } from "../scenario"
+import { firstTimeWhere } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { boilerHigh } from "../scenarios/boiler-high"
 
 const { HighHighLevel } = CstSimulation.CstBoiler
 
 describe("boiler-high", () => {
-  const samples = runScenario(boilerHigh)
+  const { samples } = runChecked(boilerHigh)
   const levels = samples.map((s) => boilerLevel(s.state.Boiler.waterVolume))
   const tripAt = firstTimeWhere(samples, (s) => s.Boiler.boilerLevelHighTripped)
 

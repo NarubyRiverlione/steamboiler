@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario } from "../scenario"
+import { firstTimeWhere } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { heatUpAtLimit } from "../scenarios/heat-up"
 
 describe("heat-up", () => {
   // every second: the rate is smoothed over 30 s, so no alarm hides between samples
-  const samples = runScenario({ ...heatUpAtLimit, sampleEvery: 1 })
+  const { samples } = runChecked(heatUpAtLimit, { sampleEvery: 1 })
 
   test("ramped at the limit, reaches working pressure (165 bar) in 4 to 8 hours, the real cold start", () => {
     const reached = firstTimeWhere(samples, (s) => s.Boiler.pressure >= 165) ?? Infinity

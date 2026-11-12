@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario } from "../scenario"
+import { firstTimeWhere } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { hotwellHigh } from "../scenarios/hotwell-high"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { activeAlarms } from "../../src/context/Alarms"
@@ -8,7 +9,7 @@ import { CstSimulation } from "../../src/context/const"
 const { HotwellHighHigh } = CstSimulation.CstCondenser
 
 describe("hotwell-high", () => {
-  const samples = runScenario(hotwellHigh)
+  const { samples } = runChecked(hotwellHigh)
   const levels = samples.map((s) => hotwellLevel(s.state.Condenser.hotwellWaterVolume))
   const reachedAt = firstTimeWhere(samples, (s) => hotwellLevel(s.Condenser.hotwellWaterVolume) >= HotwellHighHigh)
 

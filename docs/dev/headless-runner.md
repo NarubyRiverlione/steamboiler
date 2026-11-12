@@ -99,9 +99,10 @@ valve panels in each group show the positions instead. Operator settings, not pl
 
 ## Tests
 
-Layers, goal checks and the definition of done: [testing.md](testing.md). Goal checks live in `sim/golden/` and `sim/edge/`, one file per scenario. `sim/invariants.ts` holds the physical invariants
+Layers, goal checks and the definition of done: [testing.md](testing.md). Goal checks live in `sim/golden/` and `sim/edge/`, one file per scenario, `<class>/<name>.test.ts`. `sim/invariants.ts` holds the physical invariants
 (no NaN, design pressure and temperature, water within capacity, condensation pump return and feed pump delivery within
-pump capacity, water never created or lost, natural cooldown never heats and its steam comes from stored heat); `sim/invariant-matrix.ts` checks every invariant against every scenario of a class, one test per pair. A pair that fails today is in its
+pump capacity, water never created or lost, natural cooldown never heats and its steam comes from stored heat) and the golden-only ones (no hotwell
+or boiler level alarm, no high-high trip). `runChecked` in `sim/scenario-checks.ts` runs a scenario once in its own file and checks every invariant on that run, one test per pair; the file's goal checks use the same run. A pair that fails today is in its
 `expectedFailures` table as a `test.fails` naming the fixing ticket; when that ticket lands the test
 turns red, so remove the entry to make the pair a guard. `sim/invariants.test.ts` checks each invariant on hand-built samples (unit).
 
@@ -146,7 +147,7 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
 - `pnpm sim <scenario> --snapshot <name>` writes the run's final state to
   `sim/snapshots/<name>.json` (ad hoc).
 - Committed snapshots are listed in `sim/snapshot-sources.ts` with the scenario whose final state
-  they are; `pnpm sim:snapshots` regenerates them all. `sim/golden/snapshot.test.ts` fails when a committed
+  they are; `pnpm sim:snapshots` regenerates them all. The source's test file (through `runChecked`) fails when a committed
   file no longer matches a fresh run of its source, so after a physics or state change: run
   `pnpm sim:snapshots`, look at the diff, commit. The comparison is tolerant ([ADR 0020](../adr/0020-snapshots-compare-with-tolerance.md)):
   numbers match within a relative 1e-6 (absolute 1e-12 near 0, `valueErrors` in `sim/snapshot.ts`), so last-digit
