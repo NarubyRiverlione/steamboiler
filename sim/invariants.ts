@@ -2,6 +2,7 @@ import { CstDeaerator, CstSimulation } from "../src/context/const"
 import { MetalHeatCapacity } from "../src/context/Boiler/BoilerTick"
 import { getLatentHeat, getLiquidEnthalpy, getWaterSpecificHeat } from "../src/utils/steamTable"
 import PowerPlantState from "../src/context/PowerPlantState"
+import { activeAlarms } from "../src/context/Alarms"
 import { Sample } from "./scenario"
 
 // A physical rule that must hold at every sample of every scenario; check returns the violations.
@@ -188,4 +189,22 @@ export const invariants: Invariant[] = [
   { name: "water is never created or lost", check: waterNeverCreated },
   { name: "natural cooldown never heats", check: cooldownNeverHeats },
   { name: "natural cooldown steam comes from stored heat", check: cooldownSteamFromStoredHeat },
+]
+
+// The alarms among `ids` that are on in this state, as a violation message
+const raised =
+  (ids: string[]) =>
+  (state: PowerPlantState): string | undefined => {
+    const on: string[] = activeAlarms(state).filter((id: string) => ids.includes(id))
+    return on.length === 0 ? undefined : `${on.join(", ")} on`
+  }
+
+// The golden path is how the plant is meant to be run, so it never raises a level alarm or a level trip;
+// edge scenarios drive the plant into them on purpose
+export const goldenInvariants: Invariant[] = [
+  { name: "the hotwell level alarms never come on", check: everySample(raised(["hotwellLevelLow", "hotwellLevelHigh"])) },
+  {
+    name: "the boiler level alarm and the high-high trip never come on (#62)",
+    check: everySample(raised(["boilerLevelHigh", "boilerLevelHighTripped"])),
+  },
 ]

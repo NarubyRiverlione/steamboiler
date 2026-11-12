@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
 import { firstTimeWhere, runScenario, Sample } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { loadSnapshot } from "../snapshot"
+import { describeVacuumAtOpening } from "./vacuum-at-opening"
 import { syncOperator, turbineSync } from "../scenarios/turbine-sync"
 import { CstSimulation } from "../../src/context/const"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
@@ -38,8 +40,13 @@ function engageHoldFromFree(offset: number): Sample[] {
   })
 }
 
+// The one run of the scenario, every tick: its invariants, its snapshot and the goal checks below
+const { samples } = runChecked(turbineSync, { sampleEvery: DeltaTime })
+
+// It starts in Hold with the turbine valve already open, so the opening is judged from its first tick
+describeVacuumAtOpening(turbineSync.name, samples)
+
 describe("turbine-sync", () => {
-  const samples = runScenario(turbineSync)
   const last = samples.filter((s) => s.time >= turbineSync.duration - SteadyWindow)
 
   test("starts in Hold at 3000 rpm, within the breaker margin, with the breaker open", () => {
@@ -70,9 +77,8 @@ describe("turbine-sync", () => {
   })
 
   test("per tick, the breaker closes once and never reopens", () => {
-    const ticks = runScenario({ ...turbineSync, sampleEvery: DeltaTime })
-    expect(ticks.some((s) => s.state.Turbine.generatorBreaker)).toBe(true)
-    expect(reopens(ticks)).toBe(false)
+    expect(samples.some((s) => s.state.Turbine.generatorBreaker)).toBe(true)
+    expect(reopens(samples)).toBe(false)
   })
 
   // turbine-sync itself starts settled in Hold, so this is what guards the engage

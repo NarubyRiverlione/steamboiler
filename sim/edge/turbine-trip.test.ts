@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest"
 import { CstDeaerator, CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { TripAt, turbineTrip } from "../scenarios/turbine-trip"
 
 const { CstBoiler } = CstSimulation
 
 describe("turbine-trip", () => {
-  const samples = runScenario(turbineTrip)
+  const { samples } = runChecked(turbineTrip)
   const before = samples.filter((s) => s.time < TripAt)
   const after = samples.filter((s) => s.time > TripAt + 1)
   const rated = before[before.length - 1].state

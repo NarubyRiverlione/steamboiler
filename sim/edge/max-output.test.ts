@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
 import { ratedOutputMW } from "../../src/utils/turbineCalculations"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { maxOutput } from "../scenarios/max-output"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
 
@@ -11,7 +11,7 @@ const MaxOutputMW = 142 // measured: the load carried when the breaker opens, li
 
 describe("max-output", () => {
   // every tick, so the breaker opening can be pinned to one tick
-  const samples = runScenario({ ...maxOutput, sampleEvery: CstSimulation.DeltaTime })
+  const { samples } = runChecked(maxOutput, { sampleEvery: CstSimulation.DeltaTime })
   const opened: number = samples.findIndex((s) => s.time > 1 && !s.state.Turbine.generatorBreaker)
   const carrying = samples.slice(0, opened)
   const before = samples[opened - 1].state

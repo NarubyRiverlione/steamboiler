@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { sjaeClosedLoad } from "../scenarios/sjae-closed-load"
 
 const { VacuumLimit, OptimalPressure } = CstSimulation.CstCondenser
 
 describe("sjae-closed-load", () => {
-  const samples = runScenario(sjaeClosedLoad)
+  const { samples } = runChecked(sjaeClosedLoad)
   const last = samples.filter((s) => s.time > sjaeClosedLoad.duration - 600)
 
   test("the SJAE valve is shut and the air extraction pump runs", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { LoadTarget, turbineLoad } from "../scenarios/turbine-load"
 import { LoopSettings } from "../scenarios/loop-operator"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
@@ -11,8 +11,10 @@ const { CstBoiler, CstTurbine } = CstSimulation
 const SteadyWindow = 600 // sim-seconds at the end of the run that count as steady
 const LevelTolerance = 0.005 // the operator only reacts after the level crosses its deadband edge (measured overshoot 1e-5)
 
+// The one run of the scenario: its invariants and the goal checks below
+const { samples } = runChecked(turbineLoad)
+
 describe("turbine-load", () => {
-  const samples = runScenario(turbineLoad)
   const steady = samples.filter((s) => s.time >= turbineLoad.duration - SteadyWindow)
 
   test("starts synchronised with the breaker closed", () => {
