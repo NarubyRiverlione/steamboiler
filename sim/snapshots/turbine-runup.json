@@ -13,6 +13,7 @@
     "ventedTotal": 0,
     "reliefLifts": 0,
     "burnerTripped": false,
+    "boilerLevelHighTripped": false,
     "stackTemperature": 146.6404802965549,
     "boilerEfficiency": 0.9401957872733616,
     "returnTemperatureOut": 177.74268028083824,

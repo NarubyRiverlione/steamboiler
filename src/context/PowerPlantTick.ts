@@ -1,6 +1,6 @@
 import { CondenserTick } from "./Condenser/CondenserTick"
-import TurbineTick, { MainSteamValveLowPressureClosure } from "./Turbine/TurbineTick"
-import BoilerTick, { BoilerBurnerTrip, BoilerRemoveSteam, BoilerVent } from "./Boiler/BoilerTick"
+import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
+import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, BoilerVent, isAtBoilerHighHigh } from "./Boiler/BoilerTick"
 
 import { DeaeratorResult, DeaeratorTick } from "./Deaerator/DeaeratorTick"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, HeaterState, TurbineState } from "./PowerPlantState"
@@ -12,10 +12,14 @@ import { calculateExtraction, drainEnthalpyOf, Extraction, heatFeedwater } from 
 
 export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
   // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
-  const ventedBoiler = BoilerVent(BoilerBurnerTrip(state.Boiler))
+  const ventedBoiler = BoilerVent(BoilerLevelHighTrip(BoilerBurnerTrip(state.Boiler)))
+
+  // The high-high level (ADR 0041) trips the turbine and shuts the feed pump valve before anything is delivered this tick
+  const levelHighHigh: boolean = isAtBoilerHighHigh(state.Boiler)
 
   // The main steam valve closes on low pressure before any steam leaves through it (ADR 0026)
-  const turbineAfterClosure: TurbineState = MainSteamValveLowPressureClosure(state.Turbine, state.Boiler.pressure)
+  const turbineAfterLowPressure: TurbineState = MainSteamValveLowPressureClosure(state.Turbine, state.Boiler.pressure)
+  const turbineAfterClosure: TurbineState = levelHighHigh ? TurbineTripWhenOpen(turbineAfterLowPressure) : turbineAfterLowPressure
 
   // remove steam via bypass valve
   const bypassResult = BoilerRemoveSteam(ventedBoiler, turbineAfterClosure, "BYPASS")
@@ -92,7 +96,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
 
   // Deaerator: takes this tick's Return and the heater drain, holds 3 bar with the tap steam and the let-down valve, and the
   // feed pump delivers its outflow to the boiler
-  const deaerator: DeaeratorResult = DeaeratorTick(state.Deaerator, {
+  const deaerator: DeaeratorResult = DeaeratorTick(levelHighHigh ? { ...state.Deaerator, feedPumpValvePosition: 0 } : state.Deaerator, {
     intake: { mass: condenserNewState.returnRate, temperature: condenserNewState.hotwellTemperature },
     drain: { mass: extraction.flow * CstSimulation.DeltaTime, enthalpy: drainEnthalpyOf(extraction.heaterPressure) },
     tapSteam: { mass: tapFlow * CstSimulation.DeltaTime, enthalpy: extraction.tapEnthalpy },

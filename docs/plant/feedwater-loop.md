@@ -42,8 +42,8 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 | Cold start | 35% (35 000 L), thermal expansion brings it to the target at 165 bar ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)) |
 | Target | 50% (50 000 L) |
 | Control band | ±5% |
-| Alarm | ±12% (not in code) |
-| Trip | below 30%, above 70% (not in code) |
+| Alarm | from 65% (`HighLevel`, "Boiler level high") |
+| Trip | below 20% (burner low-low, [ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)); from 70% (feed pump and turbine, `HighHighLevel`, [ADR 0041](../adr/0041-boiler-high-high-level-trips-feed-pump-and-turbine.md)) |
 
 | Boiler pressure | Value |
 |---|---|

@@ -182,6 +182,11 @@ describe("loopOperator", () => {
       expect(pump(withLetDown)).toBeCloseTo((160 * getWaterSpecificVolume(134)) / CstCondenser.CondensationPump_MaxFlowRate)
     })
 
+    test("does not re-open the feed pump while the high-high trip flag is set (#62)", () => {
+      const tripped: PowerPlantState = steaming({ ...target, waterVolume: boilerAt(0.4), boilerLevelHighTripped: true })
+      expect(pump(tripped)).toBeUndefined()
+    })
+
     test("asks for nothing once the pump is where the control wants it", () => {
       const state = steaming({ ...target, waterVolume: boilerAt(LoopSettings.BoilerLevelTarget) })
       expect(pump(state)).toBeUndefined()

@@ -7,7 +7,7 @@ The simulated clock and the playback speed live in `SimulationState` (`src/conte
 ## Rules
 
 - N ticks in a batch equal N single ticks, exactly. The batch stops on the tick where an alarm comes on.
-- "Alarm" is every row of the annunciator's list in `src/navigation/alarms.ts`, the single source (`src/context/Alarms.ts` only reads it). Tiles added later (#62; #59 did the hotwell pair, #72 adds none) are one more row and drop the speed with no other change.
+- "Alarm" is every row of the annunciator's list in `src/navigation/alarms.ts`, the single source (`src/context/Alarms.ts` only reads it). Tiles added later (#62 did the boiler level pair, #59 the hotwell pair, #72 adds none) are one more row and drop the speed with no other change.
 - An alarm that comes on drops the speed to 1x (a pause stays a pause) in the same reducer step. Acknowledging is the annunciator's (UI layer): while a tile flashes (set, not yet acknowledged) the selector refuses speeds above 1x. After ACK the tile is steady (latched until RESET, #116) and speeds are allowed again, even while the flag stays set.
 - At the cap the plant runs slower than requested: the remainder is dropped, no tick is skipped. The cap was chosen by measurement (`pnpm test:perf`): 100 ticks take about 1.4 ms, and 60x needs 30 ticks per update, so 300 gives a 10x margin.
 - A hidden tab runs nothing and resumes at the same speed with no catch-up. Pause does the same.

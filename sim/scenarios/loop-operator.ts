@@ -128,6 +128,8 @@ function startSteam(state: PowerPlantState): PowerPlantAction[] {
 // comes back through the feed pump (#112), in litres at the deaerator temperature, plus LevelGain per unit of level error.
 function holdBoilerLevel({ Boiler, Deaerator, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
+  // After the high-high trip the pump stays shut until the operator decides to open it again (ADR 0041)
+  if (Boiler.boilerLevelHighTripped) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
   const steamOut = Turbine.turbineSteamFlowOut + Turbine.bypassSteamFlowOut + Deaerator.letDownFlow
   const feedforward = (steamOut * getWaterSpecificVolume(Deaerator.temperature)) / CstCondenser.CondensationPump_MaxFlowRate

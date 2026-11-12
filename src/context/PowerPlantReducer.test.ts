@@ -227,6 +227,38 @@ describe("powerPlantReducer", () => {
     })
   })
 
+  describe("feed pump at the boiler high-high level (#62, ADR 0041)", () => {
+    const high = CstBoiler.HighHighLevel
+    const boilerAt = (level: number, tripped = false): PowerPlantState => ({
+      ...base,
+      Boiler: { ...base.Boiler, waterVolume: level * CstBoiler.TotalVolume, boilerLevelHighTripped: tripped },
+      Deaerator: { ...base.Deaerator, waterVolume: 0.5 * CstDeaerator.TotalVolume },
+    })
+    const move = (delta: number, state: PowerPlantState): PowerPlantState =>
+      reduce({ type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: delta } }, state)
+
+    test("opening is refused at 70% and above, the state is unchanged", () => {
+      const state: PowerPlantState = boilerAt(high, true)
+      expect(move(0.1, state)).toBe(state)
+      expect(move(0.1, boilerAt(high + 0.1))).toEqual(boilerAt(high + 0.1))
+    })
+
+    test("opening is allowed below 70%", () => {
+      expect(move(0.1, boilerAt(high - 0.001)).Deaerator.feedPumpValvePosition).toBe(0.1)
+    })
+
+    test("closing is always allowed", () => {
+      const open: PowerPlantState = { ...boilerAt(high), Deaerator: { ...boilerAt(high).Deaerator, feedPumpValvePosition: 0.3 } }
+      expect(move(-0.1, open).Deaerator.feedPumpValvePosition).toBeCloseTo(0.2)
+    })
+
+    test("a successful opening clears the flag; a refused one and a closing leave it set", () => {
+      expect(move(0.1, boilerAt(high - 0.05, true)).Boiler.boilerLevelHighTripped).toBe(false)
+      expect(move(0.1, boilerAt(high, true)).Boiler.boilerLevelHighTripped).toBe(true)
+      expect(move(-0.1, boilerAt(high - 0.05, true)).Boiler.boilerLevelHighTripped).toBe(true)
+    })
+  })
+
   describe("turbine", () => {
     const atPressure = (pressure: number): PowerPlantState => ({ ...base, Boiler: { ...base.Boiler, pressure } })
 

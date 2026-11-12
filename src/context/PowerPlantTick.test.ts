@@ -126,15 +126,12 @@ describe("PowerPlantTick boiler feed pump (#112)", () => {
     expect(next.Boiler.waterVolume).toBeCloseTo(CstBoiler.TotalVolume, 2)
   })
 
-  test("a nearly full boiler is filled to capacity, not past it", () => {
+  // The room rule of ADR 0004 is the second line behind the high-high trip (#62): the plant trips the pump at 70% long
+  // before the boiler is nearly full, so the rule is tested on the deaerator (DeaeratorTick.test.ts)
+  test("a nearly full boiler takes nothing: the high-high trip has shut the pump long before", () => {
     const next = PowerPlantTick(feeding(CstBoiler.TotalVolume - 5))
-    expect(next.Deaerator.outflowMass).toBeCloseTo(5 / litresPerKg, 6)
-    expect(next.Boiler.waterVolume).toBeCloseTo(CstBoiler.TotalVolume, 0) // hot feedwater takes a little more room in a cold boiler
-  })
-
-  test("a hot boiler has less room: the same free volume takes fewer kg", () => {
-    const next = PowerPlantTick(feeding(CstBoiler.TotalVolume - 5, 300))
-    expect(next.Deaerator.outflowMass).toBeCloseTo(5 / getWaterSpecificVolume(300), 4)
+    expect(next.Deaerator.outflowMass).toBe(0)
+    expect(next.Boiler.boilerLevelHighTripped).toBe(true)
   })
 
   test("trips below the low-low level and delivers nothing", () => {
@@ -468,5 +465,66 @@ describe("PowerPlantTick extraction heater (ADR 0031)", () => {
     expect(half.Heater.tapPressure).toBeLessThan(full.Heater.tapPressure)
     expect(half.Heater.returnTemperature).toBeLessThan(full.Heater.returnTemperature)
     expect(half.Heater.returnTemperature).toBeGreaterThanOrEqual(half.Deaerator.temperature)
+  })
+})
+
+describe("PowerPlantTick boiler high-high level trip (#62, ADR 0041)", () => {
+  const litresAtLevel = (level: number): number => CstBoiler.TotalVolume * level
+  // A plant with the boiler at this level, the feed pump open on a hot deaerator, the turbine valve open and the burner firing
+  const feeding = (level: number, turbineValve = 0.3): PowerPlantState => {
+    const plant: PowerPlantState = pumping(litresAtLevel(level))
+    return {
+      ...plant,
+      Boiler: { ...plant.Boiler, gasFlow: CstBoiler.MaxGasFlow, pressure: 50 },
+      Condenser: { ...plant.Condenser, pressure: CstSimulation.CstCondenser.VacuumLimit },
+      Deaerator: { ...makeHotDeaerator(CstDeaerator.TotalVolume / 2), feedPumpValvePosition: 0.5 },
+      Turbine: { ...plant.Turbine, mainSteamValve: true, turbineValvePosition: turbineValve, speedMode: "hold" },
+    }
+  }
+
+  test("just below 70% nothing trips and the feed pump delivers", () => {
+    const next = PowerPlantTick(feeding(CstBoiler.HighHighLevel - 0.001))
+    expect(next.Boiler.boilerLevelHighTripped).toBe(false)
+    expect(next.Deaerator.feedPumpValvePosition).toBe(0.5)
+    expect(next.Deaerator.outflowMass).toBeGreaterThan(0)
+    expect(next.Turbine.turbineTripped).toBe(false)
+  })
+
+  test("at 70% the feed pump valve shuts with nothing delivered, the turbine trips and the flag is set", () => {
+    const next = PowerPlantTick(feeding(CstBoiler.HighHighLevel))
+    expect(next.Boiler.boilerLevelHighTripped).toBe(true)
+    expect(next.Deaerator.feedPumpValvePosition).toBe(0)
+    expect(next.Deaerator.outflowMass).toBe(0)
+    expect(next.Turbine.turbineValvePosition).toBe(0)
+    expect(next.Turbine.speedMode).toBe("free")
+    expect(next.Turbine.turbineTripped).toBe(true)
+  })
+
+  test("the deaerator flag of its own low-low trip is not set by it, and the condensation pump is untouched", () => {
+    const start: PowerPlantState = feeding(CstBoiler.HighHighLevel)
+    const next = PowerPlantTick({ ...start, Condenser: { ...start.Condenser, condensationPumpValvePosition: 0.4 } })
+    expect(next.Deaerator.feedPumpTripped).toBe(false)
+    expect(next.Condenser.condensationPumpTripped).toBe(false)
+    expect(next.Condenser.condensationPumpValvePosition).toBe(0.4)
+  })
+
+  test("with the turbine valve shut the turbine is not tripped", () => {
+    const next = PowerPlantTick(feeding(CstBoiler.HighHighLevel, 0))
+    expect(next.Boiler.boilerLevelHighTripped).toBe(true)
+    expect(next.Turbine.turbineTripped).toBe(false)
+  })
+
+  test("the flag latches while the level falls back, and the pump stays shut", () => {
+    let state: PowerPlantState = PowerPlantTick(feeding(CstBoiler.HighHighLevel))
+    state = { ...state, Boiler: { ...state.Boiler, waterVolume: litresAtLevel(0.5) } }
+    for (let i = 0; i < 10; i++) state = PowerPlantTick(state)
+    expect(state.Boiler.boilerLevelHighTripped).toBe(true)
+    expect(state.Deaerator.feedPumpValvePosition).toBe(0)
+  })
+
+  test("the burner is unaffected", () => {
+    const next = PowerPlantTick(feeding(CstBoiler.HighHighLevel))
+    expect(next.Boiler.gasFlow).toBe(CstBoiler.MaxGasFlow)
+    expect(next.Boiler.burnerTripped).toBe(false)
   })
 })
