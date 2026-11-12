@@ -2,7 +2,7 @@
 
 import formatSigned from "../../utils/formatSigned"
 import { Display } from "./Display"
-import { LevelGauge } from "./LevelGauge"
+import { LinearGauge } from "./LinearGauge"
 import type { GaugeZone } from "./RoundGauge"
 
 type LevelInstrumentProps = {
@@ -18,7 +18,7 @@ export function LevelInstrument({ label, fraction, change, zones, ticks, target 
   return (
     <div className="board-instrument">
       <span className="board-instrument-label">{label}</span>
-      <LevelGauge label={`${label} gauge`} value={fraction * 100} zones={zones}
+      <LinearGauge label={`${label} gauge`} value={fraction * 100} zones={zones}
         ticks={ticks}
         target={target === undefined ? undefined : target * 100}
       />
