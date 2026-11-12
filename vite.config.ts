@@ -23,8 +23,9 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: ['src/**/*.test.{ts,tsx}', 'sim/*.test.ts', 'scripts/**/*.test.ts'],
-          exclude: [...configDefaults.exclude, ...UI_TESTS],
+          // every test under sim/ outside the scenario and perf directories, so none falls between the projects
+          include: ['src/**/*.test.{ts,tsx}', 'sim/**/*.test.ts', 'scripts/**/*.test.ts'],
+          exclude: [...configDefaults.exclude, ...UI_TESTS, 'sim/golden/**', 'sim/edge/**', 'sim/perf/**'],
         },
       },
       // Behaviour of the board components (jsdom): an action is dispatched, a tile lights from a flag

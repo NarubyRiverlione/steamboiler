@@ -6,7 +6,7 @@ Why: [ADR 0016](../adr/0016-scenario-definition-and-test-layers.md), [ADR 0023](
 
 | Layer | Script | Where | Checks | Cost |
 |---|---|---|---|---|
-| Unit | `pnpm test:unit` | `src/`, `scripts/`, `sim/*.test.ts` | one function or one tick: formulas, reducer rules, operator functions, invariant checks on hand-built samples, snapshot loader | ~1 s |
+| Unit | `pnpm test:unit` | `src/`, `scripts/`, `sim/` outside `golden/`, `edge/` and `perf/` | one function or one tick: formulas, reducer rules, operator functions, invariant checks on hand-built samples, snapshot loader | ~1 s |
 | Sim golden | `pnpm test:sim:golden` | `sim/golden/` | golden-path scenarios, their invariants, the stale-snapshot check (tolerant, ADR 0020) | ~5 s |
 | Sim edge | `pnpm test:sim:edge` | `sim/edge/` | edge scenarios and their invariants | ~2 s |
 | UI | `pnpm test:ui` | `src/components/`, `src/navigation/` (`*.test.tsx`) | board components in jsdom: an action is dispatched, a tile lights from a flag; never SVG geometry | ~1 s |
