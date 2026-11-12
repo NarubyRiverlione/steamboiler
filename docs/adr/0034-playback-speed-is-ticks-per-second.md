@@ -24,5 +24,5 @@ The simulated clock and the playback speed live in `SimulationState` (`src/conte
 ## Consequences
 
 - The headless runner is unaffected: it dispatches single ticks and never sees a playback speed.
-- Playback speed is not a departure from a real plant; `design-basis.md` says so.
+- Playback speed is not a departure from a real plant; `design-basis.md` says so. With the real heating-rate limit (#103) a cold start to 165 bar is about 6 h of plant time: 6 min at 60x, and the first heating-rate alarm drops it to 1x.
 - The Graphs recorder (#36) samples by simulated time (`SimulationState.ticks`), not by render.

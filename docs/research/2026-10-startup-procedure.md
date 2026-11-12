@@ -55,8 +55,7 @@ manufacturer's start-up curve governs.
 
 - **Roll gate.** `MainSteamValveMinimumPressure` is 10 bar (`src/context/const.ts`), below the 28–40 bar
   the large-unit sources roll at. It has no steam-temperature or metal-temperature permissive.
-- **Heating rate.** The sim relaxes the limit to 24 K/min (alarm only) to start in about 15 min; the
-  register has the reasoning in [plant/design-basis.md](../plant/design-basis.md).
+- **Heating rate.** The sim uses the real limit, 100 K/h (alarm only), since #103; a cold start takes about 6 h of plant time, played faster with the speed control (#78).
 - **Not modeled:** turning gear, gland steam, desuperheating, warm-up hold, critical speeds, drains.
 
 ## Sources

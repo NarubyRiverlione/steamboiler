@@ -4,6 +4,9 @@ import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
+import BoilerTick from "../../context/Boiler/BoilerTick"
+import { CstSimulation } from "../../context/const"
+import { heatingRateText } from "../../utils/heatingRateText"
 import Boiler from "./Boiler"
 
 type Ctx = ContextType<typeof PowerPlantContext>
@@ -95,6 +98,25 @@ describe("Boiler page", () => {
     expect(screen.getByRole("img", { name: "Over limit: on" })).toBeTruthy()
     expect(screen.getByRole("img", { name: "Open: off" })).toBeTruthy()
     expect(screen.getByLabelText("Heating rate").classList.contains("board-display-alarm")).toBe(true)
+  })
+
+  it("shows the heating rate and its limit in K/h", () => {
+    renderBoiler({ heatingRate: 0.02 })
+    expect(screen.getByLabelText("Heating rate").textContent).toBe("72.0 K/h")
+    expect(heatingRateText(CstSimulation.CstBoiler.HeatingRateLimit)).toBe("100.0 K/h")
+    expect(screen.getByTitle("Alarm above 100.0 K/h")).toBeTruthy()
+  })
+
+  it("the alarm and the displayed rate agree at the boundary: over the limit reads over it", () => {
+    const limit: number = CstSimulation.CstBoiler.HeatingRateLimit
+    // A cold, gas-off boiler holds its temperature, so one tick only smooths the rate by 1/300 towards zero
+    const next = (target: number) => BoilerTick({ ...makeInitialState().Boiler, heatingRate: (target * 300) / 299 })
+    const over = next(limit + 0.1 / 3600)
+    const under = next(limit - 0.1 / 3600)
+    expect(over.heatingRateOverLimit).toBe(true)
+    expect(Number.parseFloat(heatingRateText(over.heatingRate))).toBeGreaterThan(100)
+    expect(under.heatingRateOverLimit).toBe(false)
+    expect(Number.parseFloat(heatingRateText(under.heatingRate))).toBeLessThan(100)
   })
 
   it("shows the stack temperature and the boiler efficiency", () => {

@@ -117,10 +117,10 @@ describe("BoilerTick heating rate", () => {
   })
 
   test("raises no alarm below the limit", () => {
-    expect(ticks(300, 2000).heatingRateOverLimit).toBe(false)
+    expect(ticks(300, 100).heatingRateOverLimit).toBe(false)
   })
 
-  test("raises the alarm above 0.4 K/s: full gas into a cold boiler", () => {
+  test("raises the alarm above 100 K/h (0.028 K/s): full gas into a cold boiler", () => {
     expect(ticks(30, CstBoiler.MaxGasFlow).heatingRateOverLimit).toBe(true)
   })
 

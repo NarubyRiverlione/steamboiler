@@ -17,7 +17,7 @@ const SteadyWindow = 600 // sim-seconds at the end of the run that count as stea
 const SteadyShare = 0.05 // average steam out within this share of average steam generated
 const OccasionalFraction = 0.1 // a valve open in at most this share of the steady samples
 
-const { samples, lifts } = runScenarioWithLifts(bypassLoop)
+const { samples, lifts } = runScenarioWithLifts({ ...bypassLoop, sampleEvery: 1 })
 const SettleTime = bypassLoop.duration - SteadyWindow
 const valveOpenAt = firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve) ?? Infinity
 const steady = samples.filter((s) => s.time >= SettleTime)
@@ -27,10 +27,9 @@ const openShare = (open: (s: PowerPlantState) => boolean) =>
 describe("bypass-loop setup", () => {
   const atOpen = samples.find((s) => s.time >= valveOpenAt)
 
-  test("starts with the knob fully up and reaches full gas in one turn and one wait, without a jump", () => {
-    expect(samples[0].state.Boiler.gasRateCommand).toBe(1)
-    const full = samples.find((s) => s.state.Boiler.gasFlow >= CstBoiler.MaxGasFlow)
-    expect(full?.time).toBeCloseTo(CstBoiler.MaxGasFlow / CstBoiler.GasRateMax, 0)
+  test("starts cold with the gas off and ramps it at the heating-rate limit, without a jump (#103)", () => {
+    expect(samples[0].state.Boiler.gasFlow).toBe(0)
+    expect(samples.some((s) => s.state.Boiler.gasFlow > 0)).toBe(true)
     for (let i = 1; i < samples.length; i++) {
       const step = samples[i].state.Boiler.gasFlow - samples[i - 1].state.Boiler.gasFlow
       expect(Math.abs(step)).toBeLessThanOrEqual(
@@ -39,9 +38,13 @@ describe("bypass-loop setup", () => {
     }
   })
 
+  test("never raises the heating-rate alarm: the whole cold start runs under the real limit", () => {
+    expect(samples.filter((s) => s.state.Boiler.heatingRateOverLimit).map((s) => s.time)).toEqual([])
+  })
+
   test("opens the main steam valve at working pressure, not during heat-up (ADR 0018)", () => {
     expect(valveOpenAt).toBeLessThan(SettleTime)
-    expect(atOpen?.state.Boiler.gasFlow).toBeCloseTo(StartGas, 3)
+    expect(atOpen?.state.Boiler.gasFlow).toBeLessThanOrEqual(StartGas)
     expect(atOpen?.state.Condenser.sjaeValvePosition).toBe(LoopSettings.SjaeOpening)
   })
 

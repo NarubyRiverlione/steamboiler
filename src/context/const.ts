@@ -18,7 +18,7 @@ export const CstSimulation = {
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
     MetalMass: 100e3, // kg of drum and tube steel, at the water temperature (one lump)
     HeatLossAtDesign: 500, // kW lost to the surroundings at design temperature, proportional to T - ambient
-    HeatingRateLimit: 0.4, // K/s, alarm above it (time-compressed: real about 100 K/h, see design-basis.md)
+    HeatingRateLimit: 100 / 3600, // K/s, alarm above it (the real limit, about 100 K/h)
     HeatingRateWindow: 30, // s, time constant of the smoothed heating rate
   },
 

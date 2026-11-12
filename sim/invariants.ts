@@ -20,8 +20,9 @@ const MassLostFixed = 1e-13 // fraction of start mass, allowed even with no stea
 const MassLostPerSteamOut = 2e-11 // fraction of the steam that left the boiler (the rounding of the flow integral)
 
 // The flash is a per-tick rate and the cooling an average over the sample interval (10 ticks at 1 s), so the last tick
-// can run above the average. The worst ratio measured over all scenarios is 1.0099 (`return-stop`); the slack is 3x that.
-const FlashSamplingSlack = 0.03 // fraction of the cooling power
+// can run above the average. The worst ratio measured over all scenarios is 1.0318 (`return-stop` from the #103 snapshot; 1.0099 before; 1.000 when
+// sampled every tick); the slack is 1.5x that.
+const FlashSamplingSlack = 0.05 // fraction of the cooling power
 
 const at = (time: number) => `t=${String(time)} s`
 

@@ -3,13 +3,13 @@ import { firstTimeWhere, runScenario } from "../scenario"
 import { heatUpAtLimit } from "../scenarios/heat-up"
 
 describe("heat-up", () => {
-  // every tick, so no alarm hides between samples
-  const samples = runScenario({ ...heatUpAtLimit, sampleEvery: 0.1 })
+  // every second: the rate is smoothed over 30 s, so no alarm hides between samples
+  const samples = runScenario({ ...heatUpAtLimit, sampleEvery: 1 })
 
-  test("ramped at the limit, reaches working pressure (165 bar) in 12 to 18 minutes", () => {
+  test("ramped at the limit, reaches working pressure (165 bar) in 4 to 8 hours, the real cold start", () => {
     const reached = firstTimeWhere(samples, (s) => s.Boiler.pressure >= 165) ?? Infinity
-    expect(reached).toBeGreaterThanOrEqual(12 * 60)
-    expect(reached).toBeLessThanOrEqual(18 * 60)
+    expect(reached).toBeGreaterThanOrEqual(4 * 3600)
+    expect(reached).toBeLessThanOrEqual(8 * 3600)
   })
 
   test("never raises the heating-rate alarm", () => {

@@ -646,7 +646,7 @@ body { margin: 0; }
       <div class="readouts">
         <div class="readout"><span>Temperature</span><output class="lcd" id="b-temp"></output></div>
         <div class="readout"><span>Energy Change</span><output class="lcd" id="b-de"></output></div>
-        <div class="readout"><span>Heating rate</span><span class="readout-values"><span class="led" id="l-rate" title="Alarm above 24 K/min"><span class="led-lamp"></span>Over limit</span><output class="lcd" id="b-rate"></output></span></div>
+        <div class="readout"><span>Heating rate</span><span class="readout-values"><span class="led" id="l-rate" title="Alarm above 100.0 K/h"><span class="led-lamp"></span>Over limit</span><output class="lcd" id="b-rate"></output></span></div>
         <div class="readout"><span>Relief valve</span><span class="readout-values"><span class="led" id="l-relief" title="Opens at 178 bar, closes at 171 bar"><span class="led-lamp"></span>Open</span><output class="lcd" id="b-vent"></output></span></div>
         <div class="readout"><span>Burner trip</span><span class="led" id="l-burner" title="Gas shut off below 20% water, raise the gas to restart"><span class="led-lamp"></span>Tripped</span></div>
         <div class="readout"><span>Stack temperature</span><output class="lcd" id="b-stack"></output></div>
@@ -813,7 +813,7 @@ body { margin: 0; }
   var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)); };
 
   // Limits from src/context/const.ts
-  var MAX_GAS = 12000, RELIEF_OPEN = 178, RELIEF_CLOSE = 171, HEAT_LIMIT = 24, BURNER_LOW = 20;
+  var MAX_GAS = 12000, RELIEF_OPEN = 178, RELIEF_CLOSE = 171, HEAT_LIMIT = 100 / 60, BURNER_LOW = 20;
   var VAC_HIGH = 100, VAC_LOW = 60, VAC_LIMIT = 327, SYNC = 3000, MARGIN = 2, MAX_RPM = 3300, MSV_MIN = 10;
   var LOAD_RATE = 0.03 * 123 / 60, NO_LOAD_FLOW = 4.83;
   var DEA_SET = 3, SAFE_AIR = 0.05, ATM = 1.013;
@@ -1154,7 +1154,7 @@ body { margin: 0; }
     txt('b-temp', tsat(s.press).toFixed(1) + ' °C');
     var de = s.de;
     txt('b-de', (de > 0 ? '+' : '') + de.toFixed(0) + ' MJ/s');
-    txt('b-rate', s.rate.toFixed(1) + ' K/min');
+    txt('b-rate', (s.rate * 60).toFixed(1) + ' K/h');
     $('b-rate').classList.toggle('err', s.rate > HEAT_LIMIT);
     led('l-rate', s.rate > HEAT_LIMIT);
     led('l-relief', s.relief);
