@@ -13,13 +13,14 @@ import PowerPlantState from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
 import { holdLoop } from "./loop-operator"
 import { atWorkingPressure } from "./pressure-hold"
-import { heatUp, openMainSteam, startUpVent } from "./steps"
+import { steerHeatingRate } from "./heat-up"
+import { airPumpOn, openMainSteamActions, startUpVent } from "./steps"
 
 const { RunUpPoints } = CstSimulation.CstTurbine
 
 export const StartupSettings = {
   SettlingTime: 600, // sim-seconds in Hold at sync speed before the run ends: the same window turbine-sync judges
-  Duration: 6500, // sim-seconds: pressure build to ~1870 s (the deaerator warm-up draws about 12 t of boiler steam, #119; ~1234 s before), the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~5470 s) and the settling time
+  Duration: 29800, // sim-seconds: the heat-up at the limit to working pressure (~22 000 s, #103), the recovery of the bypass crack to ~25 000 s, the run-up (60 min at the run-up rate, Hold at 3000 rpm from ~28 600 s) and the settling time
 }
 
 // At working pressure: from Free, select the first point above the speed and start Ramp up; in Hold at a point
@@ -34,12 +35,24 @@ function runUp({ Boiler, Turbine }: PowerPlantState): PowerPlantAction[] {
   return speedMode === "hold" ? [select] : [select, { type: "SET_SPEED_MODE", payload: { speedMode: "rampUp" } }]
 }
 
-// With steam flowing, the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md).
-// The boiler level hold waits for working pressure: the cold fill already holds the right mass (ADR 0018)
+// Below working pressure the gas follows the heating rate, the real cold start (#103): the main steam valve opens at
+// working pressure (ADR 0018) and the bypass is cracked, and the gas keeps following the rate while a pressure dip from
+// the steam draw is recovered.
+// In the band the loop operator's holds keep the boiler from running dry (docs/plant/feedwater-loop.md); the valve
+// opens only at working pressure, so the boiler level hold runs from the moment steam flows (ADR 0018)
 export function startupOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
+  const { Boiler, Turbine } = state
   const vent: PowerPlantAction[] = startUpVent(state, time)
-  if (!state.Turbine.mainSteamValve) return vent
-  return [...vent, ...runUp(state), ...holdLoop(state, time, atWorkingPressure(state.Boiler.pressure))]
+  const heating: PowerPlantAction[] = atWorkingPressure(Boiler.pressure) ? [] : steerHeatingRate(Boiler, time)
+  if (!Turbine.mainSteamValve) {
+    const open: PowerPlantAction[] = atWorkingPressure(Boiler.pressure) ? openMainSteamActions : []
+    return [...vent, ...open, ...heating]
+  }
+  const holds: PowerPlantAction[] = holdLoop(state, time)
+  const holdsWithoutGas: PowerPlantAction[] = atWorkingPressure(Boiler.pressure)
+    ? holds
+    : holds.filter((a) => a.type !== "SET_GAS_RATE")
+  return [...vent, ...runUp(state), ...holdsWithoutGas, ...heating]
 }
 
 export const turbineRunup: Scenario = {
@@ -48,6 +61,6 @@ export const turbineRunup: Scenario = {
   duration: StartupSettings.Duration,
   sampleEvery: 10,
   initial: makeInitialState(),
-  actions: [...heatUp, ...openMainSteam],
+  actions: [airPumpOn],
   operator: startupOperator,
 }

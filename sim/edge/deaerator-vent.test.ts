@@ -39,8 +39,9 @@ describe("deaerator vent opened and closed on time (bypass-loop)", () => {
     const at = (time: number): number => samples.find((s) => s.time >= time)?.state.Deaerator.ventedTotal ?? NaN
     expect(at(lampAt + 20)).toBeLessThan(300)
     // 0.08 kg/s: about 50 kg in 600 s
-    expect(at(6600) - at(6000)).toBeLessThan(100)
-    expect(at(6600) - at(6000)).toBeGreaterThan(10)
+    const end: number = bypassLoop.duration - 10 // the last sample
+    expect(at(end) - at(end - 600)).toBeLessThan(100)
+    expect(at(end) - at(end - 600)).toBeGreaterThan(10)
   })
 })
 
