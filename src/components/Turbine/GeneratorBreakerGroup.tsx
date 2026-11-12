@@ -1,24 +1,27 @@
-/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the RPM dial. */
+/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the horizontal RPM gauge. */
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { isAtSyncSpeed } from "../../utils/turbineCalculations"
 import { Lamp } from "../board/Lamp"
-import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
+import { LinearGauge, type GaugeBand } from "../board/LinearGauge"
+import type { GaugeZone } from "../board/RoundGauge"
 import { TurnSwitch } from "../board/TurnSwitch"
 import type { TurbineState } from "./types"
 
 const {
-  CstTurbine: { SyncRPM, MaxRPM, BreakerRPMMargin },
+  CstTurbine: { SyncRPM, MaxRPM, BreakerRPMMargin, RunUpPoints },
 } = CstSimulation
 
 const MIN_SYNC: number = SyncRPM - BreakerRPMMargin
 const MAX_SYNC: number = SyncRPM + BreakerRPMMargin
-const RPM_WARN: number = SyncRPM * 1.05 // dial turns orange above this
+const RPM_WARN: number = SyncRPM * 1.05 // gauge turns orange above this
 const RPM_ZONES: readonly GaugeZone[] = [
   { from: 0, to: RPM_WARN, tone: "ok" },
   { from: RPM_WARN, to: MaxRPM, tone: "warn" },
 ]
+
+const SYNC_BANDS: readonly GaugeBand[] = [{ from: MIN_SYNC, to: MAX_SYNC }]
 
 type GeneratorBreakerGroupProps = {
   readonly turbine: TurbineState
@@ -61,15 +64,15 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
           Current RPM: {rpm.toFixed(0)}
         </p>
       )}
-      <RoundGauge
+      <LinearGauge
         label="Speed gauge"
-        unit="RPM"
+        orientation="horizontal"
         value={rpm}
         min={0}
         max={MaxRPM}
-        major={500}
-        minor={100}
+        ticks={RunUpPoints}
         zones={RPM_ZONES}
+        bands={SYNC_BANDS}
       />
     </div>
   )
