@@ -18,6 +18,7 @@ const act = (state: SimulationState, action: SimulationAction) => simulationRedu
 describe("batched ticks", () => {
   test("N batched ticks give exactly the state of N single ticks", () => {
     const start: PowerPlantState = powerPlantReducer(cold, { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.3 } })
+    // 100 ticks (10 s): a longer run at this gas raises the heating-rate alarm, which stops a batch early
     let single: PowerPlantState = start
     for (let i = 0; i < 100; i++) single = PowerPlantTick(single)
     expect(runTicks(start, 100).state).toEqual(single)
