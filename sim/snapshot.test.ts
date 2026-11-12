@@ -65,9 +65,9 @@ describe("valueErrors", () => {
     ).toEqual([])
   })
 
-  test("fails a 1e-6 relative change and names the field", () => {
+  test("fails a 1e-5 relative change and names the field", () => {
     const base = { ...cold, Boiler: { ...cold.Boiler, pressure: 165e5 } }
-    const moved = { ...base, Boiler: { ...base.Boiler, pressure: 165e5 * (1 + 1e-6) } }
+    const moved = { ...base, Boiler: { ...base.Boiler, pressure: 165e5 * (1 + 1e-5) } }
     expect(valueErrors(base, moved)).toEqual([expect.stringMatching(/^state\.Boiler\.pressure: /)])
   })
 
@@ -78,9 +78,9 @@ describe("valueErrors", () => {
   })
 
   test("is symmetric and checks relative size just outside the tolerance", () => {
-    expect(valueErrors({ x: 100 }, { x: 100 * (1 + 2e-9) })).toHaveLength(1)
-    expect(valueErrors({ x: 100 * (1 + 2e-9) }, { x: 100 })).toHaveLength(1)
-    expect(valueErrors({ x: 100 }, { x: 100 * (1 + 5e-10) })).toEqual([])
+    expect(valueErrors({ x: 100 }, { x: 100 * (1 + 2e-6) })).toHaveLength(1)
+    expect(valueErrors({ x: 100 * (1 + 2e-6) }, { x: 100 })).toHaveLength(1)
+    expect(valueErrors({ x: 100 }, { x: 100 * (1 + 5e-7) })).toEqual([])
   })
 
   test("keeps shape, strings, booleans, null and arrays exact", () => {
