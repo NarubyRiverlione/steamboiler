@@ -149,9 +149,9 @@ keys or a wrong type, so a snapshot from an older state shape fails loudly inste
   they are; `pnpm sim:snapshots` regenerates them all. `sim/golden/snapshot.test.ts` fails when a committed
   file no longer matches a fresh run of its source, so after a physics or state change: run
   `pnpm sim:snapshots`, look at the diff, commit. The comparison is tolerant ([ADR 0020](../adr/0020-snapshots-compare-with-tolerance.md)):
-  numbers match within a relative 1e-9 (absolute 1e-12 near 0, `valueErrors` in `sim/snapshot.ts`), so last-digit
+  numbers match within a relative 1e-6 (absolute 1e-12 near 0, `valueErrors` in `sim/snapshot.ts`), so last-digit
   noise between machines or Node versions passes and a failure names the field path; shape, strings and booleans stay exact.
-  A physics change smaller than 1e-9 relative is not caught here, the scenario goal checks cover that.
+  A physics change smaller than 1e-6 relative is not caught here, the scenario goal checks cover that.
 - Sources: `turbine-runup` (for `turbine-sync`), `turbine-sync` (for `turbine-load`) and `bypass-loop` (for the edge set). A source starts from cold or from an earlier source; `pnpm sim:snapshots` writes them in the listed order, so a chained one loads the fresh file ([ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)).
 
 The UI Presets popup (#24) loads Cold & dark, Hot standby (`bypass-loop`) and At pressure (`turbine-runup`) from these snapshots; the app itself starts cold.

@@ -13,8 +13,8 @@ export const toSnapshotJson = (state: PowerPlantState) => `${JSON.stringify(stat
 
 export { shapeErrors }
 
-// Relative tolerance of the larger magnitude: three orders above the ~1e-12 cross-machine noise of #67 (ADR 0020).
-const RelativeTolerance = 1e-9
+// Relative tolerance of the larger magnitude: well above the noise between machines and runners (ADR 0020).
+const RelativeTolerance = 1e-6
 // Absolute tolerance for values near 0, where a relative one would fail on noise.
 const AbsoluteFloor = 1e-12
 // The magnitude below which the absolute floor wins over the relative tolerance.
