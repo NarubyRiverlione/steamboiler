@@ -10,7 +10,7 @@ import { isAdjustTime, startUpVent } from "./steps"
 // the realistic startup pace (see docs/plant/design-basis.md). Decided from state and time alone.
 
 export const RampSettings = {
-  RateShare: 0.6, // share of the heating-rate limit the operator steers to; 90% alarms when the water level turns near 9800 s and jumps the rate by 0.015 K/s (#103)
+  RateShare: 0.6, // share of the heating-rate limit the operator steers to; at 90% the let-down valve closing when the deaerator reaches 3 bar (~8888 s) removes ~12 MW of steam draw in 0.3 s and jumps the rate (#103, #130)
   PressureTarget: 165, // bar, working pressure: gas off, the closed drum then holds it for hours
   GasStep: 4, // liters/second per adjustment, small enough that the lagging readout (30 s) doesn't overshoot the 100 K/h limit
   GasBackOff: 30, // liters/second per adjustment when over the target: backing off is quicker than creeping up
