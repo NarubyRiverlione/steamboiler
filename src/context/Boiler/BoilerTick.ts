@@ -210,6 +210,18 @@ export function BoilerBurnerTrip(boilerState: BoilerState): BoilerState {
   return { ...boilerState, gasFlow: 0, gasRateCommand: 0, burnerTripped: true }
 }
 
+// True from the high-high level (share of the boiler volume), where the feed pump and the turbine trip (ADR 0041)
+export function isAtBoilerHighHigh(boilerState: BoilerState): boolean {
+  return boilerState.waterVolume >= CstBoiler.TotalVolume * CstBoiler.HighHighLevel
+}
+
+// The high-high trip flag: set at the start of the tick when the level is at the trip, until the feed pump is opened again.
+// The burner is not touched.
+export function BoilerLevelHighTrip(boilerState: BoilerState): BoilerState {
+  if (!isAtBoilerHighHigh(boilerState)) return boilerState
+  return { ...boilerState, boilerLevelHighTripped: true }
+}
+
 type SteamOutlet = "BYPASS" | "TURBINE"
 
 // Position of the valve the steam leaves through

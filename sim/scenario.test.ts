@@ -192,6 +192,7 @@ describe("scenario registry", () => {
       "hotwell-high",
       "hotwell-low",
       "boiler-low",
+      "boiler-high",
       "heat-up",
       "low-pressure-close",
       "max-output",

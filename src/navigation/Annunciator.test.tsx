@@ -20,8 +20,10 @@ function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>
 }
 
-function stateWith(flags: { heat?: boolean; burner?: boolean; pump?: boolean; turbine?: boolean; hotwellLevel?: number }): PowerPlantState {
+function stateWith(flags: { heat?: boolean; burner?: boolean; pump?: boolean; turbine?: boolean; hotwellLevel?: number; boilerLevel?: number; levelTrip?: boolean }): PowerPlantState {
   const state: PowerPlantState = makeInitialState()
+  if (flags.boilerLevel !== undefined) state.Boiler.waterVolume = flags.boilerLevel * CstSimulation.CstBoiler.TotalVolume
+  state.Boiler.boilerLevelHighTripped = flags.levelTrip === true
   if (flags.hotwellLevel !== undefined) state.Condenser.hotwellWaterVolume = flags.hotwellLevel * CstSimulation.CstCondenser.TotalVolume
   state.Boiler.heatingRateOverLimit = flags.heat === true
   state.Boiler.burnerTripped = flags.burner === true
@@ -58,7 +60,7 @@ const lit = (name: string): boolean => tile(name).className.includes("board-tile
 describe("Annunciator", () => {
   it("has one tile per alarm flag, all dark while nothing is set", () => {
     render(tree(stateWith({})))
-    for (const name of ["Heating rate over limit", "Burner trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high"]) {
+    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high"]) {
       expect(lit(name)).toBe(false)
       expect(flashing(name)).toBe(false)
     }
@@ -194,6 +196,22 @@ describe("Annunciator", () => {
     expect(screen.getByTestId("where").textContent).toBe("/condenser")
   })
 
+  it("lights the boiler level tiles from the level and from the trip flag, and opens the boiler", () => {
+    const { rerender } = render(tree(stateWith({ boilerLevel: 0.64 })))
+    expect(lit("Boiler level high")).toBe(false)
+    rerender(tree(stateWith({ boilerLevel: 0.65 })))
+    expect(lit("Boiler level high")).toBe(true)
+    expect(lit("Boiler level high-high trip")).toBe(false)
+    expect(tile("Boiler level high").className).toContain("board-tile-warning")
+    rerender(tree(stateWith({ boilerLevel: 0.5, levelTrip: true })))
+    expect(lit("Boiler level high-high trip")).toBe(true)
+    expect(tile("Boiler level high-high trip").className).toContain("board-tile-error")
+    fireEvent.click(tile("Boiler level high-high trip"))
+    expect(screen.getByTestId("where").textContent).toBe("/boiler")
+    fireEvent.click(tile("Boiler level high"))
+    expect(screen.getByTestId("where").textContent).toBe("/boiler")
+  })
+
   it("starts folded with a keyboard-operable toggle that sets aria-expanded", () => {
     render(tree(stateWith({})))
     expect(toggle().getAttribute("aria-expanded")).toBe("false")
@@ -238,7 +256,7 @@ describe("Annunciator", () => {
     render(tree(stateWith({})))
     fireEvent.click(toggle())
     const group = (name: string): HTMLElement => screen.getByRole("region", { name })
-    expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip"])
+    expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip"])
     expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(3)
     expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)
     expect(screen.queryByRole("region", { name: "Deaerator" })).toBeNull()

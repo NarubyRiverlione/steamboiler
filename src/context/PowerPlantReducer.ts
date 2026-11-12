@@ -7,7 +7,7 @@ import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { runTicks } from "./PowerPlantBatch"
-import { isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
+import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
@@ -36,6 +36,7 @@ export const makeInitialState = (): PowerPlantState => ({
     ventedTotal: 0, // kg
     reliefLifts: 0,
     burnerTripped: false,
+    boilerLevelHighTripped: false,
     stackTemperature: AmbientTemperature, // Celsius, no gas burning
     boilerEfficiency: 0,
     returnTemperatureOut: AmbientTemperature, // Celsius
@@ -148,12 +149,15 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#region Deaerator
   // The start-up vent is an operator action; the warning flags follow at the next tick
   TOGGLE_DEAERATOR_VENT: (state) => withDeaerator(state, { startUpVentOpen: !state.Deaerator.startUpVentOpen }),
-  // Below low-low the feed pump may not be opened, closing is always allowed; an opening clears the trip flag
+  // Below the deaerator low-low or at the boiler high-high level the feed pump may not be opened, closing is always allowed;
+  // an opening clears both trip flags (ADR 0041)
   SET_FEED_PUMP_VALVE_POSITION: (state, { payload }) => {
     const { feedPumpValvePosition: current, feedPumpTripped, waterVolume } = state.Deaerator
     const requested: number = clamp(current + payload.feedPumpValvePosition, 0, 1)
-    if (requested > current && deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel) return state
-    return withDeaerator(state, { feedPumpValvePosition: requested, feedPumpTripped: feedPumpTripped && requested <= current })
+    const opening: boolean = requested > current
+    if (opening && (deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel || isAtBoilerHighHigh(state.Boiler))) return state
+    const next: PowerPlantState = withDeaerator(state, { feedPumpValvePosition: requested, feedPumpTripped: feedPumpTripped && !opening })
+    return opening ? withBoiler(next, { boilerLevelHighTripped: false }) : next
   },
   //#endregion
 

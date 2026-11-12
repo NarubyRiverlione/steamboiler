@@ -15,6 +15,8 @@ export const CstSimulation = {
     ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
     WorkingLevel: 0.5, // share of TotalVolume, the level the drum holds at 165 bar: the target line on the level gauge (ADR 0018)
     BurnerLowLowLevel: 0.2, // share of TotalVolume, below it the burner trips (UNVERIFIED estimate, see design-basis.md)
+    HighLevel: 0.65, // share of TotalVolume, from it the boiler level high alarm is on (UNVERIFIED estimate, see design-basis.md)
+    HighHighLevel: 0.7, // share of TotalVolume, from it the boiler feed pump and the turbine trip (UNVERIFIED estimate, see design-basis.md)
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
     MetalMass: 100e3, // kg of drum and tube steel, at the water temperature (one lump)
     HeatLossAtDesign: 500, // kW lost to the surroundings at design temperature, proportional to T - ambient

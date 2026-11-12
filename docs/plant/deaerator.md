@@ -22,7 +22,7 @@ One lumped tank, perfectly mixed (ADR 0019 style): water mass in kg, one tempera
 | `letDownFlow`, `letDownValvePosition` | kg/s taken from the boiler through the let-down valve, and the share of its capacity |
 | `tapDemand` | kg/s the pressure loop asks of the tap for the next tick |
 | `outflowMass` | kg the feed pump delivered toward the boiler over the last tick |
-| `feedPumpValvePosition`, `feedPumpTripped` | the boiler feed pump: valve position 0-1, and the low-low trip flag |
+| `feedPumpValvePosition`, `feedPumpTripped` | the boiler feed pump: valve position 0-1, and the low-low trip flag (the boiler's high-high trip has its own flag, `Boiler.boilerLevelHighTripped`) |
 | `deltaWaterMass` | kg change of the vessel over the last tick, the level trend |
 
 ## Pressure control: one loop, split range
@@ -37,7 +37,7 @@ Each tick the heat needed to bring the stored water and everything that enters (
 
 hotwell → condensation pump → **deaerator** → feed pump → heater → economizer → boiler. All the steam condenses into the tank; the **boiler feed pump** takes the water out at its valve position (`feedPumpValvePosition` × `CondensationPump_MaxFlowRate` 300 L/s × tick, litres converted to kg at the water temperature) and delivers it to the boiler, after the heater has heated it ([feedwater-loop.md](feedwater-loop.md#return-and-capacity)). It is limited by the water held and by the room in the boiler: a full boiler stops it ([ADR 0004](../adr/0004-return-stops-at-full-boiler.md)). Like the condensation pump it is a flow actuator, with no head (ADR 0030); the rated 192 kg/s is about 206 L/s at 134 °C, 69% of the valve, so no new capacity.
 
-- **Trip:** below `LowLowLevel` (12% of the volume, [design-basis.md](design-basis.md)) the valve is shut and `feedPumpTripped` set; nothing is delivered. Opening is refused (`SET_FEED_PUMP_VALVE_POSITION`) while the level is below it, closing is always allowed, and the flag clears on the next successful opening, as for the hotwell ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)).
+- **Trip:** below `LowLowLevel` (12% of the volume, [design-basis.md](design-basis.md)) the valve is shut and `feedPumpTripped` set; nothing is delivered. Opening is refused (`SET_FEED_PUMP_VALVE_POSITION`) while the level is below it, closing is always allowed, and the flag clears on the next successful opening, as for the hotwell ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)). The pump also trips from 70% of the boiler volume ([boiler.md](boiler.md#high-high-level-trip), [ADR 0041](../adr/0041-boiler-high-high-level-trips-feed-pump-and-turbine.md)): `PowerPlantTick` shuts the valve before this tick's delivery and the reducer refuses to open it there.
 - **Levels:** the feed pump holds the **drum** level, the condensation pump holds the **deaerator** level. Steady, the feed pump flow is the condensation pump flow plus the heating steam (tap and let-down) and the heater drain; the vessel absorbs the difference in a transient.
 - **Condensation pump limit:** the Return stops at a full deaerator, so a full boiler backs up through the deaerator into the hotwell. The room is the vessel volume less the water at its temperature, less the steam and drain that join in the same tick.
 - **Control:** in the scenarios the loop operator holds both levels ([feedwater-loop.md](feedwater-loop.md#control)): the feed pump by the steam leaving the boiler plus `LevelGain` × the drum level error, the condensation pump by plain level feedback on the deaerator level (no feedforward from the feed pump flow). The page has the feed pump control and its trip lamp; the overview schemas show the deaerator, feed pump, auxiliary line, let-down valve, extraction non-return valve and heater drain cascade (#118, [overview.md](overview.md#schema)).
@@ -77,4 +77,4 @@ The heater takes the deaerator outflow as its feedwater (flow and temperature of
 
 ## Not yet
 
-No dump valve and no high-level protection: only the feed pump has its low-low trip; the `deaerator within capacity` invariant checks the capacity. No O₂ reading or penalties (#114).
+No dump valve and no high-level protection: only the feed pump has its low-low trip and, from the boiler side, its trip on the boiler high-high level; the `deaerator within capacity` invariant checks the capacity. No O₂ reading or penalties (#114).

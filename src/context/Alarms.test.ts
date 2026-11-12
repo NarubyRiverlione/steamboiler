@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { activeAlarms, newAlarms } from "./Alarms"
-import { CstPhysics, CstSimulation } from "./const"
+import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
+import { makeHotDeaerator } from "./Deaerator/DeaeratorTick"
 import PowerPlantState from "./PowerPlantState"
 import { makeInitialState } from "./PowerPlantReducer"
 import { SimulationState, makeInitialSimulation, simulationReducer } from "./SimulationReducer"
@@ -60,5 +61,45 @@ describe("hotwell level alarms", () => {
     expect(activeAlarms(fast.plant)).toContain("hotwellLevelLow")
     expect(fast.speed).toBe(1)
     expect(simulationReducer(start(0), { type: "SIMULATE_TICKS", count: 600 }).speed).toBe(0)
+  })
+})
+
+describe("boiler level high alarm (#62)", () => {
+  const { TotalVolume, HighLevel, HighHighLevel } = CstSimulation.CstBoiler
+  const boilerAt = (level: number): PowerPlantState => {
+    const base: PowerPlantState = makeInitialState()
+    return { ...base, Boiler: { ...base.Boiler, waterVolume: level * TotalVolume, waterMass: waterMassOf(level * TotalVolume, CstPhysics.AmbientTemperature) } }
+  }
+
+  test("the limits are 65% and 70%", () => {
+    expect(HighLevel).toBe(0.65)
+    expect(HighHighLevel).toBe(0.7)
+  })
+
+  test.each([
+    [HighLevel - 0.001, false],
+    [HighLevel, true],
+    [HighHighLevel, true],
+  ])("at level %f the alarm is active: %s (from 65%%)", (level: number, on: boolean) => {
+    expect(activeAlarms(boilerAt(level)).includes("boilerLevelHigh")).toBe(on)
+  })
+
+  test("the trip tile follows the flag, not the level", () => {
+    const tripped: PowerPlantState = boilerAt(0.5)
+    tripped.Boiler.boilerLevelHighTripped = true
+    expect(activeAlarms(tripped)).toEqual(["boilerLevelHighTripped"])
+    expect(activeAlarms(boilerAt(0.9))).not.toContain("boilerLevelHighTripped")
+  })
+
+  test("a newly raised alarm drops the playback from a higher speed to 1x, a pause stays a pause", () => {
+    // Just below 65% with the feed pump open on a hot deaerator: the level crosses within a few ticks
+    const start = (speed: SimulationState["speed"]): SimulationState => {
+      const plant: PowerPlantState = boilerAt(HighLevel - 0.0005)
+      return { ...makeInitialSimulation({ ...plant, Deaerator: { ...makeHotDeaerator(CstDeaerator.TotalVolume / 2), feedPumpValvePosition: 1 } }), speed }
+    }
+    const fast: SimulationState = simulationReducer(start(60), { type: "SIMULATE_TICKS", count: 60 })
+    expect(activeAlarms(fast.plant)).toContain("boilerLevelHigh")
+    expect(fast.speed).toBe(1)
+    expect(simulationReducer(start(0), { type: "SIMULATE_TICKS", count: 60 }).speed).toBe(0)
   })
 })

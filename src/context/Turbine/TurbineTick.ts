@@ -81,6 +81,11 @@ const turbineTrip: Pick<TurbineState, keyof SpeedControl | "turbineTripped"> = {
   turbineTripped: true,
 }
 
+// Turbine trip from outside the turbine (boiler high-high level, ADR 0041): an open valve trips, a shut one is left alone
+export function TurbineTripWhenOpen(turbineState: TurbineState): TurbineState {
+  return turbineState.turbineValvePosition > 0 ? { ...turbineState, ...turbineTrip } : turbineState
+}
+
 // Low-pressure closure: at or below the minimum pressure at the start of the tick the main steam valve closes, before
 // any steam leaves, until the operator reopens it above the limit. An open turbine valve makes it a turbine trip (ADR 0026)
 export function MainSteamValveLowPressureClosure(turbineState: TurbineState, boilerPressure: number): TurbineState {
