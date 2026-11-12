@@ -70,9 +70,9 @@ export const panels: Panel[] = [
     group: "Boiler",
     title: "Heating rate",
     kind: "temperature",
-    unit: "K/min",
-    series: one("Heating rate", (s) => s.Boiler.heatingRate * 60),
-    limit: CstSimulation.CstBoiler.HeatingRateLimit * 60,
+    unit: "K/h",
+    series: one("Heating rate", (s) => s.Boiler.heatingRate * 3600),
+    limit: CstSimulation.CstBoiler.HeatingRateLimit * 3600,
   },
   {
     group: "Boiler",

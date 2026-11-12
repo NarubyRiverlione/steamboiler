@@ -27,7 +27,7 @@ crosshair across all panels. Clicking a chart, pressing `L` or flipping the head
 switch freezes the crosshair and readouts so you can scroll to other panels; flip the switch or press `L` to
 unlock. Dashed lines mark operator actions and shaded bands mark relief valve
 lifts, which are also listed with open and close time and vented mass. A panel with a `limit` draws it as a red
-dashed line and keeps it on the axis: the Boiler **Heating rate** chart (K/min) shows the 1.67 K/min (100 K/h)
+dashed line and keeps it on the axis: the Boiler **Heating rate** chart (K/h) shows the 100 K/h
 heating-rate limit. Lifts are recorded per tick
 (`runScenarioWithLifts`, `trackLifts`), so a lift shorter than the sample interval still shows. On a headless machine,
 `pnpm sim:serve` serves it on `0.0.0.0:4174` (`PORT` to override) and prints the LAN URLs; the

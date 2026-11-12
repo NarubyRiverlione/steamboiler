@@ -202,14 +202,14 @@ describe("toReportHtml heating rate", () => {
 
   test("the boiler group has a heating-rate chart in K/min, from the smoothed rate", () => {
     expect(heatingRate?.group).toBe("Boiler")
-    expect(heatingRate?.unit).toBe("K/min")
+    expect(heatingRate?.unit).toBe("K/h")
     const state = runScenario(scenario).at(-1)?.state
     if (!state || !heatingRate) throw new Error("no state or panel")
-    expect(heatingRate.series[0].value(state)).toBeCloseTo(state.Boiler.heatingRate * 60, 9)
+    expect(heatingRate.series[0].value(state)).toBeCloseTo(state.Boiler.heatingRate * 3600, 9)
   })
 
   test("draws a limit line only on the charts that declare one", () => {
-    expect(heatingRate?.limit).toBeCloseTo(100 / 60, 9)
+    expect(heatingRate?.limit).toBeCloseTo(100, 9)
     expect(html.match(/<line class="limit"/g)).toHaveLength(
       panels.filter((p) => p.limit !== undefined).length,
     )

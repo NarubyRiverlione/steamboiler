@@ -11,6 +11,7 @@ import { Knob } from "../board/Knob"
 import { LevelInstrument } from "../board/LevelInstrument"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
+import { heatingRateText } from "../../utils/heatingRateText"
 
 const {
   CstBoiler: {
@@ -126,11 +127,11 @@ function Boiler() {
                   <Lamp
                     lit={heatingRateOverLimit}
                     label="Over limit"
-                    title={`Alarm above ${(HeatingRateLimit * 3600).toFixed(0)} K/h`}
+                    title={`Alarm above ${heatingRateText(HeatingRateLimit)}`}
                   />
                   <Display
                     label="Heating rate"
-                    text={`${(heatingRate * 60).toFixed(1)} K/min`}
+                    text={heatingRateText(heatingRate)}
                     alarm={heatingRateOverLimit}
                     widest={STACKED_LCD_WIDEST}
                   />
