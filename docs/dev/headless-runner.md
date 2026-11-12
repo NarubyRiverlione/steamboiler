@@ -27,7 +27,7 @@ crosshair across all panels. Clicking a chart, pressing `L` or flipping the head
 switch freezes the crosshair and readouts so you can scroll to other panels; flip the switch or press `L` to
 unlock. Dashed lines mark operator actions and shaded bands mark relief valve
 lifts, which are also listed with open and close time and vented mass. A panel with a `limit` draws it as a red
-dashed line and keeps it on the axis: the Boiler **Heating rate** chart (K/min) shows the 24 K/min
+dashed line and keeps it on the axis: the Boiler **Heating rate** chart (K/min) shows the 1.67 K/min (100 K/h)
 heating-rate limit. Lifts are recorded per tick
 (`runScenarioWithLifts`, `trackLifts`), so a lift shorter than the sample interval still shows. On a headless machine,
 `pnpm sim:serve` serves it on `0.0.0.0:4174` (`PORT` to override) and prints the LAN URLs; the
@@ -57,7 +57,7 @@ Scenarios (`pnpm sim <name>`), defined and classed in [testing.md](testing.md). 
 | `hotwell-low` | edge | `bypass-loop` | makeup shut and reject forced open (a closed loop never drains by itself): the condensation pump trips as the level crosses 10% (`HotwellLowLow`) |
 | `boiler-low` | edge | cold | full gas for an hour with everything closed: the heating-rate alarm comes on at once (peak ≈ 103 K/min), the relief valve lifts at ~259 s and holds the pressure below design (peak ≈ 178.1 bar, 356.1 °C), until the burner trips at ~289 s with ~19.8 m³ left (the deaerator warm-up delays all three, #119; its let-down valve shuts with the trip) (ADR 0017); the boiler never runs dry |
 | `return-stop` | edge | bypass-loop snapshot | full gas and the bypass fully open, the feed pump shuts at 15 s: the economizer recovers nothing and the cold feed no longer costs heat, so pressure rises (from 159 to the relief opening in about 40 s) and the relief valve keeps it at or below 178 bar plus one tick (#87, #74). The burner trips on low level later |
-| `heat-up` | edge | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~964 s (16.1 min), smoothed rate peaks at 23.5 K/min, no alarm; knob fully down at 165 bar, the gas ramps off in about 7 s |
+| `heat-up` | edge | cold | cold → working pressure (165 bar) with everything closed, the operator ramping the gas at the heating-rate limit (`rampOperator`): reaches 165 bar at ~21 595 s (6.0 h, runs 7 h of plant time, about 8 s of wall time), smoothed rate peaks at 80 K/h, no alarm; knob fully down at 165 bar, the gas ramps off in about 7 s |
 | `low-pressure-close` | edge | `turbine-sync` | gas off and bypass fully open with the turbine in Hold: the burner trips on low level at ~191 s, the hotwell reaches 95% so its clamp forces the reject open, and at ~388 s the first tick starting at or below 10 bar closes the main steam valve and trips the turbine, under vacuum, so the trip can only be the closure; no steam leaves through either valve after that (ADR 0026). The draw flashes water with the gas off, which the invariant "natural cooldown steam comes from stored heat" accepts (#58) |
 | `max-output` | edge | `turbine-sync` | bypass shut (a delta of −1; it was a no-op before #74), load setpoint to `LoadSetpointLimit` at t = 0, Hold, gas ceiling full gas (#84). The gas is the limit (#74): the load climbs at the load rate, full gas is reached at about 138 MW and 192 kg/s (about 1950 s) and the valve is nearly full by then (200 kg/s at 165 bar, #88): pressure sags a little while Hold keeps opening the valve until it is fully open at about 142 MW, and the breaker opens on the speed sag a moment later, which is the plant's maximum output. Load rejection after that: speed peaks under `MaxRPM`, Hold returns to 3000 ± 2 rpm, and the relief valve lifts several times with pressure at most 178.1 bar, because the gas hold comes down slowly |
 | `vacuum-loss` | edge | `turbine-sync` | pump and SJAE off with the shell started a few minutes short of the vacuum limit (the sourced in-leakage needs hours from the design vacuum, ADR 0035): the air builds up at exactly the in-leakage rate, the pressure passes 327 mbar and the turbine trips on the vacuum limit (#91, #109) |
@@ -85,8 +85,8 @@ there is no level control. Use `bypass-loop` for the controlled loop.
 A scenario's optional `operator(state, time)` is a feedback hook called every tick after the timed
 actions; its actions go through `powerPlantReducer` like any other. It must decide from state and
 time alone so runs stay reproducible. `sim/scenarios/heat-up.ts` has `rampOperator`: once a second it
-turns the gas knob to raise the gas 20 L/s over the next second while the smoothed heating rate is under 0.36 K/s (a margin under the 0.4 K/s
-limit for the readout's 30 s lag) and to lower it above, and turns the knob fully down at 165 bar.
+turns the gas knob to raise the gas 4 L/s over the next second while the smoothed heating rate is under 0.017 K/s (61 K/h, a margin under the 100 K/h
+limit: the readout lags 30 s and the water level turns near 9800 s, which jumps the rate) and to lower it above, and turns the knob fully down at 165 bar.
 The gas is a rate command ([ADR 0033](../adr/0033-gas-is-a-rate-knob.md)), so a scenario never sets a gas value:
 `sim/scenarios/gas.ts` has `setGasCommand` (a timed action), `rampGas` (full deflection for whole ticks, the remainder in one tick, then the knob centred) and `steerGas` (the operator's hand on the knob: the command that reaches a target gas in N seconds, full deflection for 0 or the maximum so the clamp hits it exactly).
 `sim/scenarios/loop-operator.ts` is the other: it starts

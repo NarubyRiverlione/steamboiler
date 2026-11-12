@@ -9,9 +9,10 @@ import { isAdjustTime, startUpVent } from "./steps"
 // the realistic startup pace (see docs/plant/design-basis.md). Decided from state and time alone.
 
 export const RampSettings = {
-  RateTarget: 0.36, // K/s on the smoothed heating rate, a margin below the 0.4 K/s limit for the readout's lag
+  RateTarget: 0.017, // K/s on the smoothed heating rate, a margin below the 100 K/h (0.028 K/s) limit for the readout's lag
   PressureTarget: 165, // bar, working pressure: gas off, the closed drum then holds it for hours
-  GasStep: 20, // liters/second per adjustment, small enough that the lagging readout doesn't overshoot
+  GasStep: 4, // liters/second per adjustment, small enough that the lagging readout (30 s) doesn't overshoot the 100 K/h limit
+  GasBackOff: 30, // liters/second per adjustment when over the target: backing off is quicker than creeping up
   AdjustEvery: 1, // sim-seconds between gas adjustments
 }
 
@@ -24,15 +25,15 @@ export function rampOperator(state: PowerPlantState, time: number): PowerPlantAc
   const vent: PowerPlantAction[] = startUpVent(state, time)
   if (Boiler.pressure >= S.PressureTarget) return [...vent, ...steerGas(Boiler, 0, S.AdjustEvery)]
   if (!isAdjustTime(time, S.AdjustEvery)) return vent
-  const step: number = Boiler.heatingRate < S.RateTarget ? S.GasStep : -S.GasStep
+  const step: number = Boiler.heatingRate < S.RateTarget ? S.GasStep : -S.GasBackOff
   return [...vent, ...steerGas(Boiler, Boiler.gasFlow + step, S.AdjustEvery)]
 }
 
 export const heatUpAtLimit: Scenario = {
   name: "heat-up",
   description: "Cold to working pressure (165 bar), gas ramped at the heating-rate limit, everything else closed",
-  duration: 1200,
-  sampleEvery: 10,
+  duration: 25200,
+  sampleEvery: 60,
   initial: makeInitialState(),
   actions: [],
   operator: rampOperator,

@@ -196,7 +196,7 @@ describe("toReportHtml", () => {
 })
 
 describe("toReportHtml heating rate", () => {
-  // The test run heats at 5000 L/s, about 0.57 K/s: above the 24 K/min limit
+  // The test run heats at 5000 L/s, about 0.57 K/s: above the 100 K/h limit
   const html = toReportHtml(scenario, runScenario(scenario))
   const heatingRate = panels.find((p) => p.title === "Heating rate")
 
@@ -209,7 +209,7 @@ describe("toReportHtml heating rate", () => {
   })
 
   test("draws a limit line only on the charts that declare one", () => {
-    expect(heatingRate?.limit).toBe(24)
+    expect(heatingRate?.limit).toBeCloseTo(100 / 60, 9)
     expect(html.match(/<line class="limit"/g)).toHaveLength(
       panels.filter((p) => p.limit !== undefined).length,
     )

@@ -129,10 +129,10 @@ The rise of the water temperature, smoothed (`heatingRate`, K/s; shown in K/min)
 
 ```
 Heating rate = previous + (ΔT / tick − previous) × tick / 30 s
-Alarm        = heating rate > 0.4 K/s (24 K/min)
+Alarm        = heating rate > 100 K/h (0.028 K/s, 1.67 K/min)
 ```
 
-The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 103 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.0 min (`heat-up`, 962 s). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
+The limit is the real one for a thick-walled drum (about 100 K/h, #103). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 103 K/min and raises the alarm; the operator ramping the gas under the limit reaches 165 bar in about 6.0 h of plant time (`heat-up`, 21 595 s, smoothed rate peaks at 80 K/h). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
 
 ## Pressure model
 
@@ -146,7 +146,7 @@ Pressure is the saturation pressure of the water temperature, never below atmosp
 | Boiler efficiency | not a constant: follows from the flue gas heat balance, about 93.4% at full gas, 350 °C and 171 kg/s of Return (93.9% at rated output), about 79% with no Return |
 | Metal mass | 100 t steel at 0.5 kJ/kg·K (`CstBoiler.MetalMass`, `CstPhysics.Steel_SpecificHeat`) |
 | Heat loss | 0.5 MW at design temperature, proportional to T − ambient (`CstBoiler.HeatLossAtDesign`): about 250 kW and 3.6 K per hour at 190 °C, so a cooldown takes days |
-| Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s, alarm only |
+| Heating-rate limit | 100 K/h (0.028 K/s), smoothed over 30 s, alarm only |
 | Atmospheric pressure | 1.013 bar |
 | Ambient temperature | 20 °C (`CstPhysics.AmbientTemperature`): heat loss stops here, and the temperature never falls below it |
 | Start state | cold: ambient temperature, atmospheric pressure, 35 m³ water (34 937 kg at ambient), the vapour inventory at ambient, energy = heating that water and 100 t of steel from 0 °C to ambient |

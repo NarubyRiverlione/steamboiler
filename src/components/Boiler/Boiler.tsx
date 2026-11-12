@@ -126,7 +126,7 @@ function Boiler() {
                   <Lamp
                     lit={heatingRateOverLimit}
                     label="Over limit"
-                    title={`Alarm above ${String(HeatingRateLimit * 60)} K/min`}
+                    title={`Alarm above ${(HeatingRateLimit * 3600).toFixed(0)} K/h`}
                   />
                   <Display
                     label="Heating rate"

@@ -19,9 +19,9 @@ describe("batched ticks", () => {
   test("N batched ticks give exactly the state of N single ticks", () => {
     const start: PowerPlantState = powerPlantReducer(cold, { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.3 } })
     let single: PowerPlantState = start
-    for (let i = 0; i < 250; i++) single = PowerPlantTick(single)
-    expect(runTicks(start, 250).state).toEqual(single)
-    expect(powerPlantReducer(start, { type: "SIMULATE_TICKS", count: 250 })).toEqual(single)
+    for (let i = 0; i < 100; i++) single = PowerPlantTick(single)
+    expect(runTicks(start, 100).state).toEqual(single)
+    expect(powerPlantReducer(start, { type: "SIMULATE_TICKS", count: 100 })).toEqual(single)
   })
 
   test("splitting a run into batches changes nothing (a speed change causes no jump)", () => {

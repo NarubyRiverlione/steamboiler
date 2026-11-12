@@ -263,7 +263,7 @@ Heat the boiler gives off to its surroundings, proportional to how far the water
 _Avoid_: Cooling rate, natural cooling (that is the resulting behaviour, see Natural cooldown)
 
 **Heating-rate limit**:
-The fastest the boiler water temperature may rise without over-stressing the drum: 0.4 K/s (24 K/min), a time-compressed version of the real limit of about 100 K/h. Going over it raises an alarm; nothing is limited or tripped automatically.
+The fastest the boiler water temperature may rise without over-stressing the drum: about 100 K/h (0.028 K/s). Going over it raises an alarm; nothing is limited or tripped automatically.
 _Avoid_: Ramp limit, max heat-up rate
 
 **Playback speed**:
