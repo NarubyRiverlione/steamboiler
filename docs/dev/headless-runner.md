@@ -85,7 +85,7 @@ there is no level control. Use `bypass-loop` for the controlled loop.
 A scenario's optional `operator(state, time)` is a feedback hook called every tick after the timed
 actions; its actions go through `powerPlantReducer` like any other. It must decide from state and
 time alone so runs stay reproducible. `sim/scenarios/heat-up.ts` has `rampOperator`: once a second it
-turns the gas knob to raise the gas 4 L/s over the next second while the smoothed heating rate is under 0.017 K/s (61 K/h, a margin under the 100 K/h
+turns the gas knob to raise the gas 4 L/s over the next second while the smoothed heating rate is under 60% of the limit (60 K/h, a margin under the 100 K/h
 limit: the readout lags 30 s and the water level turns near 9800 s, which jumps the rate) and to lower it 30 L/s above (backing off is quicker than creeping up), and turns the knob fully down at 165 bar.
 The gas is a rate command ([ADR 0033](../adr/0033-gas-is-a-rate-knob.md)), so a scenario never sets a gas value:
 `sim/scenarios/gas.ts` has `setGasCommand` (a timed action), `rampGas` (full deflection for whole ticks, the remainder in one tick, then the knob centred) and `steerGas` (the operator's hand on the knob: the command that reaches a target gas in N seconds, full deflection for 0 or the maximum so the clamp hits it exactly).
