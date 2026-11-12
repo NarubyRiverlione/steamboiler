@@ -15,7 +15,7 @@ The water and about 100 t of drum and tube steel share one temperature; heat los
 
 ## Consequences
 
-- The limit is no longer a departure and is not in the register as one (`docs/plant/design-basis.md`). The boiler volume is still reduced (50 m³ water against a realistic 100 m³); restoring it means rescaling the limit.
+- The limit is no longer a departure and is not in the register as one (`docs/plant/design-basis.md`); the real limit does not depend on the boiler volume.
 - The metal stretches heat-up by about a quarter; the limit is what teaches the ramp.
 - The metal never empties: a boiler vented or drained dry with gas on heats its steel to the critical-point clamp. Burner protection on low level is #33.
 - The `heat-up` scenario ramps under the limit with a feedback operator; the at-pressure snapshot moved to `heat-to-msv`.

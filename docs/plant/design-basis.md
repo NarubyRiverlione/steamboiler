@@ -107,7 +107,7 @@ In `turbine-load` at rated output (#74): gas 11 240 L/s, stack 148 °C, efficien
 | Metal mass (drum and tubes) | 100 t steel | 0.5 kJ/kg·K, added to the water's heat capacity at one lumped temperature (`CstBoiler.MetalMass`) |
 | Heat loss | 0.5 MW at design temperature | proportional to the difference with ambient (`CstBoiler.HeatLossAtDesign`); about 3.6 K per hour at 190 °C, so a cooldown takes days |
 | Heating-rate limit | 100 K/h (0.028 K/s), smoothed over 30 s | the real limit, no longer compressed (#103); alarm only (`CstBoiler.HeatingRateLimit`, `HeatingRateWindow`); see the register and [ADR 0006](../adr/0006-heating-rate-alarm-only.md) |
-| Cold start to working pressure | about 6.0 h with the gas ramped under the limit (measured, `heat-up`, 21 595 s, #103); about 3.7 min at full gas (220 s, `boiler-low`), over the limit | none: real cold startups take 4 to 8 h; played at 60x it is 6 min of watching ([ADR 0034](../adr/0034-playback-speed-is-ticks-per-second.md)) |
+| Cold start to working pressure | about 6.0 h with the gas ramped under the limit (measured, `heat-up`, 21 595 s, #103); about 7.9 h to Hold at 3000 rpm with the run-up (`turbine-runup`, 28 430 s); about 3.7 min at full gas (220 s, `boiler-low`), over the limit | none: real cold startups take 4 to 8 h; played at 60x it is 6 min of watching ([ADR 0034](../adr/0034-playback-speed-is-ticks-per-second.md)) |
 
 ## Steam path and turbine
 
