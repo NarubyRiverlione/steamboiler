@@ -107,6 +107,30 @@ describe("Turbine page", () => {
     expect(fns.selectRunUpPoint).toHaveBeenCalledWith(3000)
   })
 
+  it.each([2999, 3001])("locks every speed button while synchronised, at %s rpm (#135)", (rpm) => {
+    const fns = renderTurbine({ mainSteamValve: true, generatorBreaker: true, speedMode: "synchronised", runUpPoint: 3000, rpm })
+    const locked: string[] = ["Free", "Ramp up", "Hold", "500 rpm", "1500 rpm", "2500 rpm", "3000 rpm"]
+    for (const name of locked) {
+      const button: HTMLButtonElement = screen.getByRole("button", { name })
+      expect(button.disabled).toBe(true)
+      expect(button.title).toContain("open the breaker")
+      fireEvent.click(button)
+    }
+    expect(fns.setSpeedMode).not.toHaveBeenCalled()
+    expect(fns.selectRunUpPoint).not.toHaveBeenCalled()
+    expect(screen.getByRole("button", { name: "3000 rpm" }).getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByRole("button", { name: "1500 rpm" }).getAttribute("aria-pressed")).toBe("false")
+    expect(screen.getByRole("button", { name: "Hold" }).getAttribute("aria-pressed")).toBe("false")
+    expect(screen.getByRole("img", { name: "SYNC: on" })).toBeTruthy()
+    expect(screen.getByLabelText("Speed mode").textContent).toBe("SYNC")
+  })
+
+  it("keeps the SYNC lamp dark outside synchronised mode, and the buttons locked after a trip with the breaker closed", () => {
+    renderTurbine({ mainSteamValve: true, generatorBreaker: true, speedMode: "free" })
+    expect(screen.getByRole("img", { name: "SYNC: off" })).toBeTruthy()
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "Free" })).disabled).toBe(true)
+  })
+
   it("has a round RPM dial", () => {
     renderTurbine({ rpm: 1234 })
     expect(screen.getByRole("meter", { name: "Speed gauge" }).getAttribute("aria-valuenow")).toBe("1234")

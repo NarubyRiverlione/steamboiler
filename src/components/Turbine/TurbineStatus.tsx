@@ -6,7 +6,7 @@ import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import type { TurbineState } from "./types"
 
-const MODE_LABELS: Record<SpeedMode, string> = { free: "FREE", rampUp: "RAMP UP", hold: "HOLD" }
+const MODE_LABELS: Record<SpeedMode, string> = { free: "FREE", rampUp: "RAMP UP", hold: "HOLD", synchronised: "SYNC" }
 
 type TurbineStatusProps = {
   readonly turbine: TurbineState

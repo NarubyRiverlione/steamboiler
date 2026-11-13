@@ -46,18 +46,20 @@ The turbine is built in phases. Steam from the boiler passes the turbine valve, 
 
 Sources and the departures: [design-basis.md](design-basis.md#turbine-speed-model-figures). Free acceleration to sync speed takes minutes (10 kg/s at 1016 kJ/kg: about 105 s), set by J and the shaft power, not by a lag.
 
-**Speed modes** (#70, [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md); terms in `GLOSSARY.md`). `TurbineState.speedMode` is `free`, `rampUp` or `hold`; `runUpPoint` is the selected point and `speedReference` the rpm the PID aims at.
+**Speed modes** (#70, [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md); terms in `GLOSSARY.md`). `TurbineState.speedMode` is `free`, `rampUp`, `hold` or `synchronised`; `runUpPoint` is the selected point and `speedReference` the rpm the PID aims at.
 
 | Mode | Valve moved by | PID target | Engaged when |
 |---|---|---|---|
 | Free | the operator | none | always (`SET_SPEED_MODE`) |
 | Ramp up | the PID | `speedReference`, climbing at `RunUpRate` (50 rpm/min) and stopping at the point | main steam valve open and the point above the speed |
 | Hold | the PID | the selected point, no ramp | speed within `HoldEngageWindow` (±5 rpm) of the point |
+| Synchronised | the PID (as Hold, same gains) | 3000 rpm (`SyncRPM`) | closing the generator breaker (#135); never selected |
 
 - **Run-up points:** `CstTurbine.RunUpPoints` = 500, 1500, 2500, 3000 rpm, default 3000 (`DefaultRunUpPoint`), chosen with `SELECT_RUN_UP_POINT`. There is no free setpoint.
 - **Picking a point:** in Free it only selects the target. In Ramp up or Hold a point above the speed (main steam valve open) starts or retargets Ramp up (from Hold the reference starts at the current speed, a running ramp keeps its reference); a point at or below the speed is refused.
 - **Arrival:** when the reference has reached the point and the speed is within the window of it, `TurbineTick` changes Ramp up to Hold. Hold stays on if the speed leaves the window.
-- **Refusals** leave the state unchanged (like the breaker toggle and the valve refusal of ADR 0003). `speedModeRefusal` and `runUpPointRefusal` (`turbineCalculations.ts`) give the reason; the reducer refuses on it and the UI shows it as the tooltip of the disabled button.
+- **Refusals** leave the state unchanged (like the breaker toggle and the valve refusal of ADR 0003). `speedModeRefusal` and `runUpPointRefusal` (`turbineCalculations.ts`) give the reason; the reducer refuses on it and the UI shows it as the tooltip of the disabled button. With the breaker closed every speed mode and run-up point is refused with one constant reason (#135, "Generator synchronised: open the breaker to change the speed mode"), also in the window after a trip.
+- **Synchronised** (#135): closing the breaker sets `synchronised`, `runUpPoint` and reference 3000 and the integral 0, from any mode. Opening it by hand returns to Free (integral cleared, reference on the rpm); the tick's auto-open (speed outside ±2 rpm) goes to Hold at 3000 rpm with `runUpPoint` 3000, so a load rejection is still governed (`max-output`); a trip returns to Free, with the breaker closed until the speed leaves the window. The SYNC lamp and `MODE_LABELS` show it.
 - **Up only:** no ramp down. To slow down, switch to Free and close the valve.
 - **PID inactive** (Free, or main steam valve closed): the integral resets and `speedReference` follows the speed; the mode stays as it is.
 
@@ -67,7 +69,7 @@ These gains need no retune for the engage (#63). Hold engaged from Free at the e
 
 **Electricity** is only generated with the breaker closed at sync speed (3000 RPM ±2), as the generator must match the 50 Hz grid. `MaxRPM` (3300) is the overspeed limit: at or above it with the turbine valve open the turbine trips (valve to 0, Free, integral cleared, `turbineTripped`, as for the vacuum trip), and the reducer refuses to open the valve there (ADR 0040, #72).
 
-**Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. The speed is never locked to the grid ([ADR 0027](../adr/0027-generator-load-is-a-resisting-torque.md)): with the breaker closed it still follows the free rpm, which sags under load.
+**Generator frequency** follows from shaft speed alone: `generatorFrequency` gives `f = rpm × GeneratorPoles / 120`, so the two-pole, direct-coupled generator makes 50 Hz at 3000 rpm and the ±2 rpm breaker window is 50 Hz ± 0.033 Hz. It is derived, not state, and shown in the headless report only. The speed is never locked to the grid ([ADR 0027](../adr/0027-generator-load-is-a-resisting-torque.md)): with the breaker closed it still follows the rpm, which sags under load; Synchronised holds 3000 rpm with the Hold PID, it does not lock the speed to the grid.
 
 Calculations: `src/utils/turbineCalculations.ts`; tick: `src/context/Turbine/TurbineTick.ts`.
 

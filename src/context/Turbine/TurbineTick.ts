@@ -62,9 +62,13 @@ function TurbineTick(
   if ((isAboveVacuumLimit(condenserPressure) || isAtOverspeed(newRPM)) && currentPosition > 0) return { ...ticked, ...turbineTrip }
 
   // Otherwise the Ramp up / Hold PID may move the valve, never past the cap; an opening clears the trip flag
-  const pid = updateTurbineValve(turbineState, newRPM, maxTurbineValvePosition(currentPosition, condenserPressure))
+  // A breaker that auto-opened this tick ends Synchronised in Hold at sync speed, so the governor survives a load rejection (#135)
+  const lostSync: boolean = turbineState.speedMode === "synchronised" && !generatorBreaker
+  const control: TurbineState = lostSync ? { ...turbineState, speedMode: "hold", runUpPoint: CstTurbine.SyncRPM } : turbineState
+  const pid = updateTurbineValve(control, newRPM, maxTurbineValvePosition(currentPosition, condenserPressure))
   return {
     ...ticked,
+    runUpPoint: control.runUpPoint,
     ...pid,
     turbineTripped: turbineTrippedAfter(turbineTripped, currentPosition, pid.turbineValvePosition),
   }
@@ -94,11 +98,14 @@ export function MainSteamValveLowPressureClosure(turbineState: TurbineState, boi
   return { ...turbineState, mainSteamValve: false, ...trip }
 }
 
-// Ramp up: the reference climbs at the run-up rate and stops at the point; Hold aims at the point itself
+// Ramp up: the reference climbs at the run-up rate and stops at the point; Hold aims at the point itself and
+// Synchronised at sync speed
 const speedReferenceAfter = (speedMode: SpeedMode, runUpPoint: number, speedReference: number): number =>
-  speedMode === "hold"
-    ? runUpPoint
-    : Math.min(runUpPoint, speedReference + (CstTurbine.RunUpRate * CstSimulation.DeltaTime) / SecondsPerMinute)
+  speedMode === "synchronised"
+    ? CstTurbine.SyncRPM
+    : speedMode === "hold"
+      ? runUpPoint
+      : Math.min(runUpPoint, speedReference + (CstTurbine.RunUpRate * CstSimulation.DeltaTime) / SecondsPerMinute)
 
 // Ramp up and Hold PID: the integral lives in the turbine state, the derivative uses the rpm before this tick.
 // It never moves the valve above maxPosition (the current position above the vacuum limit).

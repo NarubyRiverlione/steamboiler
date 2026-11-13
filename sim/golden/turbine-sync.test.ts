@@ -67,7 +67,7 @@ describe("turbine-sync", () => {
   test("over the last 600 s the breaker stays closed (it reopens itself outside ±2 rpm), in Hold", () => {
     for (const { state } of last) {
       expect(state.Turbine.generatorBreaker).toBe(true)
-      expect(state.Turbine.speedMode).toBe("hold")
+      expect(state.Turbine.speedMode).toBe("synchronised")
       expect(Math.abs(state.Turbine.rpm - SyncRPM)).toBeLessThanOrEqual(BreakerRPMMargin)
     }
   })
@@ -87,7 +87,7 @@ describe("turbine-sync", () => {
 
     test("engages and settles within the breaker margin, with the breaker closed once", () => {
       const end = ticks.at(-1)?.state.Turbine
-      expect(end?.speedMode).toBe("hold")
+      expect(end?.speedMode).toBe("synchronised")
       expect(Math.abs((end?.rpm ?? 0) - SyncRPM)).toBeLessThanOrEqual(BreakerRPMMargin)
       expect(end?.generatorBreaker).toBe(true)
       expect(reopens(ticks)).toBe(false)
