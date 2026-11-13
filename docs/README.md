@@ -78,6 +78,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0038](adr/0038-deaerator-air-and-vents.md) | The deaerator holds one amount of air and has two vents; mistakes cost steam, never damage |
 | [0039](adr/0039-latching-controls-are-turn-switches.md) | A control that holds a state is a turn switch with fixed legends; a pushbutton acts or selects |
 | [0041](adr/0041-boiler-high-high-level-trips-feed-pump-and-turbine.md) | The boiler high-high level (70%) trips the feed pump and the turbine; the alarm is on from 65% |
+| [0042](adr/0042-valve-ramp-lives-above-the-pages.md) | The valve knob ramp lives in a UI context above the pages and paces in real time, so it survives navigation |
 
 ## Research (dated, frozen)
 

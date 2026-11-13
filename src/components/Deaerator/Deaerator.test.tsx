@@ -5,6 +5,7 @@ import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
 import Deaerator from "./Deaerator"
+import { PlantValveRamp } from "../board/PlantValveRamp"
 import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
 import { warningText } from "./warningText"
 
@@ -23,7 +24,9 @@ function renderDeaerator(patch: Partial<PowerPlantState["Deaerator"]> = {}) {
   } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
-      <Deaerator />
+      <PlantValveRamp>
+        <Deaerator />
+      </PlantValveRamp>
     </PowerPlantContext.Provider>,
   )
   return { toggleDeaeratorVent, adjustFeedPumpValvePosition }
