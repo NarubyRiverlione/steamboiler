@@ -15,6 +15,9 @@ export const CstSimulation = {
     ReliefClosePressure: 171, // bar, the relief valve reseats (7 bar blowdown, about 4%)
     WorkingLevel: 0.5, // share of TotalVolume, the level the drum holds at 165 bar: the target line on the level gauge (ADR 0018)
     BurnerLowLowLevel: 0.2, // share of TotalVolume, below it the burner trips (UNVERIFIED estimate, see design-basis.md)
+    LowLevel: 0.35, // share of TotalVolume: the low level zone on the gauge starts here; display only, no alarm acts on it yet (UNVERIFIED estimate, #54, #129, see design-basis.md)
+    WorkingLow: 0.45, // share of TotalVolume: lower end of the green band on the level gauge, the 50% working level minus 5 points (UNVERIFIED estimate, #54)
+    WorkingHigh: 0.55, // share of TotalVolume: upper end of the green band
     HighLevel: 0.65, // share of TotalVolume, from it the boiler level high alarm is on (UNVERIFIED estimate, see design-basis.md)
     HighHighLevel: 0.7, // share of TotalVolume, from it the boiler feed pump and the turbine trip (UNVERIFIED estimate, see design-basis.md)
     ReliefCapacityMargin: 1.1, // relief capacity over the steam made at full gas at the opening pressure
@@ -53,6 +56,8 @@ export const CstSimulation = {
     HotwellHigh: 0.85, // fraction of TotalVolume: from it the high level alarm is on (our own number, design-basis.md)
     HotwellLowLow: 0.1, // fraction of TotalVolume: below it the condensation pump trips (NPSH, see design-basis.md)
     HotwellHighHigh: 0.95, // fraction of TotalVolume: from it the reject valve is forced fully open (overfill clamp)
+    HotwellWorkingLow: 0.55, // fraction of TotalVolume: makeup opens below it, the green band on the level gauge starts here (operator band around the 70% normal level, ADR 0011)
+    HotwellWorkingHigh: 0.75, // fraction of TotalVolume: reject opens above it, the green band ends here
   },
 
   CstTurbine: {
@@ -108,6 +113,11 @@ export const CstDeaerator = {
   TotalVolume: 150e3, // liters: 5 minutes of rated feedwater (192 kg/s) from the 50% working level down to the 38% low-low trip
   WorkingLevel: 0.5, // share of TotalVolume the vessel holds at 3 bar: the target line on the level gauge (ADR 0037)
   LowLowLevel: 0.12, // share of TotalVolume: below it the boiler feed pump trips; 5 minutes of rated feedwater (38% of the volume) below the 50% working level (#112, design-basis.md)
+  LowLevel: 0.25, // share of TotalVolume: the low level zone on the gauge starts here; display only, no alarm acts on it yet (UNVERIFIED estimate, #54, #129, see design-basis.md)
+  HighLevel: 0.75, // share of TotalVolume: the high level zone on the gauge starts here; display only (UNVERIFIED estimate, #54, #129)
+  HighHighLevel: 0.85, // share of TotalVolume: the red zone on the gauge starts here; display only, 22 m³ of headroom (UNVERIFIED estimate, #54, #129)
+  WorkingLow: 0.45, // share of TotalVolume: lower end of the green band on the level gauge, the 50% working level minus 5 points (UNVERIFIED estimate, #54)
+  WorkingHigh: 0.55, // share of TotalVolume: upper end of the green band
   FeedPump_Step: 1, // % per wheel notch or arrow key; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
   StartLevel: 0.38, // share of TotalVolume filled cold at ambient: ends at 50% at 3 bar (ADR 0037)
   Pressure: 3, // bar, held by the steam inlet valve (about 134 °C)

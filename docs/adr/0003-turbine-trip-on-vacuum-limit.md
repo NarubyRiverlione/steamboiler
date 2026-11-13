@@ -1,6 +1,6 @@
 # The turbine valve trips above the vacuum limit
 
-The turbine valve may only be open, or be opened, while condenser pressure is at or below the **vacuum limit**: one named condenser constant, with its value and source recorded in [design-basis.md](../plant/design-basis.md). If pressure rises above it while the valve is open, a **turbine trip** closes the valve fully, returns the speed mode to Free and clears the PID memory. The operator can always close the valve by hand; reopening is refused until the vacuum is back. Decided in #37.
+The turbine valve may only be open, or be opened, while condenser pressure is at or below the **vacuum limit**: one named condenser constant, with its value and source recorded in [design-basis.md](../plant/design-basis.md). If pressure rises above it while the valve is open, a **turbine trip** closes the valve fully, returns the speed mode to Free and clears the PID memory. The operator can always close the valve by hand; reopening is refused until the vacuum is back and the operator has reset the trip ([ADR 0043](0043-trip-reset.md)). Decided in #37.
 
 ## Considered options
 
@@ -12,8 +12,8 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 ## Consequences
 
 - The limit applies wherever the valve position changes: the operator action and the speed PID in the tick. Ramp up and Hold cannot get around it.
-- A trip returns to Free, so the PID cannot restart the turbine on its own once vacuum recovers. Its memory is cleared, so the next Ramp up or Hold starts without a wound-up error.
-- `TurbineState` carries a trip flag that the turbine panel shows. The flag is set by a trip and cleared by the next successful opening.
+- A trip returns to Free, which also ends Synchronised even though the breaker stays closed until the speed leaves its window (#135), so the PID cannot restart the turbine on its own once vacuum recovers. Its memory is cleared, so the next Ramp up or Hold starts without a wound-up error.
+- `TurbineState` carries a trip flag that the turbine panel shows. The flag is set by a trip and cleared only by the trip reset ([ADR 0043](0043-trip-reset.md)); while it is set the valve cannot be opened.
 - Scenarios have to pull vacuum before they open the turbine valve: SJAE enabled and its valve opened once the boiler is above the main steam valve minimum pressure.
 - The bypass valve and the generator breaker are not affected.
 - The vacuum limit is no longer the only cause of a turbine trip: the main steam valve closing on low pressure with the turbine valve open trips the turbine the same way ([ADR 0026](0026-valve-flow-follows-pressure.md)).

@@ -15,8 +15,6 @@ function Turbine() {
       Turbine: turbine,
     },
     toggleMainSteamValve,
-    adjustBypassValve,
-    adjustTurbineValve,
     setSpeedMode,
     selectRunUpPoint,
     toggleGeneratorBreaker,
@@ -30,8 +28,6 @@ function Turbine() {
           turbine={turbine}
           boilerPressure={pressure}
           onToggleMainSteamValve={toggleMainSteamValve}
-          onAdjustBypass={adjustBypassValve}
-          onAdjustTurbine={adjustTurbineValve}
         />
         <div className="board-stack">
           <SpeedControlGroup

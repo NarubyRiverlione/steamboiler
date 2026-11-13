@@ -12,8 +12,9 @@ import {
   loadSetpointRefusal,
   maxTurbineValvePosition,
   ratedOutputMW,
+  runUpPointRefusal,
   shaftWorkFraction,
-  turbineTrippedAfter,
+  speedModeRefusal,
 } from "./turbineCalculations"
 
 const { CstCondenser, CstTurbine } = CstSimulation
@@ -128,12 +129,6 @@ describe("vacuum limit", () => {
     expect(maxTurbineValvePosition(0.3, limit)).toBe(1)
   })
 
-  test("the trip flag clears on an opening and stays on otherwise", () => {
-    expect(turbineTrippedAfter(true, 0, 0.01)).toBe(false)
-    expect(turbineTrippedAfter(true, 0.2, 0.2)).toBe(true)
-    expect(turbineTrippedAfter(true, 0.2, 0.1)).toBe(true)
-    expect(turbineTrippedAfter(false, 0, 0.5)).toBe(false)
-  })
 })
 
 describe("calculateRPM", () => {
@@ -237,5 +232,22 @@ describe("overspeed limit", () => {
     expect(isAtOverspeed(limit + 0.1)).toBe(true)
     expect(isAtOverspeed(limit - 0.1)).toBe(false)
     expect(isAtOverspeed(0)).toBe(false)
+  })
+})
+
+describe("speed refusals with the breaker closed (#135)", () => {
+  const closed = { ...makeInitialState().Turbine, generatorBreaker: true, mainSteamValve: true }
+  const reasons: (string | undefined)[] = [
+    ...(["free", "rampUp", "hold"] as const).map((mode) => speedModeRefusal(closed, mode)),
+    ...CstTurbine.RunUpPoints.map((point) => runUpPointRefusal(closed, point)),
+  ]
+
+  test("every mode and every run-up point is refused with the one constant reason", () => {
+    expect(new Set(reasons).size).toBe(1)
+    expect(reasons[0]).toBeTypeOf("string")
+  })
+
+  test("with the breaker open Free is allowed again", () => {
+    expect(speedModeRefusal({ ...closed, generatorBreaker: false }, "free")).toBeUndefined()
   })
 })

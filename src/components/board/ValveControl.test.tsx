@@ -1,30 +1,50 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ValveControl } from "./ValveControl"
+import { ValveRampProvider, type ValveHandle } from "./ValveRampProvider"
 import { RAMP_TICK_MS } from "./valveRamp"
 
-// A plant stand-in: the position moves by the dispatched delta, optionally refused, and the governor can move it
-let setPlant: (position: number) => void = () => undefined
+// A plant stand-in: positions move by the dispatched delta, optionally refused, and the governor can move one
+type Positions = Readonly<Record<string, number>>
+let setPlant: (valve: string, position: number) => void = () => undefined
 const dispatched: number[] = []
 
-function Harness({ start = 0, refuse = false }: { readonly start?: number; readonly refuse?: boolean }) {
-  const [position, setPosition] = useState<number>(start)
+function Plant({
+  start = 0,
+  refuse = false,
+  page = true,
+  both = false,
+}: {
+  readonly start?: number
+  readonly refuse?: boolean
+  readonly page?: boolean
+  readonly both?: boolean
+}) {
+  const [positions, setPositions] = useState<Positions>({ V: start, W: 0 })
   useEffect(() => {
-    setPlant = setPosition
+    setPlant = (valve: string, position: number): void => {
+      setPositions((p: Positions) => ({ ...p, [valve]: position }))
+    }
   }, [])
+  const handle = (valve: string): ValveHandle => ({
+    actual: positions[valve],
+    adjust: (delta: number): void => {
+      dispatched.push(delta)
+      if (!refuse)
+        setPositions((p: Positions) => ({ ...p, [valve]: Math.max(0, Math.min(1, p[valve] + delta)) }))
+    },
+  })
   return (
-    <ValveControl
-      Label="V"
-      Position={position}
-      Step={5}
-      cbAdjust={(delta: number) => {
-        dispatched.push(delta)
-        if (!refuse) setPosition((p: number) => Math.max(0, Math.min(1, p + delta)))
-      }}
-    />
+    <ValveRampProvider valves={{ V: handle("V"), W: handle("W") }}>
+      {page && <ValveControl ValveId="V" Label="V" Position={positions.V} Step={5} />}
+      {page && both && <ValveControl ValveId="W" Label="W" Position={positions.W} Step={5} />}
+    </ValveRampProvider>
   )
 }
+
+const renderValve = (ui: ReactElement) => render(<ValveRampProvider valves={{}}>{ui}</ValveRampProvider>)
+const Harness = Plant
 
 const knob = (): HTMLElement => screen.getByRole("slider", { name: "V knob" })
 const lcd = (): string | null => screen.getByLabelText("V position").textContent
@@ -47,15 +67,15 @@ afterEach(() => {
 
 describe("ValveControl", () => {
   it("marks a pump knob so it reads apart from a valve knob", () => {
-    const { unmount } = render(<ValveControl Label="P" Position={0} Step={5} cbAdjust={vi.fn()} Pump />)
+    const { unmount } = renderValve(<ValveControl ValveId="V" Label="P" Position={0} Step={5} Pump />)
     expect(screen.getByRole("slider", { name: "P knob" }).classList.contains("board-knob-pump")).toBe(true)
     unmount()
-    render(<ValveControl Label="V" Position={0} Step={5} cbAdjust={vi.fn()} />)
+    renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)
     expect(screen.getByRole("slider", { name: "V knob" }).classList.contains("board-knob-pump")).toBe(false)
   })
 
   it("shows only the flow when there is one: no position LCD, the position is on the knob", () => {
-    render(<ValveControl Label="P" Value="5.0 l/s" Position={0.5} Step={5} cbAdjust={vi.fn()} />)
+    renderValve(<ValveControl ValveId="V" Label="P" Value="5.0 l/s" Position={0.5} Step={5} />)
     expect(screen.getByLabelText("P flow").textContent).toBe("5.0 l/s")
     expect(screen.queryByLabelText("P position")).toBeNull()
     expect(screen.getByRole("slider", { name: "P knob" }).getAttribute("aria-valuenow")).toBe("50")
@@ -70,9 +90,13 @@ describe("ValveControl", () => {
   })
 
   it("shows the flow only when given", () => {
-    const { rerender } = render(<ValveControl Label="V" Position={0} Step={5} cbAdjust={vi.fn()} />)
+    const { rerender } = renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)
     expect(screen.queryByLabelText("V flow")).toBeNull()
-    rerender(<ValveControl Label="V" Value="3.0 kg/s" Position={0} Step={5} cbAdjust={vi.fn()} />)
+    rerender(
+      <ValveRampProvider valves={{}}>
+        <ValveControl ValveId="V" Label="V" Value="3.0 kg/s" Position={0} Step={5} />
+      </ValveRampProvider>,
+    )
     expect(screen.getByLabelText("V flow").textContent).toBe("3.0 kg/s")
   })
 
@@ -152,14 +176,75 @@ describe("ValveControl", () => {
     expect(knob().getAttribute("aria-valuenow")).toBe("100")
   })
 
-  it("stops the ramp on unmount", () => {
-    const { unmount } = render(<Harness start={0} />)
+  it("keeps ramping to the command after the page is unmounted", () => {
+    const { rerender } = render(<Plant start={0} />)
     fireEvent.keyDown(knob(), { key: "End" })
-    advance(500)
-    unmount()
+    advance(1500)
+    rerender(<Plant start={0} page={false} />)
+    advance(15_000)
+    rerender(<Plant start={0} />)
+    expect(lcd()).toBe("100 % Open")
+  })
+
+  it("shows the reached position and the command marker when the page is mounted again mid-ramp", () => {
+    const { rerender } = render(<Plant start={0} />)
+    fireEvent.keyDown(knob(), { key: "End" })
+    advance(1500)
+    rerender(<Plant start={0} page={false} />)
+    advance(6000)
+    rerender(<Plant start={0} />)
+    expect(lcd()).toBe("50 % Open")
+    expect(knob().getAttribute("aria-valuenow")).toBe("100")
+    advance(7500 + RAMP_TICK_MS)
+    expect(lcd()).toBe("100 % Open")
+  })
+
+  it("ramps two valves at once without interference", () => {
+    render(<Plant both />)
+    fireEvent.keyDown(knob(), { key: "End" })
+    fireEvent.keyDown(screen.getByRole("slider", { name: "W knob" }), { key: "Home" })
+    fireEvent.keyDown(screen.getByRole("slider", { name: "W knob" }), { key: "ArrowUp" })
+    advance(7500)
+    expect(lcd()).toBe("50 % Open")
+    expect(screen.getByLabelText("W position").textContent).toBe("5 % Open")
+    advance(7500)
+    expect(lcd()).toBe("100 % Open")
+  })
+
+  it("still drops the command when the governor moves the valve while the page is unmounted", () => {
+    const { rerender } = render(<Plant start={0.5} />)
+    fireEvent.keyDown(knob(), { key: "End" })
+    advance(1000)
+    rerender(<Plant start={0.5} page={false} />)
+    act(() => {
+      setPlant("V", 0.3)
+    })
+    advance(RAMP_TICK_MS * 4)
     const count: number = dispatched.length
     advance(5000)
     expect(dispatched.length).toBe(count)
+    rerender(<Plant start={0.5} />)
+    expect(knob().getAttribute("aria-valuenow")).toBe("30")
+  })
+
+  it("still drops the command when the plant refuses the move while the page is unmounted", () => {
+    const { rerender } = render(<Plant start={0.5} refuse />)
+    fireEvent.keyDown(knob(), { key: "End" })
+    rerender(<Plant start={0.5} refuse page={false} />)
+    advance(1000)
+    const count: number = dispatched.length
+    advance(2000)
+    expect(dispatched.length).toBe(count)
+    rerender(<Plant start={0.5} refuse />)
+    expect(knob().getAttribute("aria-valuenow")).toBe("50")
+  })
+
+  it("needs a ValveRampProvider", () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined)
+    expect(() => render(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)).toThrow(
+      "ValveRampProvider",
+    )
+    quiet.mockRestore()
   })
 
   it("follows the governor and drops an old ramp when the plant moves the valve", () => {
@@ -167,7 +252,7 @@ describe("ValveControl", () => {
     fireEvent.keyDown(knob(), { key: "End" })
     advance(1000)
     act(() => {
-      setPlant(0.3)
+      setPlant("V", 0.3)
     })
     advance(RAMP_TICK_MS * 2)
     expect(knob().getAttribute("aria-valuenow")).toBe("30")
@@ -180,7 +265,7 @@ describe("ValveControl", () => {
   it("follows the governor when no ramp runs", () => {
     render(<Harness start={0.5} />)
     act(() => {
-      setPlant(0.2)
+      setPlant("V", 0.2)
     })
     expect(knob().getAttribute("aria-valuenow")).toBe("20")
   })

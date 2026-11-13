@@ -6,8 +6,10 @@ import { waterKgPerSecond } from "../../utils/flowUnits"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
+import { TripResetButton } from "../board/TripResetButton"
 import { TurnSwitch } from "../board/TurnSwitch"
 import { LevelInstrument } from "../board/LevelInstrument"
+import { levelZones } from "../board/levelZones"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
@@ -16,6 +18,12 @@ const {
   CstCondenser: {
     TotalVolume,
     HotwellNormalLevel,
+    HotwellLowLow,
+    HotwellLow,
+    HotwellHigh,
+    HotwellHighHigh,
+    HotwellWorkingLow,
+    HotwellWorkingHigh,
     OptimalPressure,
     OptimalPressureBellWidth,
     VacuumLimit,
@@ -32,6 +40,11 @@ const {
   },
 } = CstSimulation
 
+const LEVEL_ZONES: readonly GaugeZone[] = levelZones({
+  trip: { low: HotwellLowLow, high: HotwellHighHigh },
+  alarm: { low: HotwellLow, high: HotwellHigh },
+  working: { low: HotwellWorkingLow, high: HotwellWorkingHigh },
+})
 const PRESSURE_MAX = 1100 // mbar, top of the dial: atmospheric (1013) is on the scale, the turbine trips at VacuumLimit
 const HIGH_PRESSURE: number = OptimalPressure + OptimalPressureBellWidth
 const LOW_PRESSURE: number = OptimalPressure - OptimalPressureBellWidth
@@ -51,6 +64,7 @@ function Condenser() {
         sjaeValvePosition,
         recirculationPumpValvePosition,
         condensationPumpValvePosition,
+        condensationPumpTripped,
         makeupValvePosition,
         rejectValvePosition,
         deltaWaterMass,
@@ -63,11 +77,6 @@ function Condenser() {
     },
     toggleAirExtractionPump,
     toggleSjae,
-    adjustSjaeValvePosition,
-    adjustRecirculationPumpValvePosition,
-    adjustCondensationPumpValvePosition,
-    adjustMakeupValvePosition,
-    adjustRejectValvePosition,
   } = usePowerPlant()
 
   const smoothIntake: number = useEMA(intakeFlowRate, 0.01)
@@ -130,7 +139,13 @@ function Condenser() {
             </span>
           </div>
 
-          <LevelInstrument label="Hotwell level" fraction={hotwellLevel} change={smoothWaterChange} target={HotwellNormalLevel} />
+          <LevelInstrument
+            label="Hotwell level"
+            fraction={hotwellLevel}
+            change={smoothWaterChange}
+            zones={LEVEL_ZONES}
+            target={HotwellNormalLevel}
+          />
         </div>
 
         <div className="board-group">
@@ -158,11 +173,11 @@ function Condenser() {
               />
               <span className="board-readout-label">Steam Jet Air Extraction (SJAE)</span>
               <ValveControl
+                ValveId="SJAE valve"
                 Label="SJAE valve"
                 Caption="Position:"
                 Position={sjaeValvePosition}
                 Step={SJAE_ValveStep}
-                cbAdjust={adjustSjaeValvePosition}
               />
             </div>
           </div>
@@ -173,6 +188,7 @@ function Condenser() {
         <div className="board-group">
           <h3 className="board-group-title">Recirculation Pump</h3>
           <ValveControl
+            ValveId="Recirculation pump"
             Label="Recirculation pump"
             Pump
             Caption="Flow rate:"
@@ -180,12 +196,12 @@ function Condenser() {
             Value={`${waterKgPerSecond(recirculationPumpValvePosition * RecirculationPump_MaxFlowRate, RecirculationPump_IntakeTemperature).toFixed(1)} kg/s`}
             ValueWidest="9999.9 kg/s"
             Step={RecirculationPump_Step}
-            cbAdjust={adjustRecirculationPumpValvePosition}
           />
         </div>
         <div className="board-group">
           <h3 className="board-group-title">Condensation Pump</h3>
           <ValveControl
+            ValveId="Condensation pump"
             Label="Condensation pump"
             Pump
             Caption="Flow rate:"
@@ -193,29 +209,34 @@ function Condenser() {
             Value={`${waterKgPerSecond(condensationPumpValvePosition * CondensationPump_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
             ValueWidest="9999.9 kg/s"
             Step={CondensationPump_Step}
-            cbAdjust={adjustCondensationPumpValvePosition}
           />
+          <Lamp
+            lit={condensationPumpTripped}
+            label="Condensation pump trip"
+            title="The hotwell level fell below low-low: reset the trip once the level is back, then open the pump"
+          />
+          <TripResetButton trip="condensationPump" label="condensation pump trip" />
         </div>
         <div className="board-group">
           <h3 className="board-group-title">Hotwell Makeup &amp; Reject</h3>
           <div className="board-group-cols">
             <ValveControl
+              ValveId="Makeup"
               Label="Makeup"
               Caption="Makeup:"
               Position={makeupValvePosition}
               Value={`${waterKgPerSecond(makeupValvePosition * Makeup_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
               ValueWidest="9999.9 kg/s"
               Step={Makeup_Step}
-              cbAdjust={adjustMakeupValvePosition}
             />
             <ValveControl
+              ValveId="Reject"
               Label="Reject"
               Caption="Reject:"
               Position={rejectValvePosition}
               Value={`${waterKgPerSecond(rejectValvePosition * Reject_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
               ValueWidest="9999.9 kg/s"
               Step={Reject_Step}
-              cbAdjust={adjustRejectValvePosition}
             />
           </div>
         </div>

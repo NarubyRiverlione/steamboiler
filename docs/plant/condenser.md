@@ -52,6 +52,8 @@ Two protections act in `CondenserTick` ([ADR 0011](../adr/0011-hotwell-protectio
 
 Two annunciator alarms warn ahead of them (#59), rows of `navigation/alarms.ts` owned by the condenser: "Hotwell level low" below `HotwellLow` (25%) and "Hotwell level high" from `HotwellHigh` (85%). They are derived from the level, so there is no state, deadband or latch, and the tick is unchanged. The limits are our own numbers ([design basis](design-basis.md)).
 
+**Level gauge zones (#54).** The hotwell level instrument draws red below `HotwellLowLow` (10%) and from `HotwellHighHigh` (95%), orange from the trip up to the alarm (10-25% and 85-95%), green for the working band `HotwellWorkingLow` to `HotwellWorkingHigh` (55-75%, both ends included) and no colour between (25-55% and 75-85%). The limits are the constants above, the pair `HotwellLow` / `HotwellHigh` is the same one the alarms read; all hotwell limits act in the sim. Built by the generic `levelZones` ([ui-board.md](../dev/ui-board.md#level-zones)).
+
 Loop targets, the working band and the operator that holds them are in [feedwater-loop.md](feedwater-loop.md).
 
 ## Intakes
