@@ -8,6 +8,7 @@ import { PowerPlantContext } from "../context/PowerPlantContext"
 import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
 import Boiler from "../components/Boiler/Boiler"
+import { ValveRampProvider } from "../components/board/ValveRampProvider"
 import Condenser from "../components/Condenser/Condenser"
 import PlantOverview from "./PlantOverview"
 import { DIAGRAM_VALUES, NODES } from "./plantDiagram"
@@ -19,7 +20,9 @@ function renderWith(state: PowerPlantState, element: ReactElement = <PlantOvervi
   const value = { state, dispatch: noop } as unknown as ContextType<typeof PowerPlantContext>
   return render(
     <PowerPlantContext.Provider value={value}>
-      <MemoryRouter>{element}</MemoryRouter>
+      <ValveRampProvider valves={{}}>
+        <MemoryRouter>{element}</MemoryRouter>
+      </ValveRampProvider>
     </PowerPlantContext.Provider>,
   )
 }

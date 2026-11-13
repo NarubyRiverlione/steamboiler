@@ -4,6 +4,7 @@ import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
+import { PlantValveRamp } from "../board/PlantValveRamp"
 import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
 import Turbine from "./Turbine"
 
@@ -25,7 +26,9 @@ function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPr
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
-      <Turbine />
+      <PlantValveRamp>
+        <Turbine />
+      </PlantValveRamp>
     </PowerPlantContext.Provider>,
   )
   return fns

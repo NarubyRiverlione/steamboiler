@@ -42,7 +42,6 @@ function Deaerator() {
       },
     },
     toggleDeaeratorVent,
-    adjustFeedPumpValvePosition,
   } = usePowerPlant()
 
   const level: number = waterVolume / CstDeaerator.TotalVolume
@@ -94,6 +93,7 @@ function Deaerator() {
         <div className="board-group">
           <h3 className="board-group-title">Boiler Feed Pump</h3>
           <ValveControl
+            ValveId="Feed pump"
             Label="Feed pump"
             Pump
             Caption="Flow rate:"
@@ -101,7 +101,6 @@ function Deaerator() {
             Value={`${waterKgPerSecond(feedPumpValvePosition * CstSimulation.CstCondenser.CondensationPump_MaxFlowRate, temperature).toFixed(1)} kg/s`}
             ValueWidest="9999.9 kg/s"
             Step={CstDeaerator.FeedPump_Step}
-            cbAdjust={adjustFeedPumpValvePosition}
           />
           <Lamp
             lit={feedPumpTripped}
