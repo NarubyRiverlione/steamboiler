@@ -349,6 +349,23 @@
   height: auto;
 }
 
+.board-overview-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+/* A live value label: a small LCD at diagram scale, inside a foreignObject */
+.board-overview-value {
+  display: flex;
+}
+
+.board-overview-value .board-display {
+  min-height: 0;
+  padding: 1px 4px;
+  font-size: 12px;
+}
+
 .board-overview-bg {
   fill: var(--board-mimic-bg);
 }

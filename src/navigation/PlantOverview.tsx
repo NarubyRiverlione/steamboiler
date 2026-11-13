@@ -1,15 +1,34 @@
-import type { ReactNode } from "react"
-/** Plant overview: the plant to be (ADR 0029) as an SVG, drawn from plantDiagram.ts. A part with controls links to its page and carries an alarm LED. The only live values are the deaerator's: temperature, level and, while the start-up vent is open, the safe-to-close lamp (ADR 0038). */
+/** Plant overview: the plant to be (ADR 0029) as an SVG, drawn from plantDiagram.ts. A part with controls links to its page and carries an alarm LED. The live values (#99) are LCD labels beside the nodes, all hidden by the Values toggle: the list is DIAGRAM_VALUES and the deaerator's temperature and level; the deaerator's safe-to-close lamp (ADR 0038) is not a value and always shows. */
 
+import { useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { PanelFrame } from "../components/board/PanelFrame"
 import { Led } from "../components/board/Led"
+import { Display } from "../components/board/Display"
+import { LensButton } from "../components/board/LensButton"
 import usePowerPlant from "../context/PowerPlantContext"
-import { DIAGRAM_HEIGHT, DIAGRAM_WIDTH, LABELS, MEDIA, NODES, PIPES, type DiagramNode, type NodeSymbol } from "./plantDiagram"
+import useEMA from "../utils/useEMA"
+import {
+  DIAGRAM_HEIGHT,
+  DIAGRAM_VALUES,
+  DIAGRAM_WIDTH,
+  LABELS,
+  MEDIA,
+  NODES,
+  PIPES,
+  type DiagramNode,
+  type DiagramValue,
+  type NodeSymbol,
+} from "./plantDiagram"
 import { CstDeaerator } from "../context/const"
+import { hotwellFraction, overviewValueTexts } from "./overviewValues"
 import { PARTS, partAlarms } from "./plantParts"
 
 const GLYPH_HALF = 18
+// A value label is a foreignObject this wide and tall; the LCD inside sits at the edge its anchor names
+const VALUE_BOX_WIDTH = 150
+const VALUE_BOX_HEIGHT = 22
+const VALUE_JUSTIFY = { start: "flex-start", middle: "center", end: "flex-end" } as const
 
 function glyphPaths(symbol: NodeSymbol): ReactNode {
   if (symbol === "valve") return <path d="M-16 -11 L16 11 L16 -11 L-16 11 Z" />
@@ -80,13 +99,34 @@ function NodeShape({ node }: { readonly node: DiagramNode }) {
   )
 }
 
+function ValueLabel({ value, text }: { readonly value: DiagramValue; readonly text: string }) {
+  const left: number = value.anchor === "start" ? value.x : value.anchor === "middle" ? value.x - VALUE_BOX_WIDTH / 2 : value.x - VALUE_BOX_WIDTH
+  return (
+    <foreignObject x={left} y={value.y} width={VALUE_BOX_WIDTH} height={VALUE_BOX_HEIGHT} pointerEvents="none">
+      <div className="board-overview-value" style={{ justifyContent: VALUE_JUSTIFY[value.anchor] }}>
+        <Display label={value.label} text={text} widest={value.widest} />
+      </div>
+    </foreignObject>
+  )
+}
+
 function PlantOverview() {
   const { state } = usePowerPlant()
+  const [showValues, setShowValues] = useState<boolean>(true)
+  // Same smoothing as the Boiler and Condenser pages, so the numbers match
+  const smoothPressure: number = useEMA(state.Boiler.pressure, 0.01)
+  const hotwellLevel: number = useEMA(hotwellFraction(state), 0.1)
+  const texts = overviewValueTexts(state, { pressure: smoothPressure, hotwellLevel })
   const alarms = partAlarms(state)
   const { temperature, waterVolume, startUpVentOpen, safeToClose } = state.Deaerator
   const deaerator: DiagramNode | undefined = NODES.find((node: DiagramNode) => node.id === "deaerator")
   return (
     <PanelFrame title="Plant">
+      <div className="board-overview-bar">
+        <LensButton small pressed={showValues} onClick={() => { setShowValues(!showValues); }}>
+          Values
+        </LensButton>
+      </div>
       <svg
         className="board-overview"
         viewBox={"0 0 " + String(DIAGRAM_WIDTH) + " " + String(DIAGRAM_HEIGHT)}
@@ -158,12 +198,16 @@ function PlantOverview() {
         )}
         {deaerator !== undefined && (
           <g className="board-node-values" pointerEvents="none">
-            <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + 20}>
-              {temperature.toFixed(0)} °C
-            </text>
-            <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + deaerator.h - 10}>
-              {((waterVolume / CstDeaerator.TotalVolume) * 100).toFixed(0)} %
-            </text>
+            {showValues && (
+              <>
+                <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + 20}>
+                  {temperature.toFixed(0)} °C
+                </text>
+                <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + deaerator.h - 10}>
+                  {((waterVolume / CstDeaerator.TotalVolume) * 100).toFixed(0)} %
+                </text>
+              </>
+            )}
             {startUpVentOpen && (
               <g transform={"translate(" + String(deaerator.x + deaerator.w) + " " + String(deaerator.y) + ")"}>
                 <Led lit={safeToClose} tone="ok" label="Deaerator safe to close" />
@@ -171,6 +215,7 @@ function PlantOverview() {
             )}
           </g>
         )}
+        {showValues && DIAGRAM_VALUES.map((value: DiagramValue) => <ValueLabel key={value.id} value={value} text={texts[value.id]} />)}
       </svg>
     </PanelFrame>
   )

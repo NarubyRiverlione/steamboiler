@@ -38,6 +38,33 @@ type DiagramLabel = {
   readonly bold?: true
 }
 
+export type ValueId =
+  | "boilerPressure"
+  | "boilerLevel"
+  | "mainSteamValve"
+  | "turbineValve"
+  | "bypassValve"
+  | "turbineSpeed"
+  | "condenserPressure"
+  | "hotwellLevel"
+  | "condensationPump"
+  | "heaterTemperature"
+  | "economizerTemperature"
+  | "stackTemperature"
+
+// A live value drawn as an LCD label beside a node (#99); x and y are the anchor in diagram units, `anchor` says which edge of the label it is
+export type DiagramValue = {
+  readonly id: ValueId
+  readonly node: string
+  // Names the readout
+  readonly label: string
+  // The longest text it shows; sizes the label so it does not resize as the value changes
+  readonly widest: string
+  readonly x: number
+  readonly y: number
+  readonly anchor: "start" | "middle" | "end"
+}
+
 export const DIAGRAM_WIDTH = 1660
 export const DIAGRAM_HEIGHT = 704
 
@@ -293,3 +320,18 @@ export const LABELS: readonly DiagramLabel[] = [
 ]
 
 export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "power", "vacuum"]
+
+export const DIAGRAM_VALUES: readonly DiagramValue[] = [
+  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 440, y: 206, anchor: "start" },
+  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 440, y: 230, anchor: "start" },
+  { id: "mainSteamValve", node: "msv", label: "Main steam valve", widest: "CLOSED", x: 890, y: 190, anchor: "start" },
+  { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 116, anchor: "middle" },
+  { id: "bypassValve", node: "bypass", label: "Bypass valve position", widest: "100 %", x: 960, y: 288, anchor: "middle" },
+  { id: "turbineSpeed", node: "turbine", label: "Turbine speed", widest: "3500 rpm", x: 1250, y: 116, anchor: "middle" },
+  { id: "condenserPressure", node: "condenser", label: "Condenser pressure", widest: "1100 mbar", x: 1250, y: 388, anchor: "middle" },
+  { id: "hotwellLevel", node: "hotwell", label: "Hotwell level", widest: "100 %", x: 1250, y: 516, anchor: "middle" },
+  { id: "condensationPump", node: "condpump", label: "Condensation pump position", widest: "100 %", x: 1100, y: 530, anchor: "middle" },
+  { id: "heaterTemperature", node: "heater", label: "Extraction heater temperature", widest: "999 °C", x: 585, y: 540, anchor: "end" },
+  { id: "economizerTemperature", node: "economizer", label: "Economizer temperature", widest: "999 °C", x: 265, y: 520, anchor: "middle" },
+  { id: "stackTemperature", node: "stack", label: "Stack temperature", widest: "999 °C", x: 330, y: 662, anchor: "start" },
+]
