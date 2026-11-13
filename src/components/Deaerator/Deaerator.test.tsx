@@ -33,6 +33,12 @@ function renderDeaerator(patch: Partial<PowerPlantState["Deaerator"]> = {}) {
 }
 
 describe("Deaerator page", () => {
+  it("shows the level zones: red, orange and the green band", () => {
+    renderDeaerator()
+    const tones: (string | null)[] = Array.from(document.querySelectorAll("rect.board-zone-bar")).map((e: Element) => e.getAttribute("data-tone"))
+    expect(tones).toEqual(["alarm", "alarm", "warn", "warn", "ok"])
+  })
+
   it("shows temperature, pressure, saturation pressure", () => {
     renderDeaerator({ temperature: 133.5, pressure: 3.05, saturationPressure: 3, waterVolume: 75_000 })
     expect(screen.getByLabelText("Temperature").textContent).toBe("133.5 °C")

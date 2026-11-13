@@ -75,6 +75,10 @@ The heater takes the deaerator outflow as its feedwater (flow and temperature of
 
 `turbine-load`, 125 MW: steam 176 kg/s, deaerator tap 38 kg/s, heater 5 kg/s, tap 4.6 bar, feedwater 144 °C after the heater and 198 °C after the economizer, stack 229 °C, boiler 90.0%, plant 32.4% (33.2% with the heater alone in #88, the let-down steam at low load and the lower tap pressure cost about 0.8 points). The two extractions together take about the same share of the flow as the heater alone did (`ratedExtractionShare`), so the rated output is 141.9 MW (141.3 before) and `RatedSteamFlow` stays 192 kg/s (`max-output` still reads it within 3 kg/s).
 
+## Level gauge zones
+
+The level instrument draws red below `LowLowLevel` (12%) and from `HighHighLevel` (85%), orange from 12% up to `LowLevel` (25%) and from `HighLevel` (75%) up to 85%, green for `WorkingLow` to `WorkingHigh` (45-55%, both ends included) and no colour between (25-45% and 55-75%), built by the generic `levelZones` ([ui-board.md](../dev/ui-board.md#level-zones), #54). The 25% low alarm is 19.5 m³ above the trip, about 100 s of rated feedwater with no inflow; the 85% leaves 22 m³ of headroom. **Only the 12% low-low acts in the model; the 25 / 75 / 85% limits are display only** (owner decision of 2026-11-13: the operator sees them before the behaviour exists), and are all UNVERIFIED estimates ([design-basis.md](design-basis.md)). Alarms, trips and tiles for them are #129.
+
 ## Not yet
 
 No dump valve and no high-level protection: only the feed pump has its low-low trip and, from the boiler side, its trip on the boiler high-high level; the `deaerator within capacity` invariant checks the capacity. No O₂ reading or penalties (#114).
