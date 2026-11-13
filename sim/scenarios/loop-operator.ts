@@ -24,6 +24,8 @@ export const LoopSettings = {
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // the level the scenarios judge the hold by: target ± band
   LevelGain: 1, // feed pump position per unit of drum level error: 0.05 of level trims 0.05 of the pump (15 L/s)
+  HeatUpLevelMargin: 0.03, // share of TotalVolume above the low level alarm that the heat-up feed holds the drum at (#137)
+  HeatUpLevelGain: 10, // feed pump position per unit of drum level error during heat-up: stiff, the let-down steam draw is small
   DeaeratorLevelTarget: 0.5, // fraction of the deaerator volume: the working level
   DeaeratorLevelBand: 0.05, // the level the scenarios judge the deaerator hold by: target ± band
   DeaeratorLevelGain: 2, // condensation pump position per second per unit of deaerator level error: plain level feedback, no feedforward (#112)
@@ -137,6 +139,16 @@ function holdBoilerLevel({ Boiler, Deaerator, Turbine }: PowerPlantState): Power
   return toPosition(Deaerator.feedPumpValvePosition, wanted, feedPumpPayload)
 }
 
+// Heat-up (#137): the let-down steam to the deaerator takes water out of the drum while the main steam valve is shut and
+// nothing feeds it back, so the drum would sink below the low level alarm. The operator feeds only what keeps it at the
+// low level alarm plus a margin (stiff proportional action, no feedforward); the expansion is not fed back (ADR 0018)
+export function holdHeatUpLevel({ Boiler, Deaerator, Turbine }: PowerPlantState): PowerPlantAction[] {
+  if (Turbine.mainSteamValve) return []
+  const level = Boiler.waterVolume / CstBoiler.TotalVolume
+  const wanted = Math.max(0, Math.min(1, S.HeatUpLevelGain * (CstBoiler.LowLevel + S.HeatUpLevelMargin - level)))
+  return toPosition(Deaerator.feedPumpValvePosition, wanted, feedPumpPayload)
+}
+
 // Plain level feedback on the deaerator (#112), no feedforward from the feed pump: the condensation pump moves by the level
 // error (integral action) and against the level rate (damping), each second, so it settles where the Return matches the feed
 function holdDeaeratorLevel({ Condenser, Deaerator, Turbine }: PowerPlantState): PowerPlantAction[] {
@@ -192,7 +204,7 @@ export function holdLoop(
 }
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
-  return [...startUpVent(state, time), ...startSteam(state), ...holdLoop(state, time)]
+  return [...startUpVent(state, time), ...startSteam(state), ...holdHeatUpLevel(state), ...holdLoop(state, time)]
 }
 
 // The loop operator with its hotwell hold taken away, for edge scenarios that force makeup and reject themselves

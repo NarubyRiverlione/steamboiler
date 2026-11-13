@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 import type { ContextType } from "react"
-import { CstSimulation } from "../context/const"
+import { CstDeaerator, CstSimulation } from "../context/const"
 import { PowerPlantContext } from "../context/PowerPlantContext"
 import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
@@ -20,10 +20,12 @@ function Where() {
   return <p data-testid="where">{useLocation().pathname}</p>
 }
 
-function stateWith(flags: { heat?: boolean; burner?: boolean; pump?: boolean; turbine?: boolean; hotwellLevel?: number; boilerLevel?: number; levelTrip?: boolean }): PowerPlantState {
+function stateWith(flags: { heat?: boolean; burner?: boolean; pump?: boolean; turbine?: boolean; hotwellLevel?: number; boilerLevel?: number; levelTrip?: boolean; deaeratorLevel?: number; feedPumpTrip?: boolean }): PowerPlantState {
   const state: PowerPlantState = makeInitialState()
   if (flags.boilerLevel !== undefined) state.Boiler.waterVolume = flags.boilerLevel * CstSimulation.CstBoiler.TotalVolume
   state.Boiler.boilerLevelHighTripped = flags.levelTrip === true
+  if (flags.deaeratorLevel !== undefined) state.Deaerator.waterVolume = flags.deaeratorLevel * CstDeaerator.TotalVolume
+  state.Deaerator.feedPumpTripped = flags.feedPumpTrip === true
   if (flags.hotwellLevel !== undefined) state.Condenser.hotwellWaterVolume = flags.hotwellLevel * CstSimulation.CstCondenser.TotalVolume
   state.Boiler.heatingRateOverLimit = flags.heat === true
   state.Boiler.burnerTripped = flags.burner === true
@@ -60,7 +62,7 @@ const lit = (name: string): boolean => tile(name).className.includes("board-tile
 describe("Annunciator", () => {
   it("has one tile per alarm flag, all dark while nothing is set", () => {
     render(tree(stateWith({})))
-    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high"]) {
+    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high", "Boiler level low", "Deaerator level low", "Deaerator level high", "Feed pump trip"]) {
       expect(lit(name)).toBe(false)
       expect(flashing(name)).toBe(false)
     }
@@ -196,6 +198,29 @@ describe("Annunciator", () => {
     expect(screen.getByTestId("where").textContent).toBe("/condenser")
   })
 
+  it("lights the boiler low and deaerator level tiles from the level and opens the owning part", () => {
+    const { rerender } = render(tree(stateWith({ boilerLevel: 0.34, deaeratorLevel: 0.2 })))
+    expect(lit("Boiler level low")).toBe(true)
+    expect(lit("Deaerator level low")).toBe(true)
+    expect(lit("Deaerator level high")).toBe(false)
+    fireEvent.click(tile("Boiler level low"))
+    expect(screen.getByTestId("where").textContent).toBe("/boiler")
+    fireEvent.click(tile("Deaerator level low"))
+    expect(screen.getByTestId("where").textContent).toBe("/deaerator")
+    rerender(tree(stateWith({ boilerLevel: 0.5, deaeratorLevel: 0.8 })))
+    expect(lit("Deaerator level high")).toBe(true)
+    fireEvent.click(tile("Deaerator level high"))
+    expect(screen.getByTestId("where").textContent).toBe("/deaerator")
+  })
+
+  it("lights the feed pump trip tile from the flag, as an error, and opens the deaerator", () => {
+    render(tree(stateWith({ deaeratorLevel: 0.5, feedPumpTrip: true })))
+    expect(lit("Feed pump trip")).toBe(true)
+    expect(tile("Feed pump trip").className).toContain("board-tile-error")
+    fireEvent.click(tile("Feed pump trip"))
+    expect(screen.getByTestId("where").textContent).toBe("/deaerator")
+  })
+
   it("lights the boiler level tiles from the level and from the trip flag, and opens the boiler", () => {
     const { rerender } = render(tree(stateWith({ boilerLevel: 0.64 })))
     expect(lit("Boiler level high")).toBe(false)
@@ -256,10 +281,10 @@ describe("Annunciator", () => {
     render(tree(stateWith({})))
     fireEvent.click(toggle())
     const group = (name: string): HTMLElement => screen.getByRole("region", { name })
-    expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip"])
+    expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip", "Boiler level low", "Boiler level high", "Boiler level high-high trip"])
+    expect(within(group("Deaerator")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Deaerator level low", "Deaerator level high", "Feed pump trip"])
     expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(3)
     expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)
-    expect(screen.queryByRole("region", { name: "Deaerator" })).toBeNull()
   })
 
   it("never opens the panel by itself when an annunciation arrives", () => {

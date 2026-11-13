@@ -207,4 +207,8 @@ export const goldenInvariants: Invariant[] = [
     name: "the boiler level alarm and the high-high trip never come on (#62)",
     check: everySample(raised(["boilerLevelHigh", "boilerLevelHighTripped"])),
   },
+  {
+    name: "the boiler low and the deaerator level alarms and feed pump trip never come on (#137)",
+    check: everySample(raised(["boilerLevelLow", "deaeratorLevelLow", "deaeratorLevelHigh", "feedPumpTripped"])),
+  },
 ]
