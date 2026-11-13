@@ -1,27 +1,28 @@
-/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the horizontal RPM gauge. */
+/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the horizontal RPM meter. */
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { isAtSyncSpeed } from "../../utils/turbineCalculations"
 import { Lamp } from "../board/Lamp"
-import { LinearGauge, type GaugeBand } from "../board/LinearGauge"
+import { LinearGauge } from "../board/LinearGauge"
 import type { GaugeZone } from "../board/RoundGauge"
 import { TurnSwitch } from "../board/TurnSwitch"
 import type { TurbineState } from "./types"
 
 const {
-  CstTurbine: { SyncRPM, MaxRPM, BreakerRPMMargin, RunUpPoints },
+  CstTurbine: { SyncRPM, MaxRPM, BreakerRPMMargin },
 } = CstSimulation
 
 const MIN_SYNC: number = SyncRPM - BreakerRPMMargin
 const MAX_SYNC: number = SyncRPM + BreakerRPMMargin
-const RPM_WARN: number = SyncRPM * 1.05 // gauge turns orange above this
+const RPM_SCALE_MAX = 3500 // gauge end, past the overspeed trip so the red zone above MaxRPM shows
+const RPM_NORMAL_HALF = 100 // green band at SyncRPM ± this: the normal running range on the meter
 const RPM_ZONES: readonly GaugeZone[] = [
-  { from: 0, to: RPM_WARN, tone: "ok" },
-  { from: RPM_WARN, to: MaxRPM, tone: "warn" },
+  { from: 0, to: SyncRPM - RPM_NORMAL_HALF, tone: "neutral" },
+  { from: SyncRPM - RPM_NORMAL_HALF, to: SyncRPM + RPM_NORMAL_HALF, tone: "ok" },
+  { from: SyncRPM + RPM_NORMAL_HALF, to: MaxRPM, tone: "warn" },
+  { from: MaxRPM, to: RPM_SCALE_MAX, tone: "alarm" },
 ]
-
-const SYNC_BANDS: readonly GaugeBand[] = [{ from: MIN_SYNC, to: MAX_SYNC }]
 
 type GeneratorBreakerGroupProps = {
   readonly turbine: TurbineState
@@ -46,8 +47,17 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
             on={generatorBreaker}
             onToggle={onToggleBreaker}
             disabled={blocked}
-            title={blocked ? `Breaker can only be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM` : undefined}
-            guard={{ lifted: coverLifted, onToggleCover: () => { setCoverLifted(!coverLifted) } }}
+            title={
+              blocked
+                ? `Breaker can only be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM`
+                : undefined
+            }
+            guard={{
+              lifted: coverLifted,
+              onToggleCover: () => {
+                setCoverLifted(!coverLifted)
+              },
+            }}
           />
         </div>
       </div>
@@ -69,10 +79,11 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
         orientation="horizontal"
         value={rpm}
         min={0}
-        max={MaxRPM}
-        ticks={RunUpPoints}
+        max={RPM_SCALE_MAX}
+        unit="rpm"
+        major={500}
+        minor={100}
         zones={RPM_ZONES}
-        bands={SYNC_BANDS}
       />
     </div>
   )

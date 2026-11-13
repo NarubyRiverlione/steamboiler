@@ -58,6 +58,7 @@
   --board-led-off: #5a2a2a;
   --board-gauge-face: #f4f2ea;
   --board-focus-ring: #1f5fbf;
+  --board-zone-neutral: #ffffff; /* a scale range with no meaning of its own, e.g. the run-up */
   --board-zone-ok: #2f9e44;
   --board-zone-warn: #f08c00;
   --board-zone-alarm: #e03131;
@@ -557,6 +558,11 @@ body {
   stroke-width: 6;
 }
 
+.board-zone-neutral {
+  stroke: var(--board-zone-neutral);
+  fill: var(--board-zone-neutral);
+}
+
 .board-zone-ok {
   stroke: var(--board-zone-ok);
   fill: var(--board-zone-ok);
@@ -594,6 +600,7 @@ path.board-zone {
 
 .board-gauge-unit {
   font-size: 12px;
+  font-weight: 700;
 }
 
 .board-needle path {
@@ -629,10 +636,6 @@ path.board-zone {
   text-anchor: start;
 }
 
-.board-level-tick-h {
-  text-anchor: middle;
-}
-
 .board-level-band {
   fill: var(--board-text);
   fill-opacity: 0.55;
@@ -642,6 +645,16 @@ path.board-zone {
 
 .board-pointer {
   fill: var(--board-text);
+}
+
+.board-meter-frame {
+  fill: none;
+  stroke: var(--board-text);
+  stroke-width: 2;
+}
+
+.board-needle-bar {
+  fill: var(--board-needle);
 }
 
 .board-lamp {

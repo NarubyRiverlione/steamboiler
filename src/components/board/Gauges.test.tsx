@@ -52,7 +52,7 @@ describe("LinearGauge", () => {
     expect(meter.getAttribute("aria-valuemin")).toBe("0")
     expect(meter.getAttribute("aria-valuemax")).toBe("3300")
     expect(meter.getAttribute("aria-valuenow")).toBe("1500")
-    expect(meter.getAttribute("viewBox")).toBe("0 0 300 100")
+    expect(meter.getAttribute("viewBox")).toBe("0 0 320 96")
   })
 
   it("places horizontal ticks left to right in scale units", () => {
@@ -70,7 +70,9 @@ describe("LinearGauge", () => {
   })
 
   it("clamps the pointer inside the scale", () => {
-    const { container, rerender } = render(<LinearGauge label="S" value={5000} max={3300} orientation="horizontal" />)
+    const { container, rerender } = render(
+      <LinearGauge label="S" value={5000} max={3300} orientation="horizontal" />,
+    )
     const d1: string | null = container.querySelector("path.board-pointer")?.getAttribute("d") ?? null
     rerender(<LinearGauge label="S" value={3300} max={3300} orientation="horizontal" />)
     expect(container.querySelector("path.board-pointer")?.getAttribute("d")).toBe(d1)
@@ -83,20 +85,57 @@ describe("LinearGauge", () => {
         value={0}
         max={3300}
         orientation="horizontal"
+        ticks={[0, 3300]}
         bands={[{ from: 2998, to: 3002 }]}
       />,
     )
     const band: Element = container.querySelectorAll("rect.board-level-band")[0]
     expect(Number(band.getAttribute("width"))).toBeGreaterThanOrEqual(3)
     const centre: number = Number(band.getAttribute("x")) + Number(band.getAttribute("width")) / 2
-    const glass: Element = container.querySelectorAll("rect.board-level-glass")[0]
-    const gx = Number(glass.getAttribute("x"))
-    const gw = Number(glass.getAttribute("width"))
-    expect(centre).toBeCloseTo(gx + (gw * 3000) / 3300)
+    const [x0, x1]: number[] = Array.from(container.querySelectorAll("line.board-tick")).map((l: Element) =>
+      Number(l.getAttribute("x1")),
+    )
+    expect(centre).toBeCloseTo(x0 + ((x1 - x0) * 3000) / 3300)
+  })
+
+  it("draws a horizontal meter: no glass or fill, even major and minor ticks, labels on the majors", () => {
+    const { container } = render(
+      <LinearGauge
+        label="Speed"
+        value={1500}
+        max={3300}
+        orientation="horizontal"
+        unit="rpm"
+        major={500}
+        minor={100}
+      />,
+    )
+    expect(container.querySelector("rect.board-level-glass")).toBeNull()
+    expect(container.querySelector("rect.board-level-fill")).toBeNull()
+    const labels: string[] = Array.from(container.querySelectorAll("text.board-gauge-text")).map(
+      (t: Element) => t.textContent ?? "",
+    )
+    expect(labels).toEqual(["0", "500", "1000", "1500", "2000", "2500", "3000", "rpm"])
+    // 34 ticks (0 to 3300 every 100)
+    expect(container.querySelectorAll("line.board-tick").length).toBe(34)
+    // the zone band is as tall as a major tick, framed by the scale outline
+    const frame: Element | null = container.querySelector("rect.board-meter-frame")
+    const majorTick: Element = container.querySelectorAll("line.board-tick-major")[0]
+    expect(Number(frame?.getAttribute("height"))).toBe(
+      Number(majorTick.getAttribute("y2")) - Number(majorTick.getAttribute("y1")),
+    )
+  })
+
+  it("labels only the major ticks of a vertical gauge with major and minor", () => {
+    const { container } = render(<LinearGauge label="L" value={10} major={50} minor={10} />)
+    expect(container.querySelectorAll("line.board-tick").length).toBe(11)
+    expect(container.querySelectorAll("text.board-gauge-text").length).toBe(3)
   })
 
   it("draws a band on a vertical gauge too, and the target line", () => {
-    const { container } = render(<LinearGauge label="L" value={10} bands={[{ from: 40, to: 60 }]} target={50} />)
+    const { container } = render(
+      <LinearGauge label="L" value={10} bands={[{ from: 40, to: 60 }]} target={50} />,
+    )
     expect(container.querySelectorAll("rect.board-level-band").length).toBe(1)
     expect(container.querySelector("[data-testid='level-target']")).toBeTruthy()
   })
