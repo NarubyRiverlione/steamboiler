@@ -349,6 +349,24 @@
   height: auto;
 }
 
+.board-overview-toggle {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-size: 1.15rem;
+}
+
+/* A live value label: a small LCD at diagram scale, inside a foreignObject */
+.board-overview-value {
+  display: flex;
+}
+
+.board-overview-value .board-display {
+  min-height: 0;
+  padding: 1px 4px;
+  font-size: 14px;
+}
+
 .board-overview-bg {
   fill: var(--board-mimic-bg);
 }
@@ -371,12 +389,6 @@
   font-size: 14px;
 }
 
-.board-node-value {
-  fill: var(--board-text);
-  font-family: var(--board-font-lcd);
-  font-size: 14px;
-  text-anchor: middle;
-}
 
 .board-node-name {
   fill: var(--board-text);

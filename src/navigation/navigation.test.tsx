@@ -233,7 +233,7 @@ describe("plant overview", () => {
     ["Condenser", "/condenser"],
     ["Condensation pump", "/condenser"],
     ["Recirculation pump", "/condenser"],
-    ["Air extraction pump", "/condenser"],
+    ["extraction", "/condenser"],
     ["SJAE", "/condenser"],
     ["Hotwell", "/condenser"],
   ])("the %s node opens %s", (label: string, path: string) => {
