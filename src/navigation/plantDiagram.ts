@@ -52,6 +52,7 @@ export type ValueId =
   | "condenserPressure"
   | "hotwellLevel"
   | "condensationPump"
+  | "feedPump"
   | "heaterTemperature"
   | "economizerTemperature"
   | "stackTemperature"
@@ -311,7 +312,7 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 1005, y: 498, text: "Return", anchor: "middle", bold: true },
   { x: 445, y: 498, text: "hotter Return", anchor: "middle", bold: true },
   { x: 502, y: 350, text: "hottest Return", anchor: "start", bold: true },
-  { x: 760, y: 562, text: "heater drain", anchor: "middle" },
+  { x: 760, y: 588, text: "heater drain", anchor: "middle" },
   { x: 772, y: 300, text: "auxiliary steam", anchor: "end" },
   { x: 1365, y: 470, text: "makeup", anchor: "middle" },
   { x: 1365, y: 545, text: "reject", anchor: "middle" },
@@ -338,6 +339,7 @@ export const DIAGRAM_VALUES: readonly DiagramValue[] = [
   { id: "condenserPressure", node: "condenser", label: "Condenser pressure", widest: "1100 mbar", x: 1250, y: 388, anchor: "middle" },
   { id: "hotwellLevel", node: "hotwell", label: "Hotwell level", widest: "100 %", x: 1250, y: 516, anchor: "middle" },
   { id: "condensationPump", node: "condpump", label: "Condensation pump position", widest: "100 %", x: 1100, y: 530, anchor: "middle" },
+  { id: "feedPump", node: "feedpump", label: "Boiler feed pump position", widest: "100 %", x: 770, y: 530, anchor: "middle" },
   { id: "heaterTemperature", node: "heater", label: "Extraction heater temperature", widest: "999 °C", x: 585, y: 540, anchor: "end" },
   { id: "economizerTemperature", node: "economizer", label: "Economizer temperature", widest: "999 °C", x: 265, y: 520, anchor: "middle" },
   { id: "stackTemperature", node: "stack", label: "Stack temperature", widest: "999 °C", x: 330, y: 662, anchor: "start" },

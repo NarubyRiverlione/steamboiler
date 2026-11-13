@@ -41,6 +41,7 @@ function livePlant(): PowerPlantState {
   state.Condenser.pressure = 87.4
   state.Condenser.hotwellWaterVolume = 35_000
   state.Condenser.condensationPumpValvePosition = 0.6
+  state.Deaerator.feedPumpValvePosition = 0.35
   state.Heater.returnTemperature = 143.2
   return state
 }
@@ -59,6 +60,7 @@ describe("plant overview values", () => {
     expect(text("Condenser pressure")).toBe("87 mbar")
     expect(text("Hotwell level")).toBe("70 %")
     expect(text("Condensation pump position")).toBe("60 %")
+    expect(text("Boiler feed pump position")).toBe("35 %")
     expect(text("Extraction heater temperature")).toBe("143 °C")
     expect(text("Economizer temperature")).toBe("187 °C")
     expect(text("Stack temperature")).toBe("213 °C")

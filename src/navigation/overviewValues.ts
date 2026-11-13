@@ -17,7 +17,7 @@ const percent = (fraction: number): string => `${(fraction * 100).toFixed(0)} %`
 const celsius = (value: number): string => `${value.toFixed(0)} °C`
 
 export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedValues): Record<ValueId, string> {
-  const { Boiler, Turbine, Condenser, Heater } = state
+  const { Boiler, Turbine, Condenser, Heater, Deaerator } = state
   return {
     boilerPressure: `${smoothed.pressure.toFixed(1)} bar`,
     boilerLevel: percent(Boiler.waterVolume / CstBoiler.TotalVolume),
@@ -30,6 +30,7 @@ export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedVal
     condenserPressure: `${Condenser.pressure.toFixed(0)} mbar`,
     hotwellLevel: percent(smoothed.hotwellLevel),
     condensationPump: percent(Condenser.condensationPumpValvePosition),
+    feedPump: percent(Deaerator.feedPumpValvePosition),
     heaterTemperature: celsius(Heater.returnTemperature),
     economizerTemperature: celsius(Boiler.returnTemperatureOut),
     stackTemperature: celsius(Boiler.stackTemperature),
