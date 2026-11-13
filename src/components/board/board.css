@@ -58,6 +58,7 @@
   --board-led-off: #5a2a2a;
   --board-gauge-face: #f4f2ea;
   --board-focus-ring: #1f5fbf;
+  --board-zone-neutral: #ffffff; /* a scale range with no meaning of its own, e.g. the run-up */
   --board-zone-ok: #2f9e44;
   --board-zone-warn: #f08c00;
   --board-zone-alarm: #e03131;
@@ -555,6 +556,11 @@ body {
 .board-zone {
   fill: none;
   stroke-width: 6;
+}
+
+.board-zone-neutral {
+  stroke: var(--board-zone-neutral);
+  fill: var(--board-zone-neutral);
 }
 
 .board-zone-ok {

@@ -2,7 +2,7 @@
 
 import "./board.css"
 
-export type GaugeZone = { readonly from: number; readonly to: number; readonly tone: "ok" | "warn" | "alarm" }
+export type GaugeZone = { readonly from: number; readonly to: number; readonly tone: "neutral" | "ok" | "warn" | "alarm" }
 
 type RoundGaugeProps = {
   readonly label: string

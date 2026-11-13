@@ -5,7 +5,7 @@ The turbine trips when its speed is at or above the **overspeed limit** (`CstTur
 ## Considered options
 
 - **Nothing, `MaxRPM` stays a figure:** rejected. Full flow in Free settles near twice sync speed, where the drive torque is zero ([ADR 0021](0021-turbine-runup-from-steam-power.md)), and a load lost in Free is unprotected ([ADR 0027](0027-generator-load-is-a-resisting-torque.md)). The owner promoted the protection to P3.
-- **A separate overspeed alarm before the trip, or a second mechanical trip stage:** rejected for now. The dial already turns orange above 105%, and one trip is what the model needs.
+- **A separate overspeed alarm before the trip, or a second mechanical trip stage:** rejected for now. The speed meter already turns orange above 3100 rpm (sync + 100) and red above the 3300 rpm trip, and one trip is what the model needs.
 - **A trip speed other than `MaxRPM`:** rejected. One number, already in the design basis. The operator cannot select it: the highest selectable speed is the 3000 rpm run-up point.
 - **Close the main steam valve or open the bypass on the trip:** rejected. Not done for the vacuum trip either.
 
