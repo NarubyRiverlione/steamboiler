@@ -1,6 +1,6 @@
 /** The text of each live value on the plant overview (#99), from the plant state; the levels and the pressure arrive smoothed, as the part pages show them. */
 
-import { CstSimulation } from "../context/const"
+import { CstDeaerator, CstSimulation } from "../context/const"
 import type PowerPlantState from "../context/PowerPlantState"
 import type { ValueId } from "./plantDiagram"
 
@@ -30,6 +30,8 @@ export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedVal
     condenserPressure: `${Condenser.pressure.toFixed(0)} mbar`,
     hotwellLevel: percent(smoothed.hotwellLevel),
     condensationPump: percent(Condenser.condensationPumpValvePosition),
+    deaeratorTemperature: celsius(Deaerator.temperature),
+    deaeratorLevel: percent(Deaerator.waterVolume / CstDeaerator.TotalVolume),
     feedPump: percent(Deaerator.feedPumpValvePosition),
     heaterTemperature: celsius(Heater.returnTemperature),
     economizerTemperature: celsius(Boiler.returnTemperatureOut),

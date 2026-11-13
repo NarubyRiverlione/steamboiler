@@ -388,12 +388,6 @@
   font-size: 14px;
 }
 
-.board-node-value {
-  fill: var(--board-text);
-  font-family: var(--board-font-lcd);
-  font-size: 14px;
-  text-anchor: middle;
-}
 
 .board-node-name {
   fill: var(--board-text);

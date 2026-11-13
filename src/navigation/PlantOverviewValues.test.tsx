@@ -42,6 +42,8 @@ function livePlant(): PowerPlantState {
   state.Condenser.hotwellWaterVolume = 35_000
   state.Condenser.condensationPumpValvePosition = 0.6
   state.Deaerator.feedPumpValvePosition = 0.35
+  state.Deaerator.temperature = 133.5
+  state.Deaerator.waterVolume = 75_000
   state.Heater.returnTemperature = 143.2
   return state
 }
@@ -60,6 +62,8 @@ describe("plant overview values", () => {
     expect(text("Condenser pressure")).toBe("87 mbar")
     expect(text("Hotwell level")).toBe("70 %")
     expect(text("Condensation pump position")).toBe("60 %")
+    expect(text("Deaerator temperature")).toBe("134 °C")
+    expect(text("Deaerator level")).toBe("50 %")
     expect(text("Boiler feed pump position")).toBe("35 %")
     expect(text("Extraction heater temperature")).toBe("143 °C")
     expect(text("Economizer temperature")).toBe("187 °C")
@@ -87,7 +91,6 @@ describe("plant overview values", () => {
     fireEvent.click(toggle)
     expect(toggle.getAttribute("aria-pressed")).toBe("false")
     for (const value of DIAGRAM_VALUES) expect(screen.queryByLabelText(value.label)).toBeNull()
-    expect(screen.queryByText("134 °C")).toBeNull()
     fireEvent.click(toggle)
     expect(screen.queryByLabelText("Boiler pressure")).not.toBeNull()
   })

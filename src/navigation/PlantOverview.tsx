@@ -1,4 +1,4 @@
-/** Plant overview: the plant to be (ADR 0029) as an SVG, drawn from plantDiagram.ts. A part with controls links to its page and carries an alarm LED. The live values (#99) are LCD labels beside the nodes, all hidden by the Values toggle: the list is DIAGRAM_VALUES and the deaerator's temperature and level; the deaerator's safe-to-close lamp (ADR 0038) is not a value and always shows. */
+/** Plant overview: the plant to be (ADR 0029) as an SVG, drawn from plantDiagram.ts. A part with controls links to its page and carries an alarm LED. The live values (#99) are LCD labels beside the nodes, all hidden by the Values toggle: the list is DIAGRAM_VALUES; the deaerator's safe-to-close lamp (ADR 0038) is not a value and always shows. */
 
 import { useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
@@ -20,7 +20,6 @@ import {
   type DiagramValue,
   type NodeSymbol,
 } from "./plantDiagram"
-import { CstDeaerator } from "../context/const"
 import { hotwellFraction, overviewValueTexts } from "./overviewValues"
 import { PARTS, partAlarms } from "./plantParts"
 
@@ -118,7 +117,7 @@ function PlantOverview() {
   const hotwellLevel: number = useEMA(hotwellFraction(state), 0.1)
   const texts = overviewValueTexts(state, { pressure: smoothPressure, hotwellLevel })
   const alarms = partAlarms(state)
-  const { temperature, waterVolume, startUpVentOpen, safeToClose } = state.Deaerator
+  const { startUpVentOpen, safeToClose } = state.Deaerator
   const deaerator: DiagramNode | undefined = NODES.find((node: DiagramNode) => node.id === "deaerator")
   return (
     <PanelFrame title="Plant">
@@ -198,16 +197,6 @@ function PlantOverview() {
         )}
         {deaerator !== undefined && (
           <g className="board-node-values" pointerEvents="none">
-            {showValues && (
-              <>
-                <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + 20}>
-                  {temperature.toFixed(0)} °C
-                </text>
-                <text className="board-node-value" x={deaerator.x + deaerator.w / 2} y={deaerator.y + deaerator.h - 10}>
-                  {((waterVolume / CstDeaerator.TotalVolume) * 100).toFixed(0)} %
-                </text>
-              </>
-            )}
             {startUpVentOpen && (
               <g transform={"translate(" + String(deaerator.x + deaerator.w) + " " + String(deaerator.y) + ")"}>
                 <Led lit={safeToClose} tone="ok" label="Deaerator safe to close" />
