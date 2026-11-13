@@ -641,6 +641,12 @@ path.board-zone {
   fill: var(--board-text);
 }
 
+.board-meter-frame {
+  fill: none;
+  stroke: var(--board-text);
+  stroke-width: 2;
+}
+
 .board-needle-bar {
   fill: var(--board-needle);
 }

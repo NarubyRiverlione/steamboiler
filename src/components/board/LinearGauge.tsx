@@ -1,4 +1,4 @@
-/** Linear gauge on any min-max scale. Vertical: a vessel level (glass, water fill, zone strip, ticks, pointer). Horizontal: a straight-scale meter (dial face, zones on the scale, major and minor ticks, a needle). Adapted from MC-v2 / the full-board mockup (level). */
+/** Linear gauge on any min-max scale. Vertical: a vessel level (glass, water fill, zone strip, ticks, pointer). Horizontal: a straight-scale meter (dial face, a framed zone band as tall as the major ticks, major and minor ticks, a needle). Adapted from MC-v2 / the full-board mockup (level). */
 
 import "./board.css"
 import type { GaugeZone } from "./RoundGauge"
@@ -142,13 +142,13 @@ function HorizontalMeter({
             className={`board-zone-bar board-zone-${z.tone}`}
             data-tone={z.tone}
             x={r.from}
-            y={50}
+            y={36}
             width={r.size}
-            height={6}
+            height={20}
           />
         )
       })}
-      <line className="board-tick board-tick-major" x1={start} y1={56} x2={end} y2={56} />
+      <rect className="board-meter-frame" x={start} y={36} width={end - start} height={20} />
       {scale.ticks.map((t: Tick) => (
         <g key={t.at}>
           <line

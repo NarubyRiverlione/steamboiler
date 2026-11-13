@@ -59,9 +59,9 @@ describe("LinearGauge", () => {
     const { container } = render(
       <LinearGauge label="Speed" value={0} max={3300} orientation="horizontal" ticks={[0, 1650, 3300]} />,
     )
-    const xs: number[] = Array.from(container.querySelectorAll("line.board-tick"))
-      .slice(1)
-      .map((l: Element) => Number(l.getAttribute("x1")))
+    const xs: number[] = Array.from(container.querySelectorAll("line.board-tick")).map((l: Element) =>
+      Number(l.getAttribute("x1")),
+    )
     expect(xs.length).toBe(3)
     expect(xs[0]).toBeLessThan(xs[1])
     expect(xs[1]).toBeLessThan(xs[2])
@@ -92,9 +92,9 @@ describe("LinearGauge", () => {
     const band: Element = container.querySelectorAll("rect.board-level-band")[0]
     expect(Number(band.getAttribute("width"))).toBeGreaterThanOrEqual(3)
     const centre: number = Number(band.getAttribute("x")) + Number(band.getAttribute("width")) / 2
-    const [x0, x1]: number[] = Array.from(container.querySelectorAll("line.board-tick"))
-      .slice(1)
-      .map((l: Element) => Number(l.getAttribute("x1")))
+    const [x0, x1]: number[] = Array.from(container.querySelectorAll("line.board-tick")).map((l: Element) =>
+      Number(l.getAttribute("x1")),
+    )
     expect(centre).toBeCloseTo(x0 + ((x1 - x0) * 3000) / 3300)
   })
 
@@ -116,8 +116,14 @@ describe("LinearGauge", () => {
       (t: Element) => t.textContent ?? "",
     )
     expect(labels).toEqual(["0", "500", "1000", "1500", "2000", "2500", "3000", "rpm"])
-    // 34 ticks (0 to 3300 every 100) plus the scale baseline
-    expect(container.querySelectorAll("line.board-tick").length).toBe(35)
+    // 34 ticks (0 to 3300 every 100)
+    expect(container.querySelectorAll("line.board-tick").length).toBe(34)
+    // the zone band is as tall as a major tick, framed by the scale outline
+    const frame: Element | null = container.querySelector("rect.board-meter-frame")
+    const majorTick: Element = container.querySelectorAll("line.board-tick-major")[0]
+    expect(Number(frame?.getAttribute("height"))).toBe(
+      Number(majorTick.getAttribute("y2")) - Number(majorTick.getAttribute("y1")),
+    )
   })
 
   it("labels only the major ticks of a vertical gauge with major and minor", () => {
@@ -138,9 +144,9 @@ describe("LinearGauge", () => {
     const { container } = render(
       <LinearGauge label="S" value={50} min={50} max={150} orientation="horizontal" ticks={[50, 100, 150]} />,
     )
-    const xs: number[] = Array.from(container.querySelectorAll("line.board-tick"))
-      .slice(1)
-      .map((l: Element) => Number(l.getAttribute("x1")))
+    const xs: number[] = Array.from(container.querySelectorAll("line.board-tick")).map((l: Element) =>
+      Number(l.getAttribute("x1")),
+    )
     expect(xs[1] - xs[0]).toBeCloseTo(xs[2] - xs[1])
     expect(screen.getByRole("meter").getAttribute("aria-valuemin")).toBe("50")
   })
