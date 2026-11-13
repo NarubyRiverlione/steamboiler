@@ -13,24 +13,24 @@ Next: the first ticket with nothing under Waiting on.
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 1 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
-| 2 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P3 | needs-triage |  |  |
-| 3 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P3 | needs-triage |  |  |
-| 4 | [#126](https://github.com/NarubyRiverlione/steamboiler/issues/126) Dedicated reset for latched trips | P3 | needs-triage |  |  |
-| 5 | [#127](https://github.com/NarubyRiverlione/steamboiler/issues/127) Valve knob ramp stops when navigating to another page | P3 | — |  |  |
-| 6 | [#128](https://github.com/NarubyRiverlione/steamboiler/issues/128) QA review of the test suite: is every test useful? | P3 | needs-triage |  |  |
-| 7 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | needs-triage |  |  |
-| 8 | [#133](https://github.com/NarubyRiverlione/steamboiler/issues/133) Test PowerPlantProvider: the simulation loop and the action creators | P3 | needs-triage |  |  |
-| 9 | [#135](https://github.com/NarubyRiverlione/steamboiler/issues/135) Generator: synchronised speed mode while the breaker is closed | P3 | ready-for-agent |  |  |
+| 2 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P3 | needs-triage |  |  |
+| 3 | [#126](https://github.com/NarubyRiverlione/steamboiler/issues/126) Dedicated reset for latched trips | P3 | needs-triage |  |  |
+| 4 | [#127](https://github.com/NarubyRiverlione/steamboiler/issues/127) Valve knob ramp stops when navigating to another page | P3 | — |  |  |
+| 5 | [#128](https://github.com/NarubyRiverlione/steamboiler/issues/128) QA review of the test suite: is every test useful? | P3 | needs-triage |  |  |
+| 6 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | needs-triage |  |  |
+| 7 | [#133](https://github.com/NarubyRiverlione/steamboiler/issues/133) Test PowerPlantProvider: the simulation loop and the action creators | P3 | needs-triage |  |  |
+| 8 | [#135](https://github.com/NarubyRiverlione/steamboiler/issues/135) Generator: synchronised speed mode while the breaker is closed | P3 | ready-for-agent |  |  |
 
 ## P4: parked
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 10 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P4 | ready-for-agent |  |  |
-| 11 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P4 | needs-triage |  |  |
-| 12 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Level zones (green, orange, red) on the gauge of every vessel | P5 (↑P4) | needs-triage |  | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) |
-| 13 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
-| 14 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
+| 9 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P4 | ready-for-agent |  |  |
+| 10 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P4 | needs-triage |  |  |
+| 11 | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) Level zones (green, orange, red) on the gauge of every vessel | P5 (↑P4) | needs-triage |  | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) |
+| 12 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
+| 13 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
+| 14 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
 | 15 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | P4 | needs-triage |  |  |
 | 16 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Annunciation for every level zone: warning tile per orange range, trip and error tile per red range | P4 | needs-triage | [#54](https://github.com/NarubyRiverlione/steamboiler/issues/54) |  |
 
