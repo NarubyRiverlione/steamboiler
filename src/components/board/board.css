@@ -629,10 +629,6 @@ path.board-zone {
   text-anchor: start;
 }
 
-.board-level-tick-h {
-  text-anchor: middle;
-}
-
 .board-level-band {
   fill: var(--board-text);
   fill-opacity: 0.55;
@@ -642,6 +638,10 @@ path.board-zone {
 
 .board-pointer {
   fill: var(--board-text);
+}
+
+.board-needle-bar {
+  fill: var(--board-needle);
 }
 
 .board-lamp {

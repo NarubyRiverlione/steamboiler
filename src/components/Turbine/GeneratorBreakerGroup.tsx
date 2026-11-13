@@ -1,4 +1,4 @@
-/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the horizontal RPM gauge. */
+/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the horizontal RPM meter. */
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
@@ -10,7 +10,7 @@ import { TurnSwitch } from "../board/TurnSwitch"
 import type { TurbineState } from "./types"
 
 const {
-  CstTurbine: { SyncRPM, MaxRPM, BreakerRPMMargin, RunUpPoints },
+  CstTurbine: { SyncRPM, MaxRPM, BreakerRPMMargin },
 } = CstSimulation
 
 const MIN_SYNC: number = SyncRPM - BreakerRPMMargin
@@ -46,8 +46,17 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
             on={generatorBreaker}
             onToggle={onToggleBreaker}
             disabled={blocked}
-            title={blocked ? `Breaker can only be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM` : undefined}
-            guard={{ lifted: coverLifted, onToggleCover: () => { setCoverLifted(!coverLifted) } }}
+            title={
+              blocked
+                ? `Breaker can only be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM`
+                : undefined
+            }
+            guard={{
+              lifted: coverLifted,
+              onToggleCover: () => {
+                setCoverLifted(!coverLifted)
+              },
+            }}
           />
         </div>
       </div>
@@ -70,7 +79,9 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
         value={rpm}
         min={0}
         max={MaxRPM}
-        ticks={RunUpPoints}
+        unit="rpm"
+        major={500}
+        minor={100}
         zones={RPM_ZONES}
         bands={SYNC_BANDS}
       />
