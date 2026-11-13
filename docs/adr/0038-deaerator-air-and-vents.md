@@ -7,7 +7,7 @@ Decided in #40 (start-up discussion, 2026-11-09); built in #120 (the numbers and
 - **Two vents:** a manual **start-up vent** (open/close, operator control) and an automatic **operating vent** (a small fixed orifice, always open, no control, not drawn). The operating vent's steam loss is part of the water and energy balance and is recorded in `design-basis.md`.
 - **Vent open with air present** removes the air. **Vent open with no air left** passes steam only; that mass leaves the water balance and returns as makeup demand ([ADR 0002](0002-makeup-into-hotwell.md)), and pressure cannot build, so the temperature stalls near 100 °C.
 - **Vent closed with air present:** steam cannot push the air out, pressure climbs while the temperature lags saturation, heating is slow, and above the relief pressure the relief valve lifts and loses steam.
-- **No damage and no O₂ penalties.** Those are the P4 ticket #114.
+- **No damage and no O₂ penalties.** Those are ticket #114.
 - **Safe-to-close lamp** comes from the air amount (air partial pressure below a small threshold), not from a separate rule.
 - **Warnings, not trips:** the sim exposes two flags (closed with air present; open with no air left). The yellow annunciator tile belongs to #116; it declares `severity: "warning"` in `alarms.ts` (the severity colours are built, #115).
 - **Panel:** own page with temperature, pressure, saturation pressure (the gap to pressure is the air), level %, lamp, vent control and warning text. The overview shows temperature, level % and the lamp while the start-up vent is open.

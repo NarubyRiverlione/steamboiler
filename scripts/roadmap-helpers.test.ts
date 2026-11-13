@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest"
 import {
-  areaOf,
   dependentsOf,
   effectivePriorities,
   planTickets,
   priorityOf,
   renderRoadmap,
   statusOf,
+  themeOf,
   Ticket,
   UNPRIORITISED,
 } from "./roadmap-helpers"
@@ -86,103 +86,93 @@ describe("planTickets", () => {
   })
 })
 
+describe("themeOf", () => {
+  test("picks the theme label and falls back to no theme", () => {
+    expect(themeOf(["enhancement", "turbine-aux"])).toBe("turbine-aux")
+    expect(themeOf(["enhancement"])).toBe("no theme")
+  })
+})
+
+describe("planTickets by theme", () => {
+  test("orders normal tickets by theme list order, then number", () => {
+    expect(order([ticket(1, ["sim-core"]), ticket(2, ["ui"]), ticket(3, ["electrical"]), ticket(4)])).toEqual(
+      [3, 2, 1, 4],
+    )
+  })
+
+  test("urgent tickets come before every theme", () => {
+    expect(order([ticket(1, ["electrical"]), ticket(2, ["sim-core", "P2"])])).toEqual([2, 1])
+  })
+})
+
 describe("renderRoadmap", () => {
   const md = renderRoadmap(
-    [ticket(6, ["P2", "needs-info"]), { ...ticket(8, ["P1"], [6]), title: "Steam | water" }, ticket(15)],
+    [
+      { ...ticket(6, ["P2", "needs-info", "sim-core"]), title: "Steam | water" },
+      ticket(8, ["P1", "plant-systems"], [6]),
+      ticket(15, ["ui", "ready-for-agent"]),
+      ticket(16, ["electrical", "needs-triage"]),
+      ticket(17, ["electrical", "ready-for-agent"], [16]),
+      ticket(18),
+    ],
     "https://github.com/o/r",
     "2026-10-28",
   )
+  const headings = md.split("\n").filter((l) => l.startsWith("## "))
 
-  test("lists tickets in plan order with what they wait on and unblock", () => {
+  test("puts urgent tickets on top and then one section per used theme in list order", () => {
+    expect(headings).toEqual([
+      "## Broken or wrong (P1, P2)",
+      "## Electrical: auxiliary load, grid supply, vital bus, UPS",
+      "## UI and UX",
+      "## No theme",
+    ])
+  })
+
+  test("a blocker of an urgent ticket inherits the urgency and shows its theme", () => {
     expect(md).toContain(
-      "| 1 | [#6](https://github.com/o/r/issues/6) Ticket 6 | P2 (↑P1) | needs-info |  | [#8](https://github.com/o/r/issues/8) |",
+      "| 1 | [#6](https://github.com/o/r/issues/6) Steam \\| water | P2 (↑P1) | sim-core | needs-info |  | [#8](https://github.com/o/r/issues/8) |",
     )
     expect(md).toContain(
-      "| 2 | [#8](https://github.com/o/r/issues/8) Steam \\| water | P1 | — | [#6](https://github.com/o/r/issues/6) |  |",
+      "| 2 | [#8](https://github.com/o/r/issues/8) Ticket 8 | P1 | plant-systems | — | [#6](https://github.com/o/r/issues/6) |  |",
     )
-    expect(md).toContain("| 3 | [#15](https://github.com/o/r/issues/15) Ticket 15 | — | — |  |  |")
   })
 
-  test("lists a blocked P2 above a free P3", () => {
-    const rows = renderRoadmap([ticket(1, ["P3"]), ticket(2, ["P2"], [3]), ticket(3, ["P4"])], "u", "d")
-      .split("\n")
-      .filter((l) => /^\| \d/.test(l))
-      .map((l) => /#(\d+)/.exec(l)?.[1])
-    expect(rows).toEqual(["3", "2", "1"])
+  test("names the next ready, unblocked ticket of a theme", () => {
+    expect(md).toContain("Next: [#15](https://github.com/o/r/issues/15) Ticket 15")
   })
 
-  test("gives each priority its own table and skips empty ones", () => {
-    const headings = renderRoadmap([ticket(1, ["P5"]), ticket(2, ["P2"]), ticket(3)], "u", "d")
-      .split("\n")
-      .filter((l) => l.startsWith("## "))
-    expect(headings).toEqual(["## P2: realism in scope", "## P5: UI and UX", "## No priority"])
+  test("says when a theme has nothing ready", () => {
+    expect(md).toContain("Next: nothing ready")
   })
 
-  test("puts a blocker in the section of the priority it inherits", () => {
-    const section = md.slice(md.indexOf("## P1: broken"), md.indexOf("## No priority"))
-    expect(section).toContain("[#6]")
-    expect(section).toContain("P2 (↑P1)")
-    expect(md).not.toContain("## P2")
+  test("a ready ticket waiting on a blocker is not the next one", () => {
+    const section = md.slice(md.indexOf("## Electrical"), md.indexOf("## UI"))
+    expect(section).toContain("Next: nothing ready")
   })
 
-  test("keeps counting across sections", () => {
-    const numbers = renderRoadmap([ticket(1, ["P1"]), ticket(2, ["P3"]), ticket(3, ["P5"])], "u", "d")
-      .split("\n")
-      .filter((l) => /^\| \d/.test(l))
-      .map((l) => l.split(" ")[1])
-    expect(numbers).toEqual(["1", "2", "3"])
-  })
-
-  test("titles a P label without a meaning by the label alone", () => {
-    expect(renderRoadmap([ticket(1, ["P7"])], "u", "d")).toContain("## P7\n")
-  })
-
-  test("keeps the numbers ascending when a cycle breaks the priority order", () => {
-    const cycle = [
-      ticket(1, ["P1"]),
-      ticket(2, [], [1, 3]),
-      ticket(3, ["P3"], [2, 4]),
-      ticket(4, ["P2"], [6]),
-      ticket(5, ["P4"]),
-      ticket(6, ["P1"], [2]),
-    ]
-    const numbers = renderRoadmap(cycle, "u", "d")
+  test("numbers follow the work order across sections", () => {
+    const numbers = md
       .split("\n")
       .filter((l) => /^\| \d/.test(l))
       .map((l) => Number(l.split(" ")[1]))
     expect(numbers).toEqual([1, 2, 3, 4, 5, 6])
   })
 
+  test("skips the urgent section when nothing is urgent", () => {
+    expect(renderRoadmap([ticket(1, ["ui"])], "u", "d")).not.toContain("## Broken or wrong")
+  })
+
+  test("still lists every ticket once when blockers form a cycle", () => {
+    const cycle = [ticket(1, ["P1"], [2]), ticket(2, ["ui"], [1]), ticket(3, ["electrical"])]
+    const numbers = renderRoadmap(cycle, "u", "d")
+      .split("\n")
+      .filter((l) => /^\| \d/.test(l))
+      .map((l) => Number(l.split(" ")[1]))
+    expect([...numbers].sort()).toEqual([1, 2, 3])
+  })
+
   test("stamps the date and count", () => {
-    expect(md).toContain("_Updated 2026-10-28 · 3 open tickets_")
-  })
-})
-
-describe("areaOf", () => {
-  test("picks the area label and falls back to other", () => {
-    expect(areaOf(["P4", "turbine-aux"])).toBe("turbine-aux")
-    expect(areaOf(["P4", "enhancement"])).toBe("other")
-  })
-})
-
-describe("renderRoadmap P4 areas", () => {
-  const md = renderRoadmap(
-    [
-      ticket(1, ["P4", "scenario"]),
-      ticket(2, ["P4", "electrical"]),
-      ticket(3, ["P4"]),
-      ticket(4, ["P3", "electrical"]),
-    ],
-    "https://x",
-    "2026-01-01",
-  )
-
-  test("splits P4 into area sub-tables in display order, other last", () => {
-    const headings = md.split("\n").filter((l) => l.startsWith("###"))
-    expect(headings).toEqual(["### electrical", "### scenario", "### other"])
-  })
-
-  test("leaves other priorities as one table", () => {
-    expect(md).toContain("## P3: experience and project health\n\n| #")
+    expect(md).toContain("_Updated 2026-10-28 · 6 open tickets_")
   })
 })

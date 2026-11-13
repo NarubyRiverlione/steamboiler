@@ -1,6 +1,6 @@
 # A UI redo in an industrial style: the analog control-room board
 
-**Status: decided.** The owner chose **option A, the analog control-room board in the MC-v2 language**, over option B, the ISA-101 DCS screen (#75). The redo has the lowest priority, `P5` ([ADR 0024](0024-ticket-priority-by-kind-of-work.md)): the physics goes first.
+**Status: decided.** The owner chose **option A, the analog control-room board in the MC-v2 language**, over option B, the ISA-101 DCS screen (#75). The redo is the `ui` theme ([ADR 0024](0024-tickets-ordered-by-theme.md)): the physics goes first.
 
 The work so far went to the physics on purpose: it is the core of the simulator. The headless runner (`pnpm sim`, [dev/headless-runner.md](../dev/headless-runner.md)) made that work possible: every physics and parameter change is judged on its report, not in the app, and before it existed the project was stuck. The website's UI and UX get a complete redo in an industrial style: panels, readouts, knobs.
 
