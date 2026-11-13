@@ -40,13 +40,14 @@ So the steam flow is about right, but the model turns it into speed far too slow
 | **Free** | the operator | none | always |
 | **Ramp up** | the PID | the speed reference, moving up at the run-up rate | main steam valve open and the selected point above the current speed |
 | **Hold** | the PID | the selected run-up point, no ramp | within ±5 rpm of the selected point |
+| **Synchronised** | the PID (as Hold) | 3000 rpm | closing the generator breaker; never selected (#135) |
 
 - **Run-up points:** the operator picks 500, 1500, 2500 or 3000 rpm. There is no free setpoint, so a setpoint step can never reach Hold.
 - **Arrival:** when the speed reference reaches the selected point and the speed is within ±5 rpm of it, Ramp up engages Hold at that point. The turbine stays there until the operator picks a higher point, which starts Ramp up again, or switches to Free.
 - **Hold stays on** if the speed leaves the ±5 rpm window: pulling it back is the PID's job. Switching to Free is always allowed.
 - **Up only:** there is no ramp down. To slow down, the operator switches to Free and closes the valve.
 - **No minimum time at a point:** the sim has no rotor temperature for a soak to act on, so a forced wait would only be a timer.
-- **Hold is the mode that carries load:** electrical load is a resisting torque on the shaft ([ADR 0027](0027-generator-load-is-a-resisting-torque.md), #71), so the speed sags and the Hold PID opens the valve; more load takes more steam.
+- **Synchronised carries load (#135):** closing the breaker enters it, with the speed mode and run-up point locked while the breaker is closed. The breaker opening on its own (speed outside ±2 rpm) goes to Hold at 3000 rpm, so a load rejection stays governed; opening it by hand or a trip goes to Free. Hold is the mode that carries load otherwise: electrical load is a resisting torque on the shaft ([ADR 0027](0027-generator-load-is-a-resisting-torque.md), #71), so the speed sags and the Hold PID opens the valve; more load takes more steam.
 
 ### Realism rule
 

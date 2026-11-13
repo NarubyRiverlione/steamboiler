@@ -8,7 +8,7 @@ import { LensButton } from "../board/LensButton"
 import type { TurbineState } from "./types"
 
 const {
-  CstTurbine: { RunUpPoints, SyncRPM },
+  CstTurbine: { RunUpPoints },
 } = CstSimulation
 
 // Synchronised is not a button: closing the breaker enters it (#135)
@@ -57,7 +57,7 @@ export function SpeedControlGroup({ turbine, onSetSpeedMode, onSelectRunUpPoint 
             <LensButton
               key={point}
               small
-              pressed={(turbine.speedMode === "synchronised" ? SyncRPM : turbine.runUpPoint) === point}
+              pressed={turbine.runUpPoint === point}
               disabled={refusal !== undefined}
               title={refusal}
               onClick={() => {

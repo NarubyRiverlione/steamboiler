@@ -108,7 +108,7 @@ describe("Turbine page", () => {
   })
 
   it.each([2999, 3001])("locks every speed button while synchronised, at %s rpm (#135)", (rpm) => {
-    const fns = renderTurbine({ mainSteamValve: true, generatorBreaker: true, speedMode: "synchronised", runUpPoint: 1500, rpm })
+    const fns = renderTurbine({ mainSteamValve: true, generatorBreaker: true, speedMode: "synchronised", runUpPoint: 3000, rpm })
     const locked: string[] = ["Free", "Ramp up", "Hold", "500 rpm", "1500 rpm", "2500 rpm", "3000 rpm"]
     for (const name of locked) {
       const button: HTMLButtonElement = screen.getByRole("button", { name })

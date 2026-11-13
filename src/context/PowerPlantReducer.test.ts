@@ -492,8 +492,8 @@ describe("powerPlantReducer", () => {
         const closedState: PowerPlantState = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, synced("hold"))
 
         test.each(speedModes)("closing from %s enters synchronised at 3000 with the integral cleared", (speedMode) => {
-          const { speedMode: mode, speedReference, pidIntegralError, generatorBreaker } = toggle(synced(speedMode))
-          expect([generatorBreaker, mode, speedReference, pidIntegralError]).toEqual([true, "synchronised", CstTurbine.SyncRPM, 0])
+          const { speedMode: mode, speedReference, pidIntegralError, generatorBreaker, runUpPoint } = toggle(synced(speedMode))
+          expect([generatorBreaker, mode, speedReference, pidIntegralError, runUpPoint]).toEqual([true, "synchronised", CstTurbine.SyncRPM, 0, CstTurbine.SyncRPM])
         })
 
         test("a refused close (out of the window) leaves the mode alone", () => {

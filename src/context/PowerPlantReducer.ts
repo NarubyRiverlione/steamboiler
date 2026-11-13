@@ -251,7 +251,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     const { rpm, generatorBreaker: wasClosed } = state.Turbine
     const generatorBreaker: boolean = !wasClosed && isAtSyncSpeed(rpm)
     if (generatorBreaker) {
-      return withTurbine(state, { generatorBreaker, speedMode: "synchronised", speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
+      return withTurbine(state, { generatorBreaker, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
     }
     return withTurbine(state, { generatorBreaker, electricOutput: 0, loadSetpoint: 0, ...(wasClosed ? freeAt(rpm) : {}) })
   },
