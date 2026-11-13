@@ -1,4 +1,4 @@
-/** Linear gauge on any min-max scale. Vertical: a vessel level (glass, water fill, zone strip, ticks, pointer). Horizontal: a straight-scale meter (dial face, a framed zone band as tall as the major ticks, major and minor ticks, a needle). Adapted from MC-v2 / the full-board mockup (level). */
+/** Linear gauge on any min-max scale. Vertical: a vessel level (glass, water fill, zone strip, ticks, pointer). Horizontal: a straight-scale meter (dial face, a framed zone band as tall as the major ticks, major and minor ticks, a triangle pointer above the scale). Adapted from MC-v2 / the full-board mockup (level). */
 
 import "./board.css"
 import type { GaugeZone } from "./RoundGauge"
@@ -186,9 +186,10 @@ function HorizontalMeter({
           {unit}
         </text>
       )}
+      {/* a triangle above the scale, tip on its top edge */}
       <path
         className="board-pointer board-needle-bar"
-        d={`M${String(at - 1.5)} 62 L${String(at - 1.5)} 20 L${String(at)} 14 L${String(at + 1.5)} 20 L${String(at + 1.5)} 62 Z`}
+        d={`M${String(at)} 36 L${String(at - 7)} 16 L${String(at + 7)} 16 Z`}
       />
     </>
   )
