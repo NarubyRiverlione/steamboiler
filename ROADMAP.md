@@ -12,7 +12,7 @@ Next: the first ticket with nothing under Waiting on.
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | needs-triage |  |  |
+| 1 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | ready-for-agent |  |  |
 | 2 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P3 | needs-triage |  |  |
 | 3 | [#128](https://github.com/NarubyRiverlione/steamboiler/issues/128) QA review of the test suite: is every test useful? | P3 | needs-triage |  |  |
 | 4 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | needs-triage |  |  |
