@@ -9,7 +9,6 @@ import {
   isWithinHoldWindow,
   loadAfter,
   maxTurbineValvePosition,
-  turbineTrippedAfter,
 } from "../../utils/turbineCalculations"
 import { shaftDropWithExtraction } from "../../utils/extractionHeater"
 import { SpeedMode, TurbineState } from "../PowerPlantState"
@@ -61,16 +60,15 @@ function TurbineTick(
   const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
   if ((isAboveVacuumLimit(condenserPressure) || isAtOverspeed(newRPM)) && currentPosition > 0) return { ...ticked, ...turbineTrip }
 
-  // Otherwise the Ramp up / Hold PID may move the valve, never past the cap; an opening clears the trip flag
+  // Otherwise the Ramp up / Hold PID may move the valve, never past the cap; while tripped it may not open (only a trip reset clears the flag, ADR 0043)
   // A breaker that auto-opened this tick ends Synchronised in Hold at sync speed, so the governor survives a load rejection (#135)
   const lostSync: boolean = turbineState.speedMode === "synchronised" && !generatorBreaker
   const control: TurbineState = lostSync ? { ...turbineState, speedMode: "hold", runUpPoint: CstTurbine.SyncRPM } : turbineState
-  const pid = updateTurbineValve(control, newRPM, maxTurbineValvePosition(currentPosition, condenserPressure))
+  const pid = updateTurbineValve(control, newRPM, turbineTripped ? currentPosition : maxTurbineValvePosition(currentPosition, condenserPressure))
   return {
     ...ticked,
     runUpPoint: control.runUpPoint,
     ...pid,
-    turbineTripped: turbineTrippedAfter(turbineTripped, currentPosition, pid.turbineValvePosition),
   }
 }
 

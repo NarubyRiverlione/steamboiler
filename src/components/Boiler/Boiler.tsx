@@ -6,6 +6,7 @@ import { CstSimulation } from "../../context/const"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
+import { TripResetButton } from "../board/TripResetButton"
 import { TurnSwitch } from "../board/TurnSwitch"
 import { Knob } from "../board/Knob"
 import { LevelInstrument } from "../board/LevelInstrument"
@@ -64,6 +65,7 @@ function Boiler() {
         reliefValveOpen,
         ventedTotal,
         burnerTripped,
+        boilerLevelHighTripped,
         heatingRate,
         heatingRateOverLimit,
         drainValveOpen,
@@ -126,8 +128,18 @@ function Boiler() {
                 <Lamp
                   lit={burnerTripped}
                   label="Tripped"
-                  title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, turn the gas knob up to restart`}
+                  title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water: reset the trip, then turn the gas knob up`}
                 />
+                <TripResetButton trip="burner" label="burner trip" />
+              </div>
+              <div className="board-readout">
+                <span>High-high trip</span>
+                <Lamp
+                  lit={boilerLevelHighTripped}
+                  label="Tripped"
+                  title={`Feed pump and turbine shut at ${String(HighHighLevel * 100)}% water: reset the trip once the level is below it`}
+                />
+                <TripResetButton trip="boilerHighHigh" label="boiler high-high trip" />
               </div>
             </div>
             <div className="board-readout-col">

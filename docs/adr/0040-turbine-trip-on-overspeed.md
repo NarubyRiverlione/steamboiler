@@ -1,6 +1,6 @@
 # The turbine valve trips at the overspeed limit
 
-The turbine trips when its speed is at or above the **overspeed limit** (`CstTurbine.MaxRPM`, 3300 rpm, 110% of sync speed, [design-basis.md](../plant/design-basis.md)) while the turbine valve is open. It is the same trip as the vacuum trip ([ADR 0003](0003-turbine-trip-on-vacuum-limit.md)): valve to 0, speed mode to Free (which ends Synchronised, #135), PID integral cleared, `turbineTripped` set. The check is in the tick, on the speed of that tick, whatever the operator does. The reducer refuses to open the turbine valve at or above the limit (closing is always allowed), so reopening in Free cannot re-trip on the next tick; the flag clears on the next successful opening, as today. Decided in #72.
+The turbine trips when its speed is at or above the **overspeed limit** (`CstTurbine.MaxRPM`, 3300 rpm, 110% of sync speed, [design-basis.md](../plant/design-basis.md)) while the turbine valve is open. It is the same trip as the vacuum trip ([ADR 0003](0003-turbine-trip-on-vacuum-limit.md)): valve to 0, speed mode to Free (which ends Synchronised, #135), PID integral cleared, `turbineTripped` set. The check is in the tick, on the speed of that tick, whatever the operator does. The reducer refuses to open the turbine valve at or above the limit (closing is always allowed), so reopening in Free cannot re-trip on the next tick; the flag clears only with the trip reset, which is refused while the speed is at the limit ([ADR 0043](0043-trip-reset.md)). Decided in #72.
 
 ## Considered options
 

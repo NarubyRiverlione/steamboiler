@@ -8,7 +8,7 @@ The trip is enforced in `PowerPlantTick`, whatever the operator or a scenario do
 - **The turbine trips:** an open turbine valve is closed, back to Free, the PID integral cleared, `turbineTripped` set: the one turbine trip object of `TurbineTick` that the vacuum limit and the overspeed use. A shut valve is left alone.
 - **The burner does not trip.**
 
-**Latching, no restart level.** The pump stays shut after the trip. The reducer refuses to open the feed pump while the boiler level is at or above the trip (and, as before, while the deaerator is below its low-low); closing is always allowed. The flag clears on the next successful opening. Feedwater control must not re-open the valve while the flag is set. The turbine trip clears as today, on the next opening of the turbine valve.
+**Latching, no restart level.** The pump stays shut after the trip. The reducer refuses to open the feed pump while the boiler level is at or above the trip (and, as before, while the deaerator is below its low-low); closing is always allowed. The opening is also refused while the flag is set; the flag clears only with the trip reset, allowed once the level is below the trip ([ADR 0043](0043-trip-reset.md)). Feedwater control must not re-open the valve while the flag is set. The turbine trip clears with its own trip reset, which is also refused while the boiler is at the high-high level.
 
 **Alarm.** Two rows in the annunciator list, both owned by the boiler: "Boiler level high" (warning), derived and stateless, active from 65% so it is on ahead of the trip, and "Boiler level high-high trip" (error), which follows the flag. The playback drop to 1x comes from the alarm list ([ADR 0034](0034-playback-speed-is-ticks-per-second.md)).
 

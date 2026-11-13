@@ -2,12 +2,13 @@ import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
 import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, isAtOverspeed, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtOverspeed, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { runTicks } from "./PowerPlantBatch"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
+import { resetTrip } from "./tripReset"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
@@ -130,18 +131,17 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   SIMULATE_TICK: (state) => PowerPlantTick(state),
   SIMULATE_TICKS: (state, { count }) => runTicks(state, count).state,
   LOAD_STATE: (_state, { payload: { state } }) => state,
+  // The only thing that clears a latched trip, and only once its cause has gone (ADR 0043)
+  RESET_TRIP: (state, { payload: { trip } }) => resetTrip(state, trip),
 
   //#region Boiler
-  // Sets the knob. Turning it up is refused (knob stays centred) while the water is below the burner low-low level; a
-  // raise past the dead zone above that level clears the trip and the gas ramps up from 0 (ADR 0017)
+  // Sets the knob. Turning it up is refused (knob stays centred) while the burner is tripped or the water is below the
+  // burner low-low level; only a trip reset lifts the trip, then a raise past the dead zone ramps the gas up from 0 (ADR 0017, 0043)
   SET_GAS_RATE: (state, { payload }) => {
     const command: number = clamp(payload.gasRateCommand, -1, 1)
     const raising: boolean = command > CstBoiler.GasRateDeadZone
-    if (raising && isBelowBurnerLowLow(state.Boiler)) return state
-    return withBoiler(state, {
-      gasRateCommand: command,
-      burnerTripped: state.Boiler.burnerTripped && !raising,
-    })
+    if (raising && (state.Boiler.burnerTripped || isBelowBurnerLowLow(state.Boiler))) return state
+    return withBoiler(state, { gasRateCommand: command })
   },
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
   //#endregion
@@ -149,15 +149,16 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#region Deaerator
   // The start-up vent is an operator action; the warning flags follow at the next tick
   TOGGLE_DEAERATOR_VENT: (state) => withDeaerator(state, { startUpVentOpen: !state.Deaerator.startUpVentOpen }),
-  // Below the deaerator low-low or at the boiler high-high level the feed pump may not be opened, closing is always allowed;
-  // an opening clears both trip flags (ADR 0041)
+  // While a feed pump or boiler high-high trip is latched, below the deaerator low-low or at the boiler high-high level the
+  // feed pump may not be opened, closing is always allowed; only a trip reset clears the flags (ADR 0041, 0043)
   SET_FEED_PUMP_VALVE_POSITION: (state, { payload }) => {
     const { feedPumpValvePosition: current, feedPumpTripped, waterVolume } = state.Deaerator
+    const { boilerLevelHighTripped } = state.Boiler
     const requested: number = clamp(current + payload.feedPumpValvePosition, 0, 1)
     const opening: boolean = requested > current
-    if (opening && (deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel || isAtBoilerHighHigh(state.Boiler))) return state
-    const next: PowerPlantState = withDeaerator(state, { feedPumpValvePosition: requested, feedPumpTripped: feedPumpTripped && !opening })
-    return opening ? withBoiler(next, { boilerLevelHighTripped: false }) : next
+    const refused: boolean = feedPumpTripped || boilerLevelHighTripped || deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel || isAtBoilerHighHigh(state.Boiler)
+    if (opening && refused) return state
+    return withDeaerator(state, { feedPumpValvePosition: requested })
   },
   //#endregion
 
@@ -177,15 +178,12 @@ const handlers: { [T in ActionType]: Handler<T> } = {
         1,
       ),
     }),
-  // Below low-low the pump may not be opened, closing is always allowed; an opening clears the trip flag
+  // Tripped or below low-low the pump may not be opened, closing is always allowed; only a trip reset clears the flag (ADR 0043)
   SET_CONDENSATION_PUMP_VALVE_POSITION: (state, { payload }) => {
     const { condensationPumpValvePosition: current, condensationPumpTripped, hotwellWaterVolume } = state.Condenser
     const requested = clamp(current + payload.condensationPumpValvePosition, 0, 1)
-    if (requested > current && hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow) return state
-    return withCondenser(state, {
-      condensationPumpValvePosition: requested,
-      condensationPumpTripped: condensationPumpTripped && requested <= current,
-    })
+    if (requested > current && (condensationPumpTripped || hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow)) return state
+    return withCondenser(state, { condensationPumpValvePosition: requested })
   },
   SET_MAKEUP_VALVE_POSITION: (state, { payload }) =>
     withCondenser(state, {
@@ -207,17 +205,15 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     withTurbine(state, {
       bypassValvePosition: clamp(state.Turbine.bypassValvePosition + payload.bypassValvePosition, 0, 1),
     }),
-  // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) the turbine may not take more steam: an opening is refused, closing is always allowed
+  // Tripped, above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) the turbine may not take more steam: an
+  // opening is refused, closing is always allowed; only a trip reset clears the flag (ADR 0043)
   ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) => {
     const { turbineValvePosition: current, turbineTripped, rpm } = state.Turbine
     const requested = clamp(current + payload.turbineValvePosition, 0, 1)
     if (requested > maxTurbineValvePosition(current, state.Condenser.pressure)) return state
     // At or above the overspeed limit the turbine may not take more steam either (ADR 0040)
-    if (requested > current && isAtOverspeed(rpm)) return state
-    return withTurbine(state, {
-      turbineValvePosition: requested,
-      turbineTripped: turbineTrippedAfter(turbineTripped, current, requested),
-    })
+    if (requested > current && (turbineTripped || isAtOverspeed(rpm))) return state
+    return withTurbine(state, { turbineValvePosition: requested })
   },
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
   SET_SPEED_MODE: (state, { payload: { speedMode } }) => {

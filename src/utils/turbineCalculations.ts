@@ -63,10 +63,6 @@ export const isAtOverspeed = (rpm: number): boolean => rpm >= CstTurbine.MaxRPM
 export const maxTurbineValvePosition = (currentPosition: number, condenserPressure: number): number =>
   isAboveVacuumLimit(condenserPressure) ? currentPosition : 1
 
-// The turbine trip flag clears on the next opening of the turbine valve, by the operator or the hold-mode PID
-export const turbineTrippedAfter = (tripped: boolean, previousPosition: number, newPosition: number): boolean =>
-  tripped && newPosition <= previousPosition
-
 const RadPerSecPerRpm = (2 * Math.PI) / 60
 const JPerKJ = 1000 // kJ to J, so kg/s x kJ/kg gives W
 

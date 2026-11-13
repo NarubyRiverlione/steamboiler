@@ -4,6 +4,7 @@ import type { SpeedMode } from "../../context/PowerPlantState"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
+import { TripResetButton } from "../board/TripResetButton"
 import type { TurbineState } from "./types"
 
 const MODE_LABELS: Record<SpeedMode, string> = { free: "FREE", rampUp: "RAMP UP", hold: "HOLD", synchronised: "SYNC" }
@@ -55,8 +56,9 @@ export function TurbineStatus({ turbine }: TurbineStatusProps) {
           <Lamp
             lit={turbine.turbineTripped}
             label="Turbine trip"
-            title="Turbine tripped: condenser pressure rose above the vacuum limit, or the main steam valve closed on low boiler pressure"
+            title="Turbine tripped: vacuum limit, overspeed, boiler high-high level or the main steam valve closed on low boiler pressure"
           />
+          <TripResetButton trip="turbine" label="turbine trip" />
         </div>
       </div>
     </>

@@ -80,7 +80,7 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 - **Operator:** above the limit, `ADJUST_STEAM_TURBINE_VALVE` refuses any opening and leaves the state unchanged; closing is always allowed.
 - **Turbine trip:** `TurbineTick` takes the condenser pressure (`PowerPlantTick` passes the pressure going into the tick). Above the limit with the valve open, it sets the valve to 0, returns the speed mode to Free and resets `pidIntegralError` to 0, so the PID cannot restart the turbine on its own. Like a PID move, the closed valve takes effect on the steam path from the next tick (0.1 s).
 - **Ramp up and Hold:** above the limit the PID may only close the valve, never open it.
-- **Trip flag:** `turbineTripped` in `TurbineState` is set by a trip and cleared by the next opening of the valve, by the operator or by the PID. The turbine status panel shows it as the "Turbine trip" indicator.
+- **Trip flag:** `turbineTripped` in `TurbineState` is set by a trip and cleared only by the trip reset (`RESET_TRIP`, `turbine`, [ADR 0043](../adr/0043-trip-reset.md)). While it is set the valve cannot be opened, by the operator or by the PID. The reset is allowed when condenser pressure is at or below the vacuum limit, the speed is below `MaxRPM` and the boiler is below the high-high level (read live); the low-pressure closure never blocks it. It leaves the valve at 0. The turbine status panel shows the flag as the "Turbine trip" indicator with a RESET button beside it.
 
 The checks (`isAboveVacuumLimit`, `maxTurbineValvePosition`, `turbineTrippedAfter`) live in `src/utils/turbineCalculations.ts`, shared by the reducer and the tick. The bypass valve and the generator breaker are not interlocked with the vacuum.
 
