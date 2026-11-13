@@ -15,44 +15,54 @@ const { CstCondenser } = CstSimulation
 
 export type TripId = "burner" | "boilerHighHigh" | "feedPump" | "condensationPump" | "turbine"
 
-type Refusal = (state: PowerPlantState) => string | undefined
+type TripRule = {
+  readonly tripped: (state: PowerPlantState) => boolean
+  readonly refusal: (state: PowerPlantState) => string | undefined
+  readonly clear: (state: PowerPlantState) => PowerPlantState
+}
 
-// The mapped type makes a missing rule a compile error
-const refusals: Record<TripId, Refusal> = {
-  burner: ({ Boiler }) => (isBelowBurnerLowLow(Boiler) ? "Boiler level is still below the burner low-low level" : undefined),
-  boilerHighHigh: ({ Boiler }) => (isAtBoilerHighHigh(Boiler) ? "Boiler level is still at the high-high level" : undefined),
-  feedPump: ({ Deaerator }) => (deaeratorLevel(Deaerator.waterVolume) < CstDeaerator.LowLowLevel ? "Deaerator level is still below low-low" : undefined),
-  condensationPump: ({ Condenser }) => (hotwellLevel(Condenser.hotwellWaterVolume) < CstCondenser.HotwellLowLow ? "Hotwell level is still below low-low" : undefined),
+// One rule per trip: its flag, why it cannot be reset yet, and the flag cleared. The mapped type makes a missing trip a compile error.
+const rules: Record<TripId, TripRule> = {
+  burner: {
+    tripped: ({ Boiler }) => Boiler.burnerTripped,
+    refusal: ({ Boiler }) => (isBelowBurnerLowLow(Boiler) ? "Boiler level is still below the burner low-low level" : undefined),
+    clear: (state) => ({ ...state, Boiler: { ...state.Boiler, burnerTripped: false } }),
+  },
+  boilerHighHigh: {
+    tripped: ({ Boiler }) => Boiler.boilerLevelHighTripped,
+    refusal: ({ Boiler }) => (isAtBoilerHighHigh(Boiler) ? "Boiler level is still at the high-high level" : undefined),
+    clear: (state) => ({ ...state, Boiler: { ...state.Boiler, boilerLevelHighTripped: false } }),
+  },
+  feedPump: {
+    tripped: ({ Deaerator }) => Deaerator.feedPumpTripped,
+    refusal: ({ Deaerator }) => (deaeratorLevel(Deaerator.waterVolume) < CstDeaerator.LowLowLevel ? "Deaerator level is still below low-low" : undefined),
+    clear: (state) => ({ ...state, Deaerator: { ...state.Deaerator, feedPumpTripped: false } }),
+  },
+  condensationPump: {
+    tripped: ({ Condenser }) => Condenser.condensationPumpTripped,
+    refusal: ({ Condenser }) => (hotwellLevel(Condenser.hotwellWaterVolume) < CstCondenser.HotwellLowLow ? "Hotwell level is still below low-low" : undefined),
+    clear: (state) => ({ ...state, Condenser: { ...state.Condenser, condensationPumpTripped: false } }),
+  },
   // Evaluated live; the low-pressure closure of the main steam valve has no persistent condition and never blocks
-  turbine: ({ Boiler, Condenser, Turbine }) => {
-    if (isAboveVacuumLimit(Condenser.pressure)) return "Condenser pressure is still above the vacuum limit"
-    if (isAtOverspeed(Turbine.rpm)) return "Turbine is still at overspeed"
-    return isAtBoilerHighHigh(Boiler) ? "Boiler level is still at the high-high level" : undefined
+  turbine: {
+    tripped: ({ Turbine }) => Turbine.turbineTripped,
+    refusal: ({ Boiler, Condenser, Turbine }) => {
+      if (isAboveVacuumLimit(Condenser.pressure)) return "Condenser pressure is still above the vacuum limit"
+      if (isAtOverspeed(Turbine.rpm)) return "Turbine is still at overspeed"
+      return isAtBoilerHighHigh(Boiler) ? "Boiler level is still at the high-high level" : undefined
+    },
+    clear: (state) => ({ ...state, Turbine: { ...state.Turbine, turbineTripped: false } }),
   },
 }
 
 // True while the trip's flag is set
-export function isTripped(state: PowerPlantState, trip: TripId): boolean {
-  switch (trip) {
-    case "burner": return state.Boiler.burnerTripped
-    case "boilerHighHigh": return state.Boiler.boilerLevelHighTripped
-    case "feedPump": return state.Deaerator.feedPumpTripped
-    case "condensationPump": return state.Condenser.condensationPumpTripped
-    case "turbine": return state.Turbine.turbineTripped
-  }
-}
+export const isTripped = (state: PowerPlantState, trip: TripId): boolean => rules[trip].tripped(state)
 
 // Why the trip cannot be reset now, or undefined when its cause has gone
-export const tripResetRefusal = (state: PowerPlantState, trip: TripId): string | undefined => refusals[trip](state)
+export const tripResetRefusal = (state: PowerPlantState, trip: TripId): string | undefined => rules[trip].refusal(state)
 
 // Clears the flag and nothing else: gas, valves and the gas knob stay where the trip left them. Untripped or refused: unchanged.
 export function resetTrip(state: PowerPlantState, trip: TripId): PowerPlantState {
-  if (!isTripped(state, trip) || tripResetRefusal(state, trip) !== undefined) return state
-  switch (trip) {
-    case "burner": return { ...state, Boiler: { ...state.Boiler, burnerTripped: false } }
-    case "boilerHighHigh": return { ...state, Boiler: { ...state.Boiler, boilerLevelHighTripped: false } }
-    case "feedPump": return { ...state, Deaerator: { ...state.Deaerator, feedPumpTripped: false } }
-    case "condensationPump": return { ...state, Condenser: { ...state.Condenser, condensationPumpTripped: false } }
-    case "turbine": return { ...state, Turbine: { ...state.Turbine, turbineTripped: false } }
-  }
+  const rule: TripRule = rules[trip]
+  return rule.tripped(state) && rule.refusal(state) === undefined ? rule.clear(state) : state
 }
