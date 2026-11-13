@@ -37,6 +37,7 @@ function livePlant(): PowerPlantState {
   state.Turbine.bypassValvePosition = 0.07
   state.Turbine.rpm = 2987.3
   state.Turbine.loadSetpoint = 250
+  state.Turbine.electricOutput = 180.26
   state.Condenser.pressure = 87.4
   state.Condenser.hotwellWaterVolume = 35_000
   state.Condenser.condensationPumpValvePosition = 0.6
@@ -53,6 +54,7 @@ describe("plant overview values", () => {
     expect(text("Turbine valve position")).toBe("42 %")
     expect(text("Bypass valve position")).toBe("7 %")
     expect(text("Turbine speed")).toBe("2987 rpm")
+    expect(text("Output")).toBe("180.3 MW")
     expect(text("Load setpoint")).toBe("250.0 MW")
     expect(text("Condenser pressure")).toBe("87 mbar")
     expect(text("Hotwell level")).toBe("70 %")
