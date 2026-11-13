@@ -16,9 +16,11 @@ const {
 const MIN_SYNC: number = SyncRPM - BreakerRPMMargin
 const MAX_SYNC: number = SyncRPM + BreakerRPMMargin
 const RPM_WARN: number = SyncRPM * 1.05 // gauge turns orange above this
+const RPM_SCALE_MAX = 3500 // gauge end, past the overspeed trip so the red zone above MaxRPM shows
 const RPM_ZONES: readonly GaugeZone[] = [
   { from: 0, to: RPM_WARN, tone: "ok" },
   { from: RPM_WARN, to: MaxRPM, tone: "warn" },
+  { from: MaxRPM, to: RPM_SCALE_MAX, tone: "alarm" },
 ]
 
 const SYNC_BANDS: readonly GaugeBand[] = [{ from: MIN_SYNC, to: MAX_SYNC }]
@@ -78,7 +80,7 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
         orientation="horizontal"
         value={rpm}
         min={0}
-        max={MaxRPM}
+        max={RPM_SCALE_MAX}
         unit="rpm"
         major={500}
         minor={100}

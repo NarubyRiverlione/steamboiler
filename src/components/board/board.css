@@ -594,6 +594,7 @@ path.board-zone {
 
 .board-gauge-unit {
   font-size: 12px;
+  font-weight: 700;
 }
 
 .board-needle path {
