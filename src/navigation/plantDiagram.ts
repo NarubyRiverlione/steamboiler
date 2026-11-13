@@ -26,6 +26,8 @@ export type DiagramNode = {
   readonly flow?: "left" | "down"
   // Where a symbol's name stands; above when left out
   readonly label?: "left"
+  // Shifts a symbol's name to the right by this many units
+  readonly labelDx?: number
 }
 
 type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
@@ -38,6 +40,39 @@ type DiagramLabel = {
   readonly bold?: true
 }
 
+export type ValueId =
+  | "boilerPressure"
+  | "boilerLevel"
+  | "gasFlow"
+  | "mainSteamValve"
+  | "turbineValve"
+  | "bypassValve"
+  | "turbineSpeed"
+  | "output"
+  | "loadSetpoint"
+  | "condenserPressure"
+  | "hotwellLevel"
+  | "condensationPump"
+  | "feedPump"
+  | "deaeratorTemperature"
+  | "deaeratorLevel"
+  | "heaterTemperature"
+  | "economizerTemperature"
+  | "stackTemperature"
+
+// A live value drawn as an LCD label beside a node (#99); x and y are the anchor in diagram units, `anchor` says which edge of the label it is
+export type DiagramValue = {
+  readonly id: ValueId
+  readonly node: string
+  // Names the readout
+  readonly label: string
+  // The longest text it shows; sizes the label so it does not resize as the value changes
+  readonly widest: string
+  readonly x: number
+  readonly y: number
+  readonly anchor: "start" | "middle" | "end"
+}
+
 export const DIAGRAM_WIDTH = 1660
 export const DIAGRAM_HEIGHT = 704
 
@@ -48,7 +83,6 @@ export const NODES: readonly DiagramNode[] = [
   { id: "economizer", name: ["Economizer"], x: 200, y: 460, w: 130, h: 90, medium: "heat" },
   { id: "preheater", name: ["Air preheater"], x: 200, y: 586, w: 130, h: 44, medium: "heat", parked: true },
   { id: "stack", name: ["Stack"], x: 210, y: 654, w: 110, h: 38, medium: "heat", round: true },
-  { id: "surroundings", name: ["Surroundings"], x: 400, y: 40, w: 125, h: 44, medium: "heat", round: true },
   { id: "air", name: ["Combustion air"], x: 420, y: 586, w: 140, h: 44, medium: "heat", round: true },
   {
     id: "boiler",
@@ -123,7 +157,7 @@ export const NODES: readonly DiagramNode[] = [
   },
   {
     id: "car",
-    name: ["Air extraction pump"],
+    name: ["extraction"],
     x: 920,
     y: 316,
     w: 190,
@@ -131,6 +165,7 @@ export const NODES: readonly DiagramNode[] = [
     medium: "vacuum",
     part: "condenser",
     symbol: "pump",
+    labelDx: 40,
   },
   { id: "sjae", name: ["SJAE"], x: 920, y: 362, w: 190, h: 36, medium: "vacuum", part: "condenser" },
   {
@@ -225,7 +260,6 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "heat", d: "M265 550 L265 585" },
   { medium: "heat", d: "M265 630 L265 653" },
   { medium: "heat", d: "M330 173 L399 173" },
-  { medium: "heat", d: "M462 146 L462 85" },
   { medium: "heat", d: "M420 608 L331 608", dashed: true },
   { medium: "heat", d: "M200 608 L110 608 L110 100 L199 100", dashed: true },
   { medium: "steam", d: "M520 173 L819 173" },
@@ -267,7 +301,6 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 275, y: 335, text: "flue gas" },
   { x: 275, y: 572, text: "flue gas" },
   { x: 365, y: 164, text: "heat", anchor: "middle" },
-  { x: 472, y: 118, text: "heat loss" },
   { x: 120, y: 360, text: "hot air" },
   { x: 640, y: 164, text: "steam", anchor: "middle" },
   { x: 1080, y: 262, text: "vapour", anchor: "middle" },
@@ -279,7 +312,7 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 1005, y: 498, text: "Return", anchor: "middle", bold: true },
   { x: 445, y: 498, text: "hotter Return", anchor: "middle", bold: true },
   { x: 502, y: 350, text: "hottest Return", anchor: "start", bold: true },
-  { x: 760, y: 562, text: "heater drain", anchor: "middle" },
+  { x: 760, y: 588, text: "heater drain", anchor: "middle" },
   { x: 772, y: 300, text: "auxiliary steam", anchor: "end" },
   { x: 1365, y: 470, text: "makeup", anchor: "middle" },
   { x: 1365, y: 545, text: "reject", anchor: "middle" },
@@ -293,3 +326,24 @@ export const LABELS: readonly DiagramLabel[] = [
 ]
 
 export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "power", "vacuum"]
+
+export const DIAGRAM_VALUES: readonly DiagramValue[] = [
+  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 528, y: 144, anchor: "start" },
+  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 528, y: 180, anchor: "start" },
+  { id: "gasFlow", node: "burner", label: "Gas flow", widest: "99999 L/s", x: 340, y: 87, anchor: "start" },
+  { id: "mainSteamValve", node: "msv", label: "Main steam valve", widest: "CLOSED", x: 890, y: 190, anchor: "start" },
+  { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 110, anchor: "middle" },
+  { id: "bypassValve", node: "bypass", label: "Bypass valve position", widest: "100 %", x: 960, y: 288, anchor: "middle" },
+  { id: "turbineSpeed", node: "turbine", label: "Turbine speed", widest: "3500 rpm", x: 1250, y: 110, anchor: "middle" },
+  { id: "output", node: "generator", label: "Output", widest: "999.9 MW", x: 1430, y: 110, anchor: "middle" },
+  { id: "loadSetpoint", node: "load", label: "Load setpoint", widest: "999.9 MW", x: 1590, y: 116, anchor: "middle" },
+  { id: "condenserPressure", node: "condenser", label: "Condenser pressure", widest: "1100 mbar", x: 1250, y: 388, anchor: "middle" },
+  { id: "hotwellLevel", node: "hotwell", label: "Hotwell level", widest: "100 %", x: 1250, y: 516, anchor: "middle" },
+  { id: "condensationPump", node: "condpump", label: "Condensation pump position", widest: "100 %", x: 1100, y: 530, anchor: "middle" },
+  { id: "deaeratorTemperature", node: "deaerator", label: "Deaerator temperature", widest: "999 °C", x: 920, y: 473, anchor: "middle" },
+  { id: "deaeratorLevel", node: "deaerator", label: "Deaerator level", widest: "100 %", x: 920, y: 520, anchor: "middle" },
+  { id: "feedPump", node: "feedpump", label: "Boiler feed pump position", widest: "100 %", x: 770, y: 530, anchor: "middle" },
+  { id: "heaterTemperature", node: "heater", label: "Extraction heater temperature", widest: "999 °C", x: 585, y: 540, anchor: "end" },
+  { id: "economizerTemperature", node: "economizer", label: "Economizer temperature", widest: "999 °C", x: 265, y: 520, anchor: "middle" },
+  { id: "stackTemperature", node: "stack", label: "Stack temperature", widest: "999 °C", x: 330, y: 662, anchor: "start" },
+]
