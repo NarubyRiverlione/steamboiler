@@ -7,6 +7,7 @@ import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { TurnSwitch } from "../board/TurnSwitch"
 import { LevelInstrument } from "../board/LevelInstrument"
+import { levelZones } from "../board/levelZones"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
@@ -20,6 +21,11 @@ const PRESSURE_ZONES: readonly GaugeZone[] = [
   { from: CstDeaerator.Pressure * 1.1, to: CstDeaerator.ReliefPressure, tone: "warn" },
   { from: CstDeaerator.ReliefPressure, to: PRESSURE_MAX, tone: "alarm" },
 ]
+const LEVEL_ZONES: readonly GaugeZone[] = levelZones({
+  trip: { low: CstDeaerator.LowLowLevel, high: CstDeaerator.HighHighLevel },
+  alarm: { low: CstDeaerator.LowLevel, high: CstDeaerator.HighLevel },
+  working: { low: CstDeaerator.WorkingLow, high: CstDeaerator.WorkingHigh },
+})
 
 function Deaerator() {
   const {
@@ -87,7 +93,13 @@ function Deaerator() {
             />
             <Display label="Pressure" text={`${pressure.toFixed(2)} bar`} widest="9.99 bar" />
           </div>
-          <LevelInstrument label="Deaerator level" fraction={level} change={smoothWaterChange} target={CstDeaerator.WorkingLevel} />
+          <LevelInstrument
+            label="Deaerator level"
+            fraction={level}
+            change={smoothWaterChange}
+            zones={LEVEL_ZONES}
+            target={CstDeaerator.WorkingLevel}
+          />
         </div>
 
         <div className="board-group">

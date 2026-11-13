@@ -76,6 +76,13 @@ describe("Condenser page", () => {
     vi.useRealTimers()
   })
 
+  it("shows the hotwell level zones: red, orange and the green working band", () => {
+    renderCondenser()
+    const tones: (string | null)[] = Array.from(document.querySelectorAll("rect.board-zone-bar")).map((e: Element) => e.getAttribute("data-tone"))
+    expect(tones.filter((t: string | null) => t === "ok").length).toBeGreaterThanOrEqual(1)
+    expect(tones).toEqual(expect.arrayContaining(["alarm", "warn", "ok"]))
+  })
+
   it("shows flow rates of the valves that have one", () => {
     renderCondenser({ hotwellTemperature: 40, recirculationPumpValvePosition: 0.5, condensationPumpValvePosition: 0.5, makeupValvePosition: 0.2, rejectValvePosition: 1 })
     expect(screen.getByLabelText("Condensation pump flow").textContent).toBe("148.8 kg/s")

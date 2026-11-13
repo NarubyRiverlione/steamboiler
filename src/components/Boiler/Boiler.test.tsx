@@ -60,9 +60,10 @@ describe("Boiler page", () => {
     expect(fns.toggleDrainValve).toHaveBeenCalledTimes(1)
   })
 
-  it("has the pressure gauge and the drum level gauge with its low-low zone", () => {
+  it("has the pressure gauge and the drum level gauge with its zones", () => {
     renderBoiler({ waterVolume: 35e3 })
-    expect(document.querySelectorAll("rect[data-tone='alarm']").length).toBe(1)
+    const tones: (string | null)[] = Array.from(document.querySelectorAll("rect.board-zone-bar")).map((e: Element) => e.getAttribute("data-tone"))
+    expect(tones).toEqual(["alarm", "alarm", "warn", "warn", "ok"])
     expect(screen.getByRole("meter", { name: "Pressure gauge" })).toBeTruthy()
     expect(screen.getByRole("meter", { name: "Drum level gauge" }).getAttribute("aria-valuenow")).toBe("35")
   })

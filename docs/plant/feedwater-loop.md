@@ -54,11 +54,11 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 |---|---|---|
 | Overfill clamp (`HotwellHighHigh`) | from 95% | plant: `CondenserTick` forces the reject fully open |
 | Reject fully open | 90% (band edge + `HotwellRamp`) | operator |
-| Working band | 55% to 75%; normal and start level 70% | operator: both valves shut |
+| Working band (`HotwellWorkingLow` / `HotwellWorkingHigh`) | 55% to 75%; normal and start level 70% | operator: both valves shut; the constants live in `CstCondenser` and `LoopSettings` reads them, so the gauge's green band and the operator share one pair (#54) |
 | Makeup fully open | 40% (band edge − `HotwellRamp`) | operator |
 | Low-low (`HotwellLowLow`) | below 10% | plant: `CondenserTick` trips the condensation pump |
 
-Levels are volume fractions (`hotwellWaterVolume` / `TotalVolume`), so they drift with the hotwell temperature ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)). The two protections are plant behaviour and the band is operator policy ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)).
+Levels are volume fractions (`hotwellWaterVolume` / `TotalVolume`), so they drift with the hotwell temperature ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)). The two protections are plant behaviour and the band is operator policy (the gauge draws it green, [condenser.md](condenser.md#hotwell-makeup-and-reject)) ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)).
 
 **Low-low trip.** Below 10% the pump valve is shut, `condensationPumpTripped` is set and nothing is returned. Opening the pump is refused while the level is below 10%; closing is always allowed. The flag clears on the next successful opening, so after a trip the pump stays shut until the operator opens it.
 

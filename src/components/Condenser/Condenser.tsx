@@ -8,6 +8,7 @@ import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { TurnSwitch } from "../board/TurnSwitch"
 import { LevelInstrument } from "../board/LevelInstrument"
+import { levelZones } from "../board/levelZones"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
@@ -16,6 +17,12 @@ const {
   CstCondenser: {
     TotalVolume,
     HotwellNormalLevel,
+    HotwellLowLow,
+    HotwellLow,
+    HotwellHigh,
+    HotwellHighHigh,
+    HotwellWorkingLow,
+    HotwellWorkingHigh,
     OptimalPressure,
     OptimalPressureBellWidth,
     VacuumLimit,
@@ -32,6 +39,11 @@ const {
   },
 } = CstSimulation
 
+const LEVEL_ZONES: readonly GaugeZone[] = levelZones({
+  trip: { low: HotwellLowLow, high: HotwellHighHigh },
+  alarm: { low: HotwellLow, high: HotwellHigh },
+  working: { low: HotwellWorkingLow, high: HotwellWorkingHigh },
+})
 const PRESSURE_MAX = 1100 // mbar, top of the dial: atmospheric (1013) is on the scale, the turbine trips at VacuumLimit
 const HIGH_PRESSURE: number = OptimalPressure + OptimalPressureBellWidth
 const LOW_PRESSURE: number = OptimalPressure - OptimalPressureBellWidth
@@ -125,7 +137,13 @@ function Condenser() {
             </span>
           </div>
 
-          <LevelInstrument label="Hotwell level" fraction={hotwellLevel} change={smoothWaterChange} target={HotwellNormalLevel} />
+          <LevelInstrument
+            label="Hotwell level"
+            fraction={hotwellLevel}
+            change={smoothWaterChange}
+            zones={LEVEL_ZONES}
+            target={HotwellNormalLevel}
+          />
         </div>
 
         <div className="board-group">
