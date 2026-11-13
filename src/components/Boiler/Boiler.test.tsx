@@ -25,6 +25,27 @@ function renderBoiler(patch: Partial<PowerPlantState["Boiler"]> = {}) {
 }
 
 describe("Boiler page", () => {
+  it("has a RESET beside each trip tile, disabled until its trip is latched and the cause gone", () => {
+    renderBoiler()
+    const resets = screen.getAllByRole<HTMLButtonElement>("button", { name: "RESET" })
+    expect(resets).toHaveLength(2)
+    expect(resets.every((b: HTMLButtonElement) => b.disabled)).toBe(true)
+  })
+
+  it("enables the burner RESET once the trip is latched and the water is back", () => {
+    renderBoiler({ burnerTripped: true })
+    const [burner, highHigh] = screen.getAllByRole<HTMLButtonElement>("button", { name: "RESET" })
+    expect(burner.disabled).toBe(false)
+    expect(highHigh.disabled).toBe(true)
+  })
+
+  it("enables the high-high RESET once the level is below the trip", () => {
+    renderBoiler({ boilerLevelHighTripped: true })
+    const [burner, highHigh] = screen.getAllByRole<HTMLButtonElement>("button", { name: "RESET" })
+    expect(burner.disabled).toBe(true)
+    expect(highHigh.disabled).toBe(false)
+  })
+
   it("turns the gas knob with the keyboard and passes the command on", () => {
     const fns = renderBoiler({ gasRateCommand: 0.5 })
     fireEvent.keyDown(screen.getByRole("slider", { name: "Gas knob" }), { key: "ArrowUp" })

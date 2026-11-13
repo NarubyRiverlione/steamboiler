@@ -33,6 +33,16 @@ function renderDeaerator(patch: Partial<PowerPlantState["Deaerator"]> = {}) {
 }
 
 describe("Deaerator page", () => {
+  it("has a feed pump RESET, enabled only while the trip is latched and the level is back", () => {
+    renderDeaerator()
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(true)
+  })
+
+  it("enables the feed pump RESET once the trip is latched", () => {
+    renderDeaerator({ feedPumpTripped: true })
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(false)
+  })
+
   it("shows the level zones: red, orange and the green band", () => {
     renderDeaerator()
     const tones: (string | null)[] = Array.from(document.querySelectorAll("rect.board-zone-bar")).map((e: Element) => e.getAttribute("data-tone"))

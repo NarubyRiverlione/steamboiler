@@ -5,6 +5,7 @@ import { CstDeaerator, CstSimulation } from "../../context/const"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
+import { TripResetButton } from "../board/TripResetButton"
 import { TurnSwitch } from "../board/TurnSwitch"
 import { LevelInstrument } from "../board/LevelInstrument"
 import { levelZones } from "../board/levelZones"
@@ -117,8 +118,9 @@ function Deaerator() {
           <Lamp
             lit={feedPumpTripped}
             label="Feed pump trip"
-            title="The deaerator level fell below low-low: open the pump again once the level is back"
+            title="The deaerator level fell below low-low: reset the trip once the level is back, then open the pump"
           />
+          <TripResetButton trip="feedPump" label="feed pump trip" />
         </div>
 
         <div className="board-deaerator-side">

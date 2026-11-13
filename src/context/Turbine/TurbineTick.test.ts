@@ -447,11 +447,11 @@ describe("TurbineTick", () => {
       expect(TurbineTick(closedHolding, boilerPressure, limit + 1).turbineValvePosition).toBe(0)
     })
 
-    it("a Hold PID opening under vacuum clears the trip flag", () => {
+    it("a Hold PID may not open the valve while the trip is latched, even with a good vacuum (ADR 0043)", () => {
       const tripped = { ...running, turbineValvePosition: 0, turbineTripped: true }
       const result = TurbineTick(tripped, boilerPressure, limit)
-      expect(result.turbineValvePosition).toBeGreaterThan(0)
-      expect(result.turbineTripped).toBe(false)
+      expect(result.turbineValvePosition).toBe(0)
+      expect(result.turbineTripped).toBe(true)
     })
 
     it("the flag stays set while the valve stays shut", () => {

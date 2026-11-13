@@ -42,6 +42,17 @@ function turnValve(label: string, key: "End" | "Home"): void {
 }
 
 describe("Condenser page", () => {
+  it("has a condensation pump RESET, enabled only while the trip is latched and the hotwell is back", () => {
+    renderCondenser()
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(true)
+  })
+
+  it("enables the condensation pump RESET once the trip is latched, and shows the trip lamp", () => {
+    renderCondenser({ condensationPumpTripped: true })
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(false)
+    expect(screen.getByRole("img", { name: "Condensation pump trip: on" })).toBeTruthy()
+  })
+
   it("toggles the air extraction pump and the SJAE, showing their state", () => {
     const fns = renderCondenser({ isAirExtractionPumpEnabled: true, isSjaeEnabled: false })
     const car: HTMLElement = screen.getByRole("switch", { name: "Air extraction pump" })

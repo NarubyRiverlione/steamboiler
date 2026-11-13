@@ -60,7 +60,7 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 
 Levels are volume fractions (`hotwellWaterVolume` / `TotalVolume`), so they drift with the hotwell temperature ([ADR 0007](../adr/0007-water-state-is-mass-in-kg.md)). The two protections are plant behaviour and the band is operator policy (the gauge draws it green, [condenser.md](condenser.md#hotwell-makeup-and-reject)) ([ADR 0011](../adr/0011-hotwell-protections-in-the-tick.md)).
 
-**Low-low trip.** Below 10% the pump valve is shut, `condensationPumpTripped` is set and nothing is returned. Opening the pump is refused while the level is below 10%; closing is always allowed. The flag clears on the next successful opening, so after a trip the pump stays shut until the operator opens it.
+**Low-low trip.** Below 10% the pump valve is shut, `condensationPumpTripped` is set and nothing is returned. Opening the pump is refused while the level is below 10% and while the flag is set; closing is always allowed. Only the trip reset (`RESET_TRIP`, `condensationPump`, allowed once the level is at or above 10%, a RESET on the Condenser page, [ADR 0043](../adr/0043-trip-reset.md)) clears the flag, so after a trip the pump stays shut until the operator resets the trip and opens it.
 
 **Overfill clamp.** From 95% the reject flows as if fully open, whatever the operator set. The stored valve position is not changed, so nothing latches.
 
