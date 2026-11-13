@@ -168,7 +168,7 @@ function HorizontalMeter({
       {bands.map((b: GaugeBand) => {
         const r: Span = scale.band(b)
         return (
-          <rect key={zoneKey(b)} className="board-level-band" x={r.from} y={30} width={r.size} height={26} />
+          <rect key={zoneKey(b)} className="board-level-band" x={r.from} y={36} width={r.size} height={20} />
         )
       })}
       {target !== undefined && (
