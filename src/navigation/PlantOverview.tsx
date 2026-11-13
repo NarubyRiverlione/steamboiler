@@ -49,7 +49,7 @@ function SymbolShape({ node, symbol }: { readonly node: DiagramNode; readonly sy
     "translate(" + String(cx) + " " + String(cy) + ")" + (down ? " rotate(90)" : node.flow === "left" ? " scale(-1 1)" : "")
   const side: boolean = node.label === "left"
   const labelAnchor: "end" | "middle" = side ? "end" : "middle"
-  const labelX: number = side ? cx - GLYPH_HALF - 8 : cx
+  const labelX: number = side ? cx - GLYPH_HALF - 8 : cx + (node.labelDx ?? 0)
   const lineHeight = 18
   const firstY: number =
     side

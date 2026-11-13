@@ -26,6 +26,8 @@ export type DiagramNode = {
   readonly flow?: "left" | "down"
   // Where a symbol's name stands; above when left out
   readonly label?: "left"
+  // Shifts a symbol's name to the right by this many units
+  readonly labelDx?: number
 }
 
 type DiagramPipe = { readonly medium: Medium; readonly d: string; readonly dashed?: true }
@@ -150,7 +152,7 @@ export const NODES: readonly DiagramNode[] = [
   },
   {
     id: "car",
-    name: ["Air extraction pump"],
+    name: ["extraction"],
     x: 920,
     y: 316,
     w: 190,
@@ -158,6 +160,7 @@ export const NODES: readonly DiagramNode[] = [
     medium: "vacuum",
     part: "condenser",
     symbol: "pump",
+    labelDx: 40,
   },
   { id: "sjae", name: ["SJAE"], x: 920, y: 362, w: 190, h: 36, medium: "vacuum", part: "condenser" },
   {
