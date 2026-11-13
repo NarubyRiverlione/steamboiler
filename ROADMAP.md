@@ -14,30 +14,30 @@ Next: the first ticket with nothing under Waiting on.
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 1 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | ready-for-agent |  |  |
 | 2 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P3 | needs-triage |  |  |
-| 3 | [#128](https://github.com/NarubyRiverlione/steamboiler/issues/128) QA review of the test suite: is every test useful? | P3 | needs-triage |  |  |
-| 4 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | needs-triage |  |  |
-| 5 | [#133](https://github.com/NarubyRiverlione/steamboiler/issues/133) Test PowerPlantProvider: the simulation loop and the action creators | P3 | needs-triage |  |  |
+| 3 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | needs-triage |  |  |
+| 4 | [#133](https://github.com/NarubyRiverlione/steamboiler/issues/133) Test PowerPlantProvider: the simulation loop and the action creators | P3 | needs-triage |  |  |
 
 ## P4: parked
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 6 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P4 | ready-for-agent |  |  |
-| 7 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P4 | needs-triage |  |  |
-| 8 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
-| 9 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
-| 10 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
-| 11 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | P4 | needs-triage |  |  |
-| 12 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Trip and error tile for every red level range | P4 | needs-triage |  |  |
+| 5 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P4 | ready-for-agent |  |  |
+| 6 | [#50](https://github.com/NarubyRiverlione/steamboiler/issues/50) Test the untested physics paths: steamTable boundaries, venting, draining, flash | P4 | needs-triage |  |  |
+| 7 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
+| 8 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
+| 9 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
+| 10 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | P4 | needs-triage |  |  |
+| 11 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Trip and error tile for every red level range | P4 | needs-triage |  |  |
 
 ## P5: UI and UX
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 13 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P5 | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
-| 14 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | P5 | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
-| 15 | [#107](https://github.com/NarubyRiverlione/steamboiler/issues/107) Boiler: precision pressure dial (150–180 bar, 165 at 12 o'clock) and a new green band on the main dial | P5 | needs-triage |  |  |
-| 16 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | P5 | needs-triage |  |  |
-| 17 | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) Generation page: split the generator controls out of the Turbine page | P5 | needs-triage |  | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) |
-| 18 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | P5 | ready-for-agent | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) |  |
-| 19 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | P5 | needs-triage |  |  |
+| 12 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | P5 | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
+| 13 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | P5 | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
+| 14 | [#107](https://github.com/NarubyRiverlione/steamboiler/issues/107) Boiler: precision pressure dial (150–180 bar, 165 at 12 o'clock) and a new green band on the main dial | P5 | needs-triage |  |  |
+| 15 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | P5 | needs-triage |  |  |
+| 16 | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) Generation page: split the generator controls out of the Turbine page | P5 | needs-triage |  | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) |
+| 17 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | P5 | ready-for-agent | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) |  |
+| 18 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | P5 | needs-triage |  |  |
+| 19 | [#138](https://github.com/NarubyRiverlione/steamboiler/issues/138) Fine-tune − / + buttons on the valve and pump knobs | P5 | ready-for-agent |  |  |
