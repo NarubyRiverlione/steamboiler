@@ -137,6 +137,43 @@ describe("TurbineTick", () => {
     })
   })
 
+  describe("Synchronised mode (#135)", () => {
+    const { SyncRPM } = CstSimulation.CstTurbine
+    const sync: TurbineState = {
+      ...initialState,
+      mainSteamValve: true,
+      turbineValvePosition: 0.3,
+      rpm: SyncRPM,
+      speedMode: "synchronised",
+      speedReference: SyncRPM,
+      generatorBreaker: true,
+      pidIntegralError: 3,
+      turbineSteamFlowOut: CstSimulation.CstTurbine.NoLoadFlowFraction * CstSimulation.CstTurbine.RatedSteamFlow,
+    }
+
+    it("aims the PID at 3000 rpm and stays synchronised while the breaker holds", () => {
+      const low: TurbineState = TurbineTick({ ...sync, rpm: SyncRPM - 1 }, 165, 31)
+      expect(low.speedMode).toBe("synchronised")
+      expect(low.speedReference).toBe(SyncRPM)
+      expect(low.turbineValvePosition).toBeGreaterThan(0.3)
+    })
+
+    it("the auto-open of the breaker goes to Hold at sync speed, whatever run-up point was selected", () => {
+      const result: TurbineState = TurbineTick({ ...sync, runUpPoint: 1500, rpm: SyncRPM - 1.99, turbineSteamFlowOut: 0 }, 165, 100)
+      expect(result.generatorBreaker).toBe(false)
+      expect(result.speedMode).toBe("hold")
+      expect(result.runUpPoint).toBe(SyncRPM)
+      expect(result.speedReference).toBe(SyncRPM)
+    })
+
+    it("a trip returns to Free even if the breaker stays closed", () => {
+      const result: TurbineState = TurbineTick(sync, 165, CstSimulation.CstCondenser.VacuumLimit + 100)
+      expect(result.speedMode).toBe("free")
+      expect(result.turbineTripped).toBe(true)
+      expect(result.generatorBreaker).toBe(true)
+    })
+  })
+
   describe("overspeed trip (ADR 0040)", () => {
     const { MaxRPM } = CstSimulation.CstTurbine
     // Free mode, breaker open, valve open and steam flowing: the unloaded rotor accelerates

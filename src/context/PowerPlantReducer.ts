@@ -246,15 +246,27 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   },
   // Allow closing the breaker if RPM is within the margin of sync speed; toggling a closed breaker opens it
   // Whenever the breaker ends up open, the load and the load setpoint are 0 (ADR 0027)
+  // Closing enters Synchronised (PID on 3000 rpm); opening, by hand, returns to Free (#135)
   TOGGLE_GENERATOR_BREAKER: (state) => {
-    const generatorBreaker: boolean = !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm)
-    return withTurbine(state, generatorBreaker ? { generatorBreaker } : { generatorBreaker, electricOutput: 0, loadSetpoint: 0 })
+    const { rpm, generatorBreaker: wasClosed } = state.Turbine
+    const generatorBreaker: boolean = !wasClosed && isAtSyncSpeed(rpm)
+    if (generatorBreaker) {
+      return withTurbine(state, { generatorBreaker, speedMode: "synchronised", speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
+    }
+    return withTurbine(state, { generatorBreaker, electricOutput: 0, loadSetpoint: 0, ...(wasClosed ? freeAt(rpm) : {}) })
   },
   // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
     loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
+
+// Back to Free: the integral is cleared and the reference follows the speed
+const freeAt = (rpm: number): Pick<TurbineState, "speedMode" | "pidIntegralError" | "speedReference"> => ({
+  speedMode: "free",
+  pidIntegralError: 0,
+  speedReference: rpm,
+})
 
 export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
   // TS cannot correlate action.type with its payload when indexing a mapped type, hence the widening

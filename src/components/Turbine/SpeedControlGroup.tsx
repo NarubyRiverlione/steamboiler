@@ -3,13 +3,15 @@
 import { CstSimulation } from "../../context/const"
 import type { SpeedMode } from "../../context/PowerPlantState"
 import { runUpPointRefusal, speedModeRefusal } from "../../utils/turbineCalculations"
+import { Lamp } from "../board/Lamp"
 import { LensButton } from "../board/LensButton"
 import type { TurbineState } from "./types"
 
 const {
-  CstTurbine: { RunUpPoints },
+  CstTurbine: { RunUpPoints, SyncRPM },
 } = CstSimulation
 
+// Synchronised is not a button: closing the breaker enters it (#135)
 const MODES: readonly { mode: SpeedMode; label: string }[] = [
   { mode: "free", label: "Free" },
   { mode: "rampUp", label: "Ramp up" },
@@ -45,6 +47,7 @@ export function SpeedControlGroup({ turbine, onSetSpeedMode, onSelectRunUpPoint 
             </LensButton>
           )
         })}
+        <Lamp lit={turbine.speedMode === "synchronised"} label="SYNC" title="Generator synchronised: speed held at 3000 rpm" tone="ok" />
       </div>
       <span className="board-readout-label">Run-up point</span>
       <div className="board-lens-row">
@@ -54,7 +57,7 @@ export function SpeedControlGroup({ turbine, onSetSpeedMode, onSelectRunUpPoint 
             <LensButton
               key={point}
               small
-              pressed={turbine.runUpPoint === point}
+              pressed={(turbine.speedMode === "synchronised" ? SyncRPM : turbine.runUpPoint) === point}
               disabled={refusal !== undefined}
               title={refusal}
               onClick={() => {

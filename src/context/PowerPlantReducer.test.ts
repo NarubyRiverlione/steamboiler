@@ -482,6 +482,43 @@ describe("powerPlantReducer", () => {
         const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, atRpm(CstTurbine.SyncRPM))
         expect(toggle(closed).generatorBreaker).toBe(false)
       })
+
+      describe("Synchronised mode (#135)", () => {
+        const speedModes: SpeedMode[] = ["free", "rampUp", "hold"]
+        const synced = (speedMode: SpeedMode): PowerPlantState => ({
+          ...base,
+          Turbine: { ...base.Turbine, rpm: CstTurbine.SyncRPM + 1, speedMode, speedReference: 1234, pidIntegralError: 5 },
+        })
+        const closedState: PowerPlantState = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, synced("hold"))
+
+        test.each(speedModes)("closing from %s enters synchronised at 3000 with the integral cleared", (speedMode) => {
+          const { speedMode: mode, speedReference, pidIntegralError, generatorBreaker } = toggle(synced(speedMode))
+          expect([generatorBreaker, mode, speedReference, pidIntegralError]).toEqual([true, "synchronised", CstTurbine.SyncRPM, 0])
+        })
+
+        test("a refused close (out of the window) leaves the mode alone", () => {
+          const state: PowerPlantState = { ...synced("rampUp"), Turbine: { ...synced("rampUp").Turbine, rpm: 2000 } }
+          expect(toggle(state).speedMode).toBe("rampUp")
+        })
+
+        test.each(speedModes)("with the breaker closed SET_SPEED_MODE %s leaves the state unchanged", (speedMode) => {
+          expect(reduce({ type: "SET_SPEED_MODE", payload: { speedMode } }, closedState)).toBe(closedState)
+        })
+
+        test.each(CstTurbine.RunUpPoints)("with the breaker closed SELECT_RUN_UP_POINT %s leaves the state unchanged", (runUpPoint) => {
+          expect(reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint } }, closedState)).toBe(closedState)
+        })
+
+        test("opening by hand returns to Free, the integral cleared and the reference on the rpm", () => {
+          const opened = toggle({ ...closedState, Turbine: { ...closedState.Turbine, pidIntegralError: 7 } })
+          expect([opened.generatorBreaker, opened.speedMode, opened.pidIntegralError, opened.speedReference]).toEqual([
+            false,
+            "free",
+            0,
+            closedState.Turbine.rpm,
+          ])
+        })
+      })
     })
   })
 

@@ -12,7 +12,7 @@ The turbine valve may only be open, or be opened, while condenser pressure is at
 ## Consequences
 
 - The limit applies wherever the valve position changes: the operator action and the speed PID in the tick. Ramp up and Hold cannot get around it.
-- A trip returns to Free, so the PID cannot restart the turbine on its own once vacuum recovers. Its memory is cleared, so the next Ramp up or Hold starts without a wound-up error.
+- A trip returns to Free, which also ends Synchronised even though the breaker stays closed until the speed leaves its window (#135), so the PID cannot restart the turbine on its own once vacuum recovers. Its memory is cleared, so the next Ramp up or Hold starts without a wound-up error.
 - `TurbineState` carries a trip flag that the turbine panel shows. The flag is set by a trip and cleared by the next successful opening.
 - Scenarios have to pull vacuum before they open the turbine valve: SJAE enabled and its valve opened once the boiler is above the main steam valve minimum pressure.
 - The bypass valve and the generator breaker are not affected.

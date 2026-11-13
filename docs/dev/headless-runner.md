@@ -14,7 +14,7 @@ edit const.ts  →  pnpm sim <scenario>  →  open the newest sim/reports/*.html
 `sim/reports/<scenario>-<timestamp>.csv` and `.html`, git-ignored) runs a named scenario through `powerPlantReducer`
 (`SIMULATE_TICK` + operator actions) and writes sampled boiler/turbine/condenser state as CSV plus
 a self-contained HTML report in ~50 ms wall. Code: `sim/scenario.ts` (`Scenario`, `runScenario`,
-`runScenarioWithLifts`, `firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`; the speed mode is the column `turbine_speedMode`: 0 Free, 1 Ramp up, 2 Hold), `sim/report.ts` (`toReportHtml`; the
+`runScenarioWithLifts`, `firstTimeWhere` for assertions), `sim/csv.ts` (`toCsv`; the speed mode is the column `turbine_speedMode`: 0 Free, 1 Ramp up, 2 Hold, 3 Synchronised), `sim/report.ts` (`toReportHtml`; the
 panel list is the `panels` array), `sim/scenarios/` (one file per scenario, registered in
 `index.ts`), `sim/run.ts` (CLI). A scenario's `initial` state is the cold plant from
 `makeInitialState()` in `src/context/PowerPlantReducer.ts` (the UI starts there too), or a snapshot
