@@ -13,5 +13,5 @@ The turbine trips when its speed is at or above the **overspeed limit** (`CstTur
 
 - No new flag and no new tile: `turbineTripped` and the "Turbine trip" tile cover it.
 - The peak is the tick of the trip, plus at most one tick while the steam flow stored in the last state still drives the rotor; the `turbine-overspeed` edge scenario pins it.
-- The bypass valve and the generator breaker are not touched. The breaker opens by itself when the speed leaves ±2 rpm of sync.
+- The bypass valve and the generator breaker are not touched. The breaker opens by itself when the speed leaves ±2 rpm of sync. A trip also ends the synchronised speed mode (back to Free, [ADR 0027](0027-generator-load-is-a-resisting-torque.md), #135).
 - No golden-path or other edge scenario reaches `MaxRPM`; `max-output` keeps its load-rejection peak under it.

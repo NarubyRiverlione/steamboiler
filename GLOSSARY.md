@@ -88,6 +88,10 @@ _Avoid_: Run-up mode, auto start
 The speed mode that keeps the turbine at the selected run-up point by moving the turbine valve. It engages only within ±5 rpm of that point, and never takes the turbine to a new speed. It is also the mode that adds steam when electrical load is added to the shaft.
 _Avoid_: Autopilot, speed hold, cruise
 
+**Synchronised mode**:
+The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the breaker or a turbine trip ends it, back to free mode.
+_Avoid_: Grid mode, sync hold
+
 **Run-up point**:
 One of the fixed speeds the operator can select: 500, 1500, 2500 or 3000 rpm (sync speed). Ramp up climbs to it and hold mode keeps it.
 _Avoid_: Setpoint (on its own), soak point
