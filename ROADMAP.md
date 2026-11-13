@@ -14,7 +14,7 @@ Next: the first ticket with nothing under Waiting on.
 | - | ------ | -------- | ------ | ---------- | -------- |
 | 1 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | ready-for-agent |  |  |
 | 2 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P3 | needs-triage |  |  |
-| 3 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | needs-triage |  |  |
+| 3 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | ready-for-agent |  |  |
 | 4 | [#133](https://github.com/NarubyRiverlione/steamboiler/issues/133) Test PowerPlantProvider: the simulation loop and the action creators | P3 | needs-triage |  |  |
 
 ## P4: parked
