@@ -61,7 +61,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0021](adr/0021-turbine-runup-from-steam-power.md) | The turbine runs up on steam power (physical torque, losses, inertia), paced by a hold-mode run-up rate |
 | [0022](adr/0022-electric-output-from-enthalpy-drop.md) | Electric output from the isentropic enthalpy drop, flow and live condenser pressure |
 | [0023](adr/0023-runner-speed-guard-is-opt-in.md) | The runner speed guard is its own opt-in layer, outside the `dev` gate |
-| [0024](adr/0024-ticket-priority-by-kind-of-work.md) | Ticket priority says what kind of work a ticket is |
+| [0024](adr/0024-tickets-ordered-by-theme.md) | Tickets are ordered by theme; only broken and wrong jump the queue |
 | [0025](adr/0025-finer-steam-table-for-density-slope.md) | A finer steam table above 300 °C smooths the steam density slope |
 | [0026](adr/0026-valve-flow-follows-pressure.md) | Valve flow follows boiler pressure; the main steam valve closes at low pressure |
 | [0027](adr/0027-generator-load-is-a-resisting-torque.md) | The generator load is a resisting torque on a free-running shaft; electric output is the load carried |

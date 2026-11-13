@@ -16,7 +16,7 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
 
 ## Priority and order
 
-- **Priority**: every ticket gets exactly one `P` label, chosen by what kind of work it is ([ADR 0024](../adr/0024-ticket-priority-by-kind-of-work.md)). Don't write the priority in the body.
+- **Priority**: every ticket gets exactly one `P` label, chosen by what kind of work it is ([ADR 0024](../adr/0024-tickets-ordered-by-theme.md)). Don't write the priority in the body.
   - `P1` **Broken**: a crash, a sim that can't run or can't be trusted, or a blocked scenario or deploy. Jumps the queue; usually empty.
   - `P2` **Realism within the current scope**: something the plant already has behaves or calculates wrongly, including physics bugs that break nothing.
   - `P3` **Experience and project health**: improves what exists. Scenarios on the existing plant, tests, CI, tooling, and protections or alarms the owner promoted.
