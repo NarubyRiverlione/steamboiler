@@ -47,6 +47,7 @@ export type ValueId =
   | "turbineValve"
   | "bypassValve"
   | "turbineSpeed"
+  | "loadSetpoint"
   | "condenserPressure"
   | "hotwellLevel"
   | "condensationPump"
@@ -331,6 +332,7 @@ export const DIAGRAM_VALUES: readonly DiagramValue[] = [
   { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 110, anchor: "middle" },
   { id: "bypassValve", node: "bypass", label: "Bypass valve position", widest: "100 %", x: 960, y: 288, anchor: "middle" },
   { id: "turbineSpeed", node: "turbine", label: "Turbine speed", widest: "3500 rpm", x: 1250, y: 110, anchor: "middle" },
+  { id: "loadSetpoint", node: "load", label: "Load setpoint", widest: "999.9 MW", x: 1590, y: 116, anchor: "middle" },
   { id: "condenserPressure", node: "condenser", label: "Condenser pressure", widest: "1100 mbar", x: 1250, y: 388, anchor: "middle" },
   { id: "hotwellLevel", node: "hotwell", label: "Hotwell level", widest: "100 %", x: 1250, y: 516, anchor: "middle" },
   { id: "condensationPump", node: "condpump", label: "Condensation pump position", widest: "100 %", x: 1100, y: 530, anchor: "middle" },

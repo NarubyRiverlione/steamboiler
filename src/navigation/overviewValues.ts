@@ -25,6 +25,7 @@ export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedVal
     turbineValve: percent(Turbine.turbineValvePosition),
     bypassValve: percent(Turbine.bypassValvePosition),
     turbineSpeed: `${Turbine.rpm.toFixed(0)} rpm`,
+    loadSetpoint: `${Turbine.loadSetpoint.toFixed(1)} MW`,
     condenserPressure: `${Condenser.pressure.toFixed(0)} mbar`,
     hotwellLevel: percent(smoothed.hotwellLevel),
     condensationPump: percent(Condenser.condensationPumpValvePosition),
