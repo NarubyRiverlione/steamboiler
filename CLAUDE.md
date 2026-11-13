@@ -26,9 +26,9 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Tickets
 
 GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs in `docs/agents/`.
-Work in `ROADMAP.md` order: the first `ready-*` ticket with nothing under **Waiting on**. New tickets get a `P1`–`P5` label
-(`P1` broken, `P2` realism in scope, `P3` experience and project health, `P4` parked, `P5` UI and UX; see `docs/agents/issue-tracker.md`) and blocked-by links. A `P4` ticket stays
-`needs-triage` until it is promoted to `P1`–`P3` or `P5`. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
+Work from `ROADMAP.md`: `P1`/`P2` tickets first, otherwise the next ready ticket of the theme the owner picks (no theme is active; the owner moves freely).
+New tickets get a theme label (`electrical`, `turbine-aux`, `plant-systems`, `alarms`, `scenario`, `ui`, `sim-core`; see `docs/agents/issue-tracker.md`), `P1`/`P2` only when broken or wrong, and blocked-by links. A new idea stays
+`needs-triage` until the owner promotes it. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
 Before closing, run `git grep "#<ticket>" docs/adr` and update every ADR the ticket makes out of date, then run the `crap-score-typescript` skill on the changed files (`--changed`; a full run takes
 ~150 s on slow hardware), report the scores (also in
 the closing comment) and flag any method above the risk threshold.
