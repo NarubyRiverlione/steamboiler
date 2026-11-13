@@ -8,38 +8,60 @@ Order: a ticket comes after every open ticket blocking it, otherwise by priority
 A blocker inherits the highest priority of anything it unblocks, shown as `↑P1`, and sits in that priority's section.
 Next: the first ticket with nothing under Waiting on.
 
-## P2: realism in scope
-
-| # | Ticket | Priority | Status | Waiting on | Unblocks |
-| - | ------ | -------- | ------ | ---------- | -------- |
-| 1 | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) Auxiliary load: the four pumps draw power, net output = electric output − auxiliary load | P2 | needs-triage |  | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |
-| 2 | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) Grid supply breaker and the auxiliary bus: pumps need power | P2 | needs-triage | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |
-
 ## P3: experience and project health
 
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 3 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | ready-for-agent |  |  |
-| 4 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P3 | needs-triage |  |  |
-| 5 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | ready-for-agent |  |  |
-| 6 | [#133](https://github.com/NarubyRiverlione/steamboiler/issues/133) Test PowerPlantProvider: the simulation loop and the action creators | P3 | ready-for-agent |  |  |
+| 1 | [#83](https://github.com/NarubyRiverlione/steamboiler/issues/83) pnpm sim:snapshots needs two runs for a chained snapshot | P3 | ready-for-agent |  |  |
+| 2 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | P3 | needs-triage |  |  |
+| 3 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | P3 | ready-for-agent |  |  |
+| 4 | [#133](https://github.com/NarubyRiverlione/steamboiler/issues/133) Test PowerPlantProvider: the simulation loop and the action creators | P3 | ready-for-agent |  |  |
 
 ## P4: parked
 
+### electrical
+
 | # | Ticket | Priority | Status | Waiting on | Unblocks |
 | - | ------ | -------- | ------ | ---------- | -------- |
-| 7 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P4 | ready-for-agent |  |  |
-| 8 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
-| 9 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
-| 10 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
-| 11 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | P4 | needs-triage |  |  |
-| 12 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Trip and error tile for every red level range | P4 | needs-triage |  |  |
-| 13 | [#139](https://github.com/NarubyRiverlione/steamboiler/issues/139) Generator takes a 10 MW basic load when the breaker closes | P4 | needs-triage |  |  |
+| 11 | [#139](https://github.com/NarubyRiverlione/steamboiler/issues/139) Generator takes a 10 MW basic load when the breaker closes | P4 | needs-triage |  |  |
+| 12 | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) Auxiliary load: the four pumps draw power, net output = electric output − auxiliary load | P4 | needs-triage |  | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |
+| 13 | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) Grid supply breaker and the auxiliary bus: pumps need power | P4 | needs-triage | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |
 | 14 | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) Vital bus and UPS: a dead bus darkens the board until the operator closes the UPS breaker | P4 | needs-triage | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) |
+
+### turbine-aux
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
 | 15 | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) Lube oil system: pressure permissive and low-pressure trip | P4 | needs-triage |  | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
 | 16 | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) Turning gear: the stopped rotor turns slowly, the turbine valve cannot open on gear | P4 | needs-triage | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
 | 17 | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) Gland seal steam: the shaft seals decide how much air leaks into the vacuum | P4 | needs-triage | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
 | 18 | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-up scenario: lube oil, turning gear, gland steam, vacuum, roll | P4 | needs-triage | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) |  |
+
+### plant-systems
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 7 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | P4 | needs-triage |  |  |
+| 8 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | P4 | needs-triage |  |  |
+| 9 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | P4 | needs-triage |  |  |
+
+### alarms
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 10 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Trip and error tile for every red level range | P4 | needs-triage |  |  |
+
+### scenario
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 5 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | P4 | ready-for-agent |  |  |
+
+### project-health
+
+| # | Ticket | Priority | Status | Waiting on | Unblocks |
+| - | ------ | -------- | ------ | ---------- | -------- |
+| 6 | [#61](https://github.com/NarubyRiverlione/steamboiler/issues/61) Test gates: unit per commit, golden path before merging into dev, edge into main | P4 | needs-triage |  |  |
 
 ## P5: UI and UX
 

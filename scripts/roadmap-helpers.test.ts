@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
+  areaOf,
   dependentsOf,
   effectivePriorities,
   planTickets,
@@ -154,5 +155,34 @@ describe("renderRoadmap", () => {
 
   test("stamps the date and count", () => {
     expect(md).toContain("_Updated 2026-10-28 · 3 open tickets_")
+  })
+})
+
+describe("areaOf", () => {
+  test("picks the area label and falls back to other", () => {
+    expect(areaOf(["P4", "turbine-aux"])).toBe("turbine-aux")
+    expect(areaOf(["P4", "enhancement"])).toBe("other")
+  })
+})
+
+describe("renderRoadmap P4 areas", () => {
+  const md = renderRoadmap(
+    [
+      ticket(1, ["P4", "scenario"]),
+      ticket(2, ["P4", "electrical"]),
+      ticket(3, ["P4"]),
+      ticket(4, ["P3", "electrical"]),
+    ],
+    "https://x",
+    "2026-01-01",
+  )
+
+  test("splits P4 into area sub-tables in display order, other last", () => {
+    const headings = md.split("\n").filter((l) => l.startsWith("###"))
+    expect(headings).toEqual(["### electrical", "### scenario", "### other"])
+  })
+
+  test("leaves other priorities as one table", () => {
+    expect(md).toContain("## P3: experience and project health\n\n| #")
   })
 })

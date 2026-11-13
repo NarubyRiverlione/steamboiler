@@ -100,6 +100,12 @@ const SECTION_TITLES = new Map([
   [UNPRIORITISED, "No priority"],
 ])
 
+// Area labels that sub-divide the parked P4 section, in display order. A new area label is added here and in docs/agents/issue-tracker.md.
+export const P4_AREAS = ["electrical", "turbine-aux", "plant-systems", "alarms", "scenario", "project-health"]
+const OTHER_AREA = "other"
+
+export const areaOf = (labels: string[]): string => P4_AREAS.find((a) => labels.includes(a)) ?? OTHER_AREA
+
 const sectionTitle = (priority: number) => SECTION_TITLES.get(priority) ?? `P${String(priority)}`
 
 export function renderRoadmap(tickets: Ticket[], repoUrl: string, date: string): string {
@@ -112,14 +118,24 @@ export function renderRoadmap(tickets: Ticket[], repoUrl: string, date: string):
   const row = (t: PlannedTicket) =>
     `| ${String(planned.indexOf(t) + 1)} | ${link(t.number)} ${title(t)} | ${priorityLabel(t)} | ${t.status} | ${links(t.waitingOn)} | ${links(t.unblocks)} |`
 
-  const section = (priority: number) => [
-    `## ${sectionTitle(priority)}`,
-    "",
+  const table = (rows: PlannedTicket[]) => [
     "| # | Ticket | Priority | Status | Waiting on | Unblocks |",
     "| - | ------ | -------- | ------ | ---------- | -------- |",
-    ...planned.filter((t) => t.effectivePriority === priority).map(row),
+    ...rows.map(row),
     "",
   ]
+
+  // P4 is split into one sub-table per area label; other priorities are a single table.
+  const section = (priority: number) => {
+    const rows = planned.filter((t) => t.effectivePriority === priority)
+    if (priority !== 4) return [`## ${sectionTitle(priority)}`, "", ...table(rows)]
+    const areas = [...P4_AREAS, OTHER_AREA].filter((a) => rows.some((t) => areaOf(t.labels) === a))
+    return [
+      `## ${sectionTitle(priority)}`,
+      "",
+      ...areas.flatMap((a) => [`### ${a}`, "", ...table(rows.filter((t) => areaOf(t.labels) === a))]),
+    ]
+  }
 
   return [
     "# Roadmap",
