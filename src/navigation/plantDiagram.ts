@@ -83,7 +83,6 @@ export const NODES: readonly DiagramNode[] = [
   { id: "economizer", name: ["Economizer"], x: 200, y: 460, w: 130, h: 90, medium: "heat" },
   { id: "preheater", name: ["Air preheater"], x: 200, y: 586, w: 130, h: 44, medium: "heat", parked: true },
   { id: "stack", name: ["Stack"], x: 210, y: 654, w: 110, h: 38, medium: "heat", round: true },
-  { id: "surroundings", name: ["Surroundings"], x: 400, y: 40, w: 125, h: 44, medium: "heat", round: true },
   { id: "air", name: ["Combustion air"], x: 420, y: 586, w: 140, h: 44, medium: "heat", round: true },
   {
     id: "boiler",
@@ -261,7 +260,6 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "heat", d: "M265 550 L265 585" },
   { medium: "heat", d: "M265 630 L265 653" },
   { medium: "heat", d: "M330 173 L399 173" },
-  { medium: "heat", d: "M462 146 L462 85" },
   { medium: "heat", d: "M420 608 L331 608", dashed: true },
   { medium: "heat", d: "M200 608 L110 608 L110 100 L199 100", dashed: true },
   { medium: "steam", d: "M520 173 L819 173" },
@@ -303,7 +301,6 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 275, y: 335, text: "flue gas" },
   { x: 275, y: 572, text: "flue gas" },
   { x: 365, y: 164, text: "heat", anchor: "middle" },
-  { x: 472, y: 118, text: "heat loss" },
   { x: 120, y: 360, text: "hot air" },
   { x: 640, y: 164, text: "steam", anchor: "middle" },
   { x: 1080, y: 262, text: "vapour", anchor: "middle" },
