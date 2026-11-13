@@ -28,7 +28,7 @@ const GLYPH_HALF = 18
 const VALUE_BOX_WIDTH = 150
 const VALUE_BOX_HEIGHT = 26
 // The Values toggle stands in the free spot left of the gas supply
-const VALUES_BUTTON = { x: 40, y: 14, w: 140, h: 40 } as const
+const VALUES_BUTTON = { x: 30, y: 10, w: 150, h: 48 } as const
 const VALUE_JUSTIFY = { start: "flex-start", middle: "center", end: "flex-end" } as const
 
 function glyphPaths(symbol: NodeSymbol): ReactNode {
@@ -168,7 +168,7 @@ function PlantOverview() {
         ))}
         <foreignObject x={VALUES_BUTTON.x} y={VALUES_BUTTON.y} width={VALUES_BUTTON.w} height={VALUES_BUTTON.h}>
           <div className="board-overview-toggle">
-            <LensButton small pressed={showValues} onClick={() => { setShowValues(!showValues); }}>
+            <LensButton pressed={showValues} onClick={() => { setShowValues(!showValues); }}>
               Values
             </LensButton>
           </div>

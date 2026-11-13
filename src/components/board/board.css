@@ -353,6 +353,7 @@
   display: flex;
   align-items: center;
   height: 100%;
+  font-size: 1.15rem;
 }
 
 /* A live value label: a small LCD at diagram scale, inside a foreignObject */
