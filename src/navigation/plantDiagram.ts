@@ -43,6 +43,7 @@ type DiagramLabel = {
 export type ValueId =
   | "boilerPressure"
   | "boilerLevel"
+  | "gasFlow"
   | "mainSteamValve"
   | "turbineValve"
   | "bypassValve"
@@ -332,6 +333,7 @@ export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "p
 export const DIAGRAM_VALUES: readonly DiagramValue[] = [
   { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 528, y: 144, anchor: "start" },
   { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 528, y: 180, anchor: "start" },
+  { id: "gasFlow", node: "burner", label: "Gas flow", widest: "99999 L/s", x: 340, y: 87, anchor: "start" },
   { id: "mainSteamValve", node: "msv", label: "Main steam valve", widest: "CLOSED", x: 890, y: 190, anchor: "start" },
   { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 110, anchor: "middle" },
   { id: "bypassValve", node: "bypass", label: "Bypass valve position", widest: "100 %", x: 960, y: 288, anchor: "middle" },

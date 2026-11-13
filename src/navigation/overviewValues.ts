@@ -21,6 +21,7 @@ export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedVal
   return {
     boilerPressure: `${smoothed.pressure.toFixed(1)} bar`,
     boilerLevel: percent(Boiler.waterVolume / CstBoiler.TotalVolume),
+    gasFlow: `${Boiler.gasFlow.toFixed(0)} L/s`,
     mainSteamValve: Turbine.mainSteamValve ? "OPEN" : "CLOSED",
     turbineValve: percent(Turbine.turbineValvePosition),
     bypassValve: percent(Turbine.bypassValvePosition),

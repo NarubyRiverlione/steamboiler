@@ -30,6 +30,7 @@ function livePlant(): PowerPlantState {
   const state: PowerPlantState = makeInitialState()
   state.Boiler.pressure = 123.46
   state.Boiler.waterVolume = 55_000
+  state.Boiler.gasFlow = 8123.4
   state.Boiler.returnTemperatureOut = 187.4
   state.Boiler.stackTemperature = 212.6
   state.Turbine.mainSteamValve = true
@@ -53,6 +54,7 @@ describe("plant overview values", () => {
     renderWith(livePlant())
     expect(text("Boiler pressure")).toBe("123.5 bar")
     expect(text("Boiler level")).toBe("55 %")
+    expect(text("Gas flow")).toBe("8123 L/s")
     expect(text("Main steam valve")).toBe("OPEN")
     expect(text("Turbine valve position")).toBe("42 %")
     expect(text("Bypass valve position")).toBe("7 %")
