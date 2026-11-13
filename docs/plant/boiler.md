@@ -118,7 +118,7 @@ The startup pace still comes from the operator ramping the gas against the heati
 
 ## Level gauge zones
 
-The drum level instrument draws red below `BurnerLowLowLevel` (20%) and from `HighHighLevel` (70%), orange from 20% up to `LowLevel` (35%) and from `HighLevel` (65%) up to 70%, green for `WorkingLow` to `WorkingHigh` (45-55%, the 50% working level ± 5 points, both ends included) and no colour between (35-45% and 55-65%), built by the generic `levelZones` ([ui-board.md](../dev/ui-board.md#level-zones), #54). The 35% low alarm and the 45-55% band are new UNVERIFIED estimates ([design-basis.md](design-basis.md)); **the 35% limit is display only**, nothing in the model acts on it yet (#129).
+The drum level instrument draws red below `BurnerLowLowLevel` (20%) and from `HighHighLevel` (70%), orange from 20% up to `LowLevel` (35%) and from `HighLevel` (65%) up to 70%, green for `WorkingLow` to `WorkingHigh` (45-55%, the 50% working level ± 5 points, both ends included) and no colour between (35-45% and 55-65%), built by the generic `levelZones` ([ui-board.md](../dev/ui-board.md#level-zones), #54). The 35% low alarm and the 45-55% band are new UNVERIFIED estimates ([design-basis.md](design-basis.md)); the 35% limit raises the warning "Boiler level low" (derived and stateless, below `LowLevel`, #137); no trip acts on it.
 
 ## High-high level trip
 

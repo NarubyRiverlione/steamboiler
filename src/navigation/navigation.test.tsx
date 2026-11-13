@@ -262,6 +262,12 @@ describe("partAlarms", () => {
     state.Boiler.heatingRateOverLimit = true
     expect(partAlarms(state).boiler).toBe(true)
   })
+
+  it("raises the deaerator from its feed pump trip (#137)", () => {
+    const state: PowerPlantState = makeInitialState()
+    state.Deaerator.feedPumpTripped = true
+    expect(partAlarms(state)).toEqual({ boiler: false, deaerator: true, condenser: false, turbine: false })
+  })
 })
 
 describe("neighbourPath", () => {

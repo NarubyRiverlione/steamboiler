@@ -103,3 +103,79 @@ describe("boiler level high alarm (#62)", () => {
     expect(simulationReducer(start(0), { type: "SIMULATE_TICKS", count: 60 }).speed).toBe(0)
   })
 })
+
+describe("boiler and deaerator level alarms (#137)", () => {
+  const boiler = CstSimulation.CstBoiler
+  const boilerAt = (level: number): PowerPlantState => {
+    const base: PowerPlantState = makeInitialState()
+    return { ...base, Boiler: { ...base.Boiler, waterVolume: level * boiler.TotalVolume } }
+  }
+  const deaeratorAt = (level: number, feedPumpTripped = false): PowerPlantState => {
+    const base: PowerPlantState = makeInitialState()
+    return { ...base, Deaerator: { ...base.Deaerator, waterVolume: level * CstDeaerator.TotalVolume, feedPumpTripped } }
+  }
+
+  test.each([
+    [boiler.LowLevel - 0.001, true],
+    [boiler.LowLevel, false],
+    [boiler.WorkingLow, false],
+  ])("boiler low at level %f is active: %s (strictly below 35%%)", (level: number, on: boolean) => {
+    expect(activeAlarms(boilerAt(level))).toEqual(on ? ["boilerLevelLow"] : [])
+  })
+
+  test.each([
+    [CstDeaerator.LowLevel - 0.001, true],
+    [CstDeaerator.LowLevel, false],
+  ])("deaerator low at level %f is active: %s (strictly below 25%%)", (level: number, on: boolean) => {
+    expect(activeAlarms(deaeratorAt(level)).includes("deaeratorLevelLow")).toBe(on)
+  })
+
+  test.each([
+    [CstDeaerator.HighLevel - 0.001, false],
+    [CstDeaerator.HighLevel, true],
+    [CstDeaerator.HighHighLevel, true],
+  ])("deaerator high at level %f is active: %s (from 75%%)", (level: number, on: boolean) => {
+    expect(activeAlarms(deaeratorAt(level)).includes("deaeratorLevelHigh")).toBe(on)
+  })
+
+  test("the feed pump trip row follows feedPumpTripped, not the level", () => {
+    expect(activeAlarms(deaeratorAt(0.5, true))).toEqual(["feedPumpTripped"])
+    expect(activeAlarms(deaeratorAt(0.05))).not.toContain("feedPumpTripped")
+  })
+
+  test("a newly raised deaerator high alarm or feed pump trip is reported once", () => {
+    expect(newAlarms(deaeratorAt(0.5), deaeratorAt(CstDeaerator.HighLevel))).toEqual(["deaeratorLevelHigh"])
+    expect(newAlarms(deaeratorAt(0.5), deaeratorAt(0.5, true))).toEqual(["feedPumpTripped"])
+    expect(newAlarms(deaeratorAt(0.5, true), deaeratorAt(0.5, true))).toEqual([])
+  })
+
+  test("the cold start raises no alarm (the 35% cold fill is not below the 35% limit)", () => {
+    const fresh: PowerPlantState = makeInitialState()
+    expect(activeAlarms(fresh)).toEqual([])
+  })
+
+  test("a newly raised boiler low alarm drops the playback from a higher speed to 1x, a pause stays a pause", () => {
+    // Just above 35% with the drain open: the level crosses within a few ticks
+    const start = (speed: SimulationState["speed"]): SimulationState => {
+      const plant: PowerPlantState = boilerAt(boiler.LowLevel + 0.0005)
+      return { ...makeInitialSimulation({ ...plant, Boiler: { ...plant.Boiler, drainValveOpen: true } }), speed }
+    }
+    const fast: SimulationState = simulationReducer(start(60), { type: "SIMULATE_TICKS", count: 600 })
+    expect(activeAlarms(fast.plant)).toContain("boilerLevelLow")
+    expect(fast.speed).toBe(1)
+    expect(simulationReducer(start(0), { type: "SIMULATE_TICKS", count: 600 }).speed).toBe(0)
+  })
+
+  test("a newly raised deaerator low alarm drops the playback from a higher speed to 1x, a pause stays a pause", () => {
+    // Just above 25% on a hot deaerator with the feed pump open: the level crosses within a few ticks
+    const start = (speed: SimulationState["speed"]): SimulationState => {
+      const plant: PowerPlantState = makeInitialState()
+      const deaerator = { ...makeHotDeaerator((CstDeaerator.LowLevel + 0.0005) * CstDeaerator.TotalVolume), feedPumpValvePosition: 1 }
+      return { ...makeInitialSimulation({ ...plant, Deaerator: deaerator }), speed }
+    }
+    const fast: SimulationState = simulationReducer(start(60), { type: "SIMULATE_TICKS", count: 600 })
+    expect(activeAlarms(fast.plant)).toContain("deaeratorLevelLow")
+    expect(fast.speed).toBe(1)
+    expect(simulationReducer(start(0), { type: "SIMULATE_TICKS", count: 600 }).speed).toBe(0)
+  })
+})

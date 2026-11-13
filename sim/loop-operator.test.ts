@@ -2,7 +2,7 @@ import { gasRateOf } from "../src/context/Boiler/BoilerTick"
 import { describe, expect, it, test } from "vitest"
 import { CstDeaerator, CstSimulation } from "../src/context/const"
 import { getWaterSpecificVolume } from "../src/utils/steamTable"
-import { hotwellValvePositions, loopOperator, LoopSettings } from "./scenarios/loop-operator"
+import { holdHeatUpLevel, hotwellValvePositions, loopOperator, LoopSettings } from "./scenarios/loop-operator"
 import { holdPressureWithGas, PressureHoldSettings } from "./scenarios/pressure-hold"
 import { StartGas } from "./scenarios/steps"
 import { makeInitialState } from "../src/context/PowerPlantReducer"
@@ -39,7 +39,10 @@ describe("hotwellValvePositions", () => {
 })
 
 describe("loopOperator", () => {
-  const cold = makeInitialState()
+  const HeatUpFloor = CstSimulation.CstBoiler.LowLevel + LoopSettings.HeatUpLevelMargin
+  const base = makeInitialState()
+  // The cold plant with the drum at the heat-up floor, so the heat-up feed (#137) has nothing to do
+  const cold = { ...base, Boiler: { ...base.Boiler, waterVolume: HeatUpFloor * CstSimulation.CstBoiler.TotalVolume } }
   const withBoiler = (patch: Partial<PowerPlantState["Boiler"]>): PowerPlantState => ({
     ...cold,
     Boiler: { ...cold.Boiler, ...patch },
@@ -282,5 +285,35 @@ describe("loopOperator", () => {
     expect(payloads(0.65, 0.5)).toEqual([-0.5])
     expect(valves(0.65, 0, 0.5)[0].type).toBe("SET_REJECT_VALVE_POSITION")
     expect(payloads(0.65, 0, 0.5)).toEqual([-0.5])
+  })
+})
+
+describe("holdHeatUpLevel (#137)", () => {
+  const { CstBoiler } = CstSimulation
+  const floor = CstBoiler.LowLevel + LoopSettings.HeatUpLevelMargin
+  const base = makeInitialState()
+  const at = (level: number, mainSteamValve = false, feed = 0): PowerPlantState => ({
+    ...base,
+    Boiler: { ...base.Boiler, waterVolume: level * CstBoiler.TotalVolume },
+    Turbine: { ...base.Turbine, mainSteamValve },
+    Deaerator: { ...base.Deaerator, feedPumpValvePosition: feed },
+  })
+  const position = (state: PowerPlantState): number | undefined => {
+    const action: PowerPlantAction | undefined = holdHeatUpLevel(state).at(0)
+    return action?.type === "SET_FEED_PUMP_VALVE_POSITION" ? action.payload.feedPumpValvePosition : undefined
+  }
+
+  it("feeds in proportion to the shortfall below the low level alarm plus the margin", () => {
+    expect(position(at(CstBoiler.LowLevel))).toBeCloseTo(LoopSettings.HeatUpLevelGain * LoopSettings.HeatUpLevelMargin)
+  })
+
+  it("does nothing at or above the floor with the pump shut, and shuts an open pump", () => {
+    expect(holdHeatUpLevel(at(floor))).toEqual([])
+    expect(holdHeatUpLevel(at(0.5))).toEqual([])
+    expect(position(at(0.5, false, 0.2))).toBeCloseTo(-0.2)
+  })
+
+  it("leaves the level to the working hold once the main steam valve is open", () => {
+    expect(holdHeatUpLevel(at(CstBoiler.LowLevel, true))).toEqual([])
   })
 })

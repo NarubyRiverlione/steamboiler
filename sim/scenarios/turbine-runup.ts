@@ -11,7 +11,7 @@ import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
-import { holdLoop } from "./loop-operator"
+import { holdHeatUpLevel, holdLoop } from "./loop-operator"
 import { atWorkingPressure } from "./pressure-hold"
 import { steerHeatingRate } from "./heat-up"
 import { airPumpOn, openMainSteamActions, startUpVent } from "./steps"
@@ -46,7 +46,7 @@ export function startupOperator(state: PowerPlantState, time: number): PowerPlan
   const heating: PowerPlantAction[] = atWorkingPressure(Boiler.pressure) ? [] : steerHeatingRate(Boiler, time)
   if (!Turbine.mainSteamValve) {
     const open: PowerPlantAction[] = atWorkingPressure(Boiler.pressure) ? openMainSteamActions : []
-    return [...vent, ...open, ...heating]
+    return [...vent, ...open, ...holdHeatUpLevel(state), ...heating]
   }
   const holds: PowerPlantAction[] = holdLoop(state, time)
   const holdsWithoutGas: PowerPlantAction[] = atWorkingPressure(Boiler.pressure)
