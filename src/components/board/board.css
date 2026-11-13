@@ -349,10 +349,10 @@
   height: auto;
 }
 
-.board-overview-bar {
+.board-overview-toggle {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  height: 100%;
 }
 
 /* A live value label: a small LCD at diagram scale, inside a foreignObject */

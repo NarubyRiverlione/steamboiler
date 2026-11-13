@@ -27,6 +27,8 @@ const GLYPH_HALF = 18
 // A value label is a foreignObject this wide and tall; the LCD inside sits at the edge its anchor names
 const VALUE_BOX_WIDTH = 150
 const VALUE_BOX_HEIGHT = 26
+// The Values toggle stands in the free spot left of the gas supply
+const VALUES_BUTTON = { x: 40, y: 14, w: 140, h: 40 } as const
 const VALUE_JUSTIFY = { start: "flex-start", middle: "center", end: "flex-end" } as const
 
 function glyphPaths(symbol: NodeSymbol): ReactNode {
@@ -121,11 +123,6 @@ function PlantOverview() {
   const deaerator: DiagramNode | undefined = NODES.find((node: DiagramNode) => node.id === "deaerator")
   return (
     <PanelFrame title="Plant">
-      <div className="board-overview-bar">
-        <LensButton small pressed={showValues} onClick={() => { setShowValues(!showValues); }}>
-          Values
-        </LensButton>
-      </div>
       <svg
         className="board-overview"
         viewBox={"0 0 " + String(DIAGRAM_WIDTH) + " " + String(DIAGRAM_HEIGHT)}
@@ -169,6 +166,13 @@ function PlantOverview() {
             {label.text}
           </text>
         ))}
+        <foreignObject x={VALUES_BUTTON.x} y={VALUES_BUTTON.y} width={VALUES_BUTTON.w} height={VALUES_BUTTON.h}>
+          <div className="board-overview-toggle">
+            <LensButton small pressed={showValues} onClick={() => { setShowValues(!showValues); }}>
+              Values
+            </LensButton>
+          </div>
+        </foreignObject>
         {NODES.map((node: DiagramNode) =>
           node.part === undefined ? (
             <g key={node.id} className={node.parked === true ? "board-node-parked" : undefined}>
