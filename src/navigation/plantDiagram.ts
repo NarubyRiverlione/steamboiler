@@ -322,12 +322,12 @@ export const LABELS: readonly DiagramLabel[] = [
 export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "power", "vacuum"]
 
 export const DIAGRAM_VALUES: readonly DiagramValue[] = [
-  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 440, y: 206, anchor: "start" },
-  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 440, y: 230, anchor: "start" },
+  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 528, y: 144, anchor: "start" },
+  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 528, y: 180, anchor: "start" },
   { id: "mainSteamValve", node: "msv", label: "Main steam valve", widest: "CLOSED", x: 890, y: 190, anchor: "start" },
-  { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 116, anchor: "middle" },
+  { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 110, anchor: "middle" },
   { id: "bypassValve", node: "bypass", label: "Bypass valve position", widest: "100 %", x: 960, y: 288, anchor: "middle" },
-  { id: "turbineSpeed", node: "turbine", label: "Turbine speed", widest: "3500 rpm", x: 1250, y: 116, anchor: "middle" },
+  { id: "turbineSpeed", node: "turbine", label: "Turbine speed", widest: "3500 rpm", x: 1250, y: 110, anchor: "middle" },
   { id: "condenserPressure", node: "condenser", label: "Condenser pressure", widest: "1100 mbar", x: 1250, y: 388, anchor: "middle" },
   { id: "hotwellLevel", node: "hotwell", label: "Hotwell level", widest: "100 %", x: 1250, y: 516, anchor: "middle" },
   { id: "condensationPump", node: "condpump", label: "Condensation pump position", widest: "100 %", x: 1100, y: 530, anchor: "middle" },

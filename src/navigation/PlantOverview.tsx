@@ -27,7 +27,7 @@ import { PARTS, partAlarms } from "./plantParts"
 const GLYPH_HALF = 18
 // A value label is a foreignObject this wide and tall; the LCD inside sits at the edge its anchor names
 const VALUE_BOX_WIDTH = 150
-const VALUE_BOX_HEIGHT = 22
+const VALUE_BOX_HEIGHT = 26
 const VALUE_JUSTIFY = { start: "flex-start", middle: "center", end: "flex-end" } as const
 
 function glyphPaths(symbol: NodeSymbol): ReactNode {
