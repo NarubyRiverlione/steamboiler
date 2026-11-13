@@ -1,10 +1,13 @@
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
+import type { TripId } from "./tripReset"
 
 type PowerPlantAction =
   | { type: "SIMULATE_TICK" }
   | { type: "SIMULATE_TICKS"; count: number } // a batch of fixed ticks, one render
   // Replaces the whole plant state (a UI preset)
   | { type: "LOAD_STATE"; payload: { state: PowerPlantState } }
+  // Clears one latched trip once its cause has gone; a no-op otherwise (ADR 0043)
+  | { type: "RESET_TRIP"; payload: { trip: TripId } }
   // Boiler Actions
   | { type: "SET_GAS_RATE"; payload: { gasRateCommand: number } } // the gas knob, -1 to 1 (#15)
   | { type: "TOGGLE_DRAIN_VALVE" }

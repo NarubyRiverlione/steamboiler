@@ -6,6 +6,7 @@ import { waterKgPerSecond } from "../../utils/flowUnits"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
+import { TripResetButton } from "../board/TripResetButton"
 import { TurnSwitch } from "../board/TurnSwitch"
 import { LevelInstrument } from "../board/LevelInstrument"
 import { levelZones } from "../board/levelZones"
@@ -63,6 +64,7 @@ function Condenser() {
         sjaeValvePosition,
         recirculationPumpValvePosition,
         condensationPumpValvePosition,
+        condensationPumpTripped,
         makeupValvePosition,
         rejectValvePosition,
         deltaWaterMass,
@@ -208,6 +210,12 @@ function Condenser() {
             ValueWidest="9999.9 kg/s"
             Step={CondensationPump_Step}
           />
+          <Lamp
+            lit={condensationPumpTripped}
+            label="Condensation pump trip"
+            title="The hotwell level fell below low-low: reset the trip once the level is back, then open the pump"
+          />
+          <TripResetButton trip="condensationPump" label="condensation pump trip" />
         </div>
         <div className="board-group">
           <h3 className="board-group-title">Hotwell Makeup &amp; Reject</h3>

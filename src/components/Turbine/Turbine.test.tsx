@@ -10,10 +10,11 @@ import Turbine from "./Turbine"
 
 type Ctx = ContextType<typeof PowerPlantContext>
 
-function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPressure?: number) {
+function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPressure?: number, condenserPressure?: number) {
   const state: PowerPlantState = makeInitialState()
   state.Turbine = { ...state.Turbine, ...patch }
   if (boilerPressure !== undefined) state.Boiler = { ...state.Boiler, pressure: boilerPressure }
+  if (condenserPressure !== undefined) state.Condenser = { ...state.Condenser, pressure: condenserPressure }
   const fns = {
     toggleMainSteamValve: vi.fn(),
     adjustBypassValve: vi.fn(),
@@ -203,6 +204,21 @@ describe("Turbine page", () => {
     const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
     expect(field.disabled).toBe(true)
     expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
+  })
+
+  it("has a RESET beside the trip lamp, disabled while the vacuum is above the limit", () => {
+    renderTurbine({ turbineTripped: true })
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(true)
+  })
+
+  it("enables the RESET once the trip is latched and the cause has gone", () => {
+    renderTurbine({ turbineTripped: true }, undefined, 100)
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(false)
+  })
+
+  it("keeps the RESET disabled while the turbine is not tripped", () => {
+    renderTurbine({ turbineTripped: false }, undefined, 100)
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(true)
   })
 
   it("shows the status readouts and the trip lamp", () => {

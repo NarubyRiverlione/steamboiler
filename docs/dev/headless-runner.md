@@ -90,7 +90,7 @@ turns the gas knob to raise the gas 4 L/s over the next second while the smoothe
 limit: the readout lags 30 s and the deaerator let-down valve closes within 0.3 s when the deaerator reaches its 3 bar setpoint, about 8888 s at 90%, which jumps the rate, #130) and to lower it 30 L/s above (backing off is quicker than creeping up), and turns the knob fully down at 165 bar.
 The gas is a rate command ([ADR 0033](../adr/0033-gas-is-a-rate-knob.md)), so a scenario never sets a gas value:
 `sim/scenarios/gas.ts` has `setGasCommand` (a timed action) and `steerGas` (the operator's hand on the knob: the command that reaches a target gas in N seconds, full deflection for 0 or the maximum so the clamp hits it exactly).
-`sim/scenarios/loop-operator.ts` is the other: it starts
+`sim/scenarios/loop-operator.ts` is the other (it never resets a trip, [ADR 0043](../adr/0043-trip-reset.md): a scenario that needs the plant back sends an explicit `RESET_TRIP`): it starts
 steam (gas back from full to `StartGas` from 120 bar on, main steam valve, bypass at its fixed 10%, condensation pump and feed pump start positions, SJAE restart),
 nudges the gas toward the working pressure (`sim/scenarios/pressure-hold.ts`, shared with `turbine-runup`),
 the feed pump toward the boiler level target, the condensation pump toward the deaerator level target (#112) and cooling water against condenser steam once a second, and sets makeup and reject in

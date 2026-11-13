@@ -15,7 +15,6 @@ import {
   runUpPointRefusal,
   shaftWorkFraction,
   speedModeRefusal,
-  turbineTrippedAfter,
 } from "./turbineCalculations"
 
 const { CstCondenser, CstTurbine } = CstSimulation
@@ -130,12 +129,6 @@ describe("vacuum limit", () => {
     expect(maxTurbineValvePosition(0.3, limit)).toBe(1)
   })
 
-  test("the trip flag clears on an opening and stays on otherwise", () => {
-    expect(turbineTrippedAfter(true, 0, 0.01)).toBe(false)
-    expect(turbineTrippedAfter(true, 0.2, 0.2)).toBe(true)
-    expect(turbineTrippedAfter(true, 0.2, 0.1)).toBe(true)
-    expect(turbineTrippedAfter(false, 0, 0.5)).toBe(false)
-  })
 })
 
 describe("calculateRPM", () => {
