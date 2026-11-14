@@ -43,8 +43,8 @@ Next: [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superhe
 | 12 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | needs-triage |  |  |
 | 13 | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) Superheater with spray attemperator | ready-for-agent |  | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) [#152](https://github.com/NarubyRiverlione/steamboiler/issues/152) |
 | 14 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | needs-triage |  |  |
-| 15 | [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) Bypass desuperheating spray | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) |  |
-| 27 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) |  |
+| 15 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) |  |
+| 16 | [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) Bypass desuperheating spray | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) |  |
 
 ## Alarms and trips
 
@@ -52,8 +52,8 @@ Next: nothing ready (every ticket is waiting or needs triage).
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 16 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Trip and error tile for every red level range | needs-triage |  |  |
-| 17 | [#152](https://github.com/NarubyRiverlione/steamboiler/issues/152) Superheater protection: outlet safety valve, start-up vent and drains, high steam temperature trip | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) |  |
+| 17 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Trip and error tile for every red level range | needs-triage |  |  |
+| 18 | [#152](https://github.com/NarubyRiverlione/steamboiler/issues/152) Superheater protection: outlet safety valve, start-up vent and drains, high steam temperature trip | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) |  |
 
 ## Scenarios
 
@@ -61,7 +61,7 @@ Next: [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown 
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 18 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | ready-for-agent |  |  |
+| 19 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | ready-for-agent |  |  |
 
 ## UI and UX
 
@@ -69,14 +69,14 @@ Next: [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historica
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 19 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
-| 20 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
-| 21 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | needs-triage |  |  |
-| 22 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | ready-for-agent |  |  |
-| 23 | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) Generation page: split the generator controls out of the Turbine page | ready-for-agent |  | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) |
-| 24 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | ready-for-agent | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) |  |
-| 25 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | needs-triage |  |  |
-| 26 | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) Steam page: superheater and reheater with the attemperator controls | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) |
+| 20 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
+| 21 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
+| 22 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | needs-triage |  |  |
+| 23 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | ready-for-agent |  |  |
+| 24 | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) Generation page: split the generator controls out of the Turbine page | ready-for-agent |  | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) |
+| 25 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | ready-for-agent | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) |  |
+| 26 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | needs-triage |  |  |
+| 27 | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) Steam page: superheater and reheater with the attemperator controls | needs-triage | [#113](https://github.com/NarubyRiverlione/steamboiler/issues/113) |  |
 
 ## Sim core: tests, CI, tooling, snapshots
 
