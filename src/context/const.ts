@@ -46,7 +46,7 @@ export const CstSimulation = {
     RecirculationPump_IntakeTemperature: 10, // C temp of cooling water (typical 8-12C)
     HeatExchangerUA: 27000, // kW/K at the full cooling water flow: terminal temperature difference 6 K at the rated load; scales with flow^0.5 (ADR 0032)
     CondensationPump_MaxFlowRate: 300, // l/s (typical 160 - 270 l/s)
-    CondensationPump_Step: 1, // % per wheel notch or arrow key: a pump is set finely
+    CondensationPump_Step: 100 / 300, // % per click, wheel notch or arrow key: 1 l/s (about 1 kg/s) of the 300 l/s max, #138
     Makeup_MaxFlowRate: 50, // l/s demineralised water into the hotwell
     Makeup_Temperature: 20, // Celsius
     Makeup_Step: 5, // % per click open/close
@@ -118,7 +118,7 @@ export const CstDeaerator = {
   HighHighLevel: 0.85, // share of TotalVolume: the red zone on the gauge starts here; display only, 22 m³ of headroom (UNVERIFIED estimate, #54, #129)
   WorkingLow: 0.45, // share of TotalVolume: lower end of the green band on the level gauge, the 50% working level minus 5 points (UNVERIFIED estimate, #54)
   WorkingHigh: 0.55, // share of TotalVolume: upper end of the green band
-  FeedPump_Step: 1, // % per wheel notch or arrow key; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
+  FeedPump_Step: 100 / 300, // % per click, wheel notch or arrow key: 1 l/s (about 1 kg/s), #138; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
   StartLevel: 0.38, // share of TotalVolume filled cold at ambient: ends at 50% at 3 bar (ADR 0037)
   Pressure: 3, // bar, held by the steam inlet valve (about 134 °C)
   ExtractionValveCapacity: 60, // kg/s the extraction valve passes: over-dimensioned, about 35 kg/s are needed at rated flow (design-basis.md)

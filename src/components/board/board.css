@@ -1466,3 +1466,9 @@ path.board-zone {
   border-radius: 4px;
   background: var(--board-panel-bg);
 }
+
+.board-valve-knob-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
