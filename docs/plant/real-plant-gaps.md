@@ -30,6 +30,6 @@ The plant to be with the two biggest additions drawn in. A sketch, not a design:
 
 ![The plant to be with a superheater between the boiler and the main steam valve, and a deaerator and boiler feed pump on the Return](real-plant-schema.svg)
 
-- **Superheater (built in #113):** drawn before the boiler surface, because flue gas after it is only about 100 K above the water ([ADR 0029](../adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md)), too cool to superheat. In a real boiler the furnace walls come first, which the one boiler surface here cannot show.
+- **Superheater (built in #113, on the overview since #153):** drawn before the boiler surface, because flue gas after it is only about 100 K above the water ([ADR 0029](../adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md)), too cool to superheat. In a real boiler the furnace walls come first, which the one boiler surface here cannot show. The overview draws the reheater (#150, parked and dashed) after it, and no longer draws the relief valve and the Atmosphere of the sketch.
 - **Deaerator:** an open heater, so it needs a vessel with a level, a second pump and a change to [ADR 0002](../adr/0002-makeup-into-hotwell.md) ([ADR 0031](../adr/0031-one-extraction-heater.md)). That pump is the boiler feed pump. It takes the same extraction steam as the heater.
 - **Heater drain:** it runs to the deaerator here, the usual arrangement. With no deaerator it is pumped forward into the Return, as ADR 0031 decides.

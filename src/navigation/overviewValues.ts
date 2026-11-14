@@ -37,6 +37,7 @@ export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedVal
     heaterTemperature: celsius(Heater.returnTemperature),
     economizerTemperature: celsius(Boiler.returnTemperatureOut),
     stackTemperature: celsius(Boiler.stackTemperature),
+    steamTemperature: celsius(Boiler.steamTemperature),
   }
 }
 

@@ -1,5 +1,6 @@
 /** Data of the plant overview: the plant to be (ADR 0029) as laid out in the full-board mockup (docs/adr/0015-full-board-mockup.html). */
 
+import type { AlarmId } from "./alarms"
 import type { PartId } from "./plantParts"
 
 export type NodeSymbol = "valve" | "pump"
@@ -20,6 +21,8 @@ export type DiagramNode = {
   readonly part?: PartId
   // The node that carries the part's alarm LED
   readonly led?: true
+  // The alarm that lights this node's LED alone, instead of every alarm of the part
+  readonly alarm?: AlarmId
   // Drawn as the industry symbol (centred in the box, the box only joins the pipes and takes the click) instead of a box
   readonly symbol?: NodeSymbol
   // The way the flow runs through a symbol; right when left out
@@ -59,6 +62,7 @@ export type ValueId =
   | "heaterTemperature"
   | "economizerTemperature"
   | "stackTemperature"
+  | "steamTemperature"
 
 // A live value drawn as an LCD label beside a node (#99); x and y are the anchor in diagram units, `anchor` says which edge of the label it is
 export type DiagramValue = {
@@ -79,7 +83,20 @@ export const DIAGRAM_HEIGHT = 704
 export const NODES: readonly DiagramNode[] = [
   { id: "gas", name: ["Gas supply"], x: 205, y: 14, w: 120, h: 40, medium: "heat", round: true },
   { id: "burner", name: ["Burner"], x: 200, y: 78, w: 130, h: 44, medium: "heat", part: "boiler" },
-  { id: "surface", name: ["Boiler surface"], x: 200, y: 146, w: 130, h: 54, medium: "heat" },
+  {
+    id: "superheater",
+    name: ["Superheater"],
+    x: 200,
+    y: 146,
+    w: 130,
+    h: 54,
+    medium: "steam",
+    part: "boiler",
+    led: true,
+    alarm: "steamTemperatureHigh",
+  },
+  { id: "reheater", name: ["Reheater"], x: 200, y: 226, w: 130, h: 44, medium: "heat", parked: true },
+  { id: "surface", name: ["Boiler surface"], x: 200, y: 296, w: 130, h: 54, medium: "heat" },
   { id: "economizer", name: ["Economizer"], x: 200, y: 460, w: 130, h: 90, medium: "heat" },
   { id: "preheater", name: ["Air preheater"], x: 200, y: 586, w: 130, h: 44, medium: "heat", parked: true },
   { id: "stack", name: ["Stack"], x: 210, y: 654, w: 110, h: 38, medium: "heat", round: true },
@@ -88,15 +105,13 @@ export const NODES: readonly DiagramNode[] = [
     id: "boiler",
     name: ["Boiler"],
     x: 400,
-    y: 146,
+    y: 296,
     w: 120,
     h: 54,
     medium: "water",
     part: "boiler",
     led: true,
   },
-  { id: "relief", name: ["Relief valve"], x: 700, y: 40, w: 120, h: 44, medium: "steam" },
-  { id: "atmosphere", name: ["Atmosphere"], x: 890, y: 40, w: 120, h: 44, medium: "steam", round: true },
   {
     id: "msv",
     name: ["Main steam", "valve"],
@@ -143,7 +158,7 @@ export const NODES: readonly DiagramNode[] = [
     part: "turbine",
     symbol: "valve",
   },
-  { id: "drain", name: ["Drain"], x: 370, y: 250, w: 100, h: 40, medium: "water", part: "boiler" },
+  { id: "drain", name: ["Drain"], x: 370, y: 400, w: 100, h: 40, medium: "water", part: "boiler" },
   {
     id: "condenser",
     name: ["Condenser"],
@@ -256,15 +271,16 @@ export const NODES: readonly DiagramNode[] = [
 export const PIPES: readonly DiagramPipe[] = [
   { medium: "heat", d: "M265 54 L265 77" },
   { medium: "heat", d: "M265 122 L265 145" },
-  { medium: "heat", d: "M265 200 L265 459" },
+  { medium: "heat", d: "M265 200 L265 225" },
+  { medium: "heat", d: "M265 270 L265 295" },
+  { medium: "heat", d: "M265 350 L265 459" },
   { medium: "heat", d: "M265 550 L265 585" },
   { medium: "heat", d: "M265 630 L265 653" },
-  { medium: "heat", d: "M330 173 L399 173" },
+  { medium: "heat", d: "M330 323 L399 323" },
   { medium: "heat", d: "M420 608 L331 608", dashed: true },
   { medium: "heat", d: "M200 608 L110 608 L110 100 L199 100", dashed: true },
-  { medium: "steam", d: "M520 173 L819 173" },
-  { medium: "steam", d: "M760 173 L760 85" },
-  { medium: "steam", d: "M820 62 L889 62" },
+  { medium: "steam", d: "M430 295 L430 190 L331 190" },
+  { medium: "steam", d: "M331 173 L819 173" },
   { medium: "steam", d: "M940 173 L999 173" },
   { medium: "steam", d: "M1130 173 L1189 173" },
   { medium: "steam", d: "M880 185 L880 272 L899 272" },
@@ -274,7 +290,7 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "steam", d: "M1020 272 L1220 272 L1220 309" },
   { medium: "steam", d: "M1280 200 L1280 309" },
   { medium: "steam", d: "M1220 200 L1220 224 L890 224 A10 10 0 0 0 870 224 L790 224 A10 10 0 0 0 770 224 L585 224 L585 479" },
-  { medium: "water", d: "M420 200 L420 249" },
+  { medium: "water", d: "M420 350 L420 399" },
   { medium: "water", d: "M1220 420 L1220 469" },
   { medium: "water", d: "M1280 420 L1280 469" },
   { medium: "water", d: "M1190 508 L1171 508" },
@@ -282,7 +298,7 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "water", d: "M859 508 L841 508" },
   { medium: "water", d: "M699 508 L661 508" },
   { medium: "water", d: "M509 508 L331 508" },
-  { medium: "water", d: "M330 472 L490 472 L490 201" },
+  { medium: "water", d: "M330 472 L490 472 L490 351" },
   { medium: "water", d: "M1420 479 L1311 494" },
   { medium: "water", d: "M1310 522 L1419 537" },
   { medium: "water", d: "M610 535 L610 570 L900 570 L900 547" },
@@ -298,20 +314,21 @@ export const PIPES: readonly DiagramPipe[] = [
 
 export const LABELS: readonly DiagramLabel[] = [
   { x: 275, y: 138, text: "flue gas" },
-  { x: 275, y: 335, text: "flue gas" },
+  { x: 275, y: 410, text: "flue gas" },
   { x: 275, y: 572, text: "flue gas" },
-  { x: 365, y: 164, text: "heat", anchor: "middle" },
+  { x: 365, y: 314, text: "heat", anchor: "middle" },
   { x: 120, y: 360, text: "hot air" },
-  { x: 640, y: 164, text: "steam", anchor: "middle" },
+  { x: 440, y: 250, text: "steam" },
+  { x: 640, y: 164, text: "superheated steam", anchor: "middle" },
   { x: 1080, y: 262, text: "vapour", anchor: "middle" },
   { x: 1292, y: 262, text: "exhaust" },
   { x: 1050, y: 215, text: "extraction steam", anchor: "middle" },
-  { x: 395, y: 230, text: "drain", anchor: "middle" },
+  { x: 395, y: 380, text: "drain", anchor: "middle" },
   { x: 1210, y: 450, text: "condensate", anchor: "end" },
   { x: 1292, y: 450, text: "exhaust moisture" },
   { x: 1005, y: 498, text: "Return", anchor: "middle", bold: true },
   { x: 445, y: 498, text: "hotter Return", anchor: "middle", bold: true },
-  { x: 502, y: 350, text: "hottest Return", anchor: "start", bold: true },
+  { x: 502, y: 410, text: "hottest Return", anchor: "start", bold: true },
   { x: 760, y: 588, text: "heater drain", anchor: "middle" },
   { x: 772, y: 300, text: "auxiliary steam", anchor: "end" },
   { x: 1365, y: 470, text: "makeup", anchor: "middle" },
@@ -323,13 +340,14 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 1150, y: 371, text: "vacuum", anchor: "middle" },
   { x: 915, y: 398, text: "motive steam", anchor: "end" },
   { x: 640, y: 650, text: "Dashed: the air preheater, parked in #90." },
+  { x: 640, y: 672, text: "Dashed: the reheater, parked in #150." },
 ]
 
 export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "power", "vacuum"]
 
 export const DIAGRAM_VALUES: readonly DiagramValue[] = [
-  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 528, y: 144, anchor: "start" },
-  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 528, y: 180, anchor: "start" },
+  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 528, y: 294, anchor: "start" },
+  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 528, y: 330, anchor: "start" },
   { id: "gasFlow", node: "burner", label: "Gas flow", widest: "99999 L/s", x: 340, y: 87, anchor: "start" },
   { id: "mainSteamValve", node: "msv", label: "Main steam valve", widest: "CLOSED", x: 890, y: 190, anchor: "start" },
   { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 110, anchor: "middle" },
@@ -345,5 +363,6 @@ export const DIAGRAM_VALUES: readonly DiagramValue[] = [
   { id: "feedPump", node: "feedpump", label: "Boiler feed pump position", widest: "100 %", x: 770, y: 530, anchor: "middle" },
   { id: "heaterTemperature", node: "heater", label: "Extraction heater temperature", widest: "999 °C", x: 585, y: 540, anchor: "end" },
   { id: "economizerTemperature", node: "economizer", label: "Economizer temperature", widest: "999 °C", x: 265, y: 520, anchor: "middle" },
+  { id: "steamTemperature", node: "superheater", label: "Steam temperature", widest: "999 °C", x: 348, y: 140, anchor: "start" },
   { id: "stackTemperature", node: "stack", label: "Stack temperature", widest: "999 °C", x: 330, y: 662, anchor: "start" },
 ]

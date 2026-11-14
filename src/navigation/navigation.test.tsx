@@ -220,6 +220,51 @@ describe("plant overview", () => {
     expect(screen.queryByRole("link", { name: /Air preheater/ })).toBeNull()
   })
 
+  it("draws the superheater between the burner and the boiler surface, linking to the Boiler page", () => {
+    renderAt("/")
+    const burner: DiagramNode = nodeById("burner")
+    const superheater: DiagramNode = nodeById("superheater")
+    const surface: DiagramNode = nodeById("surface")
+    expect(superheater.y).toBeGreaterThanOrEqual(burner.y + burner.h)
+    expect(surface.y).toBeGreaterThanOrEqual(superheater.y + superheater.h)
+    fireEvent.click(screen.getByRole("link", { name: "Superheater, opens Boiler" }))
+    expect(where()).toBe("/boiler")
+  })
+
+  it("draws the reheater parked and dashed after the superheater, with a legend line and no link", () => {
+    renderAt("/")
+    const reheater: DiagramNode = nodeById("reheater")
+    expect(reheater.parked).toBe(true)
+    expect(reheater.part).toBeUndefined()
+    expect(reheater.y).toBeGreaterThanOrEqual(nodeById("superheater").y + nodeById("superheater").h)
+    expect(nodeById("surface").y).toBeGreaterThanOrEqual(reheater.y + reheater.h)
+    expect(screen.queryByRole("link", { name: /Reheater/ })).toBeNull()
+    expect(LABELS.some((label: { text: string }) => label.text.includes('reheater, parked in #150'))).toBe(true)
+  })
+
+  it("lights the superheater LED from the steam temperature alarm only", () => {
+    const state: PowerPlantState = makeInitialState()
+    renderAt("/", state)
+    expect(screen.getByRole("img", { name: "Steam temperature high alarm: off" })).toBeTruthy()
+    cleanup()
+    state.Boiler.steamTemperature = 600
+    renderAt("/", state)
+    expect(screen.getByRole("img", { name: "Steam temperature high alarm: on" })).toBeTruthy()
+  })
+
+  it("no longer draws the relief valve and the Atmosphere", () => {
+    renderAt("/")
+    expect(NODES.some((node: DiagramNode) => node.id === "relief" || node.id === "atmosphere")).toBe(false)
+    expect(screen.queryByText("Relief valve")).toBeNull()
+    expect(screen.queryByText("Atmosphere")).toBeNull()
+  })
+
+  it("keeps every node of the diagram clear of the others", () => {
+    const hit = (a: DiagramNode, b: DiagramNode): boolean =>
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+    for (const a of NODES) for (const b of NODES) if (a.id < b.id) expect(hit(a, b), a.id + " and " + b.id).toBe(false)
+  })
+
   it.each([
     ["Boiler", "burnerTripped"],
     ["Boiler", "heatingRateOverLimit"],
