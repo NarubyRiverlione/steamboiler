@@ -22,6 +22,7 @@ type ValveControlProps = {
   readonly Step: number // percent per arrow key press or wheel notch
   readonly Pump?: boolean // a pump knob has its own cap tint
   readonly Caption?: string // visible heading of the knob, when it differs from Label
+  readonly Disabled?: string // the reason the operator cannot move the valve (the plant moves it): the knob turns display-only, the buttons disabled, the reason shown
 }
 
 export function ValveControl({
@@ -32,9 +33,11 @@ export function ValveControl({
   Position,
   Step,
   Caption,
+  Disabled,
   Pump = false,
 }: ValveControlProps) {
   const { commanded, command } = useValveRamp(ValveId)
+  const locked: boolean = Disabled !== undefined
   const percent: number = Math.round(Position * 100)
   const commandPercent: number = roundTravel((commanded ?? Position) * 100)
   const nudge = (direction: 1 | -1): void => {
@@ -47,7 +50,8 @@ export function ValveControl({
         <LensButton
           small
           aria-label={`${Label} knob decrease`}
-          disabled={commandPercent <= MIN_PERCENT}
+          disabled={locked || commandPercent <= MIN_PERCENT}
+          title={Disabled}
           onClick={() => {
             nudge(-1)
           }}
@@ -64,14 +68,19 @@ export function ValveControl({
           step={Step}
           size={100}
           tone={Pump ? "pump" : "valve"}
-          onChange={(value: number) => {
-            command(value / 100)
-          }}
+          onChange={
+            locked
+              ? undefined
+              : (value: number) => {
+                  command(value / 100)
+                }
+          }
         />
         <LensButton
           small
           aria-label={`${Label} knob increase`}
-          disabled={commandPercent >= MAX_PERCENT}
+          disabled={locked || commandPercent >= MAX_PERCENT}
+          title={Disabled}
           onClick={() => {
             nudge(1)
           }}
@@ -79,6 +88,7 @@ export function ValveControl({
           +
         </LensButton>
       </div>
+      {locked && <span className="board-valve-reason">{Disabled}</span>}
       <div className="board-valve-values">
         {Value !== undefined && <Display label={`${Label} flow`} text={Value} widest={ValueWidest} />}
         {Value === undefined && (

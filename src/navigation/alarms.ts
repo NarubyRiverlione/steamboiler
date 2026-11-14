@@ -35,6 +35,6 @@ export const ALARMS: readonly Alarm[] = [
   { id: "hotwellLevelHigh", label: "Hotwell level high", severity: "warning", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) >= HotwellHigh },
   { id: "deaeratorLevelLow", label: "Deaerator level low", severity: "warning", part: "deaerator", active: (s: PowerPlantState) => deaeratorLevel(s.Deaerator.waterVolume) < CstDeaerator.LowLevel },
   { id: "deaeratorLevelHigh", label: "Deaerator level high", severity: "warning", part: "deaerator", active: (s: PowerPlantState) => deaeratorLevel(s.Deaerator.waterVolume) >= CstDeaerator.HighLevel },
-  { id: "steamTemperatureHigh", label: "Steam temperature high", severity: "warning", part: "boiler", active: (s: PowerPlantState) => s.Boiler.steamTemperature >= CstSuperheater.AlarmTemperature },
+  { id: "steamTemperatureHigh", label: "Steam temperature high", severity: "warning", part: "steam", active: (s: PowerPlantState) => s.Boiler.steamTemperature >= CstSuperheater.AlarmTemperature },
   { id: "feedPumpTripped", label: "Feed pump trip", severity: "error", part: "deaerator", active: (s: PowerPlantState) => s.Deaerator.feedPumpTripped },
 ]
