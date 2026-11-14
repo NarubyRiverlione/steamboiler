@@ -91,7 +91,7 @@ export const NODES: readonly DiagramNode[] = [
     w: 130,
     h: 54,
     medium: "steam",
-    part: "boiler",
+    part: "steam",
     led: true,
     alarm: "steamTemperatureHigh",
   },

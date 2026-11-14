@@ -228,15 +228,15 @@ describe("plant overview", () => {
     expect(screen.queryByRole("link", { name: /Air preheater/ })).toBeNull()
   })
 
-  it("draws the superheater between the burner and the boiler surface, linking to the Boiler page", () => {
+  it("draws the superheater between the burner and the boiler surface, linking to the Steam page", () => {
     renderAt("/")
     const burner: DiagramNode = nodeById("burner")
     const superheater: DiagramNode = nodeById("superheater")
     const surface: DiagramNode = nodeById("surface")
     expect(superheater.y).toBeGreaterThanOrEqual(burner.y + burner.h)
     expect(surface.y).toBeGreaterThanOrEqual(superheater.y + superheater.h)
-    fireEvent.click(screen.getByRole("link", { name: "Superheater, opens Boiler" }))
-    expect(where()).toBe("/boiler")
+    fireEvent.click(screen.getByRole("link", { name: "Superheater, opens Steam" }))
+    expect(where()).toBe("/steam")
   })
 
   it("draws the reheater parked and dashed after the superheater, with a legend line and no link", () => {
