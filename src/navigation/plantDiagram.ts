@@ -130,7 +130,7 @@ export const NODES: readonly DiagramNode[] = [
     part: "turbine",
     led: true,
   },
-  { id: "generator", name: ["Generator"], x: 1370, y: 146, w: 120, h: 54, medium: "power", part: "turbine" },
+  { id: "generator", name: ["Generator"], x: 1370, y: 146, w: 120, h: 54, medium: "power", part: "generation" },
   { id: "load", name: ["Load"], x: 1550, y: 150, w: 80, h: 46, medium: "power", round: true },
   {
     id: "bypass",
