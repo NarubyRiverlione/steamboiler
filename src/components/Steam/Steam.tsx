@@ -1,5 +1,6 @@
 /** The Steam page on the board: the superheater with its steam temperature gauge, spray attemperator valve and Auto/Manual switch, and a placeholder for the reheater (#149, ADR 0044). */
 
+import { ALARMS, type Alarm } from "../../navigation/alarms"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { CstSuperheater } from "../../context/const"
 import { getBoilingPoint } from "../../utils/steamTable"
@@ -15,15 +16,11 @@ const { AlarmTemperature } = CstSuperheater
 const SPRAY_STEP = 5 // percent per arrow key press or wheel notch
 
 function Steam() {
-  const {
-    state: {
-      Boiler: { steamTemperature, superheaterHeat, sprayValvePosition, sprayFlow, attemperatorAuto, pressure },
-    },
-    setAttemperatorAuto,
-  } = usePowerPlant()
+  const { state, setAttemperatorAuto } = usePowerPlant()
+  const { steamTemperature, superheaterHeat, sprayValvePosition, sprayFlow, attemperatorAuto, pressure } = state.Boiler
 
   const superheat: number = Math.max(0, steamTemperature - getBoilingPoint(pressure))
-  const high: boolean = steamTemperature >= AlarmTemperature
+  const high: boolean = ALARMS.find((alarm: Alarm) => alarm.id === "steamTemperatureHigh")?.active(state) ?? false
 
   return (
     <PanelFrame title="Steam">

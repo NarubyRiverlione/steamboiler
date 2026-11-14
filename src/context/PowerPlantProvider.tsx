@@ -55,8 +55,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const setAttemperatorAuto = (attemperatorAuto: boolean) => {
     dispatch({ type: "SET_ATTEMPERATOR_AUTO", payload: { attemperatorAuto } })
   }
-  const adjustSprayValve = (position: number) => {
-    dispatch({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: position } })
+  const adjustSprayValve = (amount: number) => {
+    dispatch({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: amount } })
   }
   //#endregion
 
