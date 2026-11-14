@@ -26,10 +26,68 @@ describe("Generation page", () => {
     renderGeneration({ rpm: 2999.6, loadSetpoint: 80, electricOutput: 42.34, generatorBreaker: true })
     expect(screen.getByRole("heading", { name: "Generation" })).toBeTruthy()
     expect(screen.getByLabelText("Turbine speed").textContent).toBe("3000 RPM")
-    expect(screen.getByRole("meter", { name: "Load setpoint knob" }).getAttribute("aria-valuenow")).toBe("80")
+    expect(screen.getByRole("slider", { name: "Load setpoint knob" }).getAttribute("aria-valuenow")).toBe(
+      "80",
+    )
     expect(screen.getByLabelText("Generator load").textContent).toBe("42.3 MW")
     expect(screen.getByLabelText("Load setpoint").textContent).toBe("80.0 MW")
     expect(screen.getByLabelText("Breaker").textContent).toBe("CLOSED")
+  })
+
+  it("shows the load dial with the actual load and the setpoint, and no MOCKUP note", () => {
+    renderGeneration({ loadSetpoint: 100, electricOutput: 60, generatorBreaker: true })
+    const dial: HTMLElement = screen.getByRole("meter", { name: "Generator load dial" })
+    expect(dial.getAttribute("aria-valuenow")).toBe("60")
+    expect(dial.getAttribute("aria-valuemax")).toBe("200")
+    expect(dial.getAttribute("aria-valuetext")).toBe("60 MW, setpoint 100 MW")
+    expect(dial.querySelector("path[data-tone='warn']")).not.toBeNull()
+    expect(screen.queryByText("MOCKUP")).toBeNull()
+  })
+
+  it("turns the load setpoint with the arrow keys, Home and End, within 0 to the limit", () => {
+    const fns = renderGeneration({ generatorBreaker: true, loadSetpoint: 100 })
+    const knob: HTMLElement = screen.getByRole("slider", { name: "Load setpoint knob" })
+    fireEvent.keyDown(knob, { key: "ArrowUp" })
+    expect(fns.setLoadSetpoint).toHaveBeenLastCalledWith(105)
+    fireEvent.keyDown(knob, { key: "ArrowDown" })
+    expect(fns.setLoadSetpoint).toHaveBeenLastCalledWith(95)
+    fireEvent.keyDown(knob, { key: "End" })
+    expect(fns.setLoadSetpoint).toHaveBeenLastCalledWith(200)
+    fireEvent.keyDown(knob, { key: "Home" })
+    expect(fns.setLoadSetpoint).toHaveBeenLastCalledWith(0)
+  })
+
+  it("clamps the knob at the ends", () => {
+    const fns = renderGeneration({ generatorBreaker: true, loadSetpoint: 198 })
+    fireEvent.keyDown(screen.getByRole("slider", { name: "Load setpoint knob" }), { key: "ArrowUp" })
+    expect(fns.setLoadSetpoint).toHaveBeenLastCalledWith(200)
+  })
+
+  it("turns the load setpoint with the wheel", () => {
+    const fns = renderGeneration({ generatorBreaker: true, loadSetpoint: 100 })
+    fireEvent.wheel(screen.getByRole("slider", { name: "Load setpoint knob" }), { deltaY: -100 })
+    expect(fns.setLoadSetpoint).toHaveBeenLastCalledWith(105)
+  })
+
+  it("turns the load setpoint with a drag, in whole MW", () => {
+    const fns = renderGeneration({ generatorBreaker: true, loadSetpoint: 100 })
+    const knob: HTMLElement = screen.getByRole("slider", { name: "Load setpoint knob" })
+    Object.assign(knob, { setPointerCapture: vi.fn() })
+    fireEvent.pointerDown(knob, { clientX: 100, pointerId: 1 })
+    fireEvent.pointerMove(knob, { clientX: 140, pointerId: 1 })
+    const value: number = fns.setLoadSetpoint.mock.lastCall?.[0] as number
+    expect(value).toBeGreaterThan(100)
+    expect(Number.isInteger(value)).toBe(true)
+  })
+
+  it("leaves the knob inert with the breaker open and shows the reason", () => {
+    const fns = renderGeneration({ generatorBreaker: false })
+    const knob: HTMLElement = screen.getByRole("meter", { name: "Load setpoint knob" })
+    fireEvent.keyDown(knob, { key: "ArrowUp" })
+    fireEvent.wheel(knob, { deltaY: -100 })
+    expect(fns.setLoadSetpoint).not.toHaveBeenCalled()
+    expect(screen.queryByRole("slider", { name: "Load setpoint knob" })).toBeNull()
+    expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
   })
 
   it("has no speed gauge, trip lamp or speed controls", () => {
