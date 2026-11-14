@@ -15,7 +15,7 @@ const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 const { DeltaTime } = CstSimulation
 
 export const LoopSettings = {
-  BypassLoadOpening: 0.1, // bypass position once the main steam valve opens: 20 kg/s, close to the turbine's ~18 kg/s at sync speed
+  BypassLoadOpening: 0.06, // bypass position once the main steam valve opens: about 13 kg/s at 165 bar, what the heat-up gas holds with the superheater taking its heat first (was 0.1, 20 kg/s, before #113)
   SjaeOpening: 1, // SJAE valve position once there is steam
   CoolingWaterMinimum: 0.1, // the cooling water never goes below it: a surge of steam (load rejection) must find the exchanger running
   CoolingWaterOpening: 0.1, // cooling water valve position when the main steam valve opens: the bypass steam has somewhere to condense at once

@@ -101,7 +101,7 @@ describe("bypass-loop assertions", () => {
 
   test("while holding, steam out of the boiler matches steam generated", () => {
     const average = (value: (s: PowerPlantState) => number) => steady.reduce((sum, s) => sum + value(s.state), 0) / steady.length
-    const out = average((s) => s.Turbine.bypassSteamFlowOut + s.Turbine.turbineSteamFlowOut + s.Deaerator.letDownFlow)
+    const out = average((s) => s.Turbine.bypassSteamFlowOut + s.Turbine.turbineSteamFlowOut - s.Boiler.sprayFlow + s.Deaerator.letDownFlow)
     const generated = average((s) => s.Boiler.deltaSteamMass)
     expect(Math.abs(out - generated)).toBeLessThanOrEqual(SteadyShare * generated)
   })

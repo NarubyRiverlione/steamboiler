@@ -27,6 +27,7 @@ One extraction heater takes steam from the turbine at about 5 bar and heats the 
 
 ## Consequences
 
+- **#113:** with the superheater ([ADR 0044](0044-superheater-with-spray-attemperator.md)) the rated flow is 134 kg/s and the rated output 152.4 MW; the tap enthalpy comes from the superheated inlet, the tap pressure is 5 bar at 134 kg/s, and the heater takes about 2 kg/s at 125 MW (the deaerator tap takes the rest of the Return's heat). The spray water leaves the feed pump before the heater, so the heater heats the Return less the spray.
 - Rated steam flow and output are re-derived the same way as [ADR 0030](0030-return-pays-real-enthalpy.md). Built in #88: measured 192 kg/s (the hand estimate was about 195), 141 MWe, still below the 200 MWe class. The rated output counts the extraction: the flow times the drop that does work, so it is less than the flow times the plain drop (162 MW); the tap pressure is proportional to the flow, so it moves with this figure (5 bar at 192 kg/s). The economizer surface, the turbine valve and the relief valve sizing stay as they are; the condenser utilities gain spare capacity.
 - The stack rises to about 240 °C and boiler efficiency falls to about 89.5%. The heater pays for this, but only just over half its cycle gain survives. Measured in #88 at 125 MW: stack 227 °C, boiler 90.1%, plant 33.2% against 31.4% before, a gain of 1.8 points.
 - On a turbine trip the Return turns cold at once.

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { activeAlarms, newAlarms } from "./Alarms"
-import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
+import { CstDeaerator, CstPhysics, CstSimulation, CstSuperheater } from "./const"
 import { makeHotDeaerator } from "./Deaerator/DeaeratorTick"
 import PowerPlantState from "./PowerPlantState"
 import { makeInitialState } from "./PowerPlantReducer"
@@ -177,5 +177,29 @@ describe("boiler and deaerator level alarms (#137)", () => {
     expect(activeAlarms(fast.plant)).toContain("deaeratorLevelLow")
     expect(fast.speed).toBe(1)
     expect(simulationReducer(start(0), { type: "SIMULATE_TICKS", count: 600 }).speed).toBe(0)
+  })
+})
+
+describe("steam temperature alarm (ADR 0044)", () => {
+  const { AlarmTemperature, SteamTemperature } = CstSuperheater
+  const at = (steamTemperature: number): PowerPlantState => {
+    const base: PowerPlantState = makeInitialState()
+    return { ...base, Boiler: { ...base.Boiler, steamTemperature } }
+  }
+
+  test("the alarm sits 15 K over the 540 °C setpoint", () => {
+    expect(AlarmTemperature - SteamTemperature).toBe(15)
+  })
+
+  test.each([
+    [AlarmTemperature - 0.1, false],
+    [AlarmTemperature, true],
+    [AlarmTemperature + 40, true],
+  ])("at %f °C it is active: %s (from the alarm temperature)", (temperature: number, on: boolean) => {
+    expect(activeAlarms(at(temperature)).includes("steamTemperatureHigh")).toBe(on)
+  })
+
+  test("the held steam does not raise it", () => {
+    expect(activeAlarms(at(SteamTemperature))).toEqual([])
   })
 })
