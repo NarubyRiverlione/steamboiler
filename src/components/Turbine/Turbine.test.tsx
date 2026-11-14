@@ -21,8 +21,6 @@ function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPr
     adjustTurbineValve: vi.fn(),
     setSpeedMode: vi.fn(),
     selectRunUpPoint: vi.fn(),
-    toggleGeneratorBreaker: vi.fn(),
-    setLoadSetpoint: vi.fn(),
   }
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
   render(
@@ -135,75 +133,25 @@ describe("Turbine page", () => {
     expect((screen.getByRole<HTMLButtonElement>("button", { name: "Free" })).disabled).toBe(true)
   })
 
-  it("has a round RPM dial", () => {
+  it("keeps the speed gauge and has no breaker, sync lamp or load setpoint (#134)", () => {
+    renderTurbine({ rpm: 3000 })
+    expect(screen.getByRole("meter", { name: "Speed gauge" })).toBeTruthy()
+    expect(screen.queryByRole("switch", { name: /Generator breaker/ })).toBeNull()
+    expect(screen.queryByRole("img", { name: /Ready to close/ })).toBeNull()
+    expect(screen.queryByLabelText("Load setpoint (MW)")).toBeNull()
+    expect(screen.queryByRole("meter", { name: "Load setpoint knob" })).toBeNull()
+  })
+
+  it("has a horizontal RPM gauge", () => {
     renderTurbine({ rpm: 1234 })
     expect(screen.getByRole("meter", { name: "Speed gauge" }).getAttribute("aria-valuenow")).toBe("1234")
     expect(screen.getByLabelText("Turbine speed").textContent).toBe("1234 RPM")
   })
 
-  it("has knobs for the load setpoint and the two valves", () => {
-    renderTurbine({ loadSetpoint: 80, bypassValvePosition: 0.2 })
-    expect(screen.getByRole("meter", { name: "Load setpoint knob" }).getAttribute("aria-valuenow")).toBe("80")
+  it("has knobs for the two valves", () => {
+    renderTurbine({ bypassValvePosition: 0.2 })
     expect(screen.getByRole("slider", { name: "Bypass valve knob" }).getAttribute("aria-valuenow")).toBe("20")
     expect(screen.getByRole("slider", { name: "Turbine valve knob" })).toBeTruthy()
-  })
-
-  it("lights the sync LED and lets the breaker close within the band", () => {
-    const fns = renderTurbine({ rpm: 3001, generatorBreaker: false })
-    expect(screen.getByRole("img", { name: "Ready to close: on" })).toBeTruthy()
-    const breaker: HTMLElement = screen.getByRole("switch", { name: "Generator breaker, cover down" })
-    expect(breaker.getAttribute("aria-disabled")).toBeNull()
-    fireEvent.click(breaker)
-    expect(fns.toggleGeneratorBreaker).not.toHaveBeenCalled()
-    expect(screen.getByRole("switch", { name: "Generator breaker, cover up" })).toBeTruthy()
-    fireEvent.click(screen.getByRole("switch", { name: "Generator breaker, cover up" }))
-    expect(fns.toggleGeneratorBreaker).toHaveBeenCalledTimes(1)
-    expect(screen.queryByText(/can only be closed/)).toBeNull()
-  })
-
-  it("blocks the breaker outside the band and says why", () => {
-    renderTurbine({ rpm: 2500, generatorBreaker: false })
-    expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
-    const blocked: HTMLElement = screen.getByRole("switch", { name: "Generator breaker, cover down" })
-    expect(blocked.getAttribute("aria-disabled")).toBe("true")
-    fireEvent.click(blocked)
-    expect(screen.getByRole("switch", { name: "Generator breaker, cover down" })).toBeTruthy()
-    expect(screen.getByText(/Current RPM/).textContent).toContain("between 2998 and 3002")
-  })
-
-  it("can always open a closed breaker", () => {
-    const fns = renderTurbine({ rpm: 2500, generatorBreaker: true })
-    const breaker: HTMLElement = screen.getByRole("switch", { name: "Generator breaker, cover down" })
-    expect(breaker.getAttribute("aria-disabled")).toBeNull()
-    expect(breaker.getAttribute("aria-checked")).toBe("true")
-    fireEvent.click(breaker)
-    fireEvent.click(screen.getByRole("switch", { name: "Generator breaker, cover up" }))
-    expect(fns.toggleGeneratorBreaker).toHaveBeenCalledTimes(1)
-  })
-
-  it("applies a typed load setpoint on Enter and ignores garbage", () => {
-    const fns = renderTurbine({ generatorBreaker: true, rpm: 3000 })
-    const input: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
-    fireEvent.change(input, { target: { value: "120" } })
-    fireEvent.keyDown(input, { key: "Enter" })
-    expect(fns.setLoadSetpoint).toHaveBeenCalledWith(120)
-    fireEvent.blur(input)
-    expect(fns.setLoadSetpoint).toHaveBeenCalledTimes(1)
-  })
-
-  it("applies the load setpoint on blur", () => {
-    const fns = renderTurbine({ generatorBreaker: true, rpm: 3000 })
-    const input: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
-    fireEvent.change(input, { target: { value: "55" } })
-    fireEvent.blur(input)
-    expect(fns.setLoadSetpoint).toHaveBeenCalledWith(55)
-  })
-
-  it("disables the load setpoint with the reason when the breaker is open", () => {
-    renderTurbine({ generatorBreaker: false })
-    const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
-    expect(field.disabled).toBe(true)
-    expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
   })
 
   it("has a RESET beside the trip lamp, disabled while the vacuum is above the limit", () => {
@@ -230,11 +178,11 @@ describe("Turbine page", () => {
       generatorBreaker: true,
       turbineTripped: true,
     })
-    expect(screen.getByLabelText("Generator load").textContent).toBe("42.3 MW")
-    expect(screen.getByLabelText("Load setpoint").textContent).toBe("50.0 MW")
     expect(screen.getByLabelText("Run-up point").textContent).toBe("1500 RPM")
     expect(screen.getByLabelText("Speed mode").textContent).toBe("HOLD")
-    expect(screen.getByLabelText("Breaker").textContent).toBe("CLOSED")
+    expect(screen.queryByLabelText("Generator load")).toBeNull()
+    expect(screen.queryByLabelText("Load setpoint")).toBeNull()
+    expect(screen.queryByLabelText("Breaker")).toBeNull()
     expect(screen.getByLabelText("Steam flow")).toBeTruthy()
     expect(screen.getByRole("img", { name: "Turbine trip: on" })).toBeTruthy()
   })

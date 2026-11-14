@@ -24,20 +24,8 @@ export function TurbineStatus({ turbine }: TurbineStatusProps) {
           <Display label="Steam flow" text={`${smoothFlow.toFixed(1)} kg/s`} widest="999.9 kg/s" />
         </div>
         <div className="board-readout">
-          <span>Generator load</span>
-          <Display
-            label="Generator load"
-            text={`${turbine.electricOutput.toFixed(1)} MW`}
-            widest="999.9 MW"
-          />
-        </div>
-        <div className="board-readout">
           <span>Turbine speed</span>
           <Display label="Turbine speed" text={`${turbine.rpm.toFixed(0)} RPM`} widest="9999 RPM" />
-        </div>
-        <div className="board-readout">
-          <span>Load setpoint</span>
-          <Display label="Load setpoint" text={`${turbine.loadSetpoint.toFixed(1)} MW`} widest="999.9 MW" />
         </div>
         <div className="board-readout">
           <span>Run-up point</span>
@@ -46,10 +34,6 @@ export function TurbineStatus({ turbine }: TurbineStatusProps) {
         <div className="board-readout">
           <span>Mode</span>
           <Display label="Speed mode" text={MODE_LABELS[turbine.speedMode]} widest="RAMP UP" />
-        </div>
-        <div className="board-readout">
-          <span>Breaker</span>
-          <Display label="Breaker" text={turbine.generatorBreaker ? "CLOSED" : "OPEN"} widest="CLOSED" />
         </div>
         <div className="board-readout">
           <span>Turbine trip</span>

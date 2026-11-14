@@ -65,6 +65,7 @@
   --board-gauge-bezel-hi: #e8e8e8;
   --board-gauge-bezel-lo: #8f8f8f;
   --board-needle: #c92a2a;
+  --board-setpoint: #1f5fbf; /* the outlined command needle of a dial, blue against the solid red actual needle */
   --board-water: #1971c2;
   --board-level-glass: #eef3f7;
   --board-level-housing: #bdbdbd;
@@ -619,6 +620,13 @@ path.board-zone {
   fill: var(--board-needle);
 }
 
+/* The command marker of a dial: an outlined needle, so it reads apart from the solid actual-value needle (#105) */
+.board-setpoint path {
+  fill: none;
+  stroke: var(--board-setpoint);
+  stroke-width: 1.5;
+}
+
 .board-hub {
   fill: var(--board-text);
 }
@@ -1123,10 +1131,11 @@ path.board-zone {
   align-items: start;
 }
 
-.board-stack {
+.board-generation-main {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  min-width: 0;
+  align-items: start;
 }
 
 .board-group-row {
@@ -1465,4 +1474,10 @@ path.board-zone {
   padding: 0.3rem 0;
   border-radius: 4px;
   background: var(--board-panel-bg);
+}
+
+.board-valve-knob-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }

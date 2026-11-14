@@ -66,6 +66,25 @@ afterEach(() => {
 })
 
 describe("ValveControl", () => {
+  it("moves the command by the knob's own step with the − and + buttons, snapping an off-grid command first", () => {
+    const { unmount } = renderValve(<ValveControl ValveId="V" Label="P" Position={0.064} Step={1} Pump />)
+    fireEvent.click(screen.getByRole("button", { name: "P knob increase" }))
+    expect(screen.getByRole("slider", { name: "P knob" }).getAttribute("aria-valuenow")).toBe("7")
+    unmount()
+    renderValve(<ValveControl ValveId="V" Label="V" Position={0.064} Step={5} />)
+    fireEvent.click(screen.getByRole("button", { name: "V knob decrease" }))
+    expect(knob().getAttribute("aria-valuenow")).toBe("0")
+  })
+
+  it("disables − at 0 and + at 100", () => {
+    const { unmount } = renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)
+    expect(screen.getByRole("button", { name: "V knob decrease" })).toHaveProperty("disabled", true)
+    expect(screen.getByRole("button", { name: "V knob increase" })).toHaveProperty("disabled", false)
+    unmount()
+    renderValve(<ValveControl ValveId="V" Label="V" Position={1} Step={5} />)
+    expect(screen.getByRole("button", { name: "V knob increase" })).toHaveProperty("disabled", true)
+  })
+
   it("marks a pump knob so it reads apart from a valve knob", () => {
     const { unmount } = renderValve(<ValveControl ValveId="V" Label="P" Position={0} Step={5} Pump />)
     expect(screen.getByRole("slider", { name: "P knob" }).classList.contains("board-knob-pump")).toBe(true)
@@ -81,10 +100,13 @@ describe("ValveControl", () => {
     expect(screen.getByRole("slider", { name: "P knob" }).getAttribute("aria-valuenow")).toBe("50")
   })
 
-  it("is a named slider with the position as value, no Close and Open buttons and no bar", () => {
+  it("is a named slider with the position as value, only the − and + buttons and no bar", () => {
     render(<Harness start={0.25} />)
     expect(knob().getAttribute("aria-valuenow")).toBe("25")
-    expect(screen.queryByRole("button")).toBeNull()
+    expect(screen.getAllByRole("button").map((b: HTMLElement) => b.getAttribute("aria-label"))).toEqual([
+      "V knob decrease",
+      "V knob increase",
+    ])
     expect(screen.queryByRole("meter")).toBeNull()
     expect(lcd()).toBe("25 % Open")
   })
