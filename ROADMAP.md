@@ -74,7 +74,7 @@ Next: [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historica
 | 21 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | ready-for-agent |  |  |
 | 22 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | needs-triage |  |  |
 | 23 | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) Overview: add the superheater and reheater, remove the relief valve and Atmosphere | ready-for-agent |  | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) |
-| 25 | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) Steam page: superheater and reheater with the attemperator controls | needs-triage | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) |  |
+| 25 | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) Steam page: superheater and reheater with the attemperator controls | ready-for-agent | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) |  |
 
 ## Sim core: tests, CI, tooling, snapshots
 
