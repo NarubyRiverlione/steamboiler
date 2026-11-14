@@ -81,8 +81,9 @@ export const CstSimulation = {
     HoldEngageWindow: 5, // rpm: Hold engages within ± this of the selected run-up point (estimate, design-basis.md)
 
     // Speed model (ADR 0021, figures in docs/plant/design-basis.md): shaft power from steam, losses and inertia derived
-    RatedSteamFlow: 192, // kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater (measured: 192.3 kg/s at 138 MW in max-output, #88; was 158 with no heater, #82, ADR 0031); S, the no-load loss and the tap pressure are sized on it
-    RatedEnthalpyDrop: 1016, // kJ/kg, isentropic drop at the rated state: 165 bar to the 31 mbar design vacuum (IF97, ADR 0032)
+    RatedSteamFlow: 134, // kg/s, what full gas makes at 165 bar with the superheater and the extraction heater (measured in max-output, #113, ADR 0044; was 192 with saturated steam); S, the no-load loss and the tap pressure are sized on it
+    RatedSteamTemperature: 540, // °C, the steam the attemperator holds (CstSuperheater.SteamTemperature); the rated state and the no-load loss are sized on it (ADR 0044)
+    RatedEnthalpyDrop: 1496, // kJ/kg, isentropic drop at the rated state: 165 bar and 540 °C to the 31 mbar design vacuum (IF97, ADR 0032, ADR 0044; was 1016 with saturated steam)
     InertiaConstant: 4, // s, H of the whole shaft line (sourced range 2.5-6 s); J = 2·H·S / ω_s²
     NoLoadFlowFraction: 0.03, // of rated flow: holds sync speed unloaded; loss power ∝ ω³ is calibrated on it (sourced 1.5-3%)
 
@@ -164,4 +165,18 @@ export const CstFlueGas = {
   EconomizerDesignReturn: 171, // kg/s, the Return the economizer is sized for (171 kg/s, the design flow before #74; #88 leaves the surface as it is)
   EconomizerDesignReturnTemperature: 37, // °C, hotwell temperature the economizer is sized for
   ReturnSaturationMargin: 28, // K, the Return leaves the economizer at least this far below saturation (UNVERIFIED, no steaming in the economizer)
+}
+
+// Superheater and spray attemperator (ADR 0044, #113, figures in docs/plant/design-basis.md and docs/research/2026-11-superheater.md)
+export const CstSuperheater = {
+  SteamTemperature: 540, // °C, the attemperator setpoint and the design outlet at full gas without spray
+  DesignSteamFlow: 134, // kg/s of steam through the superheater at full gas, which the surface is sized on (measured in the headless runner)
+  DesignPressure: 165, // bar, the pressure the surface is sized at
+  TimeConstant: 100, // s, first-order lag of the steam and tube metal together (POWER magazine: 100-200 s, low end; research note)
+  SprayCapacity: 15, // kg/s the spray valve passes fully open: 8% of the outlet steam is the purity ceiling at rated flow (CCJ), this is over-dimensioned for the part-load cases (design-basis.md)
+  AlarmTemperature: 555, // °C, the high steam temperature alarm: 15 K over the setpoint (own estimate)
+  PID_Kp: 0.02, // per K of error: spray valve share (tuned in the headless runner)
+  PID_Ki: 0.001, // per K·s of error
+  PID_Kd: 0, // per K/s of the measurement: none needed, the 100 s lag is slow and a derivative chatters at the 0.1 s tick (tuned in the headless runner)
+  IntegralLimit: 500, // K·s, anti-windup clamp of the integral error
 }

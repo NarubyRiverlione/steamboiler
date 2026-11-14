@@ -77,6 +77,7 @@ const ratedOutput: number =
     CstCondenser.OptimalPressure / 1000,
     CstTurbine.RatedSteamFlow,
     ratedExtractionShare * CstTurbine.RatedSteamFlow,
+    CstTurbine.RatedSteamTemperature,
   ) *
   JPerKJ *
   CstTurbine.IsentropicEfficiency *

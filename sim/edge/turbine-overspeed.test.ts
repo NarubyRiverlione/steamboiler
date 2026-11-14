@@ -25,8 +25,8 @@ describe("turbine-overspeed", () => {
     const perTick: number = samples[tripped].state.Turbine.rpm - samples[tripped - 1].state.Turbine.rpm
     expect(samples[tripped].state.Turbine.rpm).toBeGreaterThanOrEqual(MaxRPM)
     // the tick after the trip still has the flow of the last open tick in the state (it is zero from then on), so the peak is
-    // the trip tick plus at most one more tick of that acceleration
-    expect(peak).toBeLessThanOrEqual(samples[tripped - 1].state.Turbine.rpm + 2 * perTick)
+    // the trip tick plus at most one more tick of that acceleration (a little more, as the steam superheats and the drop grows, #113)
+    expect(peak).toBeLessThanOrEqual(samples[tripped - 1].state.Turbine.rpm + 2.1 * perTick)
     expect(peak).toBe(Math.max(samples[tripped].state.Turbine.rpm, samples[tripped + 1].state.Turbine.rpm))
   })
 

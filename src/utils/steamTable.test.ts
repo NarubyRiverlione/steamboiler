@@ -12,6 +12,12 @@ import {
   getSaturatedSteamDensity,
   getSaturationEnthalpies,
   getSteamData,
+  getSteamTemperature,
+  getInletEnthalpy,
+  getInletIsentropicDrop,
+  getSteamEnthalpy,
+  getSteamEntropy,
+  getSuperheatedIsentropicDrop,
   getWaterSpecificHeat,
   getWaterSpecificVolume,
 } from "./steamTable"
@@ -333,5 +339,50 @@ describe("saturated liquid enthalpy below the steam table", () => {
     for (const temperature of [5, 37, 79, 80, 122, 322, 350]) {
       expect(getLiquidTemperature(getLiquidEnthalpy(temperature))).toBeCloseTo(temperature, 6)
     }
+  })
+})
+
+// IAPWS-IF97 superheated steam (#113): [bar, °C, enthalpy kJ/kg, entropy kJ/kg·K]
+const Superheated: number[][] = [
+  [165, 540, 3406.5, 6.4298],
+  [100, 500, 3373.7, 6.5966],
+  [50, 450, 3316.2, 6.8186],
+  [20, 400, 3247.6, 7.1271],
+]
+
+describe("superheated steam against IAPWS-IF97", () => {
+  test.each(Superheated)("%i bar, %i °C: enthalpy and entropy are within 0.5%%", (pressure, temperature, h, s) => {
+    expect(Math.abs(getSteamEnthalpy(pressure, temperature) / h - 1)).toBeLessThan(0.005)
+    expect(Math.abs(getSteamEntropy(pressure, temperature) / s - 1)).toBeLessThan(0.005)
+  })
+
+  test("at or below saturation the steam is saturated vapour", () => {
+    expect(Math.abs(getSteamEnthalpy(165, 300) - getSaturationEnthalpies(165).vapor)).toBeLessThan(2)
+    expect(getSteamEntropy(165, getBoilingPoint(165))).toBeGreaterThan(5)
+  })
+
+  test("superheat raises the isentropic drop above the saturated drop", () => {
+    const saturated: number = getIsentropicEnthalpyDrop(165, 0.031)
+    const superheated: number = getSuperheatedIsentropicDrop(165, 540, 0.031)
+    expect(superheated).toBeGreaterThan(saturated + 150)
+    expect(getSuperheatedIsentropicDrop(165, getBoilingPoint(165), 0.031)).toBeCloseTo(saturated, -1)
+  })
+})
+
+describe("getSteamTemperature (#113)", () => {
+  test.each([[165, 540], [100, 400], [50, 500]])("inverts getSteamEnthalpy at %i bar and %i °C", (pressure, temperature) => {
+    expect(getSteamTemperature(pressure, getSteamEnthalpy(pressure, temperature))).toBeCloseTo(temperature, 1)
+  })
+
+  test("saturated vapour or less is saturation, and the end of the table is its last column", () => {
+    expect(getSteamTemperature(165, 0)).toBe(getBoilingPoint(165))
+    expect(getSteamTemperature(165, 1e5)).toBeCloseTo(getBoilingPoint(165) + 350, 6)
+  })
+
+  test("the inlet helpers fall back to the saturated tables with no superheat", () => {
+    expect(getInletEnthalpy(165)).toBeCloseTo(getSaturationEnthalpies(165).vapor, 9)
+    expect(getInletIsentropicDrop(165, 0.031)).toBeCloseTo(getIsentropicEnthalpyDrop(165, 0.031), 9)
+    expect(getInletIsentropicDrop(165, 0.031, 540)).toBeGreaterThan(getInletIsentropicDrop(165, 0.031) + 400)
+    expect(getExhaustQuality(165, 0.031, 0.85, 1, 540)).toBeGreaterThan(getExhaustQuality(165, 0.031, 0.85, 1))
   })
 })

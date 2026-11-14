@@ -9,7 +9,7 @@ import BoilerTick, {
   returnHeatOf,
   warmBy,
 } from "./BoilerTick"
-import { CstPhysics, CstSimulation } from "../const"
+import { CstPhysics, CstSimulation, CstSuperheater } from "../const"
 import { makeInitialState } from "../PowerPlantReducer"
 import {
   calculateBoilerPressure,
@@ -89,12 +89,13 @@ describe("BoilerTick heat loss", () => {
 })
 
 describe("BoilerTick thermal mass", () => {
-  // Full gas at 60 °C with no Return puts 389.9 MW into the water (flue gas leaves the cold boiler 92.8% spent, ADR
-  // 0029), 39.0 MJ per tick. 50 t of water at 4.18 kJ/kg·K is 209 MJ/K; with 100 t of steel at 0.5 kJ/kg·K that
-  // becomes 259 MJ/K, so one tick warms 0.150 K instead of the water-only 0.187 K
+  // Full gas at 60 °C with no Return and no steam puts 375 MW into the water (the flue gas enters the boiler stage at the
+  // combustion temperature, which the surface is not sized for, so it leaves the cold boiler 89% spent, ADR 0029, ADR 0044),
+  // 37.5 MJ per tick. 50 t of water at 4.18 kJ/kg·K is 209 MJ/K; with 100 t of steel at 0.5 kJ/kg·K that becomes 259 MJ/K,
+  // so one tick warms 0.145 K instead of the water-only 0.180 K
   test("the drum and tube metal slow the heat-up", () => {
     const next = BoilerTick({ ...settled(60), gasFlow: CstBoiler.MaxGasFlow })
-    expect(next.temperature - 60).toBeCloseTo(0.15, 2)
+    expect(next.temperature - 60).toBeCloseTo(0.145, 3)
   })
 })
 
@@ -351,9 +352,12 @@ describe("BoilerTick helpers", () => {
 
 describe("BoilerTick flue gas heat balance (ADR 0029)", () => {
   const fullGas = { ...settled(350), gasFlow: CstBoiler.MaxGasFlow }
+  // The steam the superheater is sized on leaves the drum (ADR 0044)
+  const steam = { flow: CstSuperheater.DesignSteamFlow, sprayFlow: 0, sprayEnthalpy: 0 }
+  const designSteam = { flow: steam.flow, pressure: CstSuperheater.DesignPressure }
 
   test("reports the stack temperature, the efficiency and the Return after the economizer", () => {
-    const next = BoilerTick(fullGas, { flow: 171, temperature: 37 })
+    const next = BoilerTick(fullGas, { flow: 171, temperature: 37 }, steam)
     expect(next.stackTemperature).toBeCloseTo(160, 0)
     expect(next.boilerEfficiency).toBeCloseTo(0.934, 2)
     expect(next.returnTemperatureOut).toBeGreaterThan(120)
@@ -361,17 +365,17 @@ describe("BoilerTick flue gas heat balance (ADR 0029)", () => {
   })
 
   test("with no Return given, nothing is recovered", () => {
-    const next = BoilerTick(fullGas)
+    const next = BoilerTick(fullGas, undefined, steam)
     expect(next.boilerEfficiency).toBeCloseTo(0.79, 2)
     expect(next.stackTemperature).toBeGreaterThan(400)
   })
 
   test("the heat into the water of the tick is the fuel heat less the stack heat", () => {
-    const withReturn = BoilerTick(fullGas, { flow: 171, temperature: 37 })
-    const without = BoilerTick(fullGas)
+    const withReturn = BoilerTick(fullGas, { flow: 171, temperature: 37 }, steam)
+    const without = BoilerTick(fullGas, undefined, steam)
     const stepMW =
-      (calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 171, 37).heatIntoWater -
-        calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 0, 37).heatIntoWater) /
+      (calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 171, 37, designSteam).heatIntoWater -
+        calculateFlueGasHeatBalance(fullGas.gasFlow, 350, 0, 37, designSteam).heatIntoWater) /
       1000
     expect(stepMW).toBeCloseTo(60.8, 0)
     // The cold Return costs more than the economizer recovers (ADR 0030)
@@ -428,8 +432,8 @@ describe("BoilerVent relief valve", () => {
         mostHeat = Math.max(mostHeat, steaming)
       }
     expect(ReliefCapacity).toBeGreaterThan(mostHeat / getLatentHeat(openingTemperature))
-    expect(ReliefCapacity).toBeGreaterThan(450)
-    expect(ReliefCapacity).toBeLessThan(470)
+    expect(ReliefCapacity).toBeGreaterThan(435)
+    expect(ReliefCapacity).toBeLessThan(455)
   })
 
   // 1.1 × the worst-case heat into the water (full gas at 178 bar, no Return, ADR 0030) over about 790 kJ/kg latent

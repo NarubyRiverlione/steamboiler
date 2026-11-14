@@ -73,7 +73,7 @@ The heater takes the deaerator outflow as its feedwater (flow and temperature of
 
 ## Measured
 
-`turbine-load`, 125 MW: steam 176 kg/s, deaerator tap 38 kg/s, heater 5 kg/s, tap 4.6 bar, feedwater 144 °C after the heater and 198 °C after the economizer, stack 229 °C, boiler 90.0%, plant 32.4% (33.2% with the heater alone in #88, the let-down steam at low load and the lower tap pressure cost about 0.8 points). The two extractions together take about the same share of the flow as the heater alone did (`ratedExtractionShare`), so the rated output is 141.9 MW (141.3 before) and `RatedSteamFlow` stays 192 kg/s (`max-output` still reads it within 3 kg/s).
+`turbine-load`, 125 MW (before #113, with saturated steam; the superheated plant makes about 111 kg/s and the deaerator tap about 20 kg/s, see [turbine.md](turbine.md#extraction-heater-88)): steam 176 kg/s, deaerator tap 38 kg/s, heater 5 kg/s, tap 4.6 bar, feedwater 144 °C after the heater and 198 °C after the economizer, stack 229 °C, boiler 90.0%, plant 32.4% (33.2% with the heater alone in #88, the let-down steam at low load and the lower tap pressure cost about 0.8 points). The two extractions together take about the same share of the flow as the heater alone did (`ratedExtractionShare`), so the rated output was 141.9 MW (141.3 before) and `RatedSteamFlow` stayed 192 kg/s (`max-output` read it within 3 kg/s); with the superheater (#113) they are 152.4 MW and 134 kg/s.
 
 ## Level gauge zones
 

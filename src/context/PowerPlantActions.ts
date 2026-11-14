@@ -11,6 +11,9 @@ type PowerPlantAction =
   // Boiler Actions
   | { type: "SET_GAS_RATE"; payload: { gasRateCommand: number } } // the gas knob, -1 to 1 (#15)
   | { type: "TOGGLE_DRAIN_VALVE" }
+  // Attemperator Actions (#113): Auto holds the steam temperature; in Manual the valve moves by the change (-1 to 1)
+  | { type: "SET_ATTEMPERATOR_AUTO"; payload: { attemperatorAuto: boolean } }
+  | { type: "SET_SPRAY_VALVE_POSITION"; payload: { sprayValvePosition: number } }
   // Turbine RPM Control Actions
   | { type: "TOGGLE_MAIN_STEAM_VALVE" }
   | { type: "ADJUST_STEAM_BYPASS_VALVE"; payload: { bypassValvePosition: number } }

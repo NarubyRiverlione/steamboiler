@@ -68,16 +68,17 @@ Boiler efficiency is not a constant. The flue gas passes two heat exchangers in 
 ```
 Fuel heat         = gas flow × GasEnergyDensity                       (lower heating value, 420 MW at full gas)
 Flue gas          = 14.7 kg per m³ of gas (15% excess air at every firing rate), from 1775 °C
+Superheater       : heat to the steam = UA_sh × counterflow log-mean(gas, steam)   steam from saturation to its outlet temperature (#113, below)
 Boiler stage      : heat from the gas = UA_boiler × log-mean(gas, boiler water)     boiler water at one temperature
 Economizer        : heat from the gas = UA_eco × counterflow log-mean(gas, Return)  never past Return outlet = saturation − 28 K
 UA                = UA at full gas × (gas flow / full gas)^0.65     (the water side is ignored)
 Stack heat        = flue gas × (enthalpy at the stack temperature − enthalpy at ambient)
-Heat into water   = Fuel heat − Stack heat        (the economizer heat included)
+Heat into water   = Fuel heat − Stack heat        (the superheater and economizer heat included)
 Efficiency        = Heat into water / Fuel heat
 ```
 
 - **Flue gas enthalpy:** a quadratic through three points of Ganapathy's Table A7b (natural gas, 15% excess air), taken relative to ambient (20 °C). It is extrapolated to the 1775 °C combustion temperature.
-- **Boiler stage:** sized for flue gas 100 K above the water at full gas and 350 °C (an estimate; the sourced span is 60 to 150 K). The sized surface is about 668 kW/K. With the boiler colder the gas leaves cooler, so a colder boiler is more efficient; firing lower narrows the gap (about 20 K at 25% gas at 350 °C).
+- **Boiler stage:** sized for flue gas 100 K above the water at full gas and 350 °C (an estimate; the sourced span is 60 to 150 K), for the gas it receives from the superheater (about 1364 °C at full gas and the design steam flow). The sized surface is about 561 kW/K (668 kW/K before #113, when it took gas at 1775 °C). With the boiler colder the gas leaves cooler, so a colder boiler is more efficient; firing lower narrows the gap (about 20 K at 25% gas at 350 °C).
 - **Economizer:** sized for a 160 °C stack at full gas with 171 kg/s of Return at 37 °C, about 291 kW/K (a design choice, not a real unit's figure). The Return enters at the hotwell temperature and its enthalpy is the saturated liquid enthalpy (`getLiquidEnthalpy`, IF97, with a cold table below the 80 °C start of the steam table).
 - **Return limit:** the Return leaves the economizer at most 28 K below the boiler saturation temperature (UNVERIFIED). Heat it cannot take stays in the flue gas: the stack gets hotter and efficiency falls.
 - **No Return:** the economizer recovers nothing and the stack is the boiler stage exit (79% at full gas and 350 °C). **No gas:** no heat in, none up the stack, efficiency 0, stack at ambient.
@@ -86,6 +87,17 @@ Efficiency        = Heat into water / Fuel heat
 - **The Return pays its enthalpy** ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md), #74): `BoilerTick` adds `returnHeatOf` to the energy of the tick, this tick's Return mass times the saturated liquid enthalpy at its temperature after the economizer less that at the boiler temperature (`getLiquidEnthalpy`, not a specific heat: cp near 350 °C is more than double the cold value). A cold Return lowers the temperature and `energy`; a Return hotter than the boiler warms it. The economizer heat is counted once, in the Return's own enthalpy, so the gas share of the tick is the heat into the water less the economizer heat. Pump work (about 16 kJ/kg, 1% of the Return's cost) is ignored.
 
 Simplifications and the figures behind them are in [design-basis.md](design-basis.md); the sources in [the research note](../research/2026-11-economizer-flue-gas.md).
+
+## Superheater and attemperator (#113, [ADR 0044](../adr/0044-superheater-with-spray-attemperator.md))
+
+All steam that leaves the drum through the main steam valve (the turbine valve and the bypass) passes the superheater, a bank of tubes first in the flue gas path. It is passive, no valve in the steam path. The relief valve and the deaerator let-down valve take saturated steam at the drum.
+
+- **Superheater stage** (`flueGas.ts`, `superheaterDuty`): counterflow with the gas entering at 1775 °C, a surface of 101 kW/K at full gas (scaled with gas flow to the power 0.65), sized so the steam leaves at 540 °C at full gas and the design steam flow of 134 kg/s with no spray (about 113 MW). Bisection on the steam outlet temperature; it never passes the end of the superheated table (350 K above saturation). With no steam flow it takes no heat and the gas reaches the boiler stage at 1775 °C. The heat goes into the steam, outside the drum, so `BoilerTick` takes it off the gas energy of the boiler (`superheaterHeat`).
+- **Steam temperature** (`Boiler.steamTemperature`): one lumped state, a first-order lag of 100 s (`CstSuperheater.TimeConstant`) toward the equilibrium of the tick: the steam takes the superheater heat, then the spray water mixes in (`equilibriumSteamTemperature`, an enthalpy balance inverted on the superheated table). It never falls below the saturation temperature of the new pressure, which is the temperature with no flow. It is what the turbine, the extraction and the bypass use in the next tick. At rest it starts at saturation.
+- **Attemperator** (`Attemperator.ts`): a PID on the steam temperature, setpoint 540 °C (`CstSuperheater.SteamTemperature`), `Kp` 0.02 per K, `Ki` 0.001 per K·s, `Kd` 0 (the derivative would act on the measurement, ADR 0010, but chattered at the tick), integral clamped to 0 to 500 K·s. Its output is the spray valve position (0 to 1); the spray flow is the position times 15 kg/s. **Auto** and **Manual**: in Manual the operator moves the valve (`SET_SPRAY_VALVE_POSITION`, a delta; refused in Auto) and the integral follows the position, so `SET_ATTEMPERATOR_AUTO` back to Auto is bumpless.
+- **Spray water** comes from the feed pump discharge, before the extraction heater, and never exceeds what the pump delivered in the last tick. `PowerPlantTick` takes it out of the flow that reaches the boiler (`feedMass`) and adds it to the turbine and bypass steam flows, so the loop's water conserves. The state flows `turbineSteamFlowOut` and `bypassSteamFlowOut` therefore count the spray; steam out of the boiler is them less `Boiler.sprayFlow` (the runner's invariants and goal checks subtract it).
+- **State:** `steamTemperature`, `superheaterHeat` (kW), `sprayValvePosition`, `sprayFlow` (kg/s), `attemperatorAuto`, `attemperatorIntegralError`. High steam temperature alarm at 555 °C (`steamTemperatureHigh`, warning, no trip). Measured: 540 ± 1 K at 125 MW (`turbine-load`) and at 540.0 °C in the bypass hold; with the spray stuck shut at 125 MW (`spray-stuck-closed`) the steam settles at about 558 °C.
+- **Cold plant:** the surface is sized for the gas after the superheater, so with no steam flowing the gas reaches the boiler stage hotter than its design inlet and the stack is hotter: about 89% efficiency instead of 93% at full gas with no Return. The heat-up is a few percent slower (`relief-lift` lifts at about 269 s, 259 s before).
 
 ## Relief valve
 

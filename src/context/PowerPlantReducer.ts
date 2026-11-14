@@ -1,12 +1,14 @@
 import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
 import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
-import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
+import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
+import { getBoilingPoint } from "../utils/steamTable"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
 import { isAboveMainSteamValveMinimum, isAtOverspeed, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { runTicks } from "./PowerPlantBatch"
+import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
 
@@ -41,6 +43,12 @@ export const makeInitialState = (): PowerPlantState => ({
     stackTemperature: AmbientTemperature, // Celsius, no gas burning
     boilerEfficiency: 0,
     returnTemperatureOut: AmbientTemperature, // Celsius
+    steamTemperature: getBoilingPoint(calculateBoilerPressure(AmbientTemperature)), // Celsius, saturation: no steam flow yet (ADR 0044)
+    superheaterHeat: 0, // kW
+    sprayValvePosition: 0,
+    sprayFlow: 0, // kg/s
+    attemperatorAuto: true,
+    attemperatorIntegralError: 0,
     energy:
       calculateHeatingEnergy(startBoilerMass, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s
@@ -160,6 +168,20 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     if (opening && refused) return state
     return withDeaerator(state, { feedPumpValvePosition: requested })
   },
+  //#endregion
+
+  //#region Attemperator
+  // Auto holds the steam temperature with the PID; switching to Auto carries the valve position over (bumpless, ADR 0044)
+  SET_ATTEMPERATOR_AUTO: (state, { payload: { attemperatorAuto } }) =>
+    withBoiler(state, {
+      attemperatorAuto,
+      attemperatorIntegralError: attemperatorAuto ? integralFor(state.Boiler.sprayValvePosition) : state.Boiler.attemperatorIntegralError,
+    }),
+  // The operator moves the spray valve by this change, in Manual only; in Auto the PID owns it
+  SET_SPRAY_VALVE_POSITION: (state, { payload: { sprayValvePosition } }) =>
+    state.Boiler.attemperatorAuto
+      ? state
+      : withBoiler(state, { sprayValvePosition: clamp(state.Boiler.sprayValvePosition + sprayValvePosition, 0, 1) }),
   //#endregion
 
   //#region Condenser

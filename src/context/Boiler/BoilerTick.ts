@@ -13,9 +13,10 @@ import {
   getLiquidEnthalpy,
   getWaterSpecificHeat,
 } from "../../utils/steamTable"
-import { CstSimulation, CstPhysics } from "../const"
+import { CstSimulation, CstPhysics, CstSuperheater } from "../const"
 import { BoilerState, TurbineState } from "../PowerPlantState"
 import { calculateFlueGasHeatBalance } from "../../utils/flueGas"
+import { attemperatorAfter, equilibriumSteamTemperature } from "./Attemperator"
 
 const { CstBoiler, CstTurbine } = CstSimulation
 
@@ -91,7 +92,13 @@ export type ReturnFeed = { flow: number; temperature: number }
 
 const NoReturn: ReturnFeed = { flow: 0, temperature: CstPhysics.AmbientTemperature }
 
-function BoilerTick(previousState: BoilerState, returnFeed: ReturnFeed = NoReturn): BoilerState {
+// The steam the superheater heats in this tick (ADR 0044): kg/s that left the drum (the spray not counted), the spray water
+// the attemperator added and its enthalpy (kJ/kg)
+export type SteamFeed = { flow: number; sprayFlow: number; sprayEnthalpy: number }
+
+const NoSteam: SteamFeed = { flow: 0, sprayFlow: 0, sprayEnthalpy: 0 }
+
+function BoilerTick(previousState: BoilerState, returnFeed: ReturnFeed = NoReturn, steamFeed: SteamFeed = NoSteam): BoilerState {
   // The gas of this tick is the gas after this tick's step of the knob
   const boilerState: BoilerState = { ...previousState, gasFlow: gasFlowAfter(previousState) }
   const drain = drainBoiler(boilerState)
@@ -105,9 +112,11 @@ function BoilerTick(previousState: BoilerState, returnFeed: ReturnFeed = NoRetur
     boilerState.temperature,
     returnFeed.flow,
     returnFeed.temperature,
+    { flow: steamFeed.flow, pressure: boilerState.pressure },
   )
-  // The boiler-stage share of that heat: the economizer heat is already in the Return's own enthalpy below
-  const gasEnergy = (balance.heatIntoWater - balance.economizerHeat) * CstSimulation.DeltaTime
+  // The boiler-stage share of that heat: the economizer heat is already in the Return's own enthalpy below, and the
+  // superheater heat goes into the steam outside the drum (ADR 0044)
+  const gasEnergy = (balance.heatIntoWater - balance.economizerHeat - balance.superheaterHeat) * CstSimulation.DeltaTime
 
   // The Return pays its real enthalpy (ADR 0030): this tick's Return mass joined at the boiler temperature, and entered
   // at its temperature after the economizer. Enthalpy, not cp x dT: cp near 350 °C is more than double the cold value.
@@ -143,6 +152,30 @@ function BoilerTick(previousState: BoilerState, returnFeed: ReturnFeed = NoRetur
     warmBy(heatedTemperature, -flashEnergy, heatCapacity),
   )
 
+  // The steam temperature lags toward what the superheater and the spray give (steam and metal in one lump), and never
+  // falls below saturation at the new pressure
+  const newPressure = calculateBoilerPressure(newTemperature)
+  const saturation = getBoilingPoint(newPressure)
+  const equilibrium = equilibriumSteamTemperature(
+    newPressure,
+    steamFeed.flow,
+    balance.superheaterHeat,
+    steamFeed.sprayFlow,
+    steamFeed.sprayEnthalpy,
+    saturation,
+  )
+  const lagged =
+    boilerState.steamTemperature +
+    (equilibrium - boilerState.steamTemperature) * (CstSimulation.DeltaTime / CstSuperheater.TimeConstant)
+  const steamTemperature = Math.max(saturation, lagged)
+  const attemperator = attemperatorAfter(
+    boilerState,
+    boilerState.attemperatorAuto,
+    steamTemperature,
+    boilerState.steamTemperature,
+    CstSimulation.DeltaTime,
+  )
+
   const heatingRate = smoothHeatingRate(boilerState.heatingRate, newTemperature - boilerState.temperature)
 
   return {
@@ -152,7 +185,7 @@ function BoilerTick(previousState: BoilerState, returnFeed: ReturnFeed = NoRetur
     deltaWaterMass: newWaterMass - boilerState.waterMass,
     drainedTotal: boilerState.drainedTotal + drain.drained,
     temperature: newTemperature,
-    pressure: calculateBoilerPressure(newTemperature),
+    pressure: newPressure,
     steamMass: Math.max(0, boilerState.steamMass + flashedMass),
     energy: Math.max(0, boilerState.energy + energyChange),
     energyDelta: energyChange / CstSimulation.DeltaTime,
@@ -162,6 +195,10 @@ function BoilerTick(previousState: BoilerState, returnFeed: ReturnFeed = NoRetur
     stackTemperature: balance.stackTemperature,
     boilerEfficiency: balance.efficiency,
     returnTemperatureOut: balance.returnTemperatureOut,
+    steamTemperature,
+    superheaterHeat: balance.superheaterHeat,
+    sprayFlow: steamFeed.sprayFlow,
+    ...attemperator,
     deltaSteamMass: flashedMass / CstSimulation.DeltaTime, // kg/s flashed to steam (negative: condensing)
   }
 }

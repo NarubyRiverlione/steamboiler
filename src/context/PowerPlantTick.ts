@@ -5,8 +5,9 @@ import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, B
 import { DeaeratorResult, DeaeratorTick } from "./Deaerator/DeaeratorTick"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, HeaterState, TurbineState } from "./PowerPlantState"
 import { CstDeaerator, CstSimulation } from "./const"
+import { sprayFlowOf } from "./Boiler/Attemperator"
 import { roomInKg } from "../utils/boilerCalculations"
-import { getExhaustEnthalpy, getSaturationEnthalpies } from "../utils/steamTable"
+import { getExhaustEnthalpy, getInletEnthalpy, getLiquidEnthalpy } from "../utils/steamTable"
 import { shaftWorkFraction } from "../utils/turbineCalculations"
 import { calculateExtraction, drainEnthalpyOf, Extraction, heatFeedwater } from "../utils/extractionHeater"
 
@@ -30,10 +31,28 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     bypassResult.boilerState.pressure,
     state.Condenser.pressure,
     state.Heater.extractionFlow + state.Deaerator.extractionFlow,
+    state.Boiler.steamTemperature,
   )
 
   // remove steam via turbine valve
-  const turbineResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
+  const drumResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
+
+  // Attemperator (ADR 0044): the spray water joins all the steam that left the drum, between the superheater stages. It comes
+  // from the feed pump discharge, so it cannot exceed what the pump delivered in the last tick, and the steam flows below
+  // (turbine, bypass, extraction, condenser) count it. The boiler is fed the rest of the pump outflow.
+  const drumFlow: number = drumResult.turbineState.turbineSteamFlowOut + drumResult.turbineState.bypassSteamFlowOut
+  const sprayFlow: number =
+    drumFlow > 0 ? Math.min(sprayFlowOf(state.Boiler.sprayValvePosition), state.Deaerator.outflowMass / CstSimulation.DeltaTime) : 0
+  const sprayShare: number = drumFlow > 0 ? 1 + sprayFlow / drumFlow : 1
+  const turbineResult = {
+    boilerState: drumResult.boilerState,
+    turbineState: {
+      ...drumResult.turbineState,
+      turbineSteamFlowOut: drumResult.turbineState.turbineSteamFlowOut * sprayShare,
+      bypassSteamFlowOut: drumResult.turbineState.bypassSteamFlowOut * sprayShare,
+    },
+  }
+  const steamTemperature: number = state.Boiler.steamTemperature
 
   // Condenser: receives the steam removed from the boiler in this same tick
   const boilerPressure: number = bypassResult.boilerState.pressure
@@ -44,7 +63,8 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     turbineFlow: turbineResult.turbineState.turbineSteamFlowOut,
     workFraction: shaftWorkFraction(state.Turbine.rpm),
     boilerPressure,
-    returnFlow: state.Deaerator.outflowMass / CstSimulation.DeltaTime,
+    steamTemperature,
+    returnFlow: state.Deaerator.outflowMass / CstSimulation.DeltaTime - state.Boiler.sprayFlow,
     returnTemperature: state.Deaerator.temperature,
   })
 
@@ -63,10 +83,10 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     Math.max(0, turbineResult.turbineState.turbineSteamFlowOut - extraction.flow),
   )
 
-  // Bypass steam is saturated vapour at the boiler pressure
+  // Bypass steam leaves at the steam temperature, with no bypass spray (ADR 0032, ADR 0044)
   const steamFromBypass: { flow: number; enthalpy: number } = {
     flow: turbineResult.turbineState.bypassSteamFlowOut,
-    enthalpy: getSaturationEnthalpies(boilerPressure).vapor,
+    enthalpy: getInletEnthalpy(boilerPressure, steamTemperature),
   }
   // Exhaust enthalpy at the same pressures as the enthalpy drop in TurbineTick, less the work the shaft takes at its
   // speed: at standstill the exhaust is the inlet steam
@@ -77,6 +97,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
       state.Condenser.pressure / 1000,
       CstSimulation.CstTurbine.IsentropicEfficiency,
       shaftWorkFraction(state.Turbine.rpm),
+      steamTemperature,
     ),
   }
   // The condensation pump stops short of a full deaerator: the room (at the vessel temperature) less the steam and the heater
@@ -110,9 +131,13 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   })
   const deaeratorNewState: DeaeratorState = deaerator.state
 
+  // The spray water left the pump discharge before the heater, so the heater heats the rest of the outflow
+  const sprayMass: number = sprayFlow * CstSimulation.DeltaTime
+  const feedMass: number = deaerator.outflow.mass - sprayMass
+
   // The heater heats the deaerator outflow; its drain went back into the deaerator
   const feedwaterTemperature: number = heatFeedwater(
-    deaerator.outflow.mass,
+    feedMass,
     deaerator.outflow.temperature,
     extraction.flow * CstSimulation.DeltaTime,
     extraction,
@@ -123,14 +148,15 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   const boilerRemovedSteam: BoilerState = {
     ...turbineResult.boilerState,
     steamMass: turbineResult.boilerState.steamMass - deaerator.letDownMass,
-    waterMass: turbineResult.boilerState.waterMass + deaerator.outflow.mass,
+    waterMass: turbineResult.boilerState.waterMass + feedMass,
   }
 
   // The economizer heats the feedwater with the flue gas; it arrives from the heater
-  const boilerTicked: BoilerState = BoilerTick(boilerRemovedSteam, {
-    flow: deaerator.outflow.mass / CstSimulation.DeltaTime,
-    temperature: feedwaterTemperature,
-  })
+  const boilerTicked: BoilerState = BoilerTick(
+    boilerRemovedSteam,
+    { flow: Math.max(0, feedMass) / CstSimulation.DeltaTime, temperature: feedwaterTemperature },
+    { flow: drumFlow, sprayFlow, sprayEnthalpy: getLiquidEnthalpy(deaerator.outflow.temperature) },
+  )
   // The net change over the tick against the previous state: the feed inflow joined before BoilerTick, so it would cancel out (#121)
   const boilerNewState: BoilerState = {
     ...boilerTicked,

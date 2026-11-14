@@ -23,6 +23,12 @@ export type BoilerState = {
   stackTemperature: number // Celsius, flue gas after the economizer (ADR 0029)
   boilerEfficiency: number // 0-1, heat into the water over fuel heat; 0 with no gas
   returnTemperatureOut: number // Celsius, the Return after the economizer (the hotwell temperature when it takes no heat)
+  steamTemperature: number // Celsius, the steam after the superheater and attemperator (one lumped lag, steam and metal together, ADR 0044); saturation with no flow
+  superheaterHeat: number // kW the flue gas gives the steam in the superheater
+  sprayValvePosition: number // 0-1 (0-100%) open, the attemperator valve: the PID moves it in Auto, the operator in Manual
+  sprayFlow: number // kg/s of feedwater the attemperator injects into the steam, taken from the feed pump discharge
+  attemperatorAuto: boolean // Auto: the PID holds the steam temperature; Manual: the operator sets the valve
+  attemperatorIntegralError: number // K·s, the accumulated error of the PID, clamped
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)

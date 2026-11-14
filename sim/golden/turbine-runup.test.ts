@@ -139,7 +139,7 @@ describe("turbine-runup", () => {
   const BalanceWindow = 3000
   test("over the last 3000 s steam out of the boiler matches steam generated within 5%", () => {
     const balance = samples.filter((s) => s.time >= turbineRunup.duration - BalanceWindow)
-    const out = average(balance.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut + s.state.Deaerator.letDownFlow))
+    const out = average(balance.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut - s.state.Boiler.sprayFlow + s.state.Deaerator.letDownFlow))
     const generated = average(balance.map((s) => s.state.Boiler.deltaSteamMass))
     expect(Math.abs(out - generated)).toBeLessThanOrEqual(0.05 * generated)
   })
