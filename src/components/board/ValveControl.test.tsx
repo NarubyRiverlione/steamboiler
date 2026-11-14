@@ -76,6 +76,15 @@ describe("ValveControl", () => {
     expect(knob().getAttribute("aria-valuenow")).toBe("0")
   })
 
+  it("with a Disabled reason shows it, disables − and +, and turns the knob display-only", () => {
+    renderValve(<ValveControl ValveId="V" Label="V" Position={0.5} Step={5} Disabled="Locked by auto" />)
+    expect(screen.getByText("Locked by auto")).toBeTruthy()
+    expect(screen.getByRole<HTMLButtonElement>("button", { name: "V knob decrease" }).disabled).toBe(true)
+    expect(screen.getByRole<HTMLButtonElement>("button", { name: "V knob increase" }).disabled).toBe(true)
+    expect(screen.queryByRole("slider", { name: "V knob" })).toBeNull()
+    expect(screen.getByRole("meter", { name: "V knob" })).toBeTruthy()
+  })
+
   it("disables − at 0 and + at 100", () => {
     const { unmount } = renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)
     expect(screen.getByRole("button", { name: "V knob decrease" })).toHaveProperty("disabled", true)

@@ -36,6 +36,7 @@ function livePlant(): PowerPlantState {
   state.Boiler.gasFlow = 8123.4
   state.Boiler.returnTemperatureOut = 187.4
   state.Boiler.stackTemperature = 212.6
+  state.Boiler.steamTemperature = 538.4
   state.Turbine.mainSteamValve = true
   state.Turbine.turbineValvePosition = 0.42
   state.Turbine.bypassValvePosition = 0.07
@@ -73,6 +74,12 @@ describe("plant overview values", () => {
     expect(text("Extraction heater temperature")).toBe("143 °C")
     expect(text("Economizer temperature")).toBe("187 °C")
     expect(text("Stack temperature")).toBe("213 °C")
+    expect(text("Steam temperature")).toBe("538 °C")
+  })
+
+  it("shows a dash for the steam temperature until the steam is superheated", () => {
+    renderWith(makeInitialState())
+    expect(text("Steam temperature")).toBe("—")
   })
 
   it("shows the main steam valve closed", () => {

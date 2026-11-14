@@ -21,6 +21,7 @@ import {
   type NodeSymbol,
 } from "./plantDiagram"
 import { hotwellFraction, overviewValueTexts } from "./overviewValues"
+import { ALARMS } from "./alarms"
 import { PARTS, partAlarms } from "./plantParts"
 
 const GLYPH_HALF = 18
@@ -190,14 +191,20 @@ function PlantOverview() {
           ),
         )}
         {NODES.filter((node: DiagramNode) => node.led === true && node.part !== undefined).map(
-          (node: DiagramNode) => (
-            <g
-              key={node.id + "-led"}
-              transform={"translate(" + String(node.x + node.w) + " " + String(node.y) + ")"}
-            >
-              <Led lit={alarms[node.part ?? "boiler"]} label={PARTS[node.part ?? "boiler"].name + " alarm"} />
-            </g>
-          ),
+          (node: DiagramNode) => {
+            const own = node.alarm === undefined ? undefined : ALARMS.find((alarm) => alarm.id === node.alarm)
+            return (
+              <g
+                key={node.id + "-led"}
+                transform={"translate(" + String(node.x + node.w) + " " + String(node.y) + ")"}
+              >
+                <Led
+                  lit={own === undefined ? alarms[node.part ?? "boiler"] : own.active(state)}
+                  label={own === undefined ? PARTS[node.part ?? "boiler"].name + " alarm" : own.label + " alarm"}
+                />
+              </g>
+            )
+          },
         )}
         {deaerator !== undefined && (
           <g className="board-node-values" pointerEvents="none">

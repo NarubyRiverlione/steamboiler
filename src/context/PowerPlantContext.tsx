@@ -21,6 +21,9 @@ type PowerPlantContextType = {
   selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
   setLoadSetpoint: (loadSetpoint: number) => void
+  // Superheater attemperator
+  setAttemperatorAuto: (auto: boolean) => void
+  adjustSprayValve: (amount: number) => void
   // Deaerator
   toggleDeaeratorVent: () => void
   adjustFeedPumpValvePosition: (amount: number) => void

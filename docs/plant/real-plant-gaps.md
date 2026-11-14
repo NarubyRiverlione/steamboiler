@@ -6,7 +6,7 @@ The rows come from general plant knowledge, not from a research note, so their e
 
 | Area | Missing | Effect on the sim | Status |
 |---|---|---|---|
-| **Steam** | Superheater, with spray attemperators to control its temperature | Very large: output, exhaust wetness, and a new control task | Built in #113 ([ADR 0044](../adr/0044-superheater-with-spray-attemperator.md)): one lumped superheater and one spray attemperator at 540 °C. Missing: stages, burner tilt and gas recirculation, an outlet safety valve, start-up vent and drains, a bypass spray, a trip on high steam temperature, tube overheating at low flow |
+| **Steam** | Superheater, with spray attemperators to control its temperature | Very large: output, exhaust wetness, and a new control task | Built in #113 ([ADR 0044](../adr/0044-superheater-with-spray-attemperator.md)), operated on the Steam page (#149): one lumped superheater and one spray attemperator at 540 °C. Missing: stages, burner tilt and gas recirculation, an outlet safety valve, start-up vent and drains, a bypass spray, a trip on high steam temperature, tube overheating at low flow |
 | | Reheat, where steam goes back to the boiler between turbine stages | Large, now that there is a superheater: the exhaust is still about 17% wet | No ticket |
 | **Feedwater** | Deaerator | Moderate | #40, parked |
 | | Boiler feed pump head and feed control valve; the feed pump of #112 is a flow actuator with no head | Moderate, and a good operator task | Departure in [ADR 0031](../adr/0031-one-extraction-heater.md) |
@@ -30,6 +30,6 @@ The plant to be with the two biggest additions drawn in. A sketch, not a design:
 
 ![The plant to be with a superheater between the boiler and the main steam valve, and a deaerator and boiler feed pump on the Return](real-plant-schema.svg)
 
-- **Superheater (built in #113):** drawn before the boiler surface, because flue gas after it is only about 100 K above the water ([ADR 0029](../adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md)), too cool to superheat. In a real boiler the furnace walls come first, which the one boiler surface here cannot show.
+- **Superheater (built in #113, on the overview since #153):** drawn before the boiler surface, because flue gas after it is only about 100 K above the water ([ADR 0029](../adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md)), too cool to superheat. In a real boiler the furnace walls come first, which the one boiler surface here cannot show. The overview draws the reheater (#150, parked and dashed) after it, and no longer draws the relief valve and the Atmosphere of the sketch.
 - **Deaerator:** an open heater, so it needs a vessel with a level, a second pump and a change to [ADR 0002](../adr/0002-makeup-into-hotwell.md) ([ADR 0031](../adr/0031-one-extraction-heater.md)). That pump is the boiler feed pump. It takes the same extraction steam as the heater.
 - **Heater drain:** it runs to the deaerator here, the usual arrangement. With no deaerator it is pumped forward into the Return, as ADR 0031 decides.

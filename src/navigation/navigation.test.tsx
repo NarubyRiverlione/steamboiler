@@ -5,6 +5,7 @@ import type { ContextType, ReactNode } from "react"
 import { PowerPlantContext } from "../context/PowerPlantContext"
 import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
+import { CstSuperheater } from "../context/const"
 import Layout from "./Layout"
 import { Route, Routes } from "react-router-dom"
 import PlantOverview from "./PlantOverview"
@@ -33,6 +34,7 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
           <Route path="/" element={<Layout />}>
             <Route index element={<PlantOverview />} />
             <Route path="boiler" element={<p>boiler page</p>} />
+            <Route path="steam" element={<p>steam page</p>} />
             <Route path="deaerator" element={<p>deaerator page</p>} />
             <Route path="condenser" element={<p>condenser page</p>} />
             <Route path="turbine" element={<p>turbine page</p>} />
@@ -49,11 +51,13 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
 const where = (): string | null => screen.getByTestId("where").textContent
 
 describe("keyboard", () => {
-  it("cycles Boiler, Deaerator, Condenser, Turbine, Generation with Page Down and Right, and back with Page Up and Left", () => {
+  it("cycles Boiler, Steam, Deaerator, Condenser, Turbine, Generation with Page Down and Right, and back with Page Up and Left", () => {
     renderAt("/")
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/boiler")
     fireEvent.keyDown(window, { key: "ArrowRight" })
+    expect(where()).toBe("/steam")
+    fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/deaerator")
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/condenser")
@@ -71,6 +75,10 @@ describe("keyboard", () => {
     expect(where()).toBe("/condenser")
     fireEvent.keyDown(window, { key: "PageUp" })
     expect(where()).toBe("/deaerator")
+    fireEvent.keyDown(window, { key: "PageUp" })
+    expect(where()).toBe("/steam")
+    fireEvent.keyDown(window, { key: "PageUp" })
+    expect(where()).toBe("/boiler")
   })
 
   it("returns to the overview on Esc", () => {
@@ -89,7 +97,7 @@ describe("keyboard", () => {
   it("lets Left and Right change the page from a focused knob", () => {
     renderAt("/boiler", undefined, <div role="slider" tabIndex={0} aria-label="knob" aria-valuenow={0} />)
     fireEvent.keyDown(screen.getByRole("slider", { name: "knob" }), { key: "ArrowRight", bubbles: true })
-    expect(where()).toBe("/deaerator")
+    expect(where()).toBe("/steam")
   })
 
   it("leaves the arrows to a focused button but not Esc", () => {
@@ -220,6 +228,51 @@ describe("plant overview", () => {
     expect(screen.queryByRole("link", { name: /Air preheater/ })).toBeNull()
   })
 
+  it("draws the superheater between the burner and the boiler surface, linking to the Steam page", () => {
+    renderAt("/")
+    const burner: DiagramNode = nodeById("burner")
+    const superheater: DiagramNode = nodeById("superheater")
+    const surface: DiagramNode = nodeById("surface")
+    expect(superheater.y).toBeGreaterThanOrEqual(burner.y + burner.h)
+    expect(surface.y).toBeGreaterThanOrEqual(superheater.y + superheater.h)
+    fireEvent.click(screen.getByRole("link", { name: "Superheater, opens Steam" }))
+    expect(where()).toBe("/steam")
+  })
+
+  it("draws the reheater parked and dashed after the superheater, with a legend line and no link", () => {
+    renderAt("/")
+    const reheater: DiagramNode = nodeById("reheater")
+    expect(reheater.parked).toBe(true)
+    expect(reheater.part).toBeUndefined()
+    expect(reheater.y).toBeGreaterThanOrEqual(nodeById("superheater").y + nodeById("superheater").h)
+    expect(nodeById("surface").y).toBeGreaterThanOrEqual(reheater.y + reheater.h)
+    expect(screen.queryByRole("link", { name: /Reheater/ })).toBeNull()
+    expect(LABELS.some((label: { text: string }) => label.text.includes('reheater, parked in #150'))).toBe(true)
+  })
+
+  it("lights the superheater LED from the steam temperature alarm only", () => {
+    const state: PowerPlantState = makeInitialState()
+    renderAt("/", state)
+    expect(screen.getByRole("img", { name: "Steam temperature high alarm: off" })).toBeTruthy()
+    cleanup()
+    state.Boiler.steamTemperature = 600
+    renderAt("/", state)
+    expect(screen.getByRole("img", { name: "Steam temperature high alarm: on" })).toBeTruthy()
+  })
+
+  it("no longer draws the relief valve and the Atmosphere", () => {
+    renderAt("/")
+    expect(NODES.some((node: DiagramNode) => node.id === "relief" || node.id === "atmosphere")).toBe(false)
+    expect(screen.queryByText("Relief valve")).toBeNull()
+    expect(screen.queryByText("Atmosphere")).toBeNull()
+  })
+
+  it("keeps every node of the diagram clear of the others", () => {
+    const hit = (a: DiagramNode, b: DiagramNode): boolean =>
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+    for (const a of NODES) for (const b of NODES) if (a.id < b.id) expect(hit(a, b), a.id + " and " + b.id).toBe(false)
+  })
+
   it.each([
     ["Boiler", "burnerTripped"],
     ["Boiler", "heatingRateOverLimit"],
@@ -268,16 +321,22 @@ describe("partAlarms", () => {
     const state: PowerPlantState = makeInitialState()
     state.Boiler.burnerTripped = true
     state.Condenser.condensationPumpTripped = true
-    expect(partAlarms(state)).toEqual({ boiler: true, deaerator: false, condenser: true, turbine: false, generation: false })
+    expect(partAlarms(state)).toEqual({ boiler: true, steam: false, deaerator: false, condenser: true, turbine: false, generation: false })
     state.Boiler.burnerTripped = false
     state.Boiler.heatingRateOverLimit = true
     expect(partAlarms(state).boiler).toBe(true)
   })
 
+  it("raises the steam part from the high steam temperature, not the boiler", () => {
+    const state: PowerPlantState = makeInitialState()
+    state.Boiler.steamTemperature = CstSuperheater.AlarmTemperature
+    expect(partAlarms(state)).toEqual({ boiler: false, steam: true, deaerator: false, condenser: false, turbine: false, generation: false })
+  })
+
   it("raises the deaerator from its feed pump trip (#137)", () => {
     const state: PowerPlantState = makeInitialState()
     state.Deaerator.feedPumpTripped = true
-    expect(partAlarms(state)).toEqual({ boiler: false, deaerator: true, condenser: false, turbine: false, generation: false })
+    expect(partAlarms(state)).toEqual({ boiler: false, steam: false, deaerator: true, condenser: false, turbine: false, generation: false })
   })
 })
 
