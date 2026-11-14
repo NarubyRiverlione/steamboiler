@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
-import { loadSetpointRefusal } from "../../utils/turbineCalculations"
-import { ratedOutputMW } from "../../utils/turbineCalculations"
+import { loadSetpointRefusal, ratedOutputMW } from "../../utils/turbineCalculations"
 import { Knob } from "../board/Knob"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import type { TurbineState } from "../Turbine/types"
@@ -38,6 +37,7 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
 
   // The knob sets whole MW through the same action as the field; with the breaker open it is not given onChange, so it stays inert
   const turnKnob = (value: number): void => {
+    setDraft("")
     onSetLoadSetpoint(Math.round(value))
   }
 
@@ -60,7 +60,7 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
       </label>
       <Knob
         label="Load setpoint knob"
-        value={turbine.loadSetpoint}
+        value={Math.round(turbine.loadSetpoint)}
         min={0}
         max={LoadSetpointLimit}
         ends={["0", String(LoadSetpointLimit)]}

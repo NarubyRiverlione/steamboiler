@@ -65,7 +65,9 @@ export function RoundGauge({
       aria-valuemax={max}
       aria-valuenow={value}
       aria-valuetext={
-        setpoint === undefined ? undefined : `${String(value)} ${unit}, setpoint ${String(setpoint)} ${unit}`
+        setpoint === undefined
+          ? undefined
+          : `${String(Math.round(value * 10) / 10)} ${unit}, setpoint ${String(Math.round(setpoint * 10) / 10)} ${unit}`
       }
     >
       <circle className="board-gauge-bezel" cx={CX} cy={CY} r={92} />
