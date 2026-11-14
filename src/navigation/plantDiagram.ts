@@ -286,10 +286,10 @@ export const PIPES: readonly DiagramPipe[] = [
   { medium: "steam", d: "M880 185 L880 272 L899 272" },
   { medium: "steam", d: "M780 173 L780 329" },
   { medium: "steam", d: "M780 374 L780 440 L920 440 L920 469" },
-  { medium: "steam", d: "M585 440 L779 440" },
+  { medium: "steam", d: "M650 440 L779 440" },
   { medium: "steam", d: "M1020 272 L1220 272 L1220 309" },
   { medium: "steam", d: "M1280 200 L1280 309" },
-  { medium: "steam", d: "M1220 200 L1220 224 L890 224 A10 10 0 0 0 870 224 L790 224 A10 10 0 0 0 770 224 L585 224 L585 479" },
+  { medium: "steam", d: "M1220 200 L1220 224 L890 224 A10 10 0 0 0 870 224 L790 224 A10 10 0 0 0 770 224 L650 224 L650 479" },
   { medium: "water", d: "M420 350 L420 399" },
   { medium: "water", d: "M1220 420 L1220 469" },
   { medium: "water", d: "M1280 420 L1280 469" },
@@ -346,8 +346,8 @@ export const LABELS: readonly DiagramLabel[] = [
 export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "power", "vacuum"]
 
 export const DIAGRAM_VALUES: readonly DiagramValue[] = [
-  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 528, y: 294, anchor: "start" },
-  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 528, y: 330, anchor: "start" },
+  { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 548, y: 294, anchor: "start" },
+  { id: "boilerLevel", node: "boiler", label: "Boiler level", widest: "100 %", x: 548, y: 330, anchor: "start" },
   { id: "gasFlow", node: "burner", label: "Gas flow", widest: "99999 L/s", x: 340, y: 87, anchor: "start" },
   { id: "mainSteamValve", node: "msv", label: "Main steam valve", widest: "CLOSED", x: 890, y: 190, anchor: "start" },
   { id: "turbineValve", node: "turbinevalve", label: "Turbine valve position", widest: "100 %", x: 1065, y: 110, anchor: "middle" },
