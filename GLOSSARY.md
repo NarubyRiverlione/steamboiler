@@ -122,6 +122,22 @@ _Avoid_: Exhaust (that is the turbine's), smoke
 The heat exchanger where flue gas heats the Return on its way to the boiler. With no Return it recovers nothing.
 _Avoid_: Feedwater heater, preheater
 
+**Superheater**:
+The heat exchanger where flue gas heats the steam above its saturation temperature, between the boiler and every steam outlet (main steam valve, bypass, start-up vent). It has no valve of its own: the heat it takes follows from the gas and the steam flow.
+_Avoid_: Reheater (steam that has already been through the turbine)
+
+**Steam temperature**:
+The temperature of the steam leaving the superheater, after the spray. The attemperator holds it at 540 °C.
+_Avoid_: Superheat (that is the rise above saturation), outlet temperature
+
+**Attemperator**:
+The spray valve that injects spray water into the steam inside the superheater to hold the steam temperature. It is the one active control of the superheater.
+_Avoid_: Desuperheater (that is the same device on a bypass or a line, after the superheater)
+
+**Spray water**:
+Return water taken from the feed pump discharge for the attemperator. It joins the steam and leaves the loop through the turbine, not through the boiler.
+_Avoid_: Spray (the valve opening), injection water
+
 **Stack temperature**:
 The flue gas temperature where it leaves for the chimney.
 _Avoid_: Exit temperature, chimney temperature
