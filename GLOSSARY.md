@@ -89,7 +89,7 @@ The speed mode that keeps the turbine at the selected run-up point by moving the
 _Avoid_: Autopilot, speed hold, cruise
 
 **Synchronised mode**:
-The speed mode the turbine is in while the generator breaker is closed. It keeps sync speed like hold mode at 3000 rpm and is entered by closing the breaker, not chosen. While it lasts no speed mode or run-up point can be selected. Opening the breaker by hand returns to Free; the breaker opening on its own because the speed left the window returns to hold mode at 3000 rpm, so the governor survives a load rejection.
+The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the breaker or a turbine trip ends it, back to free mode.
 _Avoid_: Grid mode, sync hold
 
 **Run-up point**:
@@ -105,7 +105,7 @@ The steam flow that holds the turbine at sync speed with the breaker open: it on
 _Avoid_: Idle flow, minimum flow
 
 **Turbine trip**:
-The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit, or when the main steam valve closes on low pressure with the turbine valve open. It also returns the speed mode to Free; the turbine only takes steam again after a trip reset and when the operator reopens the valve. See Trip reset.
+The automatic, full closing of the turbine valve when condenser pressure rises above the vacuum limit, or when the main steam valve closes on low pressure with the turbine valve open. It also returns the speed mode to Free; the turbine only takes steam again when the operator reopens the valve.
 _Avoid_: Trip (on its own); for the operator's planned stop see Shutdown
 
 **Exhaust quality**:
@@ -121,22 +121,6 @@ _Avoid_: Exhaust (that is the turbine's), smoke
 **Economizer**:
 The heat exchanger where flue gas heats the Return on its way to the boiler. With no Return it recovers nothing.
 _Avoid_: Feedwater heater, preheater
-
-**Superheater**:
-The heat exchanger where flue gas heats the steam above its saturation temperature, between the boiler and every steam outlet (main steam valve, bypass, start-up vent). It has no valve of its own: the heat it takes follows from the gas and the steam flow.
-_Avoid_: Reheater (steam that has already been through the turbine)
-
-**Steam temperature**:
-The temperature of the steam leaving the superheater, after the spray. The attemperator holds it at 540 °C.
-_Avoid_: Superheat (that is the rise above saturation), outlet temperature
-
-**Attemperator**:
-The spray valve that injects spray water into the steam inside the superheater to hold the steam temperature. It is the one active control of the superheater.
-_Avoid_: Desuperheater (that is the same device on a bypass or a line, after the superheater)
-
-**Spray water**:
-Return water taken from the feed pump discharge for the attemperator. It joins the steam and leaves the loop through the turbine, not through the boiler.
-_Avoid_: Spray (the valve opening), injection water
 
 **Stack temperature**:
 The flue gas temperature where it leaves for the chimney.
@@ -259,7 +243,7 @@ The hotwell level below which the condensation pump would cavitate: 10%. Reachin
 _Avoid_: Empty, dry hotwell
 
 **Condensation pump trip**:
-The automatic, full closing of the condensation pump valve when the hotwell level falls below the low-low level. The pump only runs again after a trip reset, which is refused while the level is still below low-low, and when the operator reopens it. See Trip reset.
+The automatic, full closing of the condensation pump valve when the hotwell level falls below the low-low level. The pump only runs again when the operator reopens it, and that is refused while the level is still below low-low.
 _Avoid_: Pump stop, start inhibit
 
 **High-high level**:
@@ -274,12 +258,8 @@ _Avoid_: Makeup trip, overfill clamp
 The boiler water level below which the burner trips: 20% of the boiler volume.
 _Avoid_: Empty, dry boiler
 
-**Trip reset**:
-The deliberate operator action, a RESET button beside the trip tile on the page that owns it, that clears one latched trip once its cause has gone. It only clears the flag: gas and valves stay at 0, and restarting is a separate step. Nothing else clears a trip. Not the annunciator reset in the header, which only darkens steady tiles.
-_Avoid_: Restart, acknowledge (ACK only stops the flashing)
-
 **Burner trip**:
-The automatic shutting of the gas to 0 when the boiler water level falls below the burner low-low level. The gas only comes back after a trip reset, which is refused while the level is still below low-low, and when the operator raises it. See Trip reset.
+The automatic shutting of the gas to 0 when the boiler water level falls below the burner low-low level. The gas only comes back when the operator raises it, and that is refused while the level is still below low-low.
 _Avoid_: Gas limit, burner stop, trip (on its own)
 
 **Heat loss**:
