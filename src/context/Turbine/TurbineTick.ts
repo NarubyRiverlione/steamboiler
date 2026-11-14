@@ -36,8 +36,30 @@ function TurbineTick(
   extractionFlow = 0,
   steamTemperature = 0,
 ): TurbineState {
-  // The enthalpy drop (less what the extraction steam no longer does after the tap) gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed
-  // only) and is a resisting torque on the shaft, never derived from the steam flow (ADR 0027)
+  const { ticked, newRPM, generatorBreaker } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature)
+
+  // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) an open valve trips
+  if (isTripCondition(newRPM, condenserPressure) && turbineState.turbineValvePosition > 0) return { ...ticked, ...turbineTrip }
+
+  return { ...ticked, ...speedControlTick(turbineState, newRPM, generatorBreaker, condenserPressure) }
+}
+
+// True above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040)
+const isTripCondition = (rpm: number, condenserPressure: number): boolean =>
+  isAboveVacuumLimit(condenserPressure) || isAtOverspeed(rpm)
+
+type ShaftTick = { ticked: TurbineState; newRPM: number; generatorBreaker: boolean }
+
+// The shaft and the generator for one tick: the enthalpy drop (less what the extraction steam no longer does after the tap)
+// gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed only) and is a resisting
+// torque on the shaft, never derived from the steam flow (ADR 0027). The breaker auto-opens outside the sync margin and the load drops with it.
+function shaftTick(
+  turbineState: TurbineState,
+  boilerPressure: number,
+  condenserPressure: number,
+  extractionFlow: number,
+  steamTemperature: number,
+): ShaftTick {
   const enthalpyDrop: number = shaftDropWithExtraction(
     boilerPressure,
     condenserPressure / MbarPerBar,
@@ -47,32 +69,30 @@ function TurbineTick(
   )
   const load: number = turbineState.generatorBreaker ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint) : 0
   const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
-
-  // Auto-open breaker if RPM goes outside acceptable margin with breaker closed; the load drops with it
   const generatorBreaker: boolean = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
-
   const ticked: TurbineState = {
     ...turbineState,
     electricOutput: generatorBreaker ? load : 0,
     loadSetpoint: generatorBreaker ? turbineState.loadSetpoint : 0,
     rpm: newRPM,
-    generatorBreaker, // Update breaker status
+    generatorBreaker,
   }
+  return { ticked, newRPM, generatorBreaker }
+}
 
-  // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) an open valve trips
+// The Ramp up / Hold PID may move the valve, never past the cap; while tripped it may not open (only a trip reset clears the flag, ADR 0043).
+// A breaker that auto-opened this tick ends Synchronised in Hold at sync speed, so the governor survives a load rejection (#135)
+function speedControlTick(
+  turbineState: TurbineState,
+  newRPM: number,
+  generatorBreaker: boolean,
+  condenserPressure: number,
+): Pick<TurbineState, "runUpPoint"> & SpeedControl {
   const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
-  if ((isAboveVacuumLimit(condenserPressure) || isAtOverspeed(newRPM)) && currentPosition > 0) return { ...ticked, ...turbineTrip }
-
-  // Otherwise the Ramp up / Hold PID may move the valve, never past the cap; while tripped it may not open (only a trip reset clears the flag, ADR 0043)
-  // A breaker that auto-opened this tick ends Synchronised in Hold at sync speed, so the governor survives a load rejection (#135)
   const lostSync: boolean = turbineState.speedMode === "synchronised" && !generatorBreaker
   const control: TurbineState = lostSync ? { ...turbineState, speedMode: "hold", runUpPoint: CstTurbine.SyncRPM } : turbineState
   const pid = updateTurbineValve(control, newRPM, turbineTripped ? currentPosition : maxTurbineValvePosition(currentPosition, condenserPressure))
-  return {
-    ...ticked,
-    runUpPoint: control.runUpPoint,
-    ...pid,
-  }
+  return { runUpPoint: control.runUpPoint, ...pid }
 }
 
 type SpeedControl = Pick<TurbineState, "turbineValvePosition" | "pidIntegralError" | "speedMode" | "speedReference">
