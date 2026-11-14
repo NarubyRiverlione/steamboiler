@@ -2,6 +2,7 @@
 
 import { CstDeaerator, CstSimulation } from "../context/const"
 import type PowerPlantState from "../context/PowerPlantState"
+import { getBoilingPoint } from "../utils/steamTable"
 import type { ValueId } from "./plantDiagram"
 
 const { CstBoiler, CstCondenser } = CstSimulation
@@ -15,6 +16,11 @@ export type SmoothedValues = {
 
 const percent = (fraction: number): string => `${(fraction * 100).toFixed(0)} %`
 const celsius = (value: number): string => `${value.toFixed(0)} °C`
+
+// The steam temperature rests at saturation with no steam flowing (ADR 0044); only above it is there superheated steam to show
+const SUPERHEAT_MARGIN = 1
+const steamTemperatureText = (state: PowerPlantState): string =>
+  state.Boiler.steamTemperature > getBoilingPoint(state.Boiler.pressure) + SUPERHEAT_MARGIN ? celsius(state.Boiler.steamTemperature) : "—"
 
 export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedValues): Record<ValueId, string> {
   const { Boiler, Turbine, Condenser, Heater, Deaerator } = state
@@ -37,7 +43,7 @@ export function overviewValueTexts(state: PowerPlantState, smoothed: SmoothedVal
     heaterTemperature: celsius(Heater.returnTemperature),
     economizerTemperature: celsius(Boiler.returnTemperatureOut),
     stackTemperature: celsius(Boiler.stackTemperature),
-    steamTemperature: celsius(Boiler.steamTemperature),
+    steamTemperature: steamTemperatureText(state),
   }
 }
 

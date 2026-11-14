@@ -77,6 +77,11 @@ describe("plant overview values", () => {
     expect(text("Steam temperature")).toBe("538 °C")
   })
 
+  it("shows a dash for the steam temperature until the steam is superheated", () => {
+    renderWith(makeInitialState())
+    expect(text("Steam temperature")).toBe("—")
+  })
+
   it("shows the main steam valve closed", () => {
     const state: PowerPlantState = livePlant()
     state.Turbine.mainSteamValve = false
