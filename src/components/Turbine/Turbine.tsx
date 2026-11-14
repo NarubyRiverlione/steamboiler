@@ -2,9 +2,8 @@
 
 import usePowerPlant from "../../context/PowerPlantContext"
 import { PanelFrame } from "../board/PanelFrame"
-import { GeneratorBreakerGroup } from "./GeneratorBreakerGroup"
-import { GeneratorLoadGroup } from "./GeneratorLoadGroup"
 import { SpeedControlGroup } from "./SpeedControlGroup"
+import { SpeedGaugeGroup } from "./SpeedGaugeGroup"
 import { SteamFlowGroup } from "./SteamFlowGroup"
 import { TurbineStatus } from "./TurbineStatus"
 
@@ -17,8 +16,6 @@ function Turbine() {
     toggleMainSteamValve,
     setSpeedMode,
     selectRunUpPoint,
-    toggleGeneratorBreaker,
-    setLoadSetpoint,
   } = usePowerPlant()
 
   return (
@@ -29,15 +26,12 @@ function Turbine() {
           boilerPressure={pressure}
           onToggleMainSteamValve={toggleMainSteamValve}
         />
-        <div className="board-stack">
-          <SpeedControlGroup
-            turbine={turbine}
-            onSetSpeedMode={setSpeedMode}
-            onSelectRunUpPoint={selectRunUpPoint}
-          />
-          <GeneratorLoadGroup turbine={turbine} onSetLoadSetpoint={setLoadSetpoint} />
-        </div>
-        <GeneratorBreakerGroup turbine={turbine} onToggleBreaker={toggleGeneratorBreaker} />
+        <SpeedControlGroup
+          turbine={turbine}
+          onSetSpeedMode={setSpeedMode}
+          onSelectRunUpPoint={selectRunUpPoint}
+        />
+        <SpeedGaugeGroup turbine={turbine} />
       </div>
     </PanelFrame>
   )

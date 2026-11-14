@@ -4,7 +4,7 @@ import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { loadSetpointRefusal } from "../../utils/turbineCalculations"
 import { Knob } from "../board/Knob"
-import type { TurbineState } from "./types"
+import type { TurbineState } from "../Turbine/types"
 
 const {
   CstTurbine: { LoadSetpointLimit },
