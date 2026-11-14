@@ -43,7 +43,7 @@ Next: nothing ready (every ticket is waiting or needs triage).
 | 12 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | needs-triage |  |  |
 | 13 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | needs-triage |  |  |
 | 14 | [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) Bypass desuperheating spray | needs-triage |  |  |
-| 24 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) |  |
+| 25 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) |  |
 
 ## Alarms and trips
 
@@ -74,7 +74,7 @@ Next: [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historica
 | 21 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | ready-for-agent |  |  |
 | 22 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | needs-triage |  |  |
 | 23 | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) Overview: add the superheater and reheater, remove the relief valve and Atmosphere | ready-for-agent |  | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) |
-| 25 | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) Steam page: superheater and reheater with the attemperator controls | ready-for-agent | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) |  |
+| 24 | [#149](https://github.com/NarubyRiverlione/steamboiler/issues/149) Steam page: superheater and reheater with the attemperator controls | ready-for-agent | [#153](https://github.com/NarubyRiverlione/steamboiler/issues/153) | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) |
 
 ## Sim core: tests, CI, tooling, snapshots
 
