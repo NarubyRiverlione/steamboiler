@@ -1123,10 +1123,11 @@ path.board-zone {
   align-items: start;
 }
 
-.board-stack {
+.board-generation-main {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  min-width: 0;
+  align-items: start;
 }
 
 .board-group-row {

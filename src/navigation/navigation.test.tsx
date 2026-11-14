@@ -36,6 +36,7 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
             <Route path="deaerator" element={<p>deaerator page</p>} />
             <Route path="condenser" element={<p>condenser page</p>} />
             <Route path="turbine" element={<p>turbine page</p>} />
+            <Route path="generation" element={<p>generation page</p>} />
           </Route>
         </Routes>
         <Where />
@@ -48,7 +49,7 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
 const where = (): string | null => screen.getByTestId("where").textContent
 
 describe("keyboard", () => {
-  it("cycles Boiler, Deaerator, Condenser, Turbine with Page Down and Right, and back with Page Up and Left", () => {
+  it("cycles Boiler, Deaerator, Condenser, Turbine, Generation with Page Down and Right, and back with Page Up and Left", () => {
     renderAt("/")
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/boiler")
@@ -59,8 +60,12 @@ describe("keyboard", () => {
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/turbine")
     fireEvent.keyDown(window, { key: "PageDown" })
+    expect(where()).toBe("/generation")
+    fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/boiler")
     fireEvent.keyDown(window, { key: "PageUp" })
+    expect(where()).toBe("/generation")
+    fireEvent.keyDown(window, { key: "ArrowLeft" })
     expect(where()).toBe("/turbine")
     fireEvent.keyDown(window, { key: "ArrowLeft" })
     expect(where()).toBe("/condenser")
@@ -109,6 +114,11 @@ describe("header", () => {
     fireEvent.keyDown(window, { key: "PageDown" })
     const links: HTMLElement[] = screen.getAllByRole("link", { name: "Plant overview" })
     expect(links.some((link: HTMLElement) => link.getAttribute("aria-current") === "page")).toBe(false)
+  })
+
+  it("shows Generation in the breadcrumb", () => {
+    renderAt("/generation")
+    expect(screen.getByRole("navigation", { name: "Breadcrumb" }).textContent).toContain("Generation")
   })
 
   it("shows the breadcrumb of the open part and has no tab strip", () => {
@@ -230,6 +240,7 @@ describe("plant overview", () => {
     ["Main steam valve", "/turbine"],
     ["Turbine valve", "/turbine"],
     ["Bypass valve", "/turbine"],
+    ["Generator", "/generation"],
     ["Condenser", "/condenser"],
     ["Condensation pump", "/condenser"],
     ["Recirculation pump", "/condenser"],
@@ -257,7 +268,7 @@ describe("partAlarms", () => {
     const state: PowerPlantState = makeInitialState()
     state.Boiler.burnerTripped = true
     state.Condenser.condensationPumpTripped = true
-    expect(partAlarms(state)).toEqual({ boiler: true, deaerator: false, condenser: true, turbine: false })
+    expect(partAlarms(state)).toEqual({ boiler: true, deaerator: false, condenser: true, turbine: false, generation: false })
     state.Boiler.burnerTripped = false
     state.Boiler.heatingRateOverLimit = true
     expect(partAlarms(state).boiler).toBe(true)
@@ -266,14 +277,14 @@ describe("partAlarms", () => {
   it("raises the deaerator from its feed pump trip (#137)", () => {
     const state: PowerPlantState = makeInitialState()
     state.Deaerator.feedPumpTripped = true
-    expect(partAlarms(state)).toEqual({ boiler: false, deaerator: true, condenser: false, turbine: false })
+    expect(partAlarms(state)).toEqual({ boiler: false, deaerator: true, condenser: false, turbine: false, generation: false })
   })
 })
 
 describe("neighbourPath", () => {
   it("steps into the ends from an unknown path", () => {
     expect(neighbourPath("/", 1)).toBe("/boiler")
-    expect(neighbourPath("/", -1)).toBe("/turbine")
+    expect(neighbourPath("/", -1)).toBe("/generation")
   })
 })
 

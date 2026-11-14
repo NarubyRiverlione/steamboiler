@@ -1,29 +1,19 @@
-/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the horizontal RPM meter. */
+/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the turbine speed beside the breaker, so it can be closed with the speed in view. */
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { isAtSyncSpeed } from "../../utils/turbineCalculations"
+import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
-import { LinearGauge } from "../board/LinearGauge"
-import type { GaugeZone } from "../board/RoundGauge"
 import { TurnSwitch } from "../board/TurnSwitch"
-import type { TurbineState } from "./types"
+import type { TurbineState } from "../Turbine/types"
 
 const {
-  CstTurbine: { SyncRPM, MaxRPM, BreakerRPMMargin },
+  CstTurbine: { SyncRPM, BreakerRPMMargin },
 } = CstSimulation
 
 const MIN_SYNC: number = SyncRPM - BreakerRPMMargin
 const MAX_SYNC: number = SyncRPM + BreakerRPMMargin
-const RPM_SCALE_MAX = 3500 // gauge end, past the overspeed trip so the red zone above MaxRPM shows
-const RPM_NORMAL_HALF = 100 // green band at SyncRPM ± this: the normal running range on the meter
-const RPM_ZONES: readonly GaugeZone[] = [
-  { from: 0, to: SyncRPM - RPM_NORMAL_HALF, tone: "neutral" },
-  { from: SyncRPM - RPM_NORMAL_HALF, to: SyncRPM + RPM_NORMAL_HALF, tone: "ok" },
-  { from: SyncRPM + RPM_NORMAL_HALF, to: MaxRPM, tone: "warn" },
-  { from: MaxRPM, to: RPM_SCALE_MAX, tone: "alarm" },
-]
-
 type GeneratorBreakerGroupProps = {
   readonly turbine: TurbineState
   readonly onToggleBreaker: () => void
@@ -61,6 +51,10 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
           />
         </div>
       </div>
+      <div className="board-readout">
+        <span>Turbine speed</span>
+        <Display label="Turbine speed" text={`${rpm.toFixed(0)} RPM`} widest="9999 RPM" />
+      </div>
       <span className="board-readout-label">Breaker</span>
       <Lamp
         lit={inSync}
@@ -74,17 +68,6 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
           Current RPM: {rpm.toFixed(0)}
         </p>
       )}
-      <LinearGauge
-        label="Speed gauge"
-        orientation="horizontal"
-        value={rpm}
-        min={0}
-        max={RPM_SCALE_MAX}
-        unit="rpm"
-        major={500}
-        minor={100}
-        zones={RPM_ZONES}
-      />
     </div>
   )
 }
