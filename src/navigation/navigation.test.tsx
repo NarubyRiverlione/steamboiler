@@ -5,6 +5,7 @@ import type { ContextType, ReactNode } from "react"
 import { PowerPlantContext } from "../context/PowerPlantContext"
 import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
+import { CstSuperheater } from "../context/const"
 import Layout from "./Layout"
 import { Route, Routes } from "react-router-dom"
 import PlantOverview from "./PlantOverview"
@@ -33,6 +34,7 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
           <Route path="/" element={<Layout />}>
             <Route index element={<PlantOverview />} />
             <Route path="boiler" element={<p>boiler page</p>} />
+            <Route path="steam" element={<p>steam page</p>} />
             <Route path="deaerator" element={<p>deaerator page</p>} />
             <Route path="condenser" element={<p>condenser page</p>} />
             <Route path="turbine" element={<p>turbine page</p>} />
@@ -49,11 +51,13 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
 const where = (): string | null => screen.getByTestId("where").textContent
 
 describe("keyboard", () => {
-  it("cycles Boiler, Deaerator, Condenser, Turbine, Generation with Page Down and Right, and back with Page Up and Left", () => {
+  it("cycles Boiler, Steam, Deaerator, Condenser, Turbine, Generation with Page Down and Right, and back with Page Up and Left", () => {
     renderAt("/")
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/boiler")
     fireEvent.keyDown(window, { key: "ArrowRight" })
+    expect(where()).toBe("/steam")
+    fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/deaerator")
     fireEvent.keyDown(window, { key: "PageDown" })
     expect(where()).toBe("/condenser")
@@ -71,6 +75,10 @@ describe("keyboard", () => {
     expect(where()).toBe("/condenser")
     fireEvent.keyDown(window, { key: "PageUp" })
     expect(where()).toBe("/deaerator")
+    fireEvent.keyDown(window, { key: "PageUp" })
+    expect(where()).toBe("/steam")
+    fireEvent.keyDown(window, { key: "PageUp" })
+    expect(where()).toBe("/boiler")
   })
 
   it("returns to the overview on Esc", () => {
@@ -89,7 +97,7 @@ describe("keyboard", () => {
   it("lets Left and Right change the page from a focused knob", () => {
     renderAt("/boiler", undefined, <div role="slider" tabIndex={0} aria-label="knob" aria-valuenow={0} />)
     fireEvent.keyDown(screen.getByRole("slider", { name: "knob" }), { key: "ArrowRight", bubbles: true })
-    expect(where()).toBe("/deaerator")
+    expect(where()).toBe("/steam")
   })
 
   it("leaves the arrows to a focused button but not Esc", () => {
@@ -268,16 +276,22 @@ describe("partAlarms", () => {
     const state: PowerPlantState = makeInitialState()
     state.Boiler.burnerTripped = true
     state.Condenser.condensationPumpTripped = true
-    expect(partAlarms(state)).toEqual({ boiler: true, deaerator: false, condenser: true, turbine: false, generation: false })
+    expect(partAlarms(state)).toEqual({ boiler: true, steam: false, deaerator: false, condenser: true, turbine: false, generation: false })
     state.Boiler.burnerTripped = false
     state.Boiler.heatingRateOverLimit = true
     expect(partAlarms(state).boiler).toBe(true)
   })
 
+  it("raises the steam part from the high steam temperature, not the boiler", () => {
+    const state: PowerPlantState = makeInitialState()
+    state.Boiler.steamTemperature = CstSuperheater.AlarmTemperature
+    expect(partAlarms(state)).toEqual({ boiler: false, steam: true, deaerator: false, condenser: false, turbine: false, generation: false })
+  })
+
   it("raises the deaerator from its feed pump trip (#137)", () => {
     const state: PowerPlantState = makeInitialState()
     state.Deaerator.feedPumpTripped = true
-    expect(partAlarms(state)).toEqual({ boiler: false, deaerator: true, condenser: false, turbine: false, generation: false })
+    expect(partAlarms(state)).toEqual({ boiler: false, steam: false, deaerator: true, condenser: false, turbine: false, generation: false })
   })
 })
 

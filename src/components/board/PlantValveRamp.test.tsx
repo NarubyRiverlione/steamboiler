@@ -52,4 +52,37 @@ describe("PlantValveRamp", () => {
     }
     expect(Number(screen.getByLabelText("plant makeup").textContent)).toBeGreaterThan(start)
   })
+
+  it("has a row for the spray valve that moves the real valve once the attemperator is in Manual", () => {
+    function SprayPage() {
+      const plant = usePowerPlant()
+      return (
+        <>
+          <button
+            onClick={() => {
+              plant.setAttemperatorAuto(false)
+            }}
+          >
+            manual
+          </button>
+          <ValveControl ValveId="Spray valve" Label="Spray" Position={plant.state.Boiler.sprayValvePosition} Step={5} />
+        </>
+      )
+    }
+    render(
+      <PowerPlantProvider>
+        <PlantValveRamp>
+          <SprayPage />
+        </PlantValveRamp>
+      </PowerPlantProvider>,
+    )
+    fireEvent.click(screen.getByText("manual"))
+    fireEvent.keyDown(screen.getByRole("slider", { name: "Spray knob" }), { key: "End" })
+    for (let elapsed = 0; elapsed < 5000; elapsed += RAMP_TICK_MS) {
+      act(() => {
+        vi.advanceTimersByTime(RAMP_TICK_MS)
+      })
+    }
+    expect(screen.getByLabelText("Spray position").textContent).not.toBe("0 % Open")
+  })
 })

@@ -7,7 +7,7 @@ import type { ValveId } from "./valveRampContext"
 
 export function PlantValveRamp({ children }: { readonly children: ReactNode }) {
   const plant = usePowerPlant()
-  const { Turbine, Condenser, Deaerator } = plant.state
+  const { Boiler, Turbine, Condenser, Deaerator } = plant.state
   const valves: Readonly<Partial<Record<ValveId, ValveHandle>>> = {
     "Bypass valve": { actual: Turbine.bypassValvePosition, adjust: plant.adjustBypassValve },
     "Turbine valve": { actual: Turbine.turbineValvePosition, adjust: plant.adjustTurbineValve },
@@ -22,6 +22,7 @@ export function PlantValveRamp({ children }: { readonly children: ReactNode }) {
     },
     Makeup: { actual: Condenser.makeupValvePosition, adjust: plant.adjustMakeupValvePosition },
     Reject: { actual: Condenser.rejectValvePosition, adjust: plant.adjustRejectValvePosition },
+    "Spray valve": { actual: Boiler.sprayValvePosition, adjust: plant.adjustSprayValve },
     "Feed pump": { actual: Deaerator.feedPumpValvePosition, adjust: plant.adjustFeedPumpValvePosition },
   }
   return <ValveRampProvider valves={valves}>{children}</ValveRampProvider>
