@@ -25,6 +25,13 @@ describe("fineStep", () => {
     expect(fineStep(2.5, 5, -1)).toBe(0)
   })
 
+  it("moves a 300 l/s pump by 1 l/s per click with a step of 100/300 percent", () => {
+    const step: number = 100 / 300
+    expect(fineStep(0, step, 1)).toBeCloseTo(step, 10)
+    expect(fineStep(10, step, 1) * 3).toBeCloseTo(31, 10)
+    expect(fineStep(10, step, -1) * 3).toBeCloseTo(29, 10)
+  })
+
   it("clamps at both ends", () => {
     expect(fineStep(0, 5, -1)).toBe(0)
     expect(fineStep(100, 5, 1)).toBe(100)
