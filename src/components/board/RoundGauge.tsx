@@ -2,7 +2,11 @@
 
 import "./board.css"
 
-export type GaugeZone = { readonly from: number; readonly to: number; readonly tone: "neutral" | "ok" | "warn" | "alarm" }
+export type GaugeZone = {
+  readonly from: number
+  readonly to: number
+  readonly tone: "neutral" | "ok" | "warn" | "alarm"
+}
 
 type RoundGaugeProps = {
   readonly label: string
@@ -13,6 +17,7 @@ type RoundGaugeProps = {
   readonly major: number
   readonly minor: number
   readonly zones?: readonly GaugeZone[]
+  readonly setpoint?: number // second marker, a thin outlined needle: the command while the solid needle is the actual value
 }
 
 const CX = 105
@@ -31,7 +36,17 @@ function arc(radius: number, from: number, to: number): string {
   return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${String(radius)} ${String(radius)} 0 ${to - from > 180 ? "1" : "0"} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`
 }
 
-export function RoundGauge({ label, unit, value, min, max, major, minor, zones = [] }: RoundGaugeProps) {
+export function RoundGauge({
+  label,
+  unit,
+  value,
+  min,
+  max,
+  major,
+  minor,
+  zones = [],
+  setpoint,
+}: RoundGaugeProps) {
   const angle = (v: number): number =>
     SWEEP_START + ((SWEEP_END - SWEEP_START) * (Math.min(max, Math.max(min, v)) - min)) / (max - min)
   const ticks: number[] = []
@@ -49,6 +64,9 @@ export function RoundGauge({ label, unit, value, min, max, major, minor, zones =
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={value}
+      aria-valuetext={
+        setpoint === undefined ? undefined : `${String(value)} ${unit}, setpoint ${String(setpoint)} ${unit}`
+      }
     >
       <circle className="board-gauge-bezel" cx={CX} cy={CY} r={92} />
       <circle className="board-gauge-face" cx={CX} cy={CY} r={84} />
@@ -84,6 +102,16 @@ export function RoundGauge({ label, unit, value, min, max, major, minor, zones =
       <text className="board-gauge-text board-gauge-unit" x={CX} y={CY + 40}>
         {unit}
       </text>
+      {setpoint !== undefined && (
+        <g
+          className="board-setpoint"
+          transform={`rotate(${String(angle(setpoint))} ${String(CX)} ${String(CY)})`}
+        >
+          <path
+            d={`M${String(CX - 3)} ${String(CY + 14)} L${String(CX)} ${String(CY - 72)} L${String(CX + 3)} ${String(CY + 14)} Z`}
+          />
+        </g>
+      )}
       <g className="board-needle" transform={`rotate(${String(angle(value))} ${String(CX)} ${String(CY)})`}>
         <path
           d={`M${String(CX - 3)} ${String(CY + 14)} L${String(CX)} ${String(CY - 72)} L${String(CX + 3)} ${String(CY + 14)} Z`}

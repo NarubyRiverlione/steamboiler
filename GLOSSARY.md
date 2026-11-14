@@ -65,7 +65,7 @@ The electric power the generator carries, a resisting torque on the shaft. More 
 _Avoid_: Demand, consumption, shaft load, generator torque
 
 **Load setpoint**:
-The load the operator asks for, in MW, from 0 up to the load setpoint limit, above the rated output. Only settable with the breaker closed. The load moves toward it at the load rate.
+The load the operator asks for, in MW, from 0 up to the load setpoint limit, above the rated output. Only settable with the breaker closed. The load moves toward it at the load rate. The Generation page shows it as the outlined needle of the load dial, beside the solid needle of the actual load, and the load knob sets it.
 _Avoid_: Net demand, demand, target load
 
 **Load rate**:

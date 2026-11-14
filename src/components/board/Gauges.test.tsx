@@ -29,6 +29,43 @@ describe("RoundGauge", () => {
   })
 })
 
+describe("RoundGauge setpoint marker", () => {
+  const dial = (setpoint?: number) => (
+    <RoundGauge
+      label="Load dial"
+      unit="MW"
+      value={50}
+      min={0}
+      max={200}
+      major={50}
+      minor={10}
+      setpoint={setpoint}
+    />
+  )
+
+  it("draws no second marker and no valuetext without a setpoint", () => {
+    const { container } = render(dial())
+    expect(container.querySelector(".board-setpoint")).toBeNull()
+    expect(screen.getByRole("meter").getAttribute("aria-valuetext")).toBeNull()
+  })
+
+  it("draws the marker at the setpoint angle and keeps aria-valuenow on the actual value", () => {
+    const { container } = render(dial(100))
+    const marker: Element | null = container.querySelector(".board-setpoint")
+    expect(marker?.getAttribute("transform")).toBe("rotate(0 105 100)")
+    const meter: HTMLElement = screen.getByRole("meter")
+    expect(meter.getAttribute("aria-valuenow")).toBe("50")
+    expect(meter.getAttribute("aria-valuetext")).toBe("50 MW, setpoint 100 MW")
+  })
+
+  it("clamps a setpoint outside the scale to its ends", () => {
+    const { container, rerender } = render(dial(500))
+    expect(container.querySelector(".board-setpoint")?.getAttribute("transform")).toBe("rotate(135 105 100)")
+    rerender(dial(-10))
+    expect(container.querySelector(".board-setpoint")?.getAttribute("transform")).toBe("rotate(-135 105 100)")
+  })
+})
+
 describe("LinearGauge", () => {
   it("exposes the level and one strip per zone", () => {
     const { container } = render(

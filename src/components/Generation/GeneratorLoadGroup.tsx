@@ -1,14 +1,24 @@
-/** Generator Load group: the load setpoint knob (display only) and the field the setpoint is typed into. */
+/** Generator Load group: the MW dial (actual load and setpoint), the load setpoint knob and the field the setpoint is typed into. */
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { loadSetpointRefusal } from "../../utils/turbineCalculations"
+import { ratedOutputMW } from "../../utils/turbineCalculations"
 import { Knob } from "../board/Knob"
+import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import type { TurbineState } from "../Turbine/types"
 
 const {
   CstTurbine: { LoadSetpointLimit },
 } = CstSimulation
+
+const LOAD_KNOB_STEP = 5 // MW per arrow key press or wheel notch
+
+// Green up to the rated output; above it the setpoint is allowed but the steam, not the generator, sets the limit (design-basis.md)
+const LOAD_ZONES: readonly GaugeZone[] = [
+  { from: 0, to: ratedOutputMW, tone: "ok" },
+  { from: ratedOutputMW, to: LoadSetpointLimit, tone: "warn" },
+]
 
 type GeneratorLoadGroupProps = {
   readonly turbine: TurbineState
@@ -26,9 +36,25 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
     setDraft("")
   }
 
+  // The knob sets whole MW through the same action as the field; with the breaker open it is not given onChange, so it stays inert
+  const turnKnob = (value: number): void => {
+    onSetLoadSetpoint(Math.round(value))
+  }
+
   return (
     <div className="board-group">
       <h3 className="board-group-title">Generator Load</h3>
+      <RoundGauge
+        label="Generator load dial"
+        unit="MW"
+        value={turbine.electricOutput}
+        setpoint={turbine.loadSetpoint}
+        min={0}
+        max={LoadSetpointLimit}
+        major={50}
+        minor={10}
+        zones={LOAD_ZONES}
+      />
       <label className="board-readout-label" htmlFor="turbine-load-setpoint">
         Load setpoint (MW)
       </label>
@@ -38,7 +64,8 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
         min={0}
         max={LoadSetpointLimit}
         ends={["0", String(LoadSetpointLimit)]}
-        note="MOCKUP"
+        step={LOAD_KNOB_STEP}
+        onChange={loadRefusal === undefined ? turnKnob : undefined}
         size={110}
       />
       <input

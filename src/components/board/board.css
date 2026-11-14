@@ -65,6 +65,7 @@
   --board-gauge-bezel-hi: #e8e8e8;
   --board-gauge-bezel-lo: #8f8f8f;
   --board-needle: #c92a2a;
+  --board-setpoint: #1f5fbf; /* the outlined command needle of a dial, blue against the solid red actual needle */
   --board-water: #1971c2;
   --board-level-glass: #eef3f7;
   --board-level-housing: #bdbdbd;
@@ -617,6 +618,13 @@ path.board-zone {
 
 .board-needle path {
   fill: var(--board-needle);
+}
+
+/* The command marker of a dial: an outlined needle, so it reads apart from the solid actual-value needle (#105) */
+.board-setpoint path {
+  fill: none;
+  stroke: var(--board-setpoint);
+  stroke-width: 1.5;
 }
 
 .board-hub {
