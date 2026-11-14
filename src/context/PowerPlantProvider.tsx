@@ -51,6 +51,15 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   }
   //#endregion
 
+  //#region Superheater action creators
+  const setAttemperatorAuto = (attemperatorAuto: boolean) => {
+    dispatch({ type: "SET_ATTEMPERATOR_AUTO", payload: { attemperatorAuto } })
+  }
+  const adjustSprayValve = (position: number) => {
+    dispatch({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: position } })
+  }
+  //#endregion
+
   //#region Turbine action creators
   const adjustBypassValve = (position: number) => {
     dispatch({ type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: position } })
@@ -133,6 +142,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         // boiler actions
         setGasRate,
         toggleDrainValve,
+        // superheater actions
+        setAttemperatorAuto,
+        adjustSprayValve,
         // turbine rpm control actions
         adjustBypassValve,
         toggleMainSteamValve,

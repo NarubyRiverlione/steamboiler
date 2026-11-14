@@ -381,6 +381,16 @@
   stroke-width: 3;
 }
 
+.board-valve-reason {
+  color: var(--board-lcd-alarm);
+  font-family: var(--board-font-label);
+  font-size: 12px;
+}
+
+.board-placeholder {
+  opacity: 0.45;
+}
+
 .board-warning {
   margin: 8px 0 0;
   min-height: 3em;
