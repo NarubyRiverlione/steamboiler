@@ -1,6 +1,6 @@
 # Electric output comes from the isentropic enthalpy drop
 
-**Status: accepted; amended by #71.** Implemented in #14. Since #71 the electric output is no longer computed from steam flow: it is the load the generator carries ([ADR 0027](0027-generator-load-is-a-resisting-torque.md)), not a function of steam flow; the chain below now gives the shaft power and the rated output (152.4 MW since #113) that sizes the inertia and the load limit.
+**Status: accepted; amended by #71 and #113 (superheated inlet steam, [ADR 0044](0044-superheater-with-spray-attemperator.md)).** Implemented in #14. Since #71 the electric output is no longer computed from steam flow: it is the load the generator carries ([ADR 0027](0027-generator-load-is-a-resisting-torque.md)), not a function of steam flow; the chain below now gives the shaft power and the rated output (152.4 MW since #113) that sizes the inertia and the load limit.
 
 The electric output is `flow × isentropic enthalpy drop × turbine efficiency (0.85) × generator efficiency (0.98) / 1000` in MW, from the actual turbine steam flow, inlet steam at boiler pressure and its temperature and the live condenser pressure: saturated steam until #113, since then the superheated steam the attemperator holds at 540 °C ([ADR 0044](0044-superheater-with-spray-attemperator.md); with no superheat the saturated drop is used). The fixed 35% `steamToElectricityEfficiency` on valve position × 200 kg/s is removed.
 
