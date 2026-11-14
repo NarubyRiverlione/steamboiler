@@ -73,7 +73,7 @@ Next: [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historica
 | 21 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
 | 22 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | needs-triage |  |  |
 | 23 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | ready-for-agent |  |  |
-| 24 | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) Generation page: split the generator controls out of the Turbine page | needs-triage |  | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) |
+| 24 | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) Generation page: split the generator controls out of the Turbine page | ready-for-agent |  | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) |
 | 25 | [#105](https://github.com/NarubyRiverlione/steamboiler/issues/105) Generator dial with two needles: load setpoint and current load | ready-for-agent | [#134](https://github.com/NarubyRiverlione/steamboiler/issues/134) |  |
 | 26 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | needs-triage |  |  |
 | 27 | [#138](https://github.com/NarubyRiverlione/steamboiler/issues/138) Fine-tune − / + buttons on the valve and pump knobs | ready-for-agent |  |  |
