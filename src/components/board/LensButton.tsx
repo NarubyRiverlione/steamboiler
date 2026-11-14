@@ -10,6 +10,7 @@ type LensButtonProps = {
   readonly small?: boolean
   readonly disabled?: boolean
   readonly title?: string
+  readonly "aria-label"?: string
   readonly "aria-expanded"?: boolean
   readonly "aria-controls"?: string
 }
@@ -21,6 +22,7 @@ export function LensButton({
   small = false,
   disabled = false,
   title,
+  "aria-label": ariaLabel,
   "aria-expanded": ariaExpanded,
   "aria-controls": ariaControls,
 }: LensButtonProps) {
@@ -40,6 +42,7 @@ export function LensButton({
       aria-pressed={pressed}
       disabled={disabled}
       title={title}
+      aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}

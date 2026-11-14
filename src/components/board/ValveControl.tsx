@@ -6,7 +6,9 @@
  */
 
 import { Display } from "./Display"
+import { fineStep, MAX_PERCENT, MIN_PERCENT } from "./fineStep"
 import { Knob } from "./Knob"
+import { LensButton } from "./LensButton"
 import { roundTravel } from "./knobTravel"
 import { useValveRamp, type ValveId } from "./valveRampContext"
 import "./board.css"
@@ -34,23 +36,49 @@ export function ValveControl({
 }: ValveControlProps) {
   const { commanded, command } = useValveRamp(ValveId)
   const percent: number = Math.round(Position * 100)
+  const commandPercent: number = roundTravel((commanded ?? Position) * 100)
+  const nudge = (direction: 1 | -1): void => {
+    command(fineStep(commandPercent, Step, direction) / 100)
+  }
   return (
     <div className="board-valve board-valve-knob">
       <span className="board-instrument-label">{Caption ?? Label}</span>
-      <Knob
-        label={`${Label} knob`}
-        value={roundTravel((commanded ?? Position) * 100)}
-        actual={roundTravel(Position * 100)}
-        min={0}
-        max={100}
-        ends={["0", "100"]}
-        step={Step}
-        size={100}
-        tone={Pump ? "pump" : "valve"}
-        onChange={(value: number) => {
-          command(value / 100)
-        }}
-      />
+      <div className="board-valve-knob-row">
+        <LensButton
+          small
+          aria-label={`${Label} knob decrease`}
+          disabled={commandPercent <= MIN_PERCENT}
+          onClick={() => {
+            nudge(-1)
+          }}
+        >
+          −
+        </LensButton>
+        <Knob
+          label={`${Label} knob`}
+          value={commandPercent}
+          actual={roundTravel(Position * 100)}
+          min={0}
+          max={100}
+          ends={["0", "100"]}
+          step={Step}
+          size={100}
+          tone={Pump ? "pump" : "valve"}
+          onChange={(value: number) => {
+            command(value / 100)
+          }}
+        />
+        <LensButton
+          small
+          aria-label={`${Label} knob increase`}
+          disabled={commandPercent >= MAX_PERCENT}
+          onClick={() => {
+            nudge(1)
+          }}
+        >
+          +
+        </LensButton>
+      </div>
       <div className="board-valve-values">
         {Value !== undefined && <Display label={`${Label} flow`} text={Value} widest={ValueWidest} />}
         {Value === undefined && (
