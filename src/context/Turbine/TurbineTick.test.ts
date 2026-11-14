@@ -4,7 +4,7 @@ import { TurbineState } from "../PowerPlantState"
 
 import { CstSimulation } from "../const"
 import { loadAfter, ratedOutputMW } from "../../utils/turbineCalculations"
-import { getIsentropicEnthalpyDrop } from "../../utils/steamTable"
+import { getInletIsentropicDrop } from "../../utils/steamTable"
 
 describe("TurbineTick", () => {
   const initialState: TurbineState = { 
@@ -49,7 +49,8 @@ describe("TurbineTick", () => {
       mainSteamValve: true,
       turbineSteamFlowOut: noLoadFlow,
     }
-    const drop = (boiler: number, mbar: number): number => getIsentropicEnthalpyDrop(boiler, mbar / 1000)
+    // the rated state: 540 °C steam (ADR 0044)
+    const drop = (boiler: number, mbar: number): number => getInletIsentropicDrop(boiler, mbar / 1000, CstSimulation.CstTurbine.RatedSteamTemperature)
     // Steam flow that carries the load at sync speed: losses plus load / generator efficiency
     const flowFor = (loadMW: number, boiler: number, mbar: number): number =>
       noLoadFlow +
@@ -57,7 +58,7 @@ describe("TurbineTick", () => {
         (drop(boiler, mbar) * 1000 * CstSimulation.CstTurbine.IsentropicEfficiency)
 
     it("carries 0 MW at the no-load flow and holds sync speed", () => {
-      const result: TurbineState = TurbineTick(synced, 165, 31) // the no-load flow is calibrated at the rated drop: 165 bar to the 31 mbar design vacuum
+      const result: TurbineState = TurbineTick(synced, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature) // the no-load flow is calibrated at the rated drop: 165 bar and 540 °C to the 31 mbar design vacuum
       expect(result.electricOutput).toBe(0)
       expect(result.generatorBreaker).toBe(true)
       expect(result.rpm).toBeCloseTo(SyncRPM, 1)
@@ -86,7 +87,7 @@ describe("TurbineTick", () => {
 
     it("holds sync speed when the steam carries the load", () => {
       const loaded: TurbineState = { ...synced, electricOutput: 50, loadSetpoint: 50, turbineSteamFlowOut: flowFor(50, 165, 31) }
-      const result: TurbineState = TurbineTick(loaded, 165, 31)
+      const result: TurbineState = TurbineTick(loaded, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature)
       expect(result.rpm).toBeCloseTo(SyncRPM, 2)
       expect(result.electricOutput).toBe(50)
     })

@@ -201,6 +201,7 @@ describe("scenario registry", () => {
       "turbine-trip",
       "vacuum-loss",
       "sjae-closed-load",
+      "spray-stuck-closed",
       "deaerator-vent-closed",
       "deaerator-vent-open",
     ])

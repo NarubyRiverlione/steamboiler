@@ -281,7 +281,7 @@ describe("Annunciator", () => {
     render(tree(stateWith({})))
     fireEvent.click(toggle())
     const group = (name: string): HTMLElement => screen.getByRole("region", { name })
-    expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip", "Boiler level low", "Boiler level high", "Boiler level high-high trip"])
+    expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip", "Boiler level low", "Boiler level high", "Boiler level high-high trip", "Steam temperature high"])
     expect(within(group("Deaerator")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Deaerator level low", "Deaerator level high", "Feed pump trip"])
     expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(3)
     expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)

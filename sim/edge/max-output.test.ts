@@ -6,8 +6,8 @@ import { maxOutput } from "../scenarios/max-output"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const GasLimitMW = 138 // measured: full gas first reached at about 138 MW and 194 kg/s, at 165 bar, with the extraction heater (design-basis.md, #88)
-const MaxOutputMW = 142 // measured: the load carried when the breaker opens, living off the boiler's stored heat
+const GasLimitMW = 146 // measured: full gas first reached at about 146 MW and 133 kg/s, at 165 bar, with the superheater and the extraction heater (design-basis.md, #113)
+const MaxOutputMW = 166 // measured: the load carried when the breaker opens, living off the boiler's stored heat
 
 describe("max-output", () => {
   // every tick, so the breaker opening can be pinned to one tick
@@ -42,7 +42,7 @@ describe("max-output", () => {
     expect(carrying[carrying.length - 1].state.Boiler.pressure).toBeLessThan(PressureHoldSettings.Target - 1)
   })
 
-  test("the most the plant carries is the load when the valve is fully open and the pressure has sagged, about 142 MW", () => {
+  test("the most the plant carries is the load when the valve is fully open and the pressure has sagged, about 166 MW", () => {
     expect(before.Turbine.electricOutput).toBeCloseTo(MaxOutputMW, -1)
     expect(before.Turbine.electricOutput).toBeGreaterThan(GasLimitMW)
     expect(before.Turbine.turbineValvePosition).toBe(1)
@@ -52,10 +52,10 @@ describe("max-output", () => {
   test("pressure holds its band until full gas, and the vacuum holds its limit while the load climbs", () => {
     const fullGas = carrying.findIndex((s) => s.state.Boiler.gasFlow >= CstBoiler.MaxGasFlow)
     // the let-down steam of the deaerator (up to 27 kg/s at partial load, #119) is a draw the gas hold does not see coming:
-    // the pressure dips up to a bar (2.5 bar measured, at the start of the load climb) past the band while the gas catches up
+    // the pressure dips up to 3 bar (4.7 bar measured at 149 s, #113: the superheater takes its heat from the first kg of steam, before the gas catches up) past the band while the gas catches up
     for (const { state } of carrying.slice(0, fullGas))
       expect(Math.abs(state.Boiler.pressure - PressureHoldSettings.Target)).toBeLessThanOrEqual(
-        PressureHoldSettings.Band + 1,
+        PressureHoldSettings.Band + 3,
       )
     for (const { state } of carrying) expect(state.Condenser.pressure).toBeLessThan(CstCondenser.VacuumLimit)
   })

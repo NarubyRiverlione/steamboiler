@@ -1,12 +1,12 @@
 # Boiler efficiency follows from a two-stage flue gas heat balance
 
-The fixed `GasEfficiency` of 85% goes. Boiler efficiency now follows from a heat balance on the flue gas, which passes two heat exchangers in turn: the boiler surface, then the economizer. It had no source, and it could not be right: with no economizer, even flue gas leaving at the boiler water temperature gives 84.0% ([research](../research/2026-11-economizer-flue-gas.md)). Decided in #87.
+The fixed `GasEfficiency` of 85% goes. Boiler efficiency now follows from a heat balance on the flue gas, which passes two heat exchangers in turn: the boiler surface, then the economizer. **Since #113 a superheater stage comes first** ([ADR 0044](0044-superheater-with-spray-attemperator.md)): three stages, superheater, boiler surface, economizer; this text describes the last two, whose gas now arrives colder. It had no source, and it could not be right: with no economizer, even flue gas leaving at the boiler water temperature gives 84.0% ([research](../research/2026-11-economizer-flue-gas.md)). Decided in #87.
 
 ## The model
 
 - **Heat balance:** fuel heat = heat into the water + heat up the stack, with the fuel at its lower heating value. `GasEnergyDensity` (35 000 kJ/m³) is defined as a lower heating value, so full gas stays 420 MW. The existing heat loss still comes off the water afterwards; there is no separate radiation term, so no loss is counted twice.
 - **Flue gas:** 14.7 kg per m³ of gas at 15% excess air, at every firing rate, starting from a combustion temperature of 1775 °C.
-- **Boiler stage:** a heat exchanger between the flue gas and the boiler water, with its own sized surface. It is sized for flue gas 100 K above the water at full gas and 350 °C (estimate; the sourced span is 60 to 150 K, none above 254 °C saturation).
+- **Boiler stage:** a heat exchanger between the flue gas and the boiler water, with its own sized surface (561 kW/K since #113, sized for the gas after the superheater; it was 668 kW/K for the combustion temperature). It is sized for flue gas 100 K above the water at full gas and 350 °C (estimate; the sourced span is 60 to 150 K, none above 254 °C saturation).
 - **Economizer:** a heat exchanger between the flue gas and the Return. It is sized for a 160 °C stack at full gas with 171 kg/s of Return at 37 °C, about 290 kW/K (a design choice, not a real unit's figure). With no Return it recovers nothing.
 - **Surfaces** scale with gas flow to the power 0.65. The water side is left out, as the gas side dominates.
 - **Return limit:** the Return leaves the economizer at least 28 K below saturation (UNVERIFIED). Heat it cannot take stays in the flue gas, so the stack temperature rises and efficiency falls.

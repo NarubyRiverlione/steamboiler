@@ -80,6 +80,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0041](adr/0041-boiler-high-high-level-trips-feed-pump-and-turbine.md) | The boiler high-high level (70%) trips the feed pump and the turbine; the alarm is on from 65% |
 | [0042](adr/0042-valve-ramp-lives-above-the-pages.md) | The valve knob ramp lives in a UI context above the pages and paces in real time, so it survives navigation |
 | [0043](adr/0043-trip-reset.md) | Only a trip reset clears a latched trip, once its cause has gone; a RESET button beside each trip tile |
+| [0044](adr/0044-superheater-with-spray-attemperator.md) | A passive flue gas superheater before the boiler stage; one spray attemperator holds the steam at 540 °C; the turbine runs on the superheated steam |
 
 ## Research (dated, frozen)
 

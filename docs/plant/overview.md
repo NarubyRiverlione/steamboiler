@@ -22,12 +22,14 @@ The feedwater path is hotwell → condensation pump → deaerator → boiler fee
 | Part | What it does | More |
 |---|---|---|
 | Burner | Burns gas. The flue gas gives its heat to the boiler water, then to the Return in the economizer; what is left goes up the stack, so efficiency follows from the heat balance (about 93% at full gas) | [boiler.md](boiler.md) |
-| Boiler | One lumped vessel of water and steel. Heat turns water into saturated steam, and pressure follows the temperature | [boiler.md](boiler.md) |
+| Boiler | One lumped vessel of water and steel. Heat turns water into saturated steam (superheated after it, below), and pressure follows the temperature | [boiler.md](boiler.md) |
+| Superheater | A passive bank of tubes in the flue gas path before the boiler stage: all steam from the main steam valve takes its heat, to about 540 °C. No controls of its own | [boiler.md](boiler.md#superheater-and-attemperator-113-adr-0044) |
+| Spray attemperator | A valve that injects feedwater from the feed pump discharge into the steam; a PID (Auto) or the operator (Manual) holds the steam at 540 °C. The spray water joins the steam flow. A high steam temperature alarm at 555 °C | [boiler.md](boiler.md#superheater-and-attemperator-113-adr-0044) |
 | Relief valve | Vents steam to the atmosphere at high pressure, upstream of the main steam valve | [boiler.md](boiler.md#relief-valve) |
 | Main steam valve | Opens or shuts the boiler to both the turbine valve and the bypass | [turbine.md](turbine.md#low-pressure-closure) |
 | Turbine valve | Sets the steam flow to the turbine | [turbine.md](turbine.md) |
 | Bypass valve | Sends steam straight to the condenser, past the turbine | [condenser.md](condenser.md#intakes) |
-| Turbine | Takes the enthalpy drop from boiler pressure to condenser pressure as shaft power, in one stage. The steam is saturated, as there is no superheater | [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried) |
+| Turbine | Takes the enthalpy drop from boiler pressure to condenser pressure as shaft power, in one stage. The steam is the 540 °C superheated steam, and the exhaust is about 17% wet (no reheat) | [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried) |
 | Deaerator | Feedwater tank (150 m³) between the hotwell and the boiler, held at 3 bar (134 °C) by turbine tap steam first and boiler steam through a let-down valve for the rest; the boiler feed pump takes the water out toward the boiler and trips on low-low (#112) | [deaerator.md](deaerator.md) |
 | Extraction heater | Takes steam from the turbine at a tap (about 5 bar at the rated flow) and heats the deaerator outflow to about 150 °C before the economizer; its drain cascades back into the deaerator. Passive: no controls | [turbine.md](turbine.md#extraction-heater-88) |
 | Generator | Turns shaft power into the load it carries, at 98% | [turbine.md](turbine.md#generator-load-71) |

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstDeaerator, CstSimulation } from "./const"
+import { CstDeaerator, CstSimulation, CstSuperheater } from "./const"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -592,5 +592,41 @@ describe("powerPlantReducer", () => {
     const next = reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint: 500 } })
     expect(next.Boiler).toBe(base.Boiler)
     expect(next.Condenser).toBe(base.Condenser)
+  })
+})
+
+describe("attemperator actions (#113, ADR 0044)", () => {
+  const manual = (position: number): PowerPlantState => ({
+    ...base,
+    Boiler: { ...base.Boiler, attemperatorAuto: false, sprayValvePosition: position },
+  })
+
+  test("the plant starts with the attemperator in Auto and the valve shut", () => {
+    expect(base.Boiler.attemperatorAuto).toBe(true)
+    expect(base.Boiler.sprayValvePosition).toBe(0)
+  })
+
+  test("SET_ATTEMPERATOR_AUTO switches the mode", () => {
+    const toManual: PowerPlantState = reduce({ type: "SET_ATTEMPERATOR_AUTO", payload: { attemperatorAuto: false } })
+    expect(toManual.Boiler.attemperatorAuto).toBe(false)
+  })
+
+  test("switching back to Auto carries the valve position over: the integral is what holds it (bumpless)", () => {
+    const next: PowerPlantState = reduce({ type: "SET_ATTEMPERATOR_AUTO", payload: { attemperatorAuto: true } }, manual(0.2))
+    expect(next.Boiler.attemperatorAuto).toBe(true)
+    expect(next.Boiler.attemperatorIntegralError).toBeCloseTo(0.2 / CstSuperheater.PID_Ki, 6)
+  })
+
+  test("SET_SPRAY_VALVE_POSITION moves the valve by the change in Manual, within 0 to 1", () => {
+    const position = (delta: number, from: number): number =>
+      reduce({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: delta } }, manual(from)).Boiler.sprayValvePosition
+    expect(position(0.1, 0.2)).toBeCloseTo(0.3, 9)
+    expect(position(-1, 0.2)).toBe(0)
+    expect(position(1, 0.2)).toBe(1)
+  })
+
+  test("in Auto the PID owns the valve: the operator cannot move it", () => {
+    const state: PowerPlantState = { ...base, Boiler: { ...base.Boiler, sprayValvePosition: 0.2 } }
+    expect(reduce({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: 0.5 } }, state)).toBe(state)
   })
 })

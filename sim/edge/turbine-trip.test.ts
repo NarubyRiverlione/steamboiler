@@ -13,8 +13,8 @@ describe("turbine-trip", () => {
 
   test("the plant carries its load with the heater working before the trip", () => {
     expect(rated.Turbine.electricOutput).toBeCloseTo(125, 0)
-    expect(rated.Heater.extractionFlow).toBeGreaterThan(3)
-    expect(rated.Deaerator.extractionFlow).toBeGreaterThan(20)
+    expect(rated.Heater.extractionFlow).toBeGreaterThan(1.5)
+    expect(rated.Deaerator.extractionFlow).toBeGreaterThan(15)
     expect(rated.Heater.returnTemperature).toBeGreaterThan(140)
   })
 

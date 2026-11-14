@@ -77,7 +77,7 @@ scripts/roadmap.ts                    # generates ROADMAP.md from the GitHub iss
 
 ## Steam tables
 
-`steamData.ts` holds IAPWS-IF97 saturation data from 80 °C to the critical point (373.946 °C, 220.64 bar): pressure, specific volume, enthalpy, specific heat, latent heat. `steamTable.ts` interpolates it linearly. `steamEntropyData.ts` is a second, pressure-keyed saturation table (hf, hg, sf, sg, 0.01–220 bar) for `getIsentropicEnthalpyDrop`, interpolated in ln(pressure) (#14). Outside that range:
+`steamData.ts` holds IAPWS-IF97 saturation data from 80 °C to the critical point (373.946 °C, 220.64 bar): pressure, specific volume, enthalpy, specific heat, latent heat. `steamTable.ts` interpolates it linearly. `steamEntropyData.ts` is a second, pressure-keyed saturation table (hf, hg, sf, sg, 0.01–220 bar) for `getIsentropicEnthalpyDrop`, interpolated in ln(pressure) (#14). Outside that range: `steamSuperheatedData.ts` (#113, ADR 0044) is a third table, superheated steam by pressure and superheat above saturation (enthalpy and entropy, 1 to 200 bar), read by `getSteamEnthalpy`, `getSteamEntropy` and `getSteamTemperature` in `steamTable.ts`. The superheater stage is in `utils/flueGas.ts`; the spray attemperator PID and the steam temperature equilibrium are in `context/Boiler/Attemperator.ts`, called from `BoilerTick`.
 
 - Above the critical point (temperature or pressure): clamp to the critical-point row, never throw
 - Boiling point below the table: Antoine equation

@@ -55,14 +55,14 @@ export const loopWater = (state: PowerPlantState) =>
   state.Condenser.ventedTotal +
   state.Deaerator.ventedTotal
 
-// Steam out of the boiler between samples, taking each sample's flow as constant until the next
+// Steam out of the boiler between samples (the turbine and bypass flows count the spray water, which did not leave the drum), taking each sample's flow as constant until the next
 function steamOutSoFar(samples: Sample[]): number[] {
   let total = 0
   return samples.map(({ state }, i) => {
     const current = total
     const next = samples[i + 1] as Sample | undefined
     if (next) {
-      const flow = state.Turbine.turbineSteamFlowOut + state.Turbine.bypassSteamFlowOut + state.Deaerator.letDownFlow
+      const flow = state.Turbine.turbineSteamFlowOut + state.Turbine.bypassSteamFlowOut - state.Boiler.sprayFlow + state.Deaerator.letDownFlow
       total += flow * (next.time - samples[i].time)
     }
     return current

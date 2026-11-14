@@ -3,7 +3,7 @@ import { runChecked } from "../scenario-checks"
 import { LoadTarget, turbineLoad } from "../scenarios/turbine-load"
 import { LoopSettings } from "../scenarios/loop-operator"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
-import { CstPhysics, CstSimulation } from "../../src/context/const"
+import { CstPhysics, CstSimulation, CstSuperheater } from "../../src/context/const"
 import { hotwellLevel, saturationTemperature } from "../../src/utils/condenserCalculation"
 import { ratedOutputMW } from "../../src/utils/turbineCalculations"
 
@@ -43,6 +43,19 @@ describe("turbine-load", () => {
   test("over the last 600 s boiler pressure holds the band", () => {
     const { Target, Band } = PressureHoldSettings
     for (const { state } of steady) expect(Math.abs(state.Boiler.pressure - Target)).toBeLessThanOrEqual(Band)
+  })
+
+  // Goal of #113 (ADR 0044): the attemperator holds the steam at 540 °C. The tolerance is calibrated on the headless run (the
+  // measured spread over the last 600 s is under 2 K); the spray water is counted in the loop, which the water invariant
+  // checks on every sample.
+  test("over the last 600 s the spray holds the steam temperature at 540 °C ± 15 K, with spray water in the loop", () => {
+    for (const { state } of steady) {
+      expect(Math.abs(state.Boiler.steamTemperature - CstSuperheater.SteamTemperature)).toBeLessThanOrEqual(15)
+      expect(state.Boiler.attemperatorAuto).toBe(true)
+    }
+    expect(Math.max(...steady.map((s) => s.state.Boiler.sprayFlow))).toBeGreaterThan(0)
+    const alarmOn = samples.some((s) => s.state.Boiler.steamTemperature >= CstSuperheater.AlarmTemperature)
+    expect(alarmOn).toBe(false)
   })
 
   test("over the last 600 s the boiler level and the hotwell level hold their bands", () => {
@@ -96,21 +109,22 @@ describe("turbine-load", () => {
   })
 
   // Baseline recorded by #74/#82 in design-basis.md: 31.4% (125.0 MWe over 398 MW of fuel heat) with no extraction heater.
-  // The hand estimate for one heater was +1.9 points (#88); stop and report if the plant does not beat the baseline.
-  test("over the last 600 s the plant efficiency beats the 31.4% of the plant with no heater by about 1.9 points", () => {
+  // The hand estimate for one heater was +1.9 points (#88); with the superheater (#113) the 540 °C steam adds about 1.6
+  // more (34.9% measured). Stop and report if the plant does not beat the baseline.
+  test("over the last 600 s the plant efficiency beats the 31.4% of the saturated plant with no heater by about 3.5 points", () => {
     const BaselineEfficiency = 0.314
     const mean = (value: (s: (typeof steady)[number]) => number): number =>
       steady.reduce((sum, s) => sum + value(s), 0) / steady.length
     const fuel: number = mean((s) => (s.state.Boiler.gasFlow / 1000) * CstPhysics.GasEnergyDensity)
     const electric: number = mean((s) => s.state.Turbine.electricOutput) * 1000
     const gain: number = electric / fuel - BaselineEfficiency
-    expect(gain).toBeGreaterThan(0.01)
-    expect(gain).toBeLessThan(0.03)
+    expect(gain).toBeGreaterThan(0.02)
+    expect(gain).toBeLessThan(0.05)
   })
 
-  test("at that load the heater takes steam at about 5 bar and the Return leaves it at about 150 °C", () => {
+  test("at that load the heater takes steam at about 4.2 bar and the Return leaves it at about 150 °C", () => {
     const last = steady.at(-1)?.state.Heater
-    expect(last?.tapPressure).toBeGreaterThan(4.5)
+    expect(last?.tapPressure).toBeGreaterThan(3.5)
     expect(last?.tapPressure).toBeLessThan(6)
     expect(last?.returnTemperature).toBeGreaterThan(140)
     expect(last?.returnTemperature).toBeLessThan(160)

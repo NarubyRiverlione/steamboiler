@@ -3,8 +3,8 @@ import { Scenario } from "../scenario"
 import { setGasCommand } from "./gas"
 import { startUpVent } from "./steps"
 
-// Full gas would lift the relief valve at about 259 s (35% cold fill, ADR 0018; the deaerator draws let-down steam from the boiler as it warms up, #119). The gas goes off at 250 s, before that: the knob takes 40 s to bring it down, so the pressure still peaks on the heat in the water and lifts once (at about 261 s)
-export const GasOffAt = 250
+// Full gas would lift the relief valve at about 269 s (35% cold fill, ADR 0018; the superheater leaves the cold boiler stage with a hotter gas inlet and less heat, #113; the deaerator draws let-down steam from the boiler as it warms up, #119). The gas goes off at 259 s, before that: the knob takes 40 s to bring it down, so the pressure still peaks on the heat in the water and lifts once (at about 270 s)
+export const GasOffAt = 259
 
 // Full gas from cold with everything closed until the relief valve lifts, then gas off so it reseats and the boiler cools
 export const reliefLift: Scenario = {

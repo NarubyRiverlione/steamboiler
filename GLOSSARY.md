@@ -49,7 +49,7 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow the plant is rated for, the full-gas steam flow: 192 kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater, measured in a headless run (#88, was 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 141 MWe at the 31 mbar design vacuum.
+The steam flow the plant is rated for, the full-gas steam flow: 134 kg/s, what full gas makes at 165 bar with the superheater taking its heat first and the Return heated by the extraction heater, measured in a headless run (#113, was 192 with saturated steam in #88, 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 152 MWe at the 31 mbar design vacuum.
 _Avoid_: Nominal flow
 
 **Valve capacity**:
@@ -113,6 +113,21 @@ The share of the turbine exhaust that is still vapour, by mass. The rest is exha
 _Avoid_: Dryness, wetness
 
 ### Flue gas
+
+**Superheater**:
+A passive bank of tubes first in the flue gas path, before the boiler surface, that heats the steam leaving the boiler to about 540 °C. It has no valve in the steam path: its heat follows from the gas, its surface and the steam flow ([ADR 0044](docs/adr/0044-superheater-with-spray-attemperator.md)).
+_Avoid_: Reheater (steam that goes back to the boiler between turbine stages: not built)
+
+**Steam temperature**:
+The temperature of the steam after the superheater and the attemperator, one lumped state with a lag of 100 s. Held at 540 °C by the attemperator; saturation with no flow. The high steam temperature alarm is at 555 °C.
+_Avoid_: Superheater temperature, boiler temperature (the water)
+
+**Attemperator**:
+The spray valve that injects feedwater into the steam between the superheater stages to hold the steam temperature at 540 °C. A PID moves it in Auto; the operator sets it in Manual.
+_Avoid_: Desuperheater (the same device on the main steam line or on the bypass: not built)
+
+**Spray water**:
+The feedwater the attemperator injects, taken from the feed pump discharge before the extraction heater, out of the flow that reaches the boiler and into the steam flow to the turbine and bypass.
 
 **Flue gas**:
 The exhaust of the burner, on its way through the boiler and the economizer to the chimney.
