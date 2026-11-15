@@ -6,7 +6,7 @@ import usePowerPlant from "../context/PowerPlantContext"
 import { START_PRESETS, presetState, type StartPreset } from "../context/startPresets"
 import { useAnnunciator } from "./useAnnunciator"
 
-const BOARD_KEYS: readonly string[] = ["Escape", "PageUp", "PageDown"]
+const BOARD_KEYS: readonly string[] = ["Escape", "h", "Backspace", "PageUp", "PageDown"]
 
 function PresetsButton() {
   const { dispatch } = usePowerPlant()
@@ -36,7 +36,7 @@ function PresetsButton() {
 
   // Escape closes; Tab wraps inside the popup
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    // The popup is modal: the board keys (Esc to overview, Page Up/Down between parts) must not navigate behind it
+    // The popup is modal: the board keys (Esc, h and Backspace to overview, Page Up/Down between parts) must not navigate behind it
     if (BOARD_KEYS.includes(event.key)) event.preventDefault()
     if (event.key === "Escape") {
       close()

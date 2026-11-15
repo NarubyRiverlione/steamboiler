@@ -103,6 +103,8 @@ describe("Presets button and popup", () => {
     )
     open()
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "PageDown" })
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "h" })
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Backspace" })
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" })
     expect(screen.getByTestId("where").textContent).toBe("/boiler")
   })
