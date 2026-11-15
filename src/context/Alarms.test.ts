@@ -8,7 +8,7 @@ import { makeInitialState } from "./PowerPlantReducer"
 import { SimulationState, makeInitialSimulation, simulationReducer } from "./SimulationReducer"
 import { waterMassOf } from "../utils/boilerCalculations"
 
-const { TotalVolume, HotwellLow, HotwellHigh } = CstSimulation.CstCondenser
+const { TotalVolume, HotwellLow, HotwellHigh, HotwellHighHigh } = CstSimulation.CstCondenser
 
 // A plant whose hotwell sits at the given fraction of its volume
 const atLevel = (level: number, rejectValvePosition = 0): PowerPlantState => {
@@ -46,7 +46,15 @@ describe("hotwell level alarms", () => {
     expect(activeAlarms(atLevel(level)).includes("hotwellLevelHigh")).toBe(on)
   })
 
-  test("neither is active in the working band", () => {
+  test.each([
+    [HotwellHighHigh - 0.001, false],
+    [HotwellHighHigh, true],
+    [HotwellHighHigh + 0.001, true],
+  ])("high-high at level %f is active: %s (from 95%%, the overfill clamp)", (level: number, on: boolean) => {
+    expect(activeAlarms(atLevel(level)).includes("hotwellLevelHighHigh")).toBe(on)
+  })
+
+  test("none is active in the working band", () => {
     expect(activeAlarms(atLevel(0.7))).toEqual([])
   })
 
