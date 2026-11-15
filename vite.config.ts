@@ -1,7 +1,7 @@
 import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
-const UI_TESTS: string[] = ['src/components/**/*.test.tsx', 'src/navigation/**/*.test.tsx']
+const UI_TESTS: string[] = ['src/components/**/*.test.tsx', 'src/navigation/**/*.test.tsx', 'src/context/**/*.test.tsx']
 
 // https://vite.dev/config/
 export default defineConfig({
