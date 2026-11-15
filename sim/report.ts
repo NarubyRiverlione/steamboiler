@@ -462,6 +462,55 @@ function limitLine(limit: number | undefined, y: (v: number) => number): string 
   return `<line class="limit" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${at}" y2="${at}"/>`
 }
 
+type Scale = (v: number) => number
+
+function yGridSvg(yMin: number, yMax: number, y: Scale): string {
+  return niceTicks(yMin, yMax)
+    .map(
+      (v) =>
+        `<line class="grid" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>` +
+        `<text class="tick" x="${String(PAD.left - 6)}" y="${y(v).toFixed(1)}" text-anchor="end" dy="0.32em">${fmt(v)}</text>`,
+    )
+    .join("")
+}
+
+function xTicksSvg(tEnd: number, x: Scale): string {
+  return niceTicks(0, tEnd / 60, 5)
+    .map(
+      (m) =>
+        `<text class="tick" x="${x(m * 60).toFixed(1)}" y="${String(H - 6)}" text-anchor="middle">${String(m)}</text>`,
+    )
+    .join("")
+}
+
+function actionLinesSvg(actionTimes: number[], x: Scale): string {
+  return actionTimes
+    .map(
+      (t) =>
+        `<line class="action" x1="${x(t).toFixed(1)}" x2="${x(t).toFixed(1)}" y1="${String(PAD.top)}" y2="${String(H - PAD.bottom)}"/>`,
+    )
+    .join("")
+}
+
+// A lift still open at the end runs to the last sample
+function liftBandsSvg(lifts: Lift[], x: Scale, tEnd: number): string {
+  return lifts
+    .map((lift) => {
+      const [from, to] = [x(lift.open), x(lift.close ?? tEnd)]
+      return `<rect class="lift" x="${from.toFixed(1)}" y="${String(PAD.top)}" width="${(to - from).toFixed(1)}" height="${String(plotH)}"/>`
+    })
+    .join("")
+}
+
+// Only a panel with several series needs a legend
+function legendSvg(series: Panel["series"]): string {
+  if (series.length <= 1) return ""
+  const items: string = series
+    .map((s, i) => `<li><span class="key s${String(i + 1)}"></span>${escapeHtml(s.label)}</li>`)
+    .join("")
+  return `<ul class="legend">${items}</ul>`
+}
+
 function renderPanel(
   panel: Panel,
   index: number,
@@ -475,40 +524,15 @@ function renderPanel(
   const x = (t: number) => PAD.left + (t / tEnd) * plotW
   const y = (v: number) => PAD.top + (1 - (v - yMin) / (yMax - yMin)) * plotH
 
-  const yGrid = niceTicks(yMin, yMax)
-    .map(
-      (v) =>
-        `<line class="grid" x1="${String(PAD.left)}" x2="${String(W - PAD.right)}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>` +
-        `<text class="tick" x="${String(PAD.left - 6)}" y="${y(v).toFixed(1)}" text-anchor="end" dy="0.32em">${fmt(v)}</text>`,
-    )
-    .join("")
-  const xTicks = niceTicks(0, tEnd / 60, 5)
-    .map(
-      (m) =>
-        `<text class="tick" x="${x(m * 60).toFixed(1)}" y="${String(H - 6)}" text-anchor="middle">${String(m)}</text>`,
-    )
-    .join("")
-  const actions = actionTimes
-    .map(
-      (t) =>
-        `<line class="action" x1="${x(t).toFixed(1)}" x2="${x(t).toFixed(1)}" y1="${String(PAD.top)}" y2="${String(H - PAD.bottom)}"/>`,
-    )
-    .join("")
-  // A lift still open at the end runs to the last sample
-  const liftBands = lifts
-    .map((lift) => {
-      const [from, to] = [x(lift.open), x(lift.close ?? tEnd)]
-      return `<rect class="lift" x="${from.toFixed(1)}" y="${String(PAD.top)}" width="${(to - from).toFixed(1)}" height="${String(plotH)}"/>`
-    })
-    .join("")
+  const yGrid = yGridSvg(yMin, yMax, y)
+  const xTicks = xTicksSvg(tEnd, x)
+  const actions = actionLinesSvg(actionTimes, x)
+  const liftBands = liftBandsSvg(lifts, x, tEnd)
   const limit = limitLine(panel.limit, y)
   const lines = values
     .map((v, i) => `<path class="series s${String(i + 1)}" d="${linePath(times, v, x, y)}"/>`)
     .join("")
-  const legend =
-    panel.series.length > 1
-      ? `<ul class="legend">${panel.series.map((s, i) => `<li><span class="key s${String(i + 1)}"></span>${escapeHtml(s.label)}</li>`).join("")}</ul>`
-      : ""
+  const legend = legendSvg(panel.series)
 
   return `<figure class="panel kind-${panel.palette ?? panel.kind}${panel.span ? ` span-${String(panel.span)}` : ""}" data-panel="${String(index)}">
 <figcaption><span class="title">${escapeHtml(panel.title)} <span class="unit">${escapeHtml(panel.unit)}</span></span><span class="readout"></span></figcaption>

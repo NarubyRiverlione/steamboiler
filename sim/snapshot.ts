@@ -34,30 +34,33 @@ const differs = (path: string, expected: unknown, actual: unknown): string[] => 
   `${path}: expected ${String(expected)}, got ${String(actual)}`,
 ]
 
-// Where two state trees differ in value: numbers within tolerance, shape, strings, booleans and null exact.
+const lengthError = (path: string, expected: unknown[], actual: unknown[]): string[] =>
+  expected.length === actual.length
+    ? []
+    : [`${path}: expected length ${String(expected.length)}, got ${String(actual.length)}`]
+
+// Numbers within tolerance; strings, booleans and null exact
+const scalarErrors = (path: string, expected: unknown, actual: unknown): string[] => {
+  const equal: boolean =
+    typeof expected === "number" && typeof actual === "number" ? nearlyEqual(expected, actual) : expected === actual
+  return equal ? [] : differs(path, expected, actual)
+}
+
+const arrayErrors = (path: string, expected: unknown[], actual: unknown[]): string[] => [
+  ...lengthError(path, expected, actual),
+  ...expected.slice(0, actual.length).flatMap((v, i) => valueErrors(v, actual[i], `${path}[${String(i)}]`)),
+]
+
+const objectErrors = (path: string, expected: Record<string, unknown>, actual: Record<string, unknown>): string[] =>
+  Object.keys(expected).flatMap((k) => valueErrors(expected[k], actual[k], `${path}.${k}`))
+
+// Where two state trees differ in value: shape first, then numbers within tolerance and everything else exact.
 export function valueErrors(expected: unknown, actual: unknown, path = "state"): string[] {
-  if (typeof expected === "number" && typeof actual === "number") {
-    return nearlyEqual(expected, actual) ? [] : differs(path, expected, actual)
-  }
   const shape: string[] = shapeErrors(expected, actual, path)
   if (shape.length > 0) return shape
-  if (typeof expected !== "object" || expected === null) {
-    return expected === actual ? [] : differs(path, expected, actual)
-  }
-  if (Array.isArray(expected)) {
-    const items: unknown[] = actual as unknown[]
-    const length: string[] =
-      expected.length === items.length
-        ? []
-        : [`${path}: expected length ${String(expected.length)}, got ${String(items.length)}`]
-    return [
-      ...length,
-      ...expected.slice(0, items.length).flatMap((v, i) => valueErrors(v, items[i], `${path}[${String(i)}]`)),
-    ]
-  }
-  const want = expected as Record<string, unknown>
-  const have = actual as Record<string, unknown>
-  return Object.keys(want).flatMap((k) => valueErrors(want[k], have[k], `${path}.${k}`))
+  if (typeof expected !== "object" || expected === null) return scalarErrors(path, expected, actual)
+  if (Array.isArray(expected)) return arrayErrors(path, expected, actual as unknown[])
+  return objectErrors(path, expected as Record<string, unknown>, actual as Record<string, unknown>)
 }
 
 // Parses snapshot JSON and rejects anything that is not shaped like the current PowerPlantState.
