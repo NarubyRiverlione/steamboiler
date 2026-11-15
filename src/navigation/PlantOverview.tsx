@@ -43,34 +43,40 @@ function glyphPaths(symbol: NodeSymbol): ReactNode {
   )
 }
 
+const SYMBOL_LINE_HEIGHT = 18
+
+function symbolTransform(node: DiagramNode, cx: number, cy: number): string {
+  const turn: string = node.flow === "down" ? " rotate(90)" : node.flow === "left" ? " scale(-1 1)" : ""
+  return "translate(" + String(cx) + " " + String(cy) + ")" + turn
+}
+
+// Label position: beside the glyph for a left label, above it otherwise
+function symbolLabel(node: DiagramNode, cx: number, cy: number): { x: number; firstY: number; anchor: "end" | "middle" } {
+  const extra: number = (node.name.length - 1) * SYMBOL_LINE_HEIGHT
+  if (node.label === "left") return { x: cx - GLYPH_HALF - 8, firstY: cy + 5 - extra / 2, anchor: "end" }
+  return { x: cx + (node.labelDx ?? 0), firstY: cy - GLYPH_HALF - 6 - extra, anchor: "middle" }
+}
+
+// The pipe line through the node's box, vertical for a downward flow
+function pipePath(node: DiagramNode, cx: number, cy: number): string {
+  if (node.flow === "down") return "M" + String(cx) + " " + String(node.y) + " L" + String(cx) + " " + String(node.y + node.h)
+  return "M" + String(node.x) + " " + String(cy) + " L" + String(node.x + node.w) + " " + String(cy)
+}
+
 // The industry symbol of a valve, check valve or pump, on a line through the node's box that joins the pipes
 function SymbolShape({ node, symbol }: { readonly node: DiagramNode; readonly symbol: NodeSymbol }) {
   const cx: number = node.x + node.w / 2
   const cy: number = node.y + node.h / 2
-  const down: boolean = node.flow === "down"
-  const transform: string =
-    "translate(" + String(cx) + " " + String(cy) + ")" + (down ? " rotate(90)" : node.flow === "left" ? " scale(-1 1)" : "")
-  const side: boolean = node.label === "left"
-  const labelAnchor: "end" | "middle" = side ? "end" : "middle"
-  const labelX: number = side ? cx - GLYPH_HALF - 8 : cx + (node.labelDx ?? 0)
-  const lineHeight = 18
-  const firstY: number =
-    side
-      ? cy + 5 - ((node.name.length - 1) * lineHeight) / 2
-      : cy - GLYPH_HALF - 6 - (node.name.length - 1) * lineHeight
+  const label = symbolLabel(node, cx, cy)
   return (
     <>
       <rect className="board-node-hit" x={node.x} y={node.y} width={node.w} height={node.h} />
-      {down ? (
-        <path className={"board-pipe board-medium-line-" + node.medium} d={"M" + String(cx) + " " + String(node.y) + " L" + String(cx) + " " + String(node.y + node.h)} />
-      ) : (
-        <path className={"board-pipe board-medium-line-" + node.medium} d={"M" + String(node.x) + " " + String(cy) + " L" + String(node.x + node.w) + " " + String(cy)} />
-      )}
-      <g className={"board-node-box board-node-symbol board-medium-" + node.medium} transform={transform}>
+      <path className={"board-pipe board-medium-line-" + node.medium} d={pipePath(node, cx, cy)} />
+      <g className={"board-node-box board-node-symbol board-medium-" + node.medium} transform={symbolTransform(node, cx, cy)}>
         {glyphPaths(symbol)}
       </g>
       {node.name.map((line: string, index: number) => (
-        <text key={line} className="board-node-name" x={labelX} y={firstY + index * lineHeight} style={{ textAnchor: labelAnchor }}>
+        <text key={line} className="board-node-name" x={label.x} y={label.firstY + index * SYMBOL_LINE_HEIGHT} style={{ textAnchor: label.anchor }}>
           {line}
         </text>
       ))}
