@@ -1,7 +1,7 @@
 import { CstSimulation } from "../src/context/const"
 import PowerPlantAction from "../src/context/PowerPlantActions"
 import PowerPlantState from "../src/context/PowerPlantState"
-import { initialPowerPlantState, powerPlantReducer } from "../src/context/PowerPlantReducer"
+import { makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
 
 export type ScenarioAction = { at: number; action: PowerPlantAction } // at: sim-seconds
 
@@ -95,7 +95,7 @@ function simulate(
   const { ticks, sampleTicks } = toTicks(scenario)
   const actionsAt = scheduleActions(scenario, ticks)
 
-  let state = scenario.initial ?? initialPowerPlantState
+  let state = scenario.initial ?? makeInitialState()
   for (let tick = 0; tick < ticks; tick++) {
     state = actionsThisTick(scenario, actionsAt.get(tick), state, tick * DeltaTime)
     if (tick % sampleTicks === 0) record({ time: tick * DeltaTime, state })

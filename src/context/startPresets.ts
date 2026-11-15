@@ -1,9 +1,9 @@
-/** The start states the operator can pick in the Presets popup (#24): the cold initial state or a committed snapshot. */
+/** The start states the operator can pick in the Presets popup (#24): the app's cold start or a committed snapshot. */
 
 import bypassLoop from "../../sim/snapshots/bypass-loop.json"
 import turbineRunup from "../../sim/snapshots/turbine-runup.json"
 import { shapeErrors } from "../utils/stateShape"
-import { makeInitialState } from "./PowerPlantReducer"
+import { makeInitialState, makeUiStartState } from "./PowerPlantReducer"
 import type PowerPlantState from "./PowerPlantState"
 
 export type StartPreset = {
@@ -22,7 +22,7 @@ export function validatedState(name: string, json: unknown): PowerPlantState {
 }
 
 export const START_PRESETS: readonly StartPreset[] = [
-  { id: "cold", label: "Cold & dark", description: "Everything at ambient, all pumps, valves and gas off.", source: makeInitialState },
+  { id: "cold", label: "Cold & dark", description: "Everything at ambient, all pumps, valves and gas off.", source: makeUiStartState },
   {
     id: "hot-standby",
     label: "Hot standby",

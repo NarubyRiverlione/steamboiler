@@ -27,14 +27,15 @@ describe("hotwellValvePositions", () => {
   })
 
   it("ramps reject linearly above the band, fully open 15 points above it", () => {
-    expect(hotwellValvePositions(0.825).reject).toBeCloseTo(0.5)
-    expect(hotwellValvePositions(0.9).reject).toBe(1)
+    expect(hotwellValvePositions(0.875).reject).toBeCloseTo(0.5)
+    expect(hotwellValvePositions(0.95).reject).toBeCloseTo(1)
     expect(hotwellValvePositions(0.99)).toEqual({ makeup: 0, reject: 1 })
   })
 
-  it("is fully open well before the protections act", () => {
+  // The reject edge (80%) puts the full opening at the overfill clamp (95%): the ramp reaches 1 as the protection acts
+  it("is fully open before the low-low trip and by the high-high clamp", () => {
     expect(hotwellValvePositions(HotwellLowLow + 0.25).makeup).toBe(1)
-    expect(hotwellValvePositions(HotwellHighHigh - 0.04).reject).toBe(1)
+    expect(hotwellValvePositions(HotwellHighHigh).reject).toBeCloseTo(1)
   })
 })
 
@@ -280,8 +281,8 @@ describe("loopOperator", () => {
     expect(valves(0.65)).toEqual([])
     expect(valves(0.475)[0].type).toBe("SET_MAKEUP_VALVE_POSITION")
     expect(payloads(0.475)[0]).toBeCloseTo(0.5)
-    expect(valves(0.825)[0].type).toBe("SET_REJECT_VALVE_POSITION")
-    expect(payloads(0.825)[0]).toBeCloseTo(0.5)
+    expect(valves(0.875)[0].type).toBe("SET_REJECT_VALVE_POSITION")
+    expect(payloads(0.875)[0]).toBeCloseTo(0.5)
     expect(payloads(0.65, 0.5)).toEqual([-0.5])
     expect(valves(0.65, 0, 0.5)[0].type).toBe("SET_REJECT_VALVE_POSITION")
     expect(payloads(0.65, 0, 0.5)).toEqual([-0.5])

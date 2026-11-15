@@ -3,7 +3,8 @@ export const CstSimulation = {
   MaxTicksPerUpdate: 300, // cap on ticks run in one loop update (about 1.4 ms per 100 ticks measured, 10x the need at 60x); above it the plant runs slower than requested (ADR 0034)
   UpdateInterval: 50, // ms between loop updates
   CstBoiler: {
-    StartWaterVolume: 35e3, // liters at ambient: thermal expansion brings it to the 50% working level at 165 bar (ADR 0018)
+    StartWaterVolume: 35e3, // liters at ambient: thermal expansion brings it to the 50% working level at 165 bar; the headless scenarios start here (ADR 0018)
+    UiStartWaterVolume: 40e3, // liters at ambient: the app starts here, clear of the low level alarm at 35%; about 5 t more than the drum holds at 50% hot, so a hand-run start sends that to the hotwell (ADR 0018)
     TotalVolume: 100e3, // liters (typical  20-100m3)
     MaxGasFlow: 12000, // liters/second, about 420 MW of fuel for a 200 MWe unit (docs/research/2026-10-sizing-check.md)
     DrainingRate: 0.005, // 0.5% per second
@@ -120,7 +121,7 @@ export const CstDeaerator = {
   WorkingLow: 0.45, // share of TotalVolume: lower end of the green band on the level gauge, the 50% working level minus 5 points (UNVERIFIED estimate, #54)
   WorkingHigh: 0.55, // share of TotalVolume: upper end of the green band
   FeedPump_Step: 100 / 300, // % per click, wheel notch or arrow key: 1 l/s (about 1 kg/s), #138; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
-  StartLevel: 0.38, // share of TotalVolume filled cold at ambient: ends at 50% at 3 bar (ADR 0037)
+  StartLevel: 0.5, // share of TotalVolume filled cold at ambient, in the app and in the scenarios: ends at about 59% at 3 bar (ADR 0037)
   Pressure: 3, // bar, held by the steam inlet valve (about 134 °C)
   ExtractionValveCapacity: 60, // kg/s the extraction valve passes: over-dimensioned, about 35 kg/s are needed at rated flow (design-basis.md)
   ExtractionOpeningRange: 0.5, // share of the setpoint the tap pressure must rise above it for the non-return valve to pass its full capacity: flow rises with the pressure margin, so no step when the tap crosses 3 bar (design-basis.md)

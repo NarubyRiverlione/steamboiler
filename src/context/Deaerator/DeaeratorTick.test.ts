@@ -136,7 +136,7 @@ describe("makeColdDeaerator air (ADR 0038)", () => {
     const state: DeaeratorState = makeColdDeaerator()
     expect(state.pressure).toBeCloseTo(CstPhysics.AtmosphericPressure_mBar / 1e3, 9)
     expect(state.pressure).toBeCloseTo(state.airPressure + state.saturationPressure, 9)
-    expect(state.airMass).toBeGreaterThan(100)
+    expect(state.airMass).toBeGreaterThan(80) // 88 kg: the 50% cold fill leaves 75 m³ of gas space
     expect(state.startUpVentOpen).toBe(false)
     expect(state.safeToClose).toBe(false)
     expect(state.warnVentClosedWithAir).toBe(true)

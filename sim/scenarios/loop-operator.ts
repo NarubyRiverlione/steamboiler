@@ -31,7 +31,7 @@ export const LoopSettings = {
   DeaeratorLevelGain: 2, // condensation pump position per second per unit of deaerator level error: plain level feedback, no feedforward (#112)
   DeaeratorLevelDamping: 60, // condensation pump position per unit of level rate (share of the volume per second): damps the integrating vessel
   HotwellBandLow: CstSimulation.CstCondenser.HotwellWorkingLow, // makeup opens below the working band (normal level 70%)
-  HotwellBandHigh: CstSimulation.CstCondenser.HotwellWorkingHigh, // reject opens above the working band
+  HotwellBandHigh: 0.8, // reject opens above it: the operator's own edge, above the gauge's green band (75%) and under the 85% alarm, so the water the 50% deaerator fill adds stays in the hotwell
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
   CondenserPressureHigh: 33, // mbar condenser pressure: more cooling water (the design vacuum is 31 mbar)
   CondenserPressureLow: 28, // mbar: less cooling water

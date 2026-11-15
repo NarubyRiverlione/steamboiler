@@ -583,7 +583,7 @@ describe("powerPlantReducer", () => {
 
     test("the cold plant starts with the vent shut and the vessel full of air at atmospheric pressure", () => {
       expect(base.Deaerator.startUpVentOpen).toBe(false)
-      expect(base.Deaerator.airMass).toBeGreaterThan(100)
+      expect(base.Deaerator.airMass).toBeGreaterThan(80)
       expect(base.Deaerator.pressure).toBeCloseTo(1.01325, 5)
     })
   })
