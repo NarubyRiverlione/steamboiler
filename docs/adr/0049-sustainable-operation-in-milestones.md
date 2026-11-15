@@ -21,8 +21,7 @@ The idea is **sustainable operation**: the player runs one plant for a long time
 ## Ladder (draft)
 
 - **M1, save and load:** the plant state and its history saved and resumed. The full state is plain JSON already: the presets load committed snapshots (`sim/snapshots/`, `src/context/startPresets.ts`), a tick depends only on its input state, and a loaded snapshot is checked against the current state shape (`shapeErrors`). A simple version could come earlier as a release rung.
-- **M2, the operating record:** every limit that is alarm-only today logs its excursions (how long, how far over). #102's event log needs the same.
-- **M3, the account:** fuel cost now; income once Electrical M1 exists.
+- **M2, the operating record:** every limit that is alarm-only today logs its excursions (how long, how far over).- **M3, the account:** fuel cost now; income once Electrical M1 exists.
 - **M4, wear as cost:** sourced life consumption per component: drum (heating rate), rotor (mismatch), last-stage blades (wet exhaust), superheater tubes (overtemperature), deaerator corrosion (#114).
 - **M5, gross damage:** forced outage, repair time and repair cost.
 - **M6, sustainability as the goal:** the score over a long run; scenario goals building on ADR 0047's "Get a goal".
@@ -47,5 +46,5 @@ The idea is **sustainable operation**: the player runs one plant for a long time
 - ADR 0047's deferred "Saving the game" is taken up here, or by an earlier release rung.
 - ADR 0006 gains a cost for the heating rate: its "nothing else happens" ends with M4.
 - ADR 0046 M7 is redrawn depending on open questions 1 and 2.
-- #114's damage model becomes part of M4; #102 shares the operating record of M2.
+- #114's damage model becomes part of M4.
 - GitHub milestones, the theme label and the `GLOSSARY.md` terms (Operating record, Life consumption, Forced outage, and the account's terms) come with acceptance and the tickets that build them.

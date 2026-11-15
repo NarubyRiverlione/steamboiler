@@ -2,7 +2,7 @@
 
 Plan to automate the ticket workflow with Orca: a coordinator (on the laptop or a headless server, see
 [Where the coordinator runs](#where-the-coordinator-runs)) sends ready tickets to the devboxes, one ticket per box at a
-time. Status: planned, not started.
+time. Status: parked ([parked.md](../parked.md)); its prerequisite tickets #154 and #155 are closed as not planned.
 
 ## Current setup
 

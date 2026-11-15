@@ -7,6 +7,7 @@ Each fact has one home, and the kind of doc decides where that is:
 - **Tickets** are the unit of work.
 - **Research** (`research/`) holds dated findings, sources and measurements. Frozen once written.
 - **Work** (what to do next, bugs, ideas) lives only in GitHub issues, ordered in [ROADMAP.md](../ROADMAP.md). Never in a doc.
+- **Parked** ([parked.md](parked.md)) holds nice-to-have ideas the owner has decided not to do soon, as short entries. They are not work: picking one up means writing a new ticket.
 
 What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSARY.md](../GLOSSARY.md).
 

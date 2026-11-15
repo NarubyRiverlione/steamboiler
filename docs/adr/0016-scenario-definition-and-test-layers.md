@@ -21,5 +21,5 @@ A **scenario** is a reproducible operator procedure from a known plant state, ru
 
 ## Consequences
 
-- Hooks and CI jobs per layer are #61.
+- Hooks and CI jobs per layer are parked ([parked.md](../parked.md), was #61).
 - A scenario does not re-check what a unit test pins; it checks the outcome.
