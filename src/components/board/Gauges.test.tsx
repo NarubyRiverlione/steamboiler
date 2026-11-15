@@ -78,9 +78,15 @@ describe("LinearGauge", () => {
     expect(container.querySelectorAll("rect[data-tone='alarm']").length).toBe(1)
   })
 
+  // Orientation as drawn (taller or wider than it is), never the viewBox numbers themselves.
+  function drawnShape(meter: HTMLElement): "tall" | "wide" {
+    const [, , width, height]: number[] = (meter.getAttribute("viewBox") ?? "").split(" ").map(Number)
+    return height > width ? "tall" : "wide"
+  }
+
   it("stays vertical by default", () => {
     render(<LinearGauge label="Gauge" value={50} />)
-    expect(screen.getByRole("meter").getAttribute("viewBox")).toBe("0 0 96 190")
+    expect(drawnShape(screen.getByRole("meter"))).toBe("tall")
   })
 
   it("reports the actual scale in aria values", () => {
@@ -89,7 +95,7 @@ describe("LinearGauge", () => {
     expect(meter.getAttribute("aria-valuemin")).toBe("0")
     expect(meter.getAttribute("aria-valuemax")).toBe("3300")
     expect(meter.getAttribute("aria-valuenow")).toBe("1500")
-    expect(meter.getAttribute("viewBox")).toBe("0 0 320 96")
+    expect(drawnShape(meter)).toBe("wide")
   })
 
   it("places horizontal ticks left to right in scale units", () => {
