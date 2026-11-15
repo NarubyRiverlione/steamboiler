@@ -288,6 +288,24 @@ function AbsoluteTicks() {
   })
 }
 
+const isPump = (tone: AbsoluteKnobProps["tone"]): boolean => tone === "pump"
+
+// The thin pointer of where the valve actually is, when that differs from the commanded cap
+function ActualMarker({ actual, range }: { readonly actual: number | undefined; readonly range: Range }) {
+  if (actual === undefined) return null
+  return (
+    <line
+      className="board-knob-actual"
+      data-testid="knob-actual"
+      x1={CX}
+      y1={CY - 57}
+      x2={CX}
+      y2={CY - 67}
+      transform={`rotate(${angleOf(actual, range).toFixed(2)} ${String(CX)} ${String(CY)})`}
+    />
+  )
+}
+
 function AbsoluteKnob({
   label,
   value,
@@ -303,12 +321,12 @@ function AbsoluteKnob({
 }: AbsoluteKnobProps) {
   const range: Range = { min, max }
   const clamped: number = clampTo(value, min, max)
-  const input = useAbsoluteInput(clamped, range, step, onChange, tone === "pump" ? PUMP_DRAG_FULL_SWEEP_PX : DRAG_FULL_SWEEP_PX)
+  const input = useAbsoluteInput(clamped, range, step, onChange, isPump(tone) ? PUMP_DRAG_FULL_SWEEP_PX : DRAG_FULL_SWEEP_PX)
   const grips: number[] = Array.from({ length: GRIP_COUNT }, (_: unknown, i: number) => i)
   return (
     <svg
       {...input}
-      className={tone === "pump" ? `${input.className ?? ""} board-knob-pump` : input.className}
+      className={isPump(tone) ? `${input.className ?? ""} board-knob-pump` : input.className}
       viewBox="0 0 170 170"
       width={size}
       height={size}
@@ -329,17 +347,7 @@ function AbsoluteKnob({
           {note}
         </text>
       )}
-      {actual !== undefined && (
-        <line
-          className="board-knob-actual"
-          data-testid="knob-actual"
-          x1={CX}
-          y1={CY - 57}
-          x2={CX}
-          y2={CY - 67}
-          transform={`rotate(${angleOf(actual, range).toFixed(2)} ${String(CX)} ${String(CY)})`}
-        />
-      )}
+      <ActualMarker actual={actual} range={range} />
       <circle className="board-knob-bezel" cx={CX} cy={CY} r={54} />
       <circle className="board-knob-well" cx={CX} cy={CY} r={46} />
       <g transform={`rotate(${angleOf(value, range).toFixed(2)} ${String(CX)} ${String(CY)})`}>

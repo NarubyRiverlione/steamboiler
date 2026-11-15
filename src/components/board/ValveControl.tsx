@@ -25,6 +25,58 @@ type ValveControlProps = {
   readonly Disabled?: string // the reason the operator cannot move the valve (the plant moves it): the knob turns display-only, the buttons disabled, the reason shown
 }
 
+type NudgeButtonProps = {
+  readonly label: string
+  readonly direction: 1 | -1
+  readonly locked: boolean
+  readonly commandPercent: number
+  readonly title: string | undefined
+  readonly onNudge: (direction: 1 | -1) => void
+}
+
+// The small − / + button beside the knob; it is off when locked or when the command already sits at that end
+function NudgeButton({ label, direction, locked, commandPercent, title, onNudge }: NudgeButtonProps) {
+  const atEnd: boolean = direction === 1 ? commandPercent >= MAX_PERCENT : commandPercent <= MIN_PERCENT
+  return (
+    <LensButton
+      small
+      aria-label={`${label} knob ${direction === 1 ? "increase" : "decrease"}`}
+      disabled={locked || atEnd}
+      title={title}
+      onClick={() => {
+        onNudge(direction)
+      }}
+    >
+      {direction === 1 ? "+" : "−"}
+    </LensButton>
+  )
+}
+
+// The reason the operator cannot move the valve, when there is one
+function ValveReason({ reason }: { readonly reason: string | undefined }) {
+  return reason === undefined ? null : <span className="board-valve-reason">{reason}</span>
+}
+
+type ValveValuesProps = {
+  readonly label: string
+  readonly value: string | undefined
+  readonly widest: string | undefined
+  readonly percent: number
+}
+
+// With a flow the flow LCD shows; without one the position LCD does
+function ValveValues({ label, value, widest, percent }: ValveValuesProps) {
+  return (
+    <div className="board-valve-values">
+      {value === undefined ? (
+        <Display label={`${label} position`} text={`${String(percent)} % Open`} widest="100 % Open" />
+      ) : (
+        <Display label={`${label} flow`} text={value} widest={widest} />
+      )}
+    </div>
+  )
+}
+
 export function ValveControl({
   ValveId,
   Label,
@@ -47,17 +99,14 @@ export function ValveControl({
     <div className="board-valve board-valve-knob">
       <span className="board-instrument-label">{Caption ?? Label}</span>
       <div className="board-valve-knob-row">
-        <LensButton
-          small
-          aria-label={`${Label} knob decrease`}
-          disabled={locked || commandPercent <= MIN_PERCENT}
+        <NudgeButton
+          label={Label}
+          direction={-1}
+          locked={locked}
+          commandPercent={commandPercent}
           title={Disabled}
-          onClick={() => {
-            nudge(-1)
-          }}
-        >
-          −
-        </LensButton>
+          onNudge={nudge}
+        />
         <Knob
           label={`${Label} knob`}
           value={commandPercent}
@@ -76,25 +125,17 @@ export function ValveControl({
                 }
           }
         />
-        <LensButton
-          small
-          aria-label={`${Label} knob increase`}
-          disabled={locked || commandPercent >= MAX_PERCENT}
+        <NudgeButton
+          label={Label}
+          direction={1}
+          locked={locked}
+          commandPercent={commandPercent}
           title={Disabled}
-          onClick={() => {
-            nudge(1)
-          }}
-        >
-          +
-        </LensButton>
+          onNudge={nudge}
+        />
       </div>
-      {locked && <span className="board-valve-reason">{Disabled}</span>}
-      <div className="board-valve-values">
-        {Value !== undefined && <Display label={`${Label} flow`} text={Value} widest={ValueWidest} />}
-        {Value === undefined && (
-          <Display label={`${Label} position`} text={`${String(percent)} % Open`} widest="100 % Open" />
-        )}
-      </div>
+      <ValveReason reason={Disabled} />
+      <ValveValues label={Label} value={Value} widest={ValueWidest} percent={percent} />
     </div>
   )
 }
