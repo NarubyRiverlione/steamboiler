@@ -47,12 +47,13 @@ Next: nothing ready (every ticket is waiting or needs triage).
 
 ## Alarms and trips
 
-Next: nothing ready (every ticket is waiting or needs triage).
+Next: [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Deaerator high-high (85 %) trip and error tile
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 16 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Trip and error tile for every red level range | needs-triage |  |  |
+| 16 | [#129](https://github.com/NarubyRiverlione/steamboiler/issues/129) Deaerator high-high (85 %) trip and error tile | ready-for-agent |  |  |
 | 17 | [#152](https://github.com/NarubyRiverlione/steamboiler/issues/152) Superheater protection: outlet safety valve, start-up vent and drains, high steam temperature trip | needs-triage |  |  |
+| 18 | [#157](https://github.com/NarubyRiverlione/steamboiler/issues/157) Hotwell level high-high error tile (95 % overfill clamp) | ready-for-agent |  |  |
 
 ## Scenarios
 
@@ -60,7 +61,7 @@ Next: [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown 
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 18 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | ready-for-agent |  |  |
+| 19 | [#38](https://github.com/NarubyRiverlione/steamboiler/issues/38) Shutdown scenario: gas off, coast down | ready-for-agent |  |  |
 
 ## UI and UX
 
@@ -68,10 +69,9 @@ Next: [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historica
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 19 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
-| 20 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
-| 21 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | needs-triage |  |  |
-| 22 | [#132](https://github.com/NarubyRiverlione/steamboiler/issues/132) Settle the UI test rule on SVG geometry | ready-for-agent |  |  |
+| 20 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
+| 21 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
+| 22 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | needs-triage |  |  |
 | 23 | [#136](https://github.com/NarubyRiverlione/steamboiler/issues/136) Speed buttons flicker around the run-up point in Hold (breaker open) | needs-triage |  |  |
 | 24 | [#156](https://github.com/NarubyRiverlione/steamboiler/issues/156) Board: annunciator panel full width on the panel grey | ready-for-agent |  |  |
 

@@ -3,6 +3,14 @@ import { describe, expect, it } from "vitest"
 import { LevelInstrument } from "./LevelInstrument"
 import { levelZones } from "./levelZones"
 
+// Where the target line is drawn for a target, read from a render; the 0 and 1 renders give the ends of the scale.
+function targetY(target: number): number {
+  const { unmount } = render(<LevelInstrument label="Tank level" fraction={0.5} change={0} target={target} />)
+  const y = Number(screen.getByTestId("level-target").getAttribute("y1"))
+  unmount()
+  return y
+}
+
 describe("LevelInstrument", () => {
   it("shows the gauge, the fraction and the signed change", () => {
     render(<LevelInstrument label="Tank level" fraction={0.256} change={1.26} />)
@@ -12,11 +20,13 @@ describe("LevelInstrument", () => {
   })
 
   it("draws the target line at its level, and none without a target", () => {
-    const { rerender } = render(<LevelInstrument label="Tank level" fraction={0.5} change={0} />)
+    const { unmount } = render(<LevelInstrument label="Tank level" fraction={0.5} change={0} />)
     expect(screen.queryByTestId("level-target")).toBeNull()
-    rerender(<LevelInstrument label="Tank level" fraction={0.5} change={0} target={0.7} />)
-    const line: HTMLElement = screen.getByTestId("level-target")
-    expect(line.getAttribute("y1")).toBe(String(176 - (162 * 70) / 100))
+    unmount()
+    const at: number = targetY(0.7)
+    const bottom: number = targetY(0)
+    const top: number = targetY(1)
+    expect((bottom - at) / (bottom - top)).toBeCloseTo(0.7, 5)
   })
 
   it("draws the zones it is given on the gauge", () => {
