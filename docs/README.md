@@ -100,4 +100,4 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 
 ## Agent configuration
 
-Issue tracker, triage labels, domain docs: [agents/](agents/issue-tracker.md).
+Issue tracker, triage labels, domain docs: [agents/](agents/issue-tracker.md). Planning a theme in milestones: [agents/milestone-planning.md](agents/milestone-planning.md).
