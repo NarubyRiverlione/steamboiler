@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { loadSnapshot } from "../../sim/snapshot"
+import { CstSimulation } from "./const"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import type PowerPlantState from "./PowerPlantState"
 import { START_PRESETS, presetState, validatedState, type StartPreset } from "./startPresets"
@@ -23,6 +24,12 @@ describe("start presets", () => {
   test("Hot standby is the bypass-loop snapshot, At pressure the turbine-runup snapshot", () => {
     expect(presetState(find("hot-standby"))).toEqual(loadSnapshot("bypass-loop"))
     expect(presetState(find("at-pressure"))).toEqual(loadSnapshot("turbine-runup"))
+  })
+
+  test("every preset loads with the gas knob on neutral, holding", () => {
+    for (const preset of START_PRESETS) {
+      expect(Math.abs(presetState(preset).Boiler.gasRateCommand)).toBeLessThanOrEqual(CstSimulation.CstBoiler.GasRateDeadZone)
+    }
   })
 
   test("a snapshot whose shape no longer matches the current state is rejected", () => {

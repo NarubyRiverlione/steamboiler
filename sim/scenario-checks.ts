@@ -10,7 +10,7 @@ import { describe, expect, test } from "vitest"
 import { goldenInvariants, Invariant, invariants } from "./invariants"
 import { Run, runScenarioWithLifts, Scenario } from "./scenario"
 import { goldenPath, scenarios } from "./scenarios"
-import { loadSnapshot, snapshotPath, toSnapshotJson, valueErrors } from "./snapshot"
+import { loadSnapshot, snapshotPath, toSnapshotJson, valueErrors, withNeutralGas } from "./snapshot"
 import { snapshotSources } from "./snapshot-sources"
 
 // (scenario, invariant) pairs that fail today, with the ticket that fixes them. When that ticket
@@ -61,11 +61,11 @@ function describeSnapshot(name: string, run: Run): void {
     test(`matches a fresh run of ${name} (pnpm sim:snapshots to regenerate)`, () => {
       const committed: unknown = JSON.parse(readFileSync(snapshotPath(name), "utf8"))
       // The JSON round trip gives the fresh state the same form as the file (NaN and Infinity become null).
-      expect(valueErrors(JSON.parse(toSnapshotJson(run.final)), committed)).toEqual([])
+      expect(valueErrors(JSON.parse(toSnapshotJson(withNeutralGas(run.final))), committed)).toEqual([])
     })
 
     test("loads", () => {
-      expect(valueErrors(run.final, loadSnapshot(name))).toEqual([])
+      expect(valueErrors(withNeutralGas(run.final), loadSnapshot(name))).toEqual([])
     })
   })
 }
