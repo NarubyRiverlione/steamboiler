@@ -20,7 +20,7 @@ Once the gate is green, run straight through: do not ask for confirmation. Stop 
 - `pnpm test:unit`
 - `pnpm test:sim:golden`; for a UI ticket the snapshots must stay unchanged (`git status` clean after the run, no `sim/snapshots/` diff).
 - ADRs: `git grep "#<ticket>" docs/adr`; update every ADR the ticket made out of date. Reference docs in `docs/plant/` or `docs/dev/` must match the change.
-- CRAP: run the `crap-score-typescript` skill with `--changed`. Report the scores; flag any method above the risk threshold (flag only, does not fail).
+- CRAP: run the `crap-score-typescript` skill on the files the ticket changed: list them with `git diff --name-only dev...HEAD -- '*.ts' '*.tsx'` and pass them as file paths. Never use `--changed` (it only sees uncommitted changes, and the work is already committed). Report the scores; flag any method above the risk threshold (flag only, does not fail).
 - Commit any ADR or doc change on the ticket branch. Then re-run the tests the change could affect. The ticket branch never touches `ROADMAP.md` (ADR 0014: it is committed on `dev`, after the close in step 4).
 
 ## 3. Sync and merge
