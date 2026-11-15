@@ -79,9 +79,9 @@ function Condenser() {
     toggleSjae,
   } = usePowerPlant()
 
-  const smoothIntake: number = useEMA(intakeFlowRate, 0.01)
-  const hotwellLevel: number = useEMA(hotwellWaterVolume / TotalVolume, 0.1)
-  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.5)
+  const smoothIntake: number = useEMA(intakeFlowRate, CstSimulation.ReadoutSmoothingSeconds)
+  const hotwellLevel: number = hotwellWaterVolume / TotalVolume
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, CstSimulation.ReadoutSmoothingSeconds)
 
   return (
     <PanelFrame
