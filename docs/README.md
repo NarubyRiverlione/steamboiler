@@ -81,6 +81,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0042](adr/0042-valve-ramp-lives-above-the-pages.md) | The valve knob ramp lives in a UI context above the pages and paces in real time, so it survives navigation |
 | [0043](adr/0043-trip-reset.md) | Only a trip reset clears a latched trip, once its cause has gone; a RESET button beside each trip tile |
 | [0044](adr/0044-superheater-with-spray-attemperator.md) | A passive flue gas superheater before the boiler stage; one spray attemperator holds the steam at 540 °C; the turbine runs on the superheated steam |
+| [0046](adr/0046-from-island-to-town-grid-in-milestones.md) | From island to the town grid in milestones M1–M7; island means house load operation |
 
 ## Research (dated, frozen)
 

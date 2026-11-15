@@ -1,6 +1,6 @@
 # The generator load is a resisting torque on a free-running shaft
 
-**Status: accepted.** Implemented in #71; speed modes with the breaker closed amended in #135.
+**Status: accepted.** Implemented in #71; speed modes with the breaker closed amended in #135. [ADR 0046](0046-from-island-to-town-grid-in-milestones.md) sets the way to a grid-connected model; its M1 rewrites this ADR.
 
 With the breaker closed, the generator takes a **load**: a constant electric power that acts on the shaft as a resisting torque. The shaft balance becomes `J·dω/dt = drive torque − loss torque − load torque`, with `load torque = (load / GeneratorEfficiency) / ω`. The speed is **not** pinned to the grid. The **electric output is the load carried**, an independent input to the shaft, never derived from the steam flow.
 
