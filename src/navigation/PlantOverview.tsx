@@ -7,6 +7,7 @@ import { Led } from "../components/board/Led"
 import { Display } from "../components/board/Display"
 import { LensButton } from "../components/board/LensButton"
 import usePowerPlant from "../context/PowerPlantContext"
+import { CstSimulation } from "../context/const"
 import useEMA from "../utils/useEMA"
 import {
   DIAGRAM_HEIGHT,
@@ -115,9 +116,9 @@ function ValueLabel({ value, text }: { readonly value: DiagramValue; readonly te
 function PlantOverview() {
   const { state } = usePowerPlant()
   const [showValues, setShowValues] = useState<boolean>(true)
-  // Same smoothing as the Boiler and Condenser pages, so the numbers match
-  const smoothPressure: number = useEMA(state.Boiler.pressure, 0.01)
-  const hotwellLevel: number = useEMA(hotwellFraction(state), 0.1)
+  // Same smoothing as the Boiler page, so the numbers match; the hotwell level is raw like the drum level
+  const smoothPressure: number = useEMA(state.Boiler.pressure, CstSimulation.ReadoutSmoothingSeconds)
+  const hotwellLevel: number = hotwellFraction(state)
   const texts = overviewValueTexts(state, { pressure: smoothPressure, hotwellLevel })
   const alarms = partAlarms(state)
   const { startUpVentOpen, safeToClose } = state.Deaerator

@@ -2,6 +2,7 @@
 
 import { Display } from "../components/board/Display"
 import usePowerPlant from "../context/PowerPlantContext"
+import { CstSimulation } from "../context/const"
 import useEMA from "../utils/useEMA"
 
 function PlantValues() {
@@ -12,7 +13,7 @@ function PlantValues() {
     },
   } = usePowerPlant()
   // Same smoothing as the Boiler page, so the header and the gauge agree
-  const smoothPressure: number = useEMA(pressure, 0.01)
+  const smoothPressure: number = useEMA(pressure, CstSimulation.ReadoutSmoothingSeconds)
 
   return (
     <div className="board-header-values">

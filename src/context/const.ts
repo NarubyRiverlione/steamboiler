@@ -2,6 +2,7 @@ export const CstSimulation = {
   DeltaTime: 0.1, // Simulation tick duration in sec
   MaxTicksPerUpdate: 300, // cap on ticks run in one loop update (about 1.4 ms per 100 ticks measured, 10x the need at 60x); above it the plant runs slower than requested (ADR 0034)
   UpdateInterval: 50, // ms between loop updates
+  ReadoutSmoothingSeconds: 2, // wall-clock time constant of every smoothed UI readout (useEMA, #122); retune with the app, a readout that needs another value gets its own constant with the reason
   CstBoiler: {
     StartWaterVolume: 35e3, // liters at ambient: thermal expansion brings it to the 50% working level at 165 bar; the headless scenarios start here (ADR 0018)
     UiStartWaterVolume: 40e3, // liters at ambient: the app starts here, clear of the low level alarm at 35%; about 5 t more than the drum holds at 50% hot, so a hand-run start sends that to the hotwell (ADR 0018)

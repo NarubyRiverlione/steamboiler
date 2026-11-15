@@ -1,6 +1,7 @@
 /** Turbine Status panel content: the readouts and the trip lamp. */
 
 import type { SpeedMode } from "../../context/PowerPlantState"
+import { CstSimulation } from "../../context/const"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
@@ -14,7 +15,7 @@ type TurbineStatusProps = {
 }
 
 export function TurbineStatus({ turbine }: TurbineStatusProps) {
-  const smoothFlow: number = useEMA(turbine.turbineSteamFlowOut, 0.05)
+  const smoothFlow: number = useEMA(turbine.turbineSteamFlowOut, CstSimulation.ReadoutSmoothingSeconds)
   return (
     <>
       <h3 className="board-group-title board-section">Turbine Status</h3>
