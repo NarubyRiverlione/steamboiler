@@ -630,3 +630,34 @@ describe("attemperator actions (#113, ADR 0044)", () => {
     expect(reduce({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: 0.5 } }, state)).toBe(state)
   })
 })
+
+describe("condensation pump at the deaerator high-high level (#129, ADR 0045)", () => {
+  const high = CstDeaerator.HighHighLevel
+  const deaeratorAt = (level: number, tripped = false): PowerPlantState => ({
+    ...base,
+    Deaerator: { ...base.Deaerator, waterVolume: level * CstDeaerator.TotalVolume, deaeratorHighHighTripped: tripped },
+    Condenser: { ...base.Condenser, hotwellWaterVolume: 0.7 * CstCondenser.TotalVolume },
+  })
+  const move = (delta: number, state: PowerPlantState): PowerPlantState =>
+    reduce({ type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: delta } }, state)
+
+  test("opening is refused at and above the high-high level, allowed below", () => {
+    expect(move(0.1, deaeratorAt(high))).toEqual(deaeratorAt(high))
+    expect(move(0.1, deaeratorAt(high - 0.01)).Condenser.condensationPumpValvePosition).toBe(0.1)
+  })
+
+  test("opening is refused while the flag is set, even below the level; closing is allowed", () => {
+    const state: PowerPlantState = deaeratorAt(0.5, true)
+    expect(move(0.1, state)).toBe(state)
+    const open: PowerPlantState = { ...state, Condenser: { ...state.Condenser, condensationPumpValvePosition: 0.3 } }
+    expect(move(-0.1, open).Condenser.condensationPumpValvePosition).toBeCloseTo(0.2)
+  })
+
+  test("the reset is refused until the level is below high-high, then clears the flag and the pump may open", () => {
+    const at: PowerPlantState = deaeratorAt(high, true)
+    expect(reduce({ type: "RESET_TRIP", payload: { trip: "deaeratorHighHigh" } }, at)).toBe(at)
+    const reset: PowerPlantState = reduce({ type: "RESET_TRIP", payload: { trip: "deaeratorHighHigh" } }, deaeratorAt(high - 0.01, true))
+    expect(reset.Deaerator.deaeratorHighHighTripped).toBe(false)
+    expect(move(0.1, reset).Condenser.condensationPumpValvePosition).toBe(0.1)
+  })
+})

@@ -69,7 +69,7 @@ Next: [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historica
 | - | ------ | ------ | ---------- | -------- |
 | 18 | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) Historical data visualisation in the app | ready-for-agent |  | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) |
 | 19 | [#102](https://github.com/NarubyRiverlione/steamboiler/issues/102) Graphs: crosshair and event marks | needs-triage | [#36](https://github.com/NarubyRiverlione/steamboiler/issues/36) |  |
-| 20 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | ready-for-agent |  |  |
+| 20 | [#122](https://github.com/NarubyRiverlione/steamboiler/issues/122) One smoothing for every UI readout | needs-triage |  |  |
 
 ## Sim core: tests, CI, tooling, snapshots
 

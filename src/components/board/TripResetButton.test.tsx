@@ -47,6 +47,11 @@ const cases: { trip: TripId; latch: (s: PowerPlantState) => void; cause: (s: Pow
     cause: (s) => { s.Condenser.hotwellWaterVolume = 0 },
   },
   {
+    trip: "deaeratorHighHigh",
+    latch: (s) => { s.Deaerator.deaeratorHighHighTripped = true },
+    cause: (s) => { s.Deaerator.waterVolume = CstDeaerator.TotalVolume * CstDeaerator.HighHighLevel },
+  },
+  {
     trip: "turbine",
     latch: (s) => { s.Turbine.turbineTripped = true; s.Condenser.pressure = 100 },
     cause: (s) => { s.Condenser.pressure = CstCondenser.VacuumLimit + 1 },

@@ -102,6 +102,7 @@ export type DeaeratorState = {
   deltaWaterMass: number // kg change of the vessel over the last tick: the level trend the operator damps on
   feedPumpValvePosition: number // 0-1 (0-100%) open: the boiler feed pump, a flow actuator (ADR 0030)
   feedPumpTripped: boolean // set by the low-low trip, cleared by the next successful opening
+  deaeratorHighHighTripped: boolean // set by the high-high trip of the condensation pump (#129, ADR 0045), cleared only by a trip reset
 }
 
 type PowerPlantState = {

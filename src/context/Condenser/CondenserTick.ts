@@ -22,6 +22,7 @@ import { CstSimulation } from "../const"
  * @param steamFromBypass Bypass steam flow (kg/s) and its enthalpy (kJ/kg)
  * @param steamFromTurbine Turbine exhaust flow (kg/s) and its enthalpy (kJ/kg), what the shaft left in it
  * @param deaeratorRoom kg of liquid the deaerator can still take, limits the return
+ * @param deaeratorHighHigh the deaerator is at its high-high level or its trip is latched (ADR 0045): the pump is shut
  * @returns Action to update the condenser state
  */
 export function CondenserTick(
@@ -30,6 +31,7 @@ export function CondenserTick(
   steamFromBypass: { flow: number; enthalpy: number },
   steamFromTurbine: { flow: number; enthalpy: number },
   deaeratorRoom: number,
+  deaeratorHighHigh = false,
 ): CondenserState {
   const { DeltaTime, CstCondenser } = CstSimulation
 
@@ -97,7 +99,8 @@ export function CondenserTick(
 
   // Low-low: the pump may not run dry, so it trips (valve shut, flag set) and returns nothing this tick
   const pumpTripped: boolean = condenserState.condensationPumpTripped || level < HotwellLowLow
-  const pumpValvePosition: number = pumpTripped ? 0 : condenserState.condensationPumpValvePosition
+  // Deaerator high-high: the same shut valve, but its own flag lives in the deaerator state (ADR 0045)
+  const pumpValvePosition: number = pumpTripped || deaeratorHighHigh ? 0 : condenserState.condensationPumpValvePosition
 
   // Condensation pump transfer: the return, limited by the hotwell and the room in the deaerator
   const { condensatePumpMass, newHotwellWaterMass } = CalculateCondensationFlow(

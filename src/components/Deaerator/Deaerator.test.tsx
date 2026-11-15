@@ -4,6 +4,7 @@ import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
+import { CstDeaerator } from "../../context/const"
 import Deaerator from "./Deaerator"
 import { PlantValveRamp } from "../board/PlantValveRamp"
 import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
@@ -35,12 +36,26 @@ function renderDeaerator(patch: Partial<PowerPlantState["Deaerator"]> = {}) {
 describe("Deaerator page", () => {
   it("has a feed pump RESET, enabled only while the trip is latched and the level is back", () => {
     renderDeaerator()
-    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(true)
+    for (const button of screen.getAllByRole<HTMLButtonElement>("button", { name: "RESET" })) expect(button.disabled).toBe(true)
   })
 
   it("enables the feed pump RESET once the trip is latched", () => {
     renderDeaerator({ feedPumpTripped: true })
-    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(false)
+    const [feedPump, highHigh] = screen.getAllByRole<HTMLButtonElement>("button", { name: "RESET" })
+    expect(feedPump.disabled).toBe(false)
+    expect(highHigh.disabled).toBe(true)
+  })
+
+  it("has a high-high RESET, disabled with the reason while the level is still high-high, enabled once it is below", () => {
+    renderDeaerator({ deaeratorHighHighTripped: true, waterVolume: CstDeaerator.TotalVolume * CstDeaerator.HighHighLevel })
+    const [, highHigh] = screen.getAllByRole<HTMLButtonElement>("button", { name: "RESET" })
+    expect(highHigh.disabled).toBe(true)
+    expect(highHigh.title).toBe("Deaerator level is still at the high-high level")
+  })
+
+  it("enables the high-high RESET once the level is below the high-high level", () => {
+    renderDeaerator({ deaeratorHighHighTripped: true, waterVolume: CstDeaerator.TotalVolume * 0.5 })
+    expect(screen.getAllByRole<HTMLButtonElement>("button", { name: "RESET" })[1].disabled).toBe(false)
   })
 
   it("shows the level zones: red, orange and the green band", () => {

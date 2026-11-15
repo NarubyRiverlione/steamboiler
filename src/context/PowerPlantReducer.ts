@@ -203,11 +203,17 @@ const handlers: { [T in ActionType]: Handler<T> } = {
         1,
       ),
     }),
-  // Tripped or below low-low the pump may not be opened, closing is always allowed; only a trip reset clears the flag (ADR 0043)
+  // Tripped, below hotwell low-low or at the deaerator high-high level (ADR 0045) the pump may not be opened, closing is always allowed; only a trip reset clears the flag (ADR 0043)
   SET_CONDENSATION_PUMP_VALVE_POSITION: (state, { payload }) => {
     const { condensationPumpValvePosition: current, condensationPumpTripped, hotwellWaterVolume } = state.Condenser
+    const { deaeratorHighHighTripped, waterVolume } = state.Deaerator
     const requested = clamp(current + payload.condensationPumpValvePosition, 0, 1)
-    if (requested > current && (condensationPumpTripped || hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow)) return state
+    const refused: boolean =
+      condensationPumpTripped ||
+      hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow ||
+      deaeratorHighHighTripped ||
+      deaeratorLevel(waterVolume) >= CstDeaerator.HighHighLevel
+    if (requested > current && refused) return state
     return withCondenser(state, { condensationPumpValvePosition: requested })
   },
   SET_MAKEUP_VALVE_POSITION: (state, { payload }) =>

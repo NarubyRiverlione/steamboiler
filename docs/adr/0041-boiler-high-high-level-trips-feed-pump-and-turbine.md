@@ -4,7 +4,7 @@ From the **boiler high-high level** (`CstBoiler.HighHighLevel`, 70% of the 100 m
 
 The trip is enforced in `PowerPlantTick`, whatever the operator or a scenario does, on the boiler water volume at the start of the tick (as ADR 0017 reads it), before the feed pump delivers anything in that tick:
 
-- **The feed pump trips:** its valve goes shut, nothing is delivered to the boiler in that tick and `boilerLevelHighTripped` (a boiler flag, separate from the deaerator's low-low `feedPumpTripped`) is set. The condensation pump is untouched: the deaerator fills and the water backs up to the hotwell by the existing room rules.
+- **The feed pump trips:** its valve goes shut, nothing is delivered to the boiler in that tick and `boilerLevelHighTripped` (a boiler flag, separate from the deaerator's low-low `feedPumpTripped`) is set. The condensation pump is untouched: the deaerator fills and the water backs up to the hotwell by the existing room rules, until the deaerator high-high trip at 85% shuts the condensation pump ([ADR 0045](0045-deaerator-high-high-trips-condensation-pump.md)).
 - **The turbine trips:** an open turbine valve is closed, back to Free, the PID integral cleared, `turbineTripped` set: the one turbine trip object of `TurbineTick` that the vacuum limit and the overspeed use. A shut valve is left alone.
 - **The burner does not trip.**
 
