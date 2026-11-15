@@ -55,13 +55,13 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0015](adr/0015-ui-redo-analog-board-preferred.md) | A UI redo in an industrial style: the analog control-room board (with a [boiler mockup](adr/0015-boiler-panel-mockup.html) and a [full board mockup](adr/0015-full-board-mockup.html)) |
 | [0016](adr/0016-scenario-definition-and-test-layers.md) | A scenario ends in goal checks; golden path and edge classes; unit, golden and edge test layers |
 | [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |
-| [0018](adr/0018-cold-fill-at-35-percent.md) | The boiler is filled cold to 35% so it expands to the working level |
+| [0018](adr/0018-cold-fill-of-the-boiler.md) | The boiler is filled cold to 35% (40% in the app) so it expands to the working level |
 | [0019](adr/0019-boiler-is-one-lumped-vessel.md) | The boiler is one lumped vessel, not a drum with risers and downcomers |
 | [0020](adr/0020-snapshots-compare-with-tolerance.md) | Committed snapshots compare with a relative tolerance (1e-9), not exact digits |
 | [0021](adr/0021-turbine-runup-from-steam-power.md) | The turbine runs up on steam power (physical torque, losses, inertia), paced by a hold-mode run-up rate |
 | [0022](adr/0022-electric-output-from-enthalpy-drop.md) | Electric output from the isentropic enthalpy drop, flow and live condenser pressure |
 | [0023](adr/0023-runner-speed-guard-is-opt-in.md) | The runner speed guard is its own opt-in layer, outside the `dev` gate |
-| [0024](adr/0024-ticket-priority-by-kind-of-work.md) | Ticket priority says what kind of work a ticket is |
+| [0024](adr/0024-tickets-ordered-by-theme.md) | Tickets are ordered by theme; only broken and wrong jump the queue |
 | [0025](adr/0025-finer-steam-table-for-density-slope.md) | A finer steam table above 300 °C smooths the steam density slope |
 | [0026](adr/0026-valve-flow-follows-pressure.md) | Valve flow follows boiler pressure; the main steam valve closes at low pressure |
 | [0027](adr/0027-generator-load-is-a-resisting-torque.md) | The generator load is a resisting torque on a free-running shaft; electric output is the load carried |
@@ -74,9 +74,13 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0034](adr/0034-playback-speed-is-ticks-per-second.md) | Playback speed is ticks per wall-clock second, never `DeltaTime` |
 | [0035](adr/0035-condenser-pressure-is-vapour-plus-air.md) | The condenser pressure is shell vapour pressure plus air pressure; the vacuum system removes volume, not pressure |
 | [0036](adr/0036-deaerator-is-a-steam-heated-tank.md) | The deaerator is a steam-heated tank on the feedwater path, held at 3 bar |
-| [0037](adr/0037-deaerator-cold-fill-at-38-percent.md) | The deaerator is filled cold to about 38% so it ends at 50% hot |
+| [0037](adr/0037-deaerator-cold-fill-at-50-percent.md) | The deaerator is filled cold to 50%, so it ends at about 55% hot |
 | [0038](adr/0038-deaerator-air-and-vents.md) | The deaerator holds one amount of air and has two vents; mistakes cost steam, never damage |
 | [0039](adr/0039-latching-controls-are-turn-switches.md) | A control that holds a state is a turn switch with fixed legends; a pushbutton acts or selects |
+| [0041](adr/0041-boiler-high-high-level-trips-feed-pump-and-turbine.md) | The boiler high-high level (70%) trips the feed pump and the turbine; the alarm is on from 65% |
+| [0042](adr/0042-valve-ramp-lives-above-the-pages.md) | The valve knob ramp lives in a UI context above the pages and paces in real time, so it survives navigation |
+| [0043](adr/0043-trip-reset.md) | Only a trip reset clears a latched trip, once its cause has gone; a RESET button beside each trip tile |
+| [0044](adr/0044-superheater-with-spray-attemperator.md) | A passive flue gas superheater before the boiler stage; one spray attemperator holds the steam at 540 °C; the turbine runs on the superheated steam |
 
 ## Research (dated, frozen)
 

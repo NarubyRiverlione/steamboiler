@@ -1,13 +1,15 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario } from "../scenario"
+import { firstTimeWhere } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { hotwellLow } from "../scenarios/hotwell-low"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
+import { activeAlarms } from "../../src/context/Alarms"
 import { CstSimulation } from "../../src/context/const"
 
 const { HotwellLowLow } = CstSimulation.CstCondenser
 
 describe("hotwell-low", () => {
-  const samples = runScenario(hotwellLow)
+  const { samples } = runChecked(hotwellLow)
   const trippedAt = firstTimeWhere(samples, (s) => s.Condenser.condensationPumpTripped)
 
   test("starts inside the working band with the pump running, makeup shut and reject open", () => {
@@ -25,6 +27,14 @@ describe("hotwell-low", () => {
     expect((trippedAt ?? Infinity) - (crossedAt ?? 0)).toBeLessThanOrEqual(hotwellLow.sampleEvery)
     for (const { state } of samples.filter((s) => s.time < (crossedAt ?? 0)))
       expect(state.Condenser.condensationPumpTripped).toBe(false)
+  })
+
+  test("the low level alarm is on before the pump trips, at or before the crossing of low-low", () => {
+    const alarmAt = firstTimeWhere(samples, (s) => activeAlarms(s).includes("hotwellLevelLow"))
+    const crossedAt = firstTimeWhere(samples, (s) => hotwellLevel(s.Condenser.hotwellWaterVolume) < HotwellLowLow)
+    expect(alarmAt).toBeDefined()
+    expect(alarmAt ?? Infinity).toBeLessThanOrEqual(crossedAt ?? 0)
+    expect(alarmAt ?? Infinity).toBeLessThan(trippedAt ?? 0)
   })
 
   test("a tripped pump has its valve shut and returns nothing", () => {

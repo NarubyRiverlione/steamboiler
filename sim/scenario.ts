@@ -1,7 +1,7 @@
 import { CstSimulation } from "../src/context/const"
 import PowerPlantAction from "../src/context/PowerPlantActions"
 import PowerPlantState from "../src/context/PowerPlantState"
-import { initialPowerPlantState, powerPlantReducer } from "../src/context/PowerPlantReducer"
+import { makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
 
 export type ScenarioAction = { at: number; action: PowerPlantAction } // at: sim-seconds
 
@@ -95,7 +95,7 @@ function simulate(
   const { ticks, sampleTicks } = toTicks(scenario)
   const actionsAt = scheduleActions(scenario, ticks)
 
-  let state = scenario.initial ?? initialPowerPlantState
+  let state = scenario.initial ?? makeInitialState()
   for (let tick = 0; tick < ticks; tick++) {
     state = actionsThisTick(scenario, actionsAt.get(tick), state, tick * DeltaTime)
     if (tick % sampleTicks === 0) record({ time: tick * DeltaTime, state })
@@ -110,18 +110,20 @@ export function runScenario(scenario: Scenario): Sample[] {
   return runScenarioWithLifts(scenario).samples
 }
 
-// The samples plus every relief valve lift, recorded per tick
-export function runScenarioWithLifts(scenario: Scenario): { samples: Sample[]; lifts: Lift[] } {
+// One run: the samples, every relief valve lift (recorded per tick) and the state after the last tick
+export type Run = { samples: Sample[]; lifts: Lift[]; final: PowerPlantState }
+
+export function runScenarioWithLifts(scenario: Scenario): Run {
   const samples: Sample[] = []
   let lifts: Lift[] = []
-  simulate(
+  const final: PowerPlantState = simulate(
     scenario,
     (sample) => samples.push(sample),
     (before, after, time) => {
       lifts = trackLifts(lifts, before, after, time)
     },
   )
-  return { samples, lifts }
+  return { samples, lifts, final }
 }
 
 // The plant state at the end of the run: what a snapshot of this scenario holds.

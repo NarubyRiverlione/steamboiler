@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { ReturnStopAt, returnStop } from "../scenarios/return-stop"
 
 const { CstBoiler } = CstSimulation
 
 describe("return-stop", () => {
-  const samples = runScenario(returnStop)
+  const { samples } = runChecked(returnStop)
   const before = samples.filter((s) => s.time < ReturnStopAt)
   const after = samples.filter((s) => s.time > ReturnStopAt + 1)
   // The burner trips on low-low level some time after the stop, as the drum loses its feed; judge the firing part

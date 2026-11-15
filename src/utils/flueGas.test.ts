@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { CstFlueGas, CstPhysics, CstSimulation } from "../context/const"
+import { CstFlueGas, CstPhysics, CstSimulation, CstSuperheater } from "../context/const"
+import { getBoilingPoint } from "./steamTable"
 import {
   BoilerStageSurface,
+  SuperheaterSurface,
   EconomizerSurface,
   bisectDuty,
   calculateFlueGasHeatBalance,
@@ -13,6 +15,11 @@ const { MaxGasFlow } = CstSimulation.CstBoiler
 const { AmbientTemperature } = CstPhysics
 const FullFuelHeat = (MaxGasFlow / 1000) * CstPhysics.GasEnergyDensity // kW
 const DesignWater = CstFlueGas.DesignWaterTemperature
+// The steam the superheater is sized on, at a share of full gas
+const designSteam = (share = 1): { flow: number; pressure: number } => ({
+  flow: CstSuperheater.DesignSteamFlow * share,
+  pressure: CstSuperheater.DesignPressure,
+})
 
 const designReturn = (gasShare = 1): ReturnType<typeof calculateFlueGasHeatBalance> =>
   calculateFlueGasHeatBalance(
@@ -20,6 +27,7 @@ const designReturn = (gasShare = 1): ReturnType<typeof calculateFlueGasHeatBalan
     DesignWater,
     CstFlueGas.EconomizerDesignReturn * gasShare,
     CstFlueGas.EconomizerDesignReturnTemperature,
+    designSteam(gasShare),
   )
 
 describe("flue gas enthalpy", () => {
@@ -54,7 +62,7 @@ describe("sizing", () => {
   })
 
   test("the boiler stage is sized so flue gas leaves 100 K above the water at full gas and 350 °C", () => {
-    const noReturn = calculateFlueGasHeatBalance(MaxGasFlow, DesignWater, 0, CstFlueGas.EconomizerDesignReturnTemperature)
+    const noReturn = calculateFlueGasHeatBalance(MaxGasFlow, DesignWater, 0, CstFlueGas.EconomizerDesignReturnTemperature, designSteam())
     expect(noReturn.boilerExitTemperature).toBeCloseTo(DesignWater + CstFlueGas.BoilerApproachAtDesign, 3)
     expect(BoilerStageSurface).toBeGreaterThan(0)
   })
@@ -78,7 +86,7 @@ describe("full gas at 350 °C with the design Return", () => {
 
 describe("no Return", () => {
   test("full gas at 350 °C: efficiency about 79%, nothing recovered, the stack is the boiler exit", () => {
-    const balance = calculateFlueGasHeatBalance(MaxGasFlow, DesignWater, 0, 37)
+    const balance = calculateFlueGasHeatBalance(MaxGasFlow, DesignWater, 0, 37, designSteam())
     expect(balance.efficiency).toBeCloseTo(0.79, 2)
     expect(balance.economizerHeat).toBe(0)
     expect(balance.stackTemperature).toBeCloseTo(balance.boilerExitTemperature, 6)
@@ -87,20 +95,20 @@ describe("no Return", () => {
 
   test("a colder boiler gives a higher efficiency", () => {
     const efficiencies: number[] = [350, 250, 150, 60].map(
-      (temperature) => calculateFlueGasHeatBalance(MaxGasFlow, temperature, 0, 37).efficiency,
+      (temperature) => calculateFlueGasHeatBalance(MaxGasFlow, temperature, 0, 37, designSteam()).efficiency,
     )
     for (let i = 1; i < efficiencies.length; i++) expect(efficiencies[i]).toBeGreaterThan(efficiencies[i - 1])
   })
 
   test("never exceeds the 84% theoretical limit at 350 °C: flue gas cannot leave cooler than the water", () => {
-    expect(calculateFlueGasHeatBalance(MaxGasFlow, DesignWater, 0, 37).efficiency).toBeLessThan(0.84)
+    expect(calculateFlueGasHeatBalance(MaxGasFlow, DesignWater, 0, 37, designSteam()).efficiency).toBeLessThan(0.84)
   })
 })
 
 describe("part load at 350 °C", () => {
   // Gap between the flue gas leaving the boiler stage and the boiler water
   const gap = (share: number): number =>
-    calculateFlueGasHeatBalance(MaxGasFlow * share, DesignWater, 0, 37).boilerExitTemperature - DesignWater
+    calculateFlueGasHeatBalance(MaxGasFlow * share, DesignWater, 0, 37, designSteam(share)).boilerExitTemperature - DesignWater
 
   test("firing lower narrows the gap: 100 K at full gas, about 20 K at 25%", () => {
     expect(gap(1)).toBeCloseTo(100, 3)
@@ -190,5 +198,55 @@ describe("bisectDuty", () => {
 
   test("converges on the ceiling end when the shortfall never turns positive", () => {
     expect(bisectDuty((duty) => duty - 500, 100)).toBeCloseTo(100, 9)
+  })
+})
+
+describe("superheater (ADR 0044)", () => {
+  const at = (flow: number, share = 1) =>
+    calculateFlueGasHeatBalance(MaxGasFlow * share, DesignWater, 120 * share, 130, {
+      flow,
+      pressure: CstSuperheater.DesignPressure,
+    })
+
+  test("the steam leaves at 540 °C at full gas and the design flow, with no spray", () => {
+    expect(at(CstSuperheater.DesignSteamFlow).superheaterSteamTemperature).toBeCloseTo(CstSuperheater.SteamTemperature, 2)
+    expect(SuperheaterSurface).toBeGreaterThan(50)
+  })
+
+  test("its heat is the steam flow times the enthalpy it gains, about 110 MW at the design flow", () => {
+    const heat: number = at(CstSuperheater.DesignSteamFlow).superheaterHeat / 1000
+    expect(heat).toBeGreaterThan(100)
+    expect(heat).toBeLessThan(135)
+  })
+
+  test("less steam leaves hotter, more steam leaves cooler (the reason for the spray)", () => {
+    expect(at(CstSuperheater.DesignSteamFlow * 0.8).superheaterSteamTemperature).toBeGreaterThan(CstSuperheater.SteamTemperature)
+    expect(at(CstSuperheater.DesignSteamFlow * 1.2).superheaterSteamTemperature).toBeLessThan(CstSuperheater.SteamTemperature)
+  })
+
+  test("no steam takes no heat: the flue gas passes to the boiler stage at the combustion temperature", () => {
+    const none = at(0)
+    expect(none.superheaterHeat).toBe(0)
+    expect(none.superheaterExitTemperature).toBe(CstFlueGas.CombustionTemperature)
+  })
+
+  test("the heat it takes comes before the boiler stage: the gas arrives there colder", () => {
+    expect(at(CstSuperheater.DesignSteamFlow).superheaterExitTemperature).toBeLessThan(CstFlueGas.CombustionTemperature - 300)
+  })
+
+  test("the steam never passes the end of the steam table, however little flows", () => {
+    expect(at(1).superheaterSteamTemperature).toBeLessThanOrEqual(getBoilingPoint(CstSuperheater.DesignPressure) + 350 + 1e-6)
+  })
+
+  test("fuel heat is still the water's heat plus the stack's: the superheater heat is part of the heat into the water", () => {
+    const balance = at(CstSuperheater.DesignSteamFlow)
+    expect(balance.fuelHeat - balance.stackHeat).toBeCloseTo(balance.heatIntoWater, 6)
+    expect(balance.superheaterHeat).toBeLessThan(balance.heatIntoWater)
+  })
+
+  test("the surface scales with gas flow to the power 0.65, so at half gas and half the steam it falls less than the flow: the steam leaves hotter", () => {
+    const half = at(CstSuperheater.DesignSteamFlow * 0.5, 0.5).superheaterSteamTemperature
+    expect(half).toBeGreaterThan(CstSuperheater.SteamTemperature)
+    expect(half).toBeLessThan(CstSuperheater.SteamTemperature + 100)
   })
 })

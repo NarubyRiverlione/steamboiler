@@ -7,8 +7,8 @@ The simulated clock and the playback speed live in `SimulationState` (`src/conte
 ## Rules
 
 - N ticks in a batch equal N single ticks, exactly. The batch stops on the tick where an alarm comes on.
-- "Alarm" is every row of the annunciator's list in `src/navigation/alarms.ts`, the single source (`src/context/Alarms.ts` only reads it). Tiles added later (#59, #62, #72) are one more row and drop the speed with no other change.
-- An alarm that comes on drops the speed to 1x (a pause stays a pause) in the same reducer step. Acknowledging is the annunciator's (UI layer): while a tile flashes (set, not yet acknowledged) the selector refuses speeds above 1x. After ACK they are allowed again, even while the flag stays set.
+- "Alarm" is every row of the annunciator's list in `src/navigation/alarms.ts`, the single source (`src/context/Alarms.ts` only reads it). Tiles added later (#62 did the boiler level pair, #59 the hotwell pair, #72 adds none) are one more row and drop the speed with no other change.
+- An alarm that comes on drops the speed to 1x (a pause stays a pause) in the same reducer step. Acknowledging is the annunciator's (UI layer): while a tile flashes (set, not yet acknowledged) the selector refuses speeds above 1x. After ACK the tile is steady (latched until RESET, #116) and speeds are allowed again, even while the flag stays set.
 - At the cap the plant runs slower than requested: the remainder is dropped, no tick is skipped. The cap was chosen by measurement (`pnpm test:perf`): 100 ticks take about 1.4 ms, and 60x needs 30 ticks per update, so 300 gives a 10x margin.
 - A hidden tab runs nothing and resumes at the same speed with no catch-up. Pause does the same.
 - Loading a preset (`LOAD_STATE`, #24) resets the clock to zero and the speed to 1x; the alarms of the loaded state are not new.
@@ -24,5 +24,5 @@ The simulated clock and the playback speed live in `SimulationState` (`src/conte
 ## Consequences
 
 - The headless runner is unaffected: it dispatches single ticks and never sees a playback speed.
-- Playback speed is not a departure from a real plant; `design-basis.md` says so.
+- Playback speed is not a departure from a real plant; `design-basis.md` says so. With the real heating-rate limit (#103) a cold start to 165 bar is about 6 h of plant time: 6 min at 60x, and the first heating-rate alarm drops it to 1x.
 - The Graphs recorder (#36) samples by simulated time (`SimulationState.ticks`), not by render.

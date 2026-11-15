@@ -10,8 +10,8 @@ The **boiler feed pump's** delivery (#112; before it the condensation pump's Ret
 
 ## Consequences
 
-- Boiler water never exceeds `CstBoiler.TotalVolume`. High-level protection is a separate feature (#62).
-- The capacity is the whole 100 m³ of liquid, so a full boiler has no steam space. Protecting against that is #62's job, not the Return's.
+- Boiler water never exceeds `CstBoiler.TotalVolume`. High-level protection is a separate feature: the feed pump trips at 70% ([ADR 0041](0041-boiler-high-high-level-trips-feed-pump-and-turbine.md)).
+- The capacity is the whole 100 m³ of liquid, so a full boiler has no steam space. Protecting against that is the high-high level trip's job ([ADR 0041](0041-boiler-high-high-level-trips-feed-pump-and-turbine.md)), not the Return's: it shuts the pump at 70%, so this room rule is the second line.
 - `DeaeratorTick` takes the boiler's room as an input and reports the delivery of the feed pump; `CondenserTick` takes the deaerator's room and reports the Return actually delivered; `PowerPlantTick` adds exactly that, which removes the previous one-tick lag.
 - Water is held as kg and the room is converted at the boiler temperature, so a hot boiler takes fewer kg for the same free volume ([ADR 0007](0007-water-state-is-mass-in-kg.md)). A full drum that then heats up passes `TotalVolume`, because mass is not clamped (#62).
 - The sample invariant can only bound the Return by the pump capacity; that it never exceeds the hotwell is checked directly on `CondenserTick`.

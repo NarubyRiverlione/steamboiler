@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { lowPressureClose } from "../scenarios/low-pressure-close"
 
 const { MainSteamValveMinimumPressure } = CstSimulation.CstTurbine
 
 describe("low-pressure-close", () => {
   // every tick, so the closure can be pinned to one tick
-  const samples = runScenario({ ...lowPressureClose, sampleEvery: CstSimulation.DeltaTime })
+  const { samples } = runChecked(lowPressureClose, { sampleEvery: CstSimulation.DeltaTime })
   const closed: number = samples.findIndex((s) => !s.state.Turbine.mainSteamValve)
   const before = samples[closed - 1].state
   const at = samples[closed].state

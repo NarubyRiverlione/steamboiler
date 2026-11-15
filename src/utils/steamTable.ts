@@ -1,5 +1,6 @@
 import { type SteamData, steamTable } from "./steamData"
 import { type SaturationEntropyRow, saturationEntropyTable } from "./steamEntropyData"
+import { type SuperheatedRow, superheatedTable, superheatSteps } from "./steamSuperheatedData"
 
 // Last table row: the critical point, where lookups clamp (never throw, the simulation runs this every tick)
 const CriticalPoint: SteamData = steamTable[steamTable.length - 1]
@@ -250,6 +251,78 @@ export function getSaturationEnthalpies(pressure: number): { liquid: number; vap
   return { liquid: row.liquidEnthalpy, vapor: row.vaporEnthalpy }
 }
 
+// Row of the superheated table at a pressure (bar), linear in ln(pressure), clamped to the table: the value at one superheat
+function superheatedValue(pressure: number, superheat: number, column: "enthalpy" | "entropy"): number {
+  const last: number = superheatedTable.length - 1
+  const clamped: number = Math.max(superheatedTable[0].pressure, Math.min(superheatedTable[last].pressure, pressure))
+  const index: number = Math.min(last - 1, Math.max(0, superheatedTable.findIndex((row) => row.pressure > clamped) - 1))
+  const lower: SuperheatedRow = superheatedTable[index]
+  const upper: SuperheatedRow = superheatedTable[index + 1]
+  const ratio: number = Math.log(clamped / lower.pressure) / Math.log(upper.pressure / lower.pressure)
+  const steps: number = superheatSteps.length - 1
+  const s: number = Math.max(0, Math.min(superheatSteps[steps], superheat))
+  const k: number = Math.min(steps - 1, Math.max(0, superheatSteps.findIndex((step) => step > s) - 1))
+  const along: number = (s - superheatSteps[k]) / (superheatSteps[k + 1] - superheatSteps[k])
+  const at = (row: SuperheatedRow): number => row[column][k] + along * (row[column][k + 1] - row[column][k])
+  return at(lower) + ratio * (at(upper) - at(lower))
+}
+
+// Enthalpy (kJ/kg) of steam at a pressure (bar) and temperature (°C); at or below saturation it is saturated vapour (#113)
+export function getSteamEnthalpy(pressure: number, temperature: number): number {
+  return superheatedValue(pressure, temperature - getBoilingPoint(pressure), "enthalpy")
+}
+
+// Entropy (kJ/kg·K) of steam at a pressure (bar) and temperature (°C); at or below saturation it is saturated vapour (#113)
+export function getSteamEntropy(pressure: number, temperature: number): number {
+  return superheatedValue(pressure, temperature - getBoilingPoint(pressure), "entropy")
+}
+
+// Isentropic enthalpy drop (kJ/kg) of superheated steam expanding from the inlet state to the exhaust pressure (bar): the
+// exhaust is wet steam at the inlet entropy. With no superheat it equals getIsentropicEnthalpyDrop (#113, ADR 0044).
+export function getSuperheatedIsentropicDrop(inletPressure: number, inletTemperature: number, exhaustPressure: number): number {
+  const exhaust: SaturationEntropyRow = getSaturationEntropyRow(exhaustPressure)
+  const quality: number =
+    (getSteamEntropy(inletPressure, inletTemperature) - exhaust.liquidEntropy) / (exhaust.vaporEntropy - exhaust.liquidEntropy)
+  const exhaustEnthalpy: number = exhaust.liquidEnthalpy + quality * (exhaust.vaporEnthalpy - exhaust.liquidEnthalpy)
+  return getSteamEnthalpy(inletPressure, inletTemperature) - exhaustEnthalpy
+}
+
+// Inlet steam state (#113, ADR 0044): at or below saturation the inlet is saturated vapour (the saturated tables of ADR 0025
+// stay untouched), above it the superheated table. With no temperature given the steam is saturated.
+export function isSuperheated(pressure: number, steamTemperature: number): boolean {
+  return steamTemperature > getBoilingPoint(pressure)
+}
+
+// Enthalpy (kJ/kg) of the turbine inlet steam at a pressure (bar) and steam temperature (°C)
+export function getInletEnthalpy(pressure: number, steamTemperature = 0): number {
+  return isSuperheated(pressure, steamTemperature)
+    ? getSteamEnthalpy(pressure, steamTemperature)
+    : getSaturationEnthalpies(pressure).vapor
+}
+
+// Isentropic enthalpy drop (kJ/kg) from the inlet steam (saturated or superheated) to the exhaust pressure (bar)
+export function getInletIsentropicDrop(pressure: number, exhaustPressure: number, steamTemperature = 0): number {
+  return isSuperheated(pressure, steamTemperature)
+    ? getSuperheatedIsentropicDrop(pressure, steamTemperature, exhaustPressure)
+    : getIsentropicEnthalpyDrop(pressure, exhaustPressure)
+}
+
+// Temperature (°C) of steam of this enthalpy (kJ/kg) at a pressure (bar), the inverse of getSteamEnthalpy by bisection:
+// saturation at or below the saturated vapour, the end of the superheated table at or above its last column
+export function getSteamTemperature(pressure: number, enthalpy: number): number {
+  const saturation: number = getBoilingPoint(pressure)
+  let low: number = saturation
+  let high: number = saturation + superheatSteps[superheatSteps.length - 1]
+  if (enthalpy <= getSteamEnthalpy(pressure, low)) return low
+  if (enthalpy >= getSteamEnthalpy(pressure, high)) return high
+  for (let i = 0; i < 30; i++) {
+    const mid: number = (low + high) / 2
+    if (getSteamEnthalpy(pressure, mid) < enthalpy) low = mid
+    else high = mid
+  }
+  return (low + high) / 2
+}
+
 // Enthalpy (kJ/kg) of the turbine exhaust. The real expansion takes only isentropicEfficiency of the drop, and the shaft
 // takes only workFraction of that (1 at sync speed, less while the rotor runs up, 0 at standstill where the steam
 // passes through unchanged). Same pressures as the drop; with a zero or negative drop nothing expands.
@@ -258,9 +331,10 @@ export function getExhaustEnthalpy(
   exhaustPressure: number,
   isentropicEfficiency: number,
   workFraction = 1,
+  steamTemperature = 0,
 ): number {
-  const inletEnthalpy: number = getSaturationEnthalpies(boilerPressure).vapor
-  const enthalpyDrop: number = getIsentropicEnthalpyDrop(boilerPressure, exhaustPressure)
+  const inletEnthalpy: number = getInletEnthalpy(boilerPressure, steamTemperature)
+  const enthalpyDrop: number = getInletIsentropicDrop(boilerPressure, exhaustPressure, steamTemperature)
   if (enthalpyDrop <= 0) return inletEnthalpy
   return inletEnthalpy - workFraction * isentropicEfficiency * enthalpyDrop
 }
@@ -272,11 +346,18 @@ export function getExhaustQuality(
   exhaustPressure: number,
   isentropicEfficiency: number,
   workFraction = 1,
+  steamTemperature = 0,
 ): number {
-  if (getIsentropicEnthalpyDrop(boilerPressure, exhaustPressure) <= 0) return 1
+  if (getInletIsentropicDrop(boilerPressure, exhaustPressure, steamTemperature) <= 0) return 1
 
   const exhaust: { liquid: number; vapor: number } = getSaturationEnthalpies(exhaustPressure)
-  const exhaustEnthalpy: number = getExhaustEnthalpy(boilerPressure, exhaustPressure, isentropicEfficiency, workFraction)
+  const exhaustEnthalpy: number = getExhaustEnthalpy(
+    boilerPressure,
+    exhaustPressure,
+    isentropicEfficiency,
+    workFraction,
+    steamTemperature,
+  )
   const quality: number = (exhaustEnthalpy - exhaust.liquid) / (exhaust.vapor - exhaust.liquid)
   return Math.max(0, Math.min(1, quality))
 }

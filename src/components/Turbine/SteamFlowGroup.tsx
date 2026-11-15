@@ -15,16 +15,12 @@ type SteamFlowGroupProps = {
   readonly turbine: TurbineState
   readonly boilerPressure: number
   readonly onToggleMainSteamValve: () => void
-  readonly onAdjustBypass: (step: number) => void
-  readonly onAdjustTurbine: (step: number) => void
 }
 
 export function SteamFlowGroup({
   turbine,
   boilerPressure,
   onToggleMainSteamValve,
-  onAdjustBypass,
-  onAdjustTurbine,
 }: SteamFlowGroupProps) {
   return (
     <div className="board-group board-group-left">
@@ -46,20 +42,20 @@ export function SteamFlowGroup({
       <span className="board-readout-label">Main steam valve</span>
       <div className="board-group-cols">
         <ValveControl
+          ValveId="Bypass valve"
           Label="Bypass valve"
           Value={`${turbine.bypassSteamFlowOut.toFixed(1)} kg/s`}
           ValueWidest="999.9 kg/s"
           Position={turbine.bypassValvePosition}
           Step={BypassValveStep}
-          cbAdjust={onAdjustBypass}
         />
         <ValveControl
+          ValveId="Turbine valve"
           Label="Turbine valve"
           Value={`${turbine.turbineSteamFlowOut.toFixed(1)} kg/s`}
           ValueWidest="999.9 kg/s"
           Position={turbine.turbineValvePosition}
           Step={TurbineValveStep}
-          cbAdjust={onAdjustTurbine}
         />
       </div>
     </div>

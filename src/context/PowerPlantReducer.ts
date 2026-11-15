@@ -1,30 +1,33 @@
 import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
 import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
-import { calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
+import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
+import { getBoilingPoint } from "../utils/steamTable"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal, turbineTrippedAfter } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtOverspeed, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 import { runTicks } from "./PowerPlantBatch"
-import { isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
+import { integralFor } from "./Boiler/Attemperator"
+import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
+import { resetTrip } from "./tripReset"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
 const { AmbientTemperature } = CstPhysics
 
 // Initial fills are specified in litres at ambient and held as kg
-const startBoilerMass: number = waterMassOf(CstBoiler.StartWaterVolume, AmbientTemperature)
 const startHotwellMass: number = waterMassOf(
   CstSimulation.CstCondenser.HotwellStartVolume,
   AmbientTemperature,
 )
 
-// Truly cold plant: everything at ambient temperature and atmospheric pressure, all pumps, valves and gas off
-export const makeInitialState = (): PowerPlantState => ({
+// Truly cold plant: everything at ambient temperature and atmospheric pressure, all pumps, valves and gas off.
+// The headless scenarios start with the 35% drum; the app starts with makeUiStartState (40%)
+export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWaterVolume): PowerPlantState => ({
   Boiler: {
-    waterMass: startBoilerMass, // kg, the start volume (litres at ambient) converted
-    waterVolume: CstBoiler.StartWaterVolume, // liters, derived
+    waterMass: waterMassOf(boilerStartVolume, AmbientTemperature), // kg, the start volume (litres at ambient) converted
+    waterVolume: boilerStartVolume, // liters, derived
     deltaWaterMass: 0,
     temperature: AmbientTemperature, // Celsius
     pressure: CstPhysics.AtmosphericPressure_mBar / 1e3, // bar
@@ -36,16 +39,23 @@ export const makeInitialState = (): PowerPlantState => ({
     ventedTotal: 0, // kg
     reliefLifts: 0,
     burnerTripped: false,
+    boilerLevelHighTripped: false,
     stackTemperature: AmbientTemperature, // Celsius, no gas burning
     boilerEfficiency: 0,
     returnTemperatureOut: AmbientTemperature, // Celsius
+    steamTemperature: getBoilingPoint(calculateBoilerPressure(AmbientTemperature)), // Celsius, saturation: no steam flow yet (ADR 0044)
+    superheaterHeat: 0, // kW
+    sprayValvePosition: 0,
+    sprayFlow: 0, // kg/s
+    attemperatorAuto: true,
+    attemperatorIntegralError: 0,
     energy:
-      calculateHeatingEnergy(startBoilerMass, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
+      calculateHeatingEnergy(waterMassOf(boilerStartVolume, AmbientTemperature), 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s
     heatLoss: 0, // kW
     heatingRate: 0, // K/s
     heatingRateOverLimit: false,
-    steamMass: calculateSteamInventory(AmbientTemperature, CstBoiler.StartWaterVolume), // kg - vapour over the water, in equilibrium
+    steamMass: calculateSteamInventory(AmbientTemperature, boilerStartVolume), // kg - vapour over the water, in equilibrium
     deltaSteamMass: 0,
   },
   Condenser: {
@@ -73,7 +83,7 @@ export const makeInitialState = (): PowerPlantState => ({
     rejectTotal: 0,
     deltaWaterMass: 0,
   },
-  Deaerator: makeColdDeaerator(), // filled cold to 38% at ambient (ADR 0037)
+  Deaerator: makeColdDeaerator(), // filled cold to 50% at ambient (ADR 0037)
   Heater: {
     extractionFlow: 0, // kg/s
     tapPressure: 0, // bar
@@ -98,7 +108,10 @@ export const makeInitialState = (): PowerPlantState => ({
   },
 })
 
-export const initialPowerPlantState: PowerPlantState = makeInitialState()
+// What the app starts from: the cold plant with the drum filled to 40% (ADR 0018)
+export const makeUiStartState = (): PowerPlantState => makeInitialState(CstBoiler.UiStartWaterVolume)
+
+export const initialPowerPlantState: PowerPlantState = makeUiStartState()
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 const withBoiler = (state: PowerPlantState, patch: Partial<BoilerState>): PowerPlantState => ({
@@ -129,18 +142,17 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   SIMULATE_TICK: (state) => PowerPlantTick(state),
   SIMULATE_TICKS: (state, { count }) => runTicks(state, count).state,
   LOAD_STATE: (_state, { payload: { state } }) => state,
+  // The only thing that clears a latched trip, and only once its cause has gone (ADR 0043)
+  RESET_TRIP: (state, { payload: { trip } }) => resetTrip(state, trip),
 
   //#region Boiler
-  // Sets the knob. Turning it up is refused (knob stays centred) while the water is below the burner low-low level; a
-  // raise past the dead zone above that level clears the trip and the gas ramps up from 0 (ADR 0017)
+  // Sets the knob. Turning it up is refused (knob stays centred) while the burner is tripped or the water is below the
+  // burner low-low level; only a trip reset lifts the trip, then a raise past the dead zone ramps the gas up from 0 (ADR 0017, 0043)
   SET_GAS_RATE: (state, { payload }) => {
     const command: number = clamp(payload.gasRateCommand, -1, 1)
     const raising: boolean = command > CstBoiler.GasRateDeadZone
-    if (raising && isBelowBurnerLowLow(state.Boiler)) return state
-    return withBoiler(state, {
-      gasRateCommand: command,
-      burnerTripped: state.Boiler.burnerTripped && !raising,
-    })
+    if (raising && (state.Boiler.burnerTripped || isBelowBurnerLowLow(state.Boiler))) return state
+    return withBoiler(state, { gasRateCommand: command })
   },
   TOGGLE_DRAIN_VALVE: (state) => withBoiler(state, { drainValveOpen: !state.Boiler.drainValveOpen }),
   //#endregion
@@ -148,13 +160,31 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#region Deaerator
   // The start-up vent is an operator action; the warning flags follow at the next tick
   TOGGLE_DEAERATOR_VENT: (state) => withDeaerator(state, { startUpVentOpen: !state.Deaerator.startUpVentOpen }),
-  // Below low-low the feed pump may not be opened, closing is always allowed; an opening clears the trip flag
+  // While a feed pump or boiler high-high trip is latched, below the deaerator low-low or at the boiler high-high level the
+  // feed pump may not be opened, closing is always allowed; only a trip reset clears the flags (ADR 0041, 0043)
   SET_FEED_PUMP_VALVE_POSITION: (state, { payload }) => {
     const { feedPumpValvePosition: current, feedPumpTripped, waterVolume } = state.Deaerator
+    const { boilerLevelHighTripped } = state.Boiler
     const requested: number = clamp(current + payload.feedPumpValvePosition, 0, 1)
-    if (requested > current && deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel) return state
-    return withDeaerator(state, { feedPumpValvePosition: requested, feedPumpTripped: feedPumpTripped && requested <= current })
+    const opening: boolean = requested > current
+    const refused: boolean = feedPumpTripped || boilerLevelHighTripped || deaeratorLevel(waterVolume) < CstDeaerator.LowLowLevel || isAtBoilerHighHigh(state.Boiler)
+    if (opening && refused) return state
+    return withDeaerator(state, { feedPumpValvePosition: requested })
   },
+  //#endregion
+
+  //#region Attemperator
+  // Auto holds the steam temperature with the PID; switching to Auto carries the valve position over (bumpless, ADR 0044)
+  SET_ATTEMPERATOR_AUTO: (state, { payload: { attemperatorAuto } }) =>
+    withBoiler(state, {
+      attemperatorAuto,
+      attemperatorIntegralError: attemperatorAuto ? integralFor(state.Boiler.sprayValvePosition) : state.Boiler.attemperatorIntegralError,
+    }),
+  // The operator moves the spray valve by this change, in Manual only; in Auto the PID owns it
+  SET_SPRAY_VALVE_POSITION: (state, { payload: { sprayValvePosition } }) =>
+    state.Boiler.attemperatorAuto
+      ? state
+      : withBoiler(state, { sprayValvePosition: clamp(state.Boiler.sprayValvePosition + sprayValvePosition, 0, 1) }),
   //#endregion
 
   //#region Condenser
@@ -173,15 +203,18 @@ const handlers: { [T in ActionType]: Handler<T> } = {
         1,
       ),
     }),
-  // Below low-low the pump may not be opened, closing is always allowed; an opening clears the trip flag
+  // Tripped, below hotwell low-low or at the deaerator high-high level (ADR 0045) the pump may not be opened, closing is always allowed; only a trip reset clears the flag (ADR 0043)
   SET_CONDENSATION_PUMP_VALVE_POSITION: (state, { payload }) => {
     const { condensationPumpValvePosition: current, condensationPumpTripped, hotwellWaterVolume } = state.Condenser
+    const { deaeratorHighHighTripped, waterVolume } = state.Deaerator
     const requested = clamp(current + payload.condensationPumpValvePosition, 0, 1)
-    if (requested > current && hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow) return state
-    return withCondenser(state, {
-      condensationPumpValvePosition: requested,
-      condensationPumpTripped: condensationPumpTripped && requested <= current,
-    })
+    const refused: boolean =
+      condensationPumpTripped ||
+      hotwellLevel(hotwellWaterVolume) < CstCondenser.HotwellLowLow ||
+      deaeratorHighHighTripped ||
+      deaeratorLevel(waterVolume) >= CstDeaerator.HighHighLevel
+    if (requested > current && refused) return state
+    return withCondenser(state, { condensationPumpValvePosition: requested })
   },
   SET_MAKEUP_VALVE_POSITION: (state, { payload }) =>
     withCondenser(state, {
@@ -203,15 +236,15 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     withTurbine(state, {
       bypassValvePosition: clamp(state.Turbine.bypassValvePosition + payload.bypassValvePosition, 0, 1),
     }),
-  // Above the vacuum limit the turbine may not take more steam: an opening is refused, closing is always allowed (ADR 0003)
+  // Tripped, above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) the turbine may not take more steam: an
+  // opening is refused, closing is always allowed; only a trip reset clears the flag (ADR 0043)
   ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) => {
-    const { turbineValvePosition: current, turbineTripped } = state.Turbine
+    const { turbineValvePosition: current, turbineTripped, rpm } = state.Turbine
     const requested = clamp(current + payload.turbineValvePosition, 0, 1)
     if (requested > maxTurbineValvePosition(current, state.Condenser.pressure)) return state
-    return withTurbine(state, {
-      turbineValvePosition: requested,
-      turbineTripped: turbineTrippedAfter(turbineTripped, current, requested),
-    })
+    // At or above the overspeed limit the turbine may not take more steam either (ADR 0040)
+    if (requested > current && (turbineTripped || isAtOverspeed(rpm))) return state
+    return withTurbine(state, { turbineValvePosition: requested })
   },
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
   SET_SPEED_MODE: (state, { payload: { speedMode } }) => {
@@ -240,15 +273,27 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   },
   // Allow closing the breaker if RPM is within the margin of sync speed; toggling a closed breaker opens it
   // Whenever the breaker ends up open, the load and the load setpoint are 0 (ADR 0027)
+  // Closing enters Synchronised (PID on 3000 rpm); opening, by hand, returns to Free (#135)
   TOGGLE_GENERATOR_BREAKER: (state) => {
-    const generatorBreaker: boolean = !state.Turbine.generatorBreaker && isAtSyncSpeed(state.Turbine.rpm)
-    return withTurbine(state, generatorBreaker ? { generatorBreaker } : { generatorBreaker, electricOutput: 0, loadSetpoint: 0 })
+    const { rpm, generatorBreaker: wasClosed } = state.Turbine
+    const generatorBreaker: boolean = !wasClosed && isAtSyncSpeed(rpm)
+    if (generatorBreaker) {
+      return withTurbine(state, { generatorBreaker, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
+    }
+    return withTurbine(state, { generatorBreaker, electricOutput: 0, loadSetpoint: 0, ...(wasClosed ? freeAt(rpm) : {}) })
   },
   // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
     loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
+
+// Back to Free: the integral is cleared and the reference follows the speed
+const freeAt = (rpm: number): Pick<TurbineState, "speedMode" | "pidIntegralError" | "speedReference"> => ({
+  speedMode: "free",
+  pidIntegralError: 0,
+  speedReference: rpm,
+})
 
 export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
   // TS cannot correlate action.type with its payload when indexing a mapped type, hence the widening

@@ -1,40 +1,56 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario, runScenarioWithLifts } from "../scenario"
+import { firstTimeWhere, runScenario, Sample } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { LoopSettings } from "../scenarios/loop-operator"
 import { PressureHoldSettings } from "../scenarios/pressure-hold"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { StartupSettings, startupOperator, turbineRunup } from "../scenarios/turbine-runup"
-import { turbineSync } from "../scenarios/turbine-sync"
 import { StartGas } from "../scenarios/steps"
 import { CstSimulation } from "../../src/context/const"
 import PowerPlantState from "../../src/context/PowerPlantState"
+import { describeVacuumAtOpening } from "./vacuum-at-opening"
+
+const RunUpCheckDuration = 3900 // sim-seconds: the 60 min run-up and the Hold at 3000 rpm that ends it
+
+// The one run of the scenario: its invariants, its snapshot and the goal checks below
+const { samples: runupSamples, lifts } = runChecked(turbineRunup)
 
 describe("turbine-runup", () => {
-  const { samples, lifts } = runScenarioWithLifts(turbineRunup)
+  const samples: Sample[] = runupSamples
 
   test("starts cold and at rest", () => {
     expect(samples[0].state.Boiler.temperature).toBe(20)
     expect(samples[0].state.Turbine.rpm).toBe(0)
   })
 
-  test("reaches main-steam-valve pressure (10 bar) before the valve is opened at 780 s", () => {
-    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(780)
+  const valveOpenAt = firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve) ?? Infinity
+
+  test("heats under the real limit: the heating-rate alarm never rises (#103)", () => {
+    expect(samples.filter((s) => s.state.Boiler.heatingRateOverLimit).map((s) => s.time)).toEqual([])
   })
 
-  test("main steam valve opens when commanded and the turbine spins up", () => {
-    expect(firstTimeWhere(samples, (s) => s.Turbine.mainSteamValve)).toBe(780)
-    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(780)
+  test("reaches main-steam-valve pressure (10 bar) before the valve is opened, at working pressure (ADR 0018)", () => {
+    expect(firstTimeWhere(samples, (s) => s.Boiler.pressure > 10)).toBeLessThan(valveOpenAt)
+    // the sample just before: the opening itself starts the pressure falling
+    const before = samples.find((s) => s.time >= valveOpenAt - 10)
+    expect(before?.state.Boiler.pressure).toBeGreaterThan(PressureHoldSettings.Target - PressureHoldSettings.Band - 0.5)
+  })
+
+  test("the turbine spins up only after the main steam valve opens", () => {
+    expect(valveOpenAt).toBeLessThan(turbineRunup.duration)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(valveOpenAt)
   })
 
   const { Target, Band } = PressureHoldSettings
   const { SettlingTime } = StartupSettings
-  const inBandAt = firstTimeWhere(samples, (s) => Math.abs(s.Boiler.pressure - Target) <= Band) ?? Infinity
+  // The bypass crack draws the pressure down from the band, and Ramp up waits until it is back
+  const inBandAt = firstTimeWhere(samples, (s) => s.Turbine.speedMode !== "free") ?? Infinity
   const last = samples.filter((s) => s.time >= turbineRunup.duration - SettlingTime)
   const average = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
-  test("builds pressure on the bypass at 5% with the turbine valve shut until pressure first enters the band", () => {
+  test("cracks the bypass to 5% with the turbine valve shut until the pressure is back in the band", () => {
     expect(inBandAt).toBeLessThan(turbineRunup.duration - SettlingTime)
-    for (const { state } of samples.filter((s) => s.time > 790 && s.time < inBandAt)) {
+    for (const { state } of samples.filter((s) => s.time > valveOpenAt && s.time < inBandAt)) {
       expect(state.Turbine.bypassValvePosition).toBeCloseTo(0.05, 9)
       expect(state.Turbine.turbineValvePosition).toBe(0)
       expect(state.Turbine.speedMode).toBe("free")
@@ -59,8 +75,13 @@ describe("turbine-runup", () => {
   // reaches a sample, so the states the operator sees in Hold are collected from a wrapped operator at tick resolution
   describe("run-up through the run-up points", () => {
     const seenInHold: PowerPlantState["Turbine"][] = []
+    // Tick resolution only around the run-up: from just before Ramp up starts, for the run-up and a little more
+    const rampStartState = samples.find((s) => s.time >= inBandAt - 10)?.state ?? turbineRunup.initial
     const ticks = runScenario({
       ...turbineRunup,
+      initial: rampStartState,
+      actions: [],
+      duration: RunUpCheckDuration,
       sampleEvery: CstSimulation.DeltaTime,
       operator: (state, time) => {
         if (state.Turbine.speedMode === "hold") seenInHold.push(state.Turbine)
@@ -118,7 +139,7 @@ describe("turbine-runup", () => {
   const BalanceWindow = 3000
   test("over the last 3000 s steam out of the boiler matches steam generated within 5%", () => {
     const balance = samples.filter((s) => s.time >= turbineRunup.duration - BalanceWindow)
-    const out = average(balance.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut + s.state.Deaerator.letDownFlow))
+    const out = average(balance.map((s) => s.state.Turbine.bypassSteamFlowOut + s.state.Turbine.turbineSteamFlowOut - s.state.Boiler.sprayFlow + s.state.Deaerator.letDownFlow))
     const generated = average(balance.map((s) => s.state.Boiler.deltaSteamMass))
     expect(Math.abs(out - generated)).toBeLessThanOrEqual(0.05 * generated)
   })
@@ -128,25 +149,16 @@ describe("turbine-runup", () => {
   })
 })
 
-// The turbine valve may only open under vacuum (ADR 0003): the scenarios pull it first and the turbine
-// never trips. Sampled every tick, so a trip that a later opening clears again cannot slip between samples.
-const VacuumCheckDuration = 4000 // sim-seconds: covers the first opening of the turbine valve by Ramp up
-describe.each([turbineRunup, turbineSync])("$name under the vacuum limit", (scenario) => {
-  const samples = runScenario({
-    ...scenario,
-    duration: Math.min(scenario.duration, VacuumCheckDuration),
+// The cold start heats for hours first: from its samples to just before the first opening, then at every tick
+const turbineOpenAt = firstTimeWhere(runupSamples, (s) => s.Turbine.turbineValvePosition > 0) ?? 0
+const beforeOpening = runupSamples.find((s) => s.time >= Math.max(0, turbineOpenAt - 100))
+describeVacuumAtOpening(
+  turbineRunup.name,
+  runScenario({
+    ...turbineRunup,
+    initial: beforeOpening?.state ?? turbineRunup.initial,
+    actions: [],
+    duration: 400,
     sampleEvery: CstSimulation.DeltaTime,
-  })
-  const limit = CstSimulation.CstCondenser.VacuumLimit
-  const firstOpen = samples.findIndex((s) => s.state.Turbine.turbineValvePosition > 0)
-
-  test("condenser pressure is at or below the vacuum limit when the turbine valve first opens", () => {
-    expect(firstOpen).toBeGreaterThanOrEqual(0)
-    expect(samples[firstOpen].state.Condenser.pressure).toBeLessThanOrEqual(limit)
-  })
-
-  test("no turbine trip after the turbine valve opens", () => {
-    const afterOpening = samples.slice(firstOpen)
-    expect(afterOpening.filter((s) => s.state.Turbine.turbineTripped)).toEqual([])
-  })
-})
+  }),
+)

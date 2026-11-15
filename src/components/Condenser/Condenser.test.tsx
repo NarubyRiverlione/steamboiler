@@ -4,6 +4,7 @@ import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
+import { PlantValveRamp } from "../board/PlantValveRamp"
 import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
 import Condenser from "./Condenser"
 
@@ -24,7 +25,9 @@ function renderCondenser(patch: Partial<PowerPlantState["Condenser"]> = {}) {
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
-      <Condenser />
+      <PlantValveRamp>
+        <Condenser />
+      </PlantValveRamp>
     </PowerPlantContext.Provider>,
   )
   return fns
@@ -39,6 +42,17 @@ function turnValve(label: string, key: "End" | "Home"): void {
 }
 
 describe("Condenser page", () => {
+  it("has a condensation pump RESET, enabled only while the trip is latched and the hotwell is back", () => {
+    renderCondenser()
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(true)
+  })
+
+  it("enables the condensation pump RESET once the trip is latched, and shows the trip lamp", () => {
+    renderCondenser({ condensationPumpTripped: true })
+    expect((screen.getByRole<HTMLButtonElement>("button", { name: "RESET" })).disabled).toBe(false)
+    expect(screen.getByRole("img", { name: "Condensation pump trip: on" })).toBeTruthy()
+  })
+
   it("toggles the air extraction pump and the SJAE, showing their state", () => {
     const fns = renderCondenser({ isAirExtractionPumpEnabled: true, isSjaeEnabled: false })
     const car: HTMLElement = screen.getByRole("switch", { name: "Air extraction pump" })
@@ -71,6 +85,13 @@ describe("Condenser page", () => {
     expect(fns.adjustMakeupValvePosition).toHaveBeenCalledWith(RAMP_STEP)
     expect(fns.adjustRejectValvePosition).toHaveBeenCalledWith(-RAMP_STEP)
     vi.useRealTimers()
+  })
+
+  it("shows the hotwell level zones: red, orange and the green working band", () => {
+    renderCondenser()
+    const tones: (string | null)[] = Array.from(document.querySelectorAll("rect.board-zone-bar")).map((e: Element) => e.getAttribute("data-tone"))
+    expect(tones.filter((t: string | null) => t === "ok").length).toBeGreaterThanOrEqual(1)
+    expect(tones).toEqual(expect.arrayContaining(["alarm", "warn", "ok"]))
   })
 
   it("shows flow rates of the valves that have one", () => {

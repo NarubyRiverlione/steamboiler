@@ -6,11 +6,28 @@ import usePowerPlant from "../context/PowerPlantContext"
 import { START_PRESETS, presetState, type StartPreset } from "../context/startPresets"
 import { useAnnunciator } from "./useAnnunciator"
 
-const BOARD_KEYS: readonly string[] = ["Escape", "PageUp", "PageDown"]
+const BOARD_KEYS: readonly string[] = ["Escape", "h", "Backspace", "PageUp", "PageDown"]
+
+// Where Tab (or Shift+Tab) must jump to keep focus inside the popup: the opposite end from the focused edge, else null
+function tabWrapTarget(targets: readonly HTMLElement[], active: Element | null, shift: boolean): HTMLElement | null {
+  if (targets.length === 0) return null
+  const edge: HTMLElement = shift ? targets[0] : targets[targets.length - 1]
+  const opposite: HTMLElement = shift ? targets[targets.length - 1] : targets[0]
+  return active === edge ? opposite : null
+}
+
+// Keeps Tab inside the popup: at the edge button the focus jumps to the opposite end
+function wrapTab(event: KeyboardEvent<HTMLDivElement>, dialog: HTMLElement | null): void {
+  const targets: HTMLElement[] = Array.from(dialog?.querySelectorAll<HTMLElement>("button") ?? [])
+  const wrapTo: HTMLElement | null = tabWrapTarget(targets, document.activeElement, event.shiftKey)
+  if (wrapTo === null) return
+  event.preventDefault()
+  wrapTo.focus()
+}
 
 function PresetsButton() {
   const { dispatch } = usePowerPlant()
-  const { clearAcknowledgements } = useAnnunciator()
+  const { clearLatches } = useAnnunciator()
   const [isOpen, setOpen] = useState<boolean>(false)
   const dialogRef = useRef<HTMLDivElement>(null)
   const returnFocus = useRef<HTMLElement | null>(null)
@@ -30,30 +47,19 @@ function PresetsButton() {
   }
   const choose = (preset: StartPreset): void => {
     dispatch({ type: "LOAD_STATE", payload: { state: presetState(preset) } })
-    clearAcknowledgements()
+    clearLatches()
     close()
   }
 
   // Escape closes; Tab wraps inside the popup
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    // The popup is modal: the board keys (Esc to overview, Page Up/Down between parts) must not navigate behind it
+    // The popup is modal: the board keys (Esc, h and Backspace to overview, Page Up/Down between parts) must not navigate behind it
     if (BOARD_KEYS.includes(event.key)) event.preventDefault()
     if (event.key === "Escape") {
       close()
       return
     }
-    if (event.key !== "Tab") return
-    const targets: HTMLElement[] = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>("button") ?? [])
-    if (targets.length === 0) return
-    const first: HTMLElement = targets[0]
-    const last: HTMLElement = targets[targets.length - 1]
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault()
-      last.focus()
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault()
-      first.focus()
-    }
+    if (event.key === "Tab") wrapTab(event, dialogRef.current)
   }
 
   return (

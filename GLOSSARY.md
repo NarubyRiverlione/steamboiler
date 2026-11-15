@@ -49,7 +49,7 @@ The turbine speed at which the generator matches the 50 Hz grid: 3000 rpm.
 _Avoid_: Max RPM, rated speed
 
 **Rated steam flow**:
-The steam flow the plant is rated for, the full-gas steam flow: 192 kg/s, what full gas makes at 165 bar with the Return heated by the extraction heater, measured in a headless run (#88, was 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 141 MWe at the 31 mbar design vacuum.
+The steam flow the plant is rated for, the full-gas steam flow: 134 kg/s, what full gas makes at 165 bar with the superheater taking its heat first and the Return heated by the extraction heater, measured in a headless run (#113, was 192 with saturated steam in #88, 158 with no heater in #82 and 161 in #74, [ADR 0030](docs/adr/0030-return-pays-real-enthalpy.md)). Rated output follows from it: about 152 MWe at the 31 mbar design vacuum.
 _Avoid_: Nominal flow
 
 **Valve capacity**:
@@ -65,7 +65,7 @@ The electric power the generator carries, a resisting torque on the shaft. More 
 _Avoid_: Demand, consumption, shaft load, generator torque
 
 **Load setpoint**:
-The load the operator asks for, in MW, from 0 up to the load setpoint limit, above the rated output. Only settable with the breaker closed. The load moves toward it at the load rate.
+The load the operator asks for, in MW, from 0 up to the load setpoint limit, above the rated output. Only settable with the breaker closed. The load moves toward it at the load rate. The Generation page shows it as the outlined needle of the load dial, beside the solid needle of the actual load, and the load knob sets it.
 _Avoid_: Net demand, demand, target load
 
 **Load rate**:
@@ -88,6 +88,10 @@ _Avoid_: Run-up mode, auto start
 The speed mode that keeps the turbine at the selected run-up point by moving the turbine valve. It engages only within ±5 rpm of that point, and never takes the turbine to a new speed. It is also the mode that adds steam when electrical load is added to the shaft.
 _Avoid_: Autopilot, speed hold, cruise
 
+**Synchronised mode**:
+The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the breaker or a turbine trip ends it, back to free mode.
+_Avoid_: Grid mode, sync hold
+
 **Run-up point**:
 One of the fixed speeds the operator can select: 500, 1500, 2500 or 3000 rpm (sync speed). Ramp up climbs to it and hold mode keeps it.
 _Avoid_: Setpoint (on its own), soak point
@@ -109,6 +113,21 @@ The share of the turbine exhaust that is still vapour, by mass. The rest is exha
 _Avoid_: Dryness, wetness
 
 ### Flue gas
+
+**Superheater**:
+A passive bank of tubes first in the flue gas path, before the boiler surface, that heats the steam leaving the boiler to about 540 °C. It has no valve in the steam path: its heat follows from the gas, its surface and the steam flow ([ADR 0044](docs/adr/0044-superheater-with-spray-attemperator.md)).
+_Avoid_: Reheater (steam that goes back to the boiler between turbine stages: not built)
+
+**Steam temperature**:
+The temperature of the steam after the superheater and the attemperator, one lumped state with a lag of 100 s. Held at 540 °C by the attemperator; saturation with no flow. The high steam temperature alarm is at 555 °C.
+_Avoid_: Superheater temperature, boiler temperature (the water)
+
+**Attemperator**:
+The spray valve that injects feedwater into the steam between the superheater stages to hold the steam temperature at 540 °C. A PID moves it in Auto; the operator sets it in Manual.
+_Avoid_: Desuperheater (the same device on the main steam line or on the bypass: not built)
+
+**Spray water**:
+The feedwater the attemperator injects, taken from the feed pump discharge before the extraction heater, out of the flow that reaches the boiler and into the steam flow to the turbine and bypass.
 
 **Flue gas**:
 The exhaust of the burner, on its way through the boiler and the economizer to the chimney.
@@ -263,7 +282,7 @@ Heat the boiler gives off to its surroundings, proportional to how far the water
 _Avoid_: Cooling rate, natural cooling (that is the resulting behaviour, see Natural cooldown)
 
 **Heating-rate limit**:
-The fastest the boiler water temperature may rise without over-stressing the drum: 0.4 K/s (24 K/min), a time-compressed version of the real limit of about 100 K/h. Going over it raises an alarm; nothing is limited or tripped automatically.
+The fastest the boiler water temperature may rise without over-stressing the drum: about 100 K/h (0.028 K/s). Going over it raises an alarm; nothing is limited or tripped automatically.
 _Avoid_: Ramp limit, max heat-up rate
 
 **Playback speed**:

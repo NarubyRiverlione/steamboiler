@@ -4,7 +4,7 @@ import { TurbineState } from "../PowerPlantState"
 
 import { CstSimulation } from "../const"
 import { loadAfter, ratedOutputMW } from "../../utils/turbineCalculations"
-import { getIsentropicEnthalpyDrop } from "../../utils/steamTable"
+import { getInletIsentropicDrop } from "../../utils/steamTable"
 
 describe("TurbineTick", () => {
   const initialState: TurbineState = { 
@@ -49,7 +49,8 @@ describe("TurbineTick", () => {
       mainSteamValve: true,
       turbineSteamFlowOut: noLoadFlow,
     }
-    const drop = (boiler: number, mbar: number): number => getIsentropicEnthalpyDrop(boiler, mbar / 1000)
+    // the rated state: 540 °C steam (ADR 0044)
+    const drop = (boiler: number, mbar: number): number => getInletIsentropicDrop(boiler, mbar / 1000, CstSimulation.CstTurbine.RatedSteamTemperature)
     // Steam flow that carries the load at sync speed: losses plus load / generator efficiency
     const flowFor = (loadMW: number, boiler: number, mbar: number): number =>
       noLoadFlow +
@@ -57,7 +58,7 @@ describe("TurbineTick", () => {
         (drop(boiler, mbar) * 1000 * CstSimulation.CstTurbine.IsentropicEfficiency)
 
     it("carries 0 MW at the no-load flow and holds sync speed", () => {
-      const result: TurbineState = TurbineTick(synced, 165, 31) // the no-load flow is calibrated at the rated drop: 165 bar to the 31 mbar design vacuum
+      const result: TurbineState = TurbineTick(synced, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature) // the no-load flow is calibrated at the rated drop: 165 bar and 540 °C to the 31 mbar design vacuum
       expect(result.electricOutput).toBe(0)
       expect(result.generatorBreaker).toBe(true)
       expect(result.rpm).toBeCloseTo(SyncRPM, 1)
@@ -86,7 +87,7 @@ describe("TurbineTick", () => {
 
     it("holds sync speed when the steam carries the load", () => {
       const loaded: TurbineState = { ...synced, electricOutput: 50, loadSetpoint: 50, turbineSteamFlowOut: flowFor(50, 165, 31) }
-      const result: TurbineState = TurbineTick(loaded, 165, 31)
+      const result: TurbineState = TurbineTick(loaded, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature)
       expect(result.rpm).toBeCloseTo(SyncRPM, 2)
       expect(result.electricOutput).toBe(50)
     })
@@ -134,6 +135,87 @@ describe("TurbineTick", () => {
       expect(state.generatorBreaker).toBe(false)
       expect(state.electricOutput).toBe(0)
       expect(Number.isFinite(state.rpm)).toBe(true)
+    })
+  })
+
+  describe("Synchronised mode (#135)", () => {
+    const { SyncRPM } = CstSimulation.CstTurbine
+    const sync: TurbineState = {
+      ...initialState,
+      mainSteamValve: true,
+      turbineValvePosition: 0.3,
+      rpm: SyncRPM,
+      speedMode: "synchronised",
+      speedReference: SyncRPM,
+      generatorBreaker: true,
+      pidIntegralError: 3,
+      turbineSteamFlowOut: CstSimulation.CstTurbine.NoLoadFlowFraction * CstSimulation.CstTurbine.RatedSteamFlow,
+    }
+
+    it("aims the PID at 3000 rpm and stays synchronised while the breaker holds", () => {
+      const low: TurbineState = TurbineTick({ ...sync, rpm: SyncRPM - 1 }, 165, 31)
+      expect(low.speedMode).toBe("synchronised")
+      expect(low.speedReference).toBe(SyncRPM)
+      expect(low.turbineValvePosition).toBeGreaterThan(0.3)
+    })
+
+    it("the auto-open of the breaker goes to Hold at sync speed, whatever run-up point was selected", () => {
+      const result: TurbineState = TurbineTick({ ...sync, runUpPoint: 1500, rpm: SyncRPM - 1.99, turbineSteamFlowOut: 0 }, 165, 100)
+      expect(result.generatorBreaker).toBe(false)
+      expect(result.speedMode).toBe("hold")
+      expect(result.runUpPoint).toBe(SyncRPM)
+      expect(result.speedReference).toBe(SyncRPM)
+    })
+
+    it("a trip returns to Free even if the breaker stays closed", () => {
+      const result: TurbineState = TurbineTick(sync, 165, CstSimulation.CstCondenser.VacuumLimit + 100)
+      expect(result.speedMode).toBe("free")
+      expect(result.turbineTripped).toBe(true)
+      expect(result.generatorBreaker).toBe(true)
+    })
+  })
+
+  describe("overspeed trip (ADR 0040)", () => {
+    const { MaxRPM } = CstSimulation.CstTurbine
+    // Free mode, breaker open, valve open and steam flowing: the unloaded rotor accelerates
+    const open: TurbineState = {
+      ...initialState,
+      mainSteamValve: true,
+      turbineValvePosition: 0.5,
+      turbineSteamFlowOut: 50,
+      pidIntegralError: 3,
+      speedReference: 3000,
+    }
+
+    it("does not trip just below the limit", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM - 50 }, 165, 31)
+      expect(result.rpm).toBeLessThan(MaxRPM)
+      expect(result.turbineTripped).toBe(false)
+      expect(result.turbineValvePosition).toBe(0.5)
+    })
+
+    it("trips when the speed reaches the limit with the valve open, with the full set of trip values", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM, speedMode: "hold", runUpPoint: 3000 }, 165, 31)
+      expect(result.rpm).toBeGreaterThanOrEqual(MaxRPM)
+      expect(result).toMatchObject({
+        turbineValvePosition: 0,
+        speedMode: "free",
+        pidIntegralError: 0,
+        speedReference: 0,
+        turbineTripped: true,
+      })
+    })
+
+    it("leaves the bypass valve and the main steam valve alone", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM, bypassValvePosition: 0.4 }, 165, 31)
+      expect(result.bypassValvePosition).toBe(0.4)
+      expect(result.mainSteamValve).toBe(true)
+    })
+
+    it("changes nothing with the valve shut", () => {
+      const result: TurbineState = TurbineTick({ ...open, rpm: MaxRPM + 100, turbineValvePosition: 0 }, 165, 31)
+      expect(result.turbineTripped).toBe(false)
+      expect(result.speedMode).toBe("free")
     })
   })
 
@@ -366,11 +448,11 @@ describe("TurbineTick", () => {
       expect(TurbineTick(closedHolding, boilerPressure, limit + 1).turbineValvePosition).toBe(0)
     })
 
-    it("a Hold PID opening under vacuum clears the trip flag", () => {
+    it("a Hold PID may not open the valve while the trip is latched, even with a good vacuum (ADR 0043)", () => {
       const tripped = { ...running, turbineValvePosition: 0, turbineTripped: true }
       const result = TurbineTick(tripped, boilerPressure, limit)
-      expect(result.turbineValvePosition).toBeGreaterThan(0)
-      expect(result.turbineTripped).toBe(false)
+      expect(result.turbineValvePosition).toBe(0)
+      expect(result.turbineTripped).toBe(true)
     })
 
     it("the flag stays set while the valve stays shut", () => {

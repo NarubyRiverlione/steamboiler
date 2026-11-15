@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
-import { runScenarioWithLifts } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { GasOffAt, reliefLift } from "../scenarios/relief-lift"
 
 const { CstBoiler } = CstSimulation
 
 describe("relief-lift", () => {
-  const { samples, lifts } = runScenarioWithLifts(reliefLift)
+  const { samples, lifts } = runChecked(reliefLift)
 
   test("records the one lift with its open and close time, though it is shorter than a sample", () => {
     expect(lifts).toHaveLength(1)

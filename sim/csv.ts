@@ -2,7 +2,7 @@ import PowerPlantState, { SpeedMode } from "../src/context/PowerPlantState"
 import { Sample } from "./scenario"
 
 // The speed mode as a number in the CSV: 0 Free, 1 Ramp up, 2 Hold
-const speedModeCodes: SpeedMode[] = ["free", "rampUp", "hold"]
+const speedModeCodes: SpeedMode[] = ["free", "rampUp", "hold", "synchronised"]
 const toNumber = (value: number | boolean | SpeedMode): number =>
   typeof value === "boolean" ? Number(value) : typeof value === "string" ? speedModeCodes.indexOf(value) : value
 

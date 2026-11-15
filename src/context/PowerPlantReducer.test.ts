@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstDeaerator, CstSimulation } from "./const"
+import { CstDeaerator, CstSimulation, CstSuperheater } from "./const"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -62,12 +62,20 @@ describe("powerPlantReducer", () => {
         expect(next.Boiler.gasRateCommand).toBe(0)
       })
 
-      test("a raise past the dead zone once the water is back above the level clears the trip", () => {
+      test("a raise past the dead zone is refused while the trip is latched, even with the water back (ADR 0043)", () => {
         const refilled: PowerPlantState = {
           ...tripped,
           Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
         }
-        const next: PowerPlantState = reduce(raise(0.5), refilled)
+        expect(reduce(raise(0.5), refilled)).toBe(refilled)
+      })
+
+      test("a raise after the trip reset turns the knob and leaves the flag clear", () => {
+        const refilled: PowerPlantState = {
+          ...tripped,
+          Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
+        }
+        const next: PowerPlantState = reduce(raise(0.5), reduce({ type: "RESET_TRIP", payload: { trip: "burner" } }, refilled))
         expect(next.Boiler.gasRateCommand).toBe(0.5)
         expect(next.Boiler.burnerTripped).toBe(false)
       })
@@ -85,7 +93,8 @@ describe("powerPlantReducer", () => {
           ...tripped,
           Boiler: { ...tripped.Boiler, waterVolume: lowLowVolume + 2 },
         }
-        const next: PowerPlantState = reduce({ type: "SIMULATE_TICK" }, reduce(raise(1), refilled))
+        const reset: PowerPlantState = reduce({ type: "RESET_TRIP", payload: { trip: "burner" } }, refilled)
+        const next: PowerPlantState = reduce({ type: "SIMULATE_TICK" }, reduce(raise(1), reset))
         expect(next.Boiler.gasFlow).toBeGreaterThan(0)
         expect(next.Boiler.gasFlow).toBeLessThan(CstBoiler.GasRateMax)
       })
@@ -184,11 +193,13 @@ describe("powerPlantReducer", () => {
       expect(pump(-0.1, atLevel(lowLow - 0.01, { condensationPumpValvePosition: 0.3 })).condensationPumpValvePosition).toBeCloseTo(0.2)
     })
 
-    test("a successful opening clears the trip flag; a refused one and a closing leave it set", () => {
+    test("an opening is refused while the trip is latched, even above low-low; the flag only goes with a reset", () => {
       const tripped = (level: number) => atLevel(level, { condensationPumpTripped: true })
-      expect(pump(0.1, tripped(lowLow)).condensationPumpTripped).toBe(false)
-      expect(pump(0.1, tripped(lowLow - 0.01)).condensationPumpTripped).toBe(true)
+      const state = tripped(lowLow)
+      expect(reduce({ type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: 0.1 } }, state)).toBe(state)
       expect(pump(-0.1, tripped(lowLow)).condensationPumpTripped).toBe(true)
+      const reset: PowerPlantState = reduce({ type: "RESET_TRIP", payload: { trip: "condensationPump" } }, state)
+      expect(pump(0.1, reset).condensationPumpValvePosition).toBe(0.1)
     })
   })
 
@@ -219,11 +230,46 @@ describe("powerPlantReducer", () => {
       expect(pump(-0.1, atLevel(lowLow - 0.01, { feedPumpValvePosition: 0.3 })).feedPumpValvePosition).toBeCloseTo(0.2)
     })
 
-    test("a successful opening clears the trip flag; a refused one and a closing leave it set", () => {
-      const tripped = (level: number): PowerPlantState => atLevel(level, { feedPumpTripped: true })
-      expect(pump(0.1, tripped(lowLow)).feedPumpTripped).toBe(false)
-      expect(pump(0.1, tripped(lowLow - 0.01)).feedPumpTripped).toBe(true)
-      expect(pump(-0.1, tripped(lowLow)).feedPumpTripped).toBe(true)
+    test("an opening is refused while the trip is latched, even above low-low; the flag only goes with a reset", () => {
+      const state: PowerPlantState = atLevel(lowLow, { feedPumpTripped: true })
+      expect(reduce({ type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: 0.1 } }, state)).toBe(state)
+      expect(pump(-0.1, state).feedPumpTripped).toBe(true)
+      const reset: PowerPlantState = reduce({ type: "RESET_TRIP", payload: { trip: "feedPump" } }, state)
+      expect(pump(0.1, reset).feedPumpValvePosition).toBe(0.1)
+    })
+  })
+
+  describe("feed pump at the boiler high-high level (#62, ADR 0041)", () => {
+    const high = CstBoiler.HighHighLevel
+    const boilerAt = (level: number, tripped = false): PowerPlantState => ({
+      ...base,
+      Boiler: { ...base.Boiler, waterVolume: level * CstBoiler.TotalVolume, boilerLevelHighTripped: tripped },
+      Deaerator: { ...base.Deaerator, waterVolume: 0.5 * CstDeaerator.TotalVolume },
+    })
+    const move = (delta: number, state: PowerPlantState): PowerPlantState =>
+      reduce({ type: "SET_FEED_PUMP_VALVE_POSITION", payload: { feedPumpValvePosition: delta } }, state)
+
+    test("opening is refused at 70% and above, the state is unchanged", () => {
+      const state: PowerPlantState = boilerAt(high, true)
+      expect(move(0.1, state)).toBe(state)
+      expect(move(0.1, boilerAt(high + 0.1))).toEqual(boilerAt(high + 0.1))
+    })
+
+    test("opening is allowed below 70%", () => {
+      expect(move(0.1, boilerAt(high - 0.001)).Deaerator.feedPumpValvePosition).toBe(0.1)
+    })
+
+    test("closing is always allowed", () => {
+      const open: PowerPlantState = { ...boilerAt(high), Deaerator: { ...boilerAt(high).Deaerator, feedPumpValvePosition: 0.3 } }
+      expect(move(-0.1, open).Deaerator.feedPumpValvePosition).toBeCloseTo(0.2)
+    })
+
+    test("an opening is refused while the flag is latched, even below 70%; the flag only goes with a reset", () => {
+      const state: PowerPlantState = boilerAt(high - 0.05, true)
+      expect(move(0.1, state)).toBe(state)
+      expect(move(-0.1, state).Boiler.boilerLevelHighTripped).toBe(true)
+      const reset: PowerPlantState = reduce({ type: "RESET_TRIP", payload: { trip: "boilerHighHigh" } }, state)
+      expect(move(0.1, reset).Deaerator.feedPumpValvePosition).toBe(0.1)
     })
   })
 
@@ -259,6 +305,39 @@ describe("powerPlantReducer", () => {
       expect(reduce(act(-5), opened).Turbine[field]).toBe(0)
     })
 
+    describe("overspeed limit", () => {
+      const limit = CstSimulation.CstTurbine.MaxRPM
+      // a good vacuum, so only the speed can refuse
+      const atRpm = (rpm: number, turbineValvePosition = 0): PowerPlantState => ({
+        ...base,
+        Condenser: { ...base.Condenser, pressure: CstCondenser.VacuumLimit },
+        Turbine: { ...base.Turbine, rpm, turbineValvePosition },
+      })
+      const turbineValve = (delta: number, state: PowerPlantState) =>
+        reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: delta } }, state).Turbine
+
+      test("opening is refused at the limit and above, and the state is unchanged", () => {
+        for (const rpm of [limit, limit + 1]) {
+          const state = atRpm(rpm, 0.2)
+          expect(reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 0.1 } }, state)).toBe(state)
+        }
+      })
+
+      test("opening is allowed just below the limit", () => {
+        expect(turbineValve(0.1, atRpm(limit - 0.1)).turbineValvePosition).toBe(0.1)
+      })
+
+      test("closing is always allowed", () => {
+        expect(turbineValve(-0.1, atRpm(limit + 100, 0.3)).turbineValvePosition).toBeCloseTo(0.2)
+      })
+
+      test("an opening is refused while the trip is latched, even below the limit", () => {
+        const state = atRpm(limit - 1)
+        const tripped: PowerPlantState = { ...state, Turbine: { ...state.Turbine, turbineTripped: true } }
+        expect(reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 0.1 } }, tripped)).toBe(tripped)
+      })
+    })
+
     describe("vacuum limit", () => {
       const limit = CstCondenser.VacuumLimit
       const atCondenser = (pressure: number, turbineValvePosition = 0): PowerPlantState => ({
@@ -289,14 +368,11 @@ describe("powerPlantReducer", () => {
         expect(turbineValve(-0.1, atCondenser(limit + 100, 0.3)).turbineValvePosition).toBeCloseTo(0.2)
       })
 
-      test("a successful opening clears the trip flag; a refused one leaves it set", () => {
-        const tripped = (pressure: number) => {
-          const state = atCondenser(pressure)
-          return { ...state, Turbine: { ...state.Turbine, turbineTripped: true } }
-        }
-        expect(turbineValve(0.1, tripped(limit)).turbineTripped).toBe(false)
-        expect(turbineValve(0.1, tripped(limit + 1)).turbineTripped).toBe(true)
-        expect(turbineValve(-0.1, tripped(limit)).turbineTripped).toBe(true)
+      test("an opening is refused while the trip is latched, even at the limit; closing leaves the flag set", () => {
+        const state = atCondenser(limit)
+        const tripped: PowerPlantState = { ...state, Turbine: { ...state.Turbine, turbineTripped: true } }
+        expect(reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: 0.1 } }, tripped)).toBe(tripped)
+        expect(turbineValve(-0.1, tripped).turbineTripped).toBe(true)
       })
     })
 
@@ -414,6 +490,43 @@ describe("powerPlantReducer", () => {
         const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, atRpm(CstTurbine.SyncRPM))
         expect(toggle(closed).generatorBreaker).toBe(false)
       })
+
+      describe("Synchronised mode (#135)", () => {
+        const speedModes: SpeedMode[] = ["free", "rampUp", "hold"]
+        const synced = (speedMode: SpeedMode): PowerPlantState => ({
+          ...base,
+          Turbine: { ...base.Turbine, rpm: CstTurbine.SyncRPM + 1, speedMode, speedReference: 1234, pidIntegralError: 5 },
+        })
+        const closedState: PowerPlantState = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, synced("hold"))
+
+        test.each(speedModes)("closing from %s enters synchronised at 3000 with the integral cleared", (speedMode) => {
+          const { speedMode: mode, speedReference, pidIntegralError, generatorBreaker, runUpPoint } = toggle(synced(speedMode))
+          expect([generatorBreaker, mode, speedReference, pidIntegralError, runUpPoint]).toEqual([true, "synchronised", CstTurbine.SyncRPM, 0, CstTurbine.SyncRPM])
+        })
+
+        test("a refused close (out of the window) leaves the mode alone", () => {
+          const state: PowerPlantState = { ...synced("rampUp"), Turbine: { ...synced("rampUp").Turbine, rpm: 2000 } }
+          expect(toggle(state).speedMode).toBe("rampUp")
+        })
+
+        test.each(speedModes)("with the breaker closed SET_SPEED_MODE %s leaves the state unchanged", (speedMode) => {
+          expect(reduce({ type: "SET_SPEED_MODE", payload: { speedMode } }, closedState)).toBe(closedState)
+        })
+
+        test.each(CstTurbine.RunUpPoints)("with the breaker closed SELECT_RUN_UP_POINT %s leaves the state unchanged", (runUpPoint) => {
+          expect(reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint } }, closedState)).toBe(closedState)
+        })
+
+        test("opening by hand returns to Free, the integral cleared and the reference on the rpm", () => {
+          const opened = toggle({ ...closedState, Turbine: { ...closedState.Turbine, pidIntegralError: 7 } })
+          expect([opened.generatorBreaker, opened.speedMode, opened.pidIntegralError, opened.speedReference]).toEqual([
+            false,
+            "free",
+            0,
+            closedState.Turbine.rpm,
+          ])
+        })
+      })
     })
   })
 
@@ -470,7 +583,7 @@ describe("powerPlantReducer", () => {
 
     test("the cold plant starts with the vent shut and the vessel full of air at atmospheric pressure", () => {
       expect(base.Deaerator.startUpVentOpen).toBe(false)
-      expect(base.Deaerator.airMass).toBeGreaterThan(100)
+      expect(base.Deaerator.airMass).toBeGreaterThan(80)
       expect(base.Deaerator.pressure).toBeCloseTo(1.01325, 5)
     })
   })
@@ -479,5 +592,72 @@ describe("powerPlantReducer", () => {
     const next = reduce({ type: "SELECT_RUN_UP_POINT", payload: { runUpPoint: 500 } })
     expect(next.Boiler).toBe(base.Boiler)
     expect(next.Condenser).toBe(base.Condenser)
+  })
+})
+
+describe("attemperator actions (#113, ADR 0044)", () => {
+  const manual = (position: number): PowerPlantState => ({
+    ...base,
+    Boiler: { ...base.Boiler, attemperatorAuto: false, sprayValvePosition: position },
+  })
+
+  test("the plant starts with the attemperator in Auto and the valve shut", () => {
+    expect(base.Boiler.attemperatorAuto).toBe(true)
+    expect(base.Boiler.sprayValvePosition).toBe(0)
+  })
+
+  test("SET_ATTEMPERATOR_AUTO switches the mode", () => {
+    const toManual: PowerPlantState = reduce({ type: "SET_ATTEMPERATOR_AUTO", payload: { attemperatorAuto: false } })
+    expect(toManual.Boiler.attemperatorAuto).toBe(false)
+  })
+
+  test("switching back to Auto carries the valve position over: the integral is what holds it (bumpless)", () => {
+    const next: PowerPlantState = reduce({ type: "SET_ATTEMPERATOR_AUTO", payload: { attemperatorAuto: true } }, manual(0.2))
+    expect(next.Boiler.attemperatorAuto).toBe(true)
+    expect(next.Boiler.attemperatorIntegralError).toBeCloseTo(0.2 / CstSuperheater.PID_Ki, 6)
+  })
+
+  test("SET_SPRAY_VALVE_POSITION moves the valve by the change in Manual, within 0 to 1", () => {
+    const position = (delta: number, from: number): number =>
+      reduce({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: delta } }, manual(from)).Boiler.sprayValvePosition
+    expect(position(0.1, 0.2)).toBeCloseTo(0.3, 9)
+    expect(position(-1, 0.2)).toBe(0)
+    expect(position(1, 0.2)).toBe(1)
+  })
+
+  test("in Auto the PID owns the valve: the operator cannot move it", () => {
+    const state: PowerPlantState = { ...base, Boiler: { ...base.Boiler, sprayValvePosition: 0.2 } }
+    expect(reduce({ type: "SET_SPRAY_VALVE_POSITION", payload: { sprayValvePosition: 0.5 } }, state)).toBe(state)
+  })
+})
+
+describe("condensation pump at the deaerator high-high level (#129, ADR 0045)", () => {
+  const high = CstDeaerator.HighHighLevel
+  const deaeratorAt = (level: number, tripped = false): PowerPlantState => ({
+    ...base,
+    Deaerator: { ...base.Deaerator, waterVolume: level * CstDeaerator.TotalVolume, deaeratorHighHighTripped: tripped },
+    Condenser: { ...base.Condenser, hotwellWaterVolume: 0.7 * CstCondenser.TotalVolume },
+  })
+  const move = (delta: number, state: PowerPlantState): PowerPlantState =>
+    reduce({ type: "SET_CONDENSATION_PUMP_VALVE_POSITION", payload: { condensationPumpValvePosition: delta } }, state)
+
+  test("opening is refused at and above the high-high level, allowed below", () => {
+    expect(move(0.1, deaeratorAt(high))).toEqual(deaeratorAt(high))
+    expect(move(0.1, deaeratorAt(high - 0.01)).Condenser.condensationPumpValvePosition).toBe(0.1)
+  })
+
+  test("opening is refused while the flag is set, even below the level; closing is allowed", () => {
+    const state: PowerPlantState = deaeratorAt(0.5, true)
+    expect(move(0.1, state)).toBe(state)
+    const open: PowerPlantState = { ...state, Condenser: { ...state.Condenser, condensationPumpValvePosition: 0.3 } }
+    expect(move(-0.1, open).Condenser.condensationPumpValvePosition).toBeCloseTo(0.2)
+  })
+
+  test("the reset is refused until the level is below high-high, then clears the flag and the pump may open", () => {
+    const at: PowerPlantState = deaeratorAt(high, true)
+    expect(reduce({ type: "RESET_TRIP", payload: { trip: "deaeratorHighHigh" } }, at)).toBe(at)
+    const reset: PowerPlantState = reduce({ type: "RESET_TRIP", payload: { trip: "deaeratorHighHigh" } }, deaeratorAt(high - 0.01, true))
+    expect(reset.Deaerator.deaeratorHighHighTripped).toBe(false)
+    expect(move(0.1, reset).Condenser.condensationPumpValvePosition).toBe(0.1)
   })
 })

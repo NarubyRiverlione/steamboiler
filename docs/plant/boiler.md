@@ -19,7 +19,7 @@ A real drum boiler is a steam drum at the top and a lower (mud) drum at the bott
 - **Pressure**: see **Pressure model** below.
 - **Thermal mass**: the water plus about 100 t of drum and tube steel at 0.5 kJ/kg·K (50 MJ/K), at the water temperature. No separate metal temperature. At the cold start (35 t of water, 147 MJ/K) the metal adds about a third.
 - **Energy**: the heat content above 0 °C of the water and the metal. The source is the fuel heat less what leaves up the stack (see **Flue gas and economizer**). The sinks are heat loss, the latent heat of the flash (which includes steam vented by the relief valve), and drained water (the water's share only; the metal stays).
-- **Volume**: a fixed 100 m³ shared between water and steam; 35 m³ of water at the start (34 937 kg at ambient), which expands to the 50 m³ working level at 165 bar ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)). `waterVolume` is derived from `waterMass` every tick, in `BoilerTick` only. `deltaWaterMass` is the net change of `waterMass` over the tick (feed inflow, steam flashed and drain), set in `PowerPlantTick` against the previous state because the feed inflow joins before `BoilerTick` runs (#121); the drum LCD shows it.
+- **Volume**: a fixed 100 m³ shared between water and steam; 35 m³ of water at the start in the scenarios (34 937 kg at ambient; the app starts at 40 m³), which expands to the 50 m³ working level at 165 bar ([ADR 0018](../adr/0018-cold-fill-of-the-boiler.md)). `waterVolume` is derived from `waterMass` every tick, in `BoilerTick` only. `deltaWaterMass` is the net change of `waterMass` over the tick (feed inflow, steam flashed and drain), set in `PowerPlantTick` against the previous state because the feed inflow joins before `BoilerTick` runs (#121); the drum LCD shows it.
 - **Water in and out**: the boiler is fed only by the condensation pump from the hotwell ([ADR 0002](../adr/0002-makeup-into-hotwell.md)). The drain valve removes 0.5% of total volume per second, converted to kg at the boiler temperature (`drainedTotal` counts kg). Steam leaves through the relief valve to the atmosphere (`BoilerVent`, see **Relief valve**), and through the turbine valve and the bypass (`BoilerRemoveSteam`): each passes a flow that follows its position and the boiler pressure (see **Steam removal** below), taken from the steam inventory.
 
 ## Calculations
@@ -40,6 +40,7 @@ Each tick (`BoilerTick`, `calculateFlashedMass`):
 2. The steam space should hold saturated steam at that temperature. Water flashes to steam (or steam condenses) to restore the inventory, and the latent heat is taken from (or returned to) the water.
 3. Flashing cools the water (less steam wanted) and lowers the water level (more steam space), so the flashed mass is solved implicitly by bisection. An explicit step oscillates near the critical point, where steam density approaches water density. A boiler already in equilibrium flashes exactly nothing, so a resting plant stays at rest.
 4. `deltaSteamMass` is the flash rate in kg/s: positive while heating or under draw, negative while cooling.
+   The flash rate follows the steam drawn from the boiler, so it steps when a draw stops. In `heat-up` the deaerator let-down valve takes about 6.7 kg/s (about 12 MW of latent heat) until the deaerator reaches its 3 bar setpoint, then closes within 0.3 s; the flash falls from about 7.2 to 1.7 kg/s and the water temperature rises faster for the same gas (at 90% of the heating-rate limit near 8888 s and 225.6 °C, at 60% near 12 586 s and 207 °C). It is not the solver: the residual has one root there, and it coincides with the water volume turning (#130). The 60% `RateShare` stays as the margin ([headless-runner.md](../dev/headless-runner.md)); a gradual valve closure would be a deaerator control change.
 5. `heatLoss` (kW) is this tick's loss; `heatingRate` and `heatingRateOverLimit` are updated (see **Heating rate**).
 
 Saturated steam density: the table holds only the liquid side, so the steam side comes from Clausius-Clapeyron, `vg = vf + hfg / (T · dP/dT)`, with `dP/dT` a centred difference over ±5 K of the table pressure (within 3% of IAPWS-IF97 from 100 to 350 °C). The table has a row every 1 K from 300 to 370 °C, so the window crosses many nodes and the density slope steps by under 0.2 kg/m³ per K (it stepped by 0.65 with the old 10-20 K rows, #46, [ADR 0025](../adr/0025-finer-steam-table-for-density-slope.md)). The last 1 K row (370 °C) sits 3.9 K below the critical-point row, so the slope still steps there and the density dips about 1% at 369.5-370 °C; the relief valve caps the plant at about 357 °C, so it is out of reach. Below 80 °C it is the ideal-gas vapour density at the Antoine saturation pressure: the vapour over the water in the vented drum. The cold start holds this vapour inventory (about 0.9 kg at 20 °C), so it starts in equilibrium.
@@ -67,16 +68,17 @@ Boiler efficiency is not a constant. The flue gas passes two heat exchangers in 
 ```
 Fuel heat         = gas flow × GasEnergyDensity                       (lower heating value, 420 MW at full gas)
 Flue gas          = 14.7 kg per m³ of gas (15% excess air at every firing rate), from 1775 °C
+Superheater       : heat to the steam = UA_sh × counterflow log-mean(gas, steam)   steam from saturation to its outlet temperature (#113, below)
 Boiler stage      : heat from the gas = UA_boiler × log-mean(gas, boiler water)     boiler water at one temperature
 Economizer        : heat from the gas = UA_eco × counterflow log-mean(gas, Return)  never past Return outlet = saturation − 28 K
 UA                = UA at full gas × (gas flow / full gas)^0.65     (the water side is ignored)
 Stack heat        = flue gas × (enthalpy at the stack temperature − enthalpy at ambient)
-Heat into water   = Fuel heat − Stack heat        (the economizer heat included)
+Heat into water   = Fuel heat − Stack heat        (the superheater and economizer heat included)
 Efficiency        = Heat into water / Fuel heat
 ```
 
 - **Flue gas enthalpy:** a quadratic through three points of Ganapathy's Table A7b (natural gas, 15% excess air), taken relative to ambient (20 °C). It is extrapolated to the 1775 °C combustion temperature.
-- **Boiler stage:** sized for flue gas 100 K above the water at full gas and 350 °C (an estimate; the sourced span is 60 to 150 K). The sized surface is about 668 kW/K. With the boiler colder the gas leaves cooler, so a colder boiler is more efficient; firing lower narrows the gap (about 20 K at 25% gas at 350 °C).
+- **Boiler stage:** sized for flue gas 100 K above the water at full gas and 350 °C (an estimate; the sourced span is 60 to 150 K), for the gas it receives from the superheater (about 1364 °C at full gas and the design steam flow). The sized surface is about 561 kW/K (668 kW/K before #113, when it took gas at 1775 °C). With the boiler colder the gas leaves cooler, so a colder boiler is more efficient; firing lower narrows the gap (about 20 K at 25% gas at 350 °C).
 - **Economizer:** sized for a 160 °C stack at full gas with 171 kg/s of Return at 37 °C, about 291 kW/K (a design choice, not a real unit's figure). The Return enters at the hotwell temperature and its enthalpy is the saturated liquid enthalpy (`getLiquidEnthalpy`, IF97, with a cold table below the 80 °C start of the steam table).
 - **Return limit:** the Return leaves the economizer at most 28 K below the boiler saturation temperature (UNVERIFIED). Heat it cannot take stays in the flue gas: the stack gets hotter and efficiency falls.
 - **No Return:** the economizer recovers nothing and the stack is the boiler stage exit (79% at full gas and 350 °C). **No gas:** no heat in, none up the stack, efficiency 0, stack at ambient.
@@ -85,6 +87,17 @@ Efficiency        = Heat into water / Fuel heat
 - **The Return pays its enthalpy** ([ADR 0030](../adr/0030-return-pays-real-enthalpy.md), #74): `BoilerTick` adds `returnHeatOf` to the energy of the tick, this tick's Return mass times the saturated liquid enthalpy at its temperature after the economizer less that at the boiler temperature (`getLiquidEnthalpy`, not a specific heat: cp near 350 °C is more than double the cold value). A cold Return lowers the temperature and `energy`; a Return hotter than the boiler warms it. The economizer heat is counted once, in the Return's own enthalpy, so the gas share of the tick is the heat into the water less the economizer heat. Pump work (about 16 kJ/kg, 1% of the Return's cost) is ignored.
 
 Simplifications and the figures behind them are in [design-basis.md](design-basis.md); the sources in [the research note](../research/2026-11-economizer-flue-gas.md).
+
+## Superheater and attemperator (#113, [ADR 0044](../adr/0044-superheater-with-spray-attemperator.md))
+
+All steam that leaves the drum through the main steam valve (the turbine valve and the bypass) passes the superheater, a bank of tubes first in the flue gas path. It is passive, no valve in the steam path. The relief valve and the deaerator let-down valve take saturated steam at the drum.
+
+- **Superheater stage** (`flueGas.ts`, `superheaterDuty`): counterflow with the gas entering at 1775 °C, a surface of 101 kW/K at full gas (scaled with gas flow to the power 0.65), sized so the steam leaves at 540 °C at full gas and the design steam flow of 134 kg/s with no spray (about 113 MW). Bisection on the steam outlet temperature; it never passes the end of the superheated table (350 K above saturation). With no steam flow it takes no heat and the gas reaches the boiler stage at 1775 °C. The heat goes into the steam, outside the drum, so `BoilerTick` takes it off the gas energy of the boiler (`superheaterHeat`).
+- **Steam temperature** (`Boiler.steamTemperature`): one lumped state, a first-order lag of 100 s (`CstSuperheater.TimeConstant`) toward the equilibrium of the tick: the steam takes the superheater heat, then the spray water mixes in (`equilibriumSteamTemperature`, an enthalpy balance inverted on the superheated table). It never falls below the saturation temperature of the new pressure, which is the temperature with no flow. It is what the turbine, the extraction and the bypass use in the next tick. At rest it starts at saturation.
+- **Attemperator** (`Attemperator.ts`): a PID on the steam temperature, setpoint 540 °C (`CstSuperheater.SteamTemperature`), `Kp` 0.02 per K, `Ki` 0.001 per K·s, `Kd` 0 (the derivative would act on the measurement, ADR 0010, but chattered at the tick), integral clamped to 0 to 500 K·s. Its output is the spray valve position (0 to 1); the spray flow is the position times 15 kg/s. **Auto** and **Manual**: in Manual the operator moves the valve (`SET_SPRAY_VALVE_POSITION`, a delta; refused in Auto) and the integral follows the position, so `SET_ATTEMPERATOR_AUTO` back to Auto is bumpless.
+- **Spray water** comes from the feed pump discharge, before the extraction heater, and never exceeds what the pump delivered in the last tick. `PowerPlantTick` takes it out of the flow that reaches the boiler (`feedMass`) and adds it to the turbine and bypass steam flows, so the loop's water conserves. The state flows `turbineSteamFlowOut` and `bypassSteamFlowOut` therefore count the spray; steam out of the boiler is them less `Boiler.sprayFlow` (the runner's invariants and goal checks subtract it).
+- **State:** `steamTemperature`, `superheaterHeat` (kW), `sprayValvePosition`, `sprayFlow` (kg/s), `attemperatorAuto`, `attemperatorIntegralError`. High steam temperature alarm at 555 °C (`steamTemperatureHigh`, warning, no trip). Measured: 540 ± 1 K at 125 MW (`turbine-load`) and at 540.0 °C in the bypass hold; with the spray stuck shut at 125 MW (`spray-stuck-closed`) the steam settles at about 558 °C.
+- **Cold plant:** the surface is sized for the gas after the superheater, so with no steam flowing the gas reaches the boiler stage hotter than its design inlet and the stack is hotter: about 89% efficiency instead of 93% at full gas with no Return. The heat-up is a few percent slower (`relief-lift` lifts at about 269 s, 259 s before).
 
 ## Relief valve
 
@@ -115,9 +128,17 @@ gasFlow               = clamp(gasFlow + rate × DeltaTime, 0, MaxGasFlow)
 
 The startup pace still comes from the operator ramping the gas against the heating-rate limit; the knob changes the control, not the pace. The operators of the headless scenarios turn the same knob (`sim/scenarios/gas.ts`, [headless-runner.md](../dev/headless-runner.md)). `GasRateMax` and the dead zone are UNVERIFIED playability numbers, see [design-basis.md](design-basis.md).
 
+## Level gauge zones
+
+The drum level instrument draws red below `BurnerLowLowLevel` (20%) and from `HighHighLevel` (70%), orange from 20% up to `LowLevel` (35%) and from `HighLevel` (65%) up to 70%, green for `WorkingLow` to `WorkingHigh` (45-55%, the 50% working level ± 5 points, both ends included) and no colour between (35-45% and 55-65%), built by the generic `levelZones` ([ui-board.md](../dev/ui-board.md#level-zones), #54). The 35% low alarm and the 45-55% band are new UNVERIFIED estimates ([design-basis.md](design-basis.md)); the 35% limit raises the warning "Boiler level low" (derived and stateless, below `LowLevel`, #137); no trip acts on it.
+
+## High-high level trip
+
+From 70% of the boiler volume (`CstBoiler.HighHighLevel`, UNVERIFIED, see [design-basis.md](design-basis.md)) the feed pump and the turbine trip ([ADR 0041](../adr/0041-boiler-high-high-level-trips-feed-pump-and-turbine.md)). `PowerPlantTick` reads the water volume at the start of the tick (`isAtBoilerHighHigh`): `BoilerLevelHighTrip` sets `boilerLevelHighTripped`, the feed pump valve is shut before `DeaeratorTick` runs, so nothing is delivered that tick, and an open turbine valve is tripped with the same trip object as the vacuum limit (`TurbineTripWhenOpen`). The burner and the condensation pump are untouched. The flag latches: `SET_FEED_PUMP_VALVE_POSITION` is refused at or above the level and while the flag is set, closing is always allowed, and only the trip reset (`RESET_TRIP`, `boilerHighHigh`, allowed once the level is below the trip, [ADR 0043](../adr/0043-trip-reset.md)) clears the flag; the turbine trip it causes has its own reset. The loop operator's feedwater control holds the pump shut while the flag is set. The alarm "Boiler level high" is derived and stateless, active from 65% (`CstBoiler.HighLevel`); the trip has its own tile, "Boiler level high-high trip". In `boiler-high` (from the `bypass-loop` snapshot, feed pump forced fully open) the alarm comes on at 65%, the trip fires at 68 s at 70.0%, and the level then falls back with the pump shut.
+
 ## Burner trip
 
-The burner trips when the water volume falls below the burner low-low level, 20% of the boiler volume (`CstBoiler.BurnerLowLowLevel`, UNVERIFIED, see [design-basis.md](design-basis.md)) ([ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)). `BoilerBurnerTrip` runs first in `PowerPlantTick`, upstream of the relief valve, on the volume at the start of the tick: the gas is forced to 0 and `burnerTripped` is set, whatever the operator or a scenario does. The trip also centres the gas knob (`gasRateCommand` 0). `SET_GAS_RATE` is refused when it turns the knob up past the dead zone while the volume is below the level; above it, a deflection past the dead zone to the raise side clears the flag and the gas ramps up from 0 (lowering or centring the knob never clears it). There is no pressure or temperature trip: pressure follows saturation, and the relief valve holds it while water remains. A drained boiler trips the burner as well. The boiler panel shows the trip and the sim report notes its time; the CSV has `boiler_burnerTripped`.
+The burner trips when the water volume falls below the burner low-low level, 20% of the boiler volume (`CstBoiler.BurnerLowLowLevel`, UNVERIFIED, see [design-basis.md](design-basis.md)) ([ADR 0017](../adr/0017-burner-trips-on-low-water-level.md)). `BoilerBurnerTrip` runs first in `PowerPlantTick`, upstream of the relief valve, on the volume at the start of the tick: the gas is forced to 0 and `burnerTripped` is set, whatever the operator or a scenario does. The trip also centres the gas knob (`gasRateCommand` 0). `SET_GAS_RATE` is refused when it turns the knob up past the dead zone while the volume is below the level; above it, it is also refused while the flag is set. Only the trip reset (`RESET_TRIP`, `burner`, allowed once the volume is at or above the level, [ADR 0043](../adr/0043-trip-reset.md)) clears the flag, and it leaves the gas and the knob at 0; then a deflection past the dead zone to the raise side ramps the gas up from 0. The boiler panel has a RESET beside the burner trip and the high-high trip tiles. There is no pressure or temperature trip: pressure follows saturation, and the relief valve holds it while water remains. A drained boiler trips the burner as well. The boiler panel shows the trip and the sim report notes its time; the CSV has `boiler_burnerTripped`.
 
 In `boiler-low` (full gas, everything closed) the burner trips at about 271 s with about 19 m³ left, and the peak is 178.0 bar and 356.1 °C, inside design.
 
@@ -129,10 +150,10 @@ The rise of the water temperature, smoothed (`heatingRate`, K/s; shown in K/min)
 
 ```
 Heating rate = previous + (ΔT / tick − previous) × tick / 30 s
-Alarm        = heating rate > 0.4 K/s (24 K/min)
+Alarm        = heating rate > 100 K/h (0.028 K/s, 1.67 K/min)
 ```
 
-The limit is time-compressed (a real drum allows about 100 K/h, see [design-basis.md](design-basis.md)). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 103 K/min and raises the alarm; the operator ramping the gas at the limit reaches 165 bar in about 16.0 min (`heat-up`, 962 s). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
+The limit is the real one for a thick-walled drum (about 100 K/h, #103). Alarm only: the burner trip is on water level only and does not look at the rate. Full gas from cold rises at about 103 K/min and raises the alarm; the operator ramping the gas under the limit reaches 165 bar in about 6.0 h of plant time (`heat-up`, 21 595 s, smoothed rate peaks at 80 K/h). Constants: `CstBoiler.HeatingRateLimit`, `HeatingRateWindow`.
 
 ## Pressure model
 
@@ -146,10 +167,10 @@ Pressure is the saturation pressure of the water temperature, never below atmosp
 | Boiler efficiency | not a constant: follows from the flue gas heat balance, about 93.4% at full gas, 350 °C and 171 kg/s of Return (93.9% at rated output), about 79% with no Return |
 | Metal mass | 100 t steel at 0.5 kJ/kg·K (`CstBoiler.MetalMass`, `CstPhysics.Steel_SpecificHeat`) |
 | Heat loss | 0.5 MW at design temperature, proportional to T − ambient (`CstBoiler.HeatLossAtDesign`): about 250 kW and 3.6 K per hour at 190 °C, so a cooldown takes days |
-| Heating-rate limit | 0.4 K/s (24 K/min), smoothed over 30 s, alarm only |
+| Heating-rate limit | 100 K/h (0.028 K/s), smoothed over 30 s, alarm only |
 | Atmospheric pressure | 1.013 bar |
 | Ambient temperature | 20 °C (`CstPhysics.AmbientTemperature`): heat loss stops here, and the temperature never falls below it |
-| Start state | cold: ambient temperature, atmospheric pressure, 35 m³ water (34 937 kg at ambient), the vapour inventory at ambient, energy = heating that water and 100 t of steel from 0 °C to ambient |
+| Start state | cold: ambient temperature, atmospheric pressure, 35 m³ water in the scenarios and 40 m³ in the app (34 937 kg at ambient for 35 m³), the vapour inventory at ambient, energy = heating that water and 100 t of steel from 0 °C to ambient |
 
 ## Remaining empirical areas
 

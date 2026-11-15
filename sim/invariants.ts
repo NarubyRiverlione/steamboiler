@@ -2,6 +2,7 @@ import { CstDeaerator, CstSimulation } from "../src/context/const"
 import { MetalHeatCapacity } from "../src/context/Boiler/BoilerTick"
 import { getLatentHeat, getLiquidEnthalpy, getWaterSpecificHeat } from "../src/utils/steamTable"
 import PowerPlantState from "../src/context/PowerPlantState"
+import { activeAlarms } from "../src/context/Alarms"
 import { Sample } from "./scenario"
 
 // A physical rule that must hold at every sample of every scenario; check returns the violations.
@@ -20,8 +21,9 @@ const MassLostFixed = 1e-13 // fraction of start mass, allowed even with no stea
 const MassLostPerSteamOut = 2e-11 // fraction of the steam that left the boiler (the rounding of the flow integral)
 
 // The flash is a per-tick rate and the cooling an average over the sample interval (10 ticks at 1 s), so the last tick
-// can run above the average. The worst ratio measured over all scenarios is 1.0099 (`return-stop`); the slack is 3x that.
-const FlashSamplingSlack = 0.03 // fraction of the cooling power
+// can run above the average. The worst ratio measured over all scenarios is 1.0318 (`return-stop` from the #103 snapshot; 1.0099 before; 1.000 when
+// sampled every tick); the slack is 1.5x that.
+const FlashSamplingSlack = 0.05 // fraction of the cooling power
 
 const at = (time: number) => `t=${String(time)} s`
 
@@ -53,14 +55,14 @@ export const loopWater = (state: PowerPlantState) =>
   state.Condenser.ventedTotal +
   state.Deaerator.ventedTotal
 
-// Steam out of the boiler between samples, taking each sample's flow as constant until the next
+// Steam out of the boiler between samples (the turbine and bypass flows count the spray water, which did not leave the drum), taking each sample's flow as constant until the next
 function steamOutSoFar(samples: Sample[]): number[] {
   let total = 0
   return samples.map(({ state }, i) => {
     const current = total
     const next = samples[i + 1] as Sample | undefined
     if (next) {
-      const flow = state.Turbine.turbineSteamFlowOut + state.Turbine.bypassSteamFlowOut + state.Deaerator.letDownFlow
+      const flow = state.Turbine.turbineSteamFlowOut + state.Turbine.bypassSteamFlowOut - state.Boiler.sprayFlow + state.Deaerator.letDownFlow
       total += flow * (next.time - samples[i].time)
     }
     return current
@@ -187,4 +189,26 @@ export const invariants: Invariant[] = [
   { name: "water is never created or lost", check: waterNeverCreated },
   { name: "natural cooldown never heats", check: cooldownNeverHeats },
   { name: "natural cooldown steam comes from stored heat", check: cooldownSteamFromStoredHeat },
+]
+
+// The alarms among `ids` that are on in this state, as a violation message
+const raised =
+  (ids: string[]) =>
+  (state: PowerPlantState): string | undefined => {
+    const on: string[] = activeAlarms(state).filter((id: string) => ids.includes(id))
+    return on.length === 0 ? undefined : `${on.join(", ")} on`
+  }
+
+// The golden path is how the plant is meant to be run, so it never raises a level alarm or a level trip;
+// edge scenarios drive the plant into them on purpose
+export const goldenInvariants: Invariant[] = [
+  { name: "the hotwell level alarms never come on", check: everySample(raised(["hotwellLevelLow", "hotwellLevelHigh", "hotwellLevelHighHigh"])) },
+  {
+    name: "the boiler level alarm and the high-high trip never come on (#62)",
+    check: everySample(raised(["boilerLevelHigh", "boilerLevelHighTripped"])),
+  },
+  {
+    name: "the boiler low and the deaerator level alarms and feed pump trip never come on (#137)",
+    check: everySample(raised(["boilerLevelLow", "deaeratorLevelLow", "deaeratorLevelHigh", "feedPumpTripped"])),
+  },
 ]

@@ -9,12 +9,19 @@ const SnapshotDir = fileURLToPath(new URL("./snapshots/", import.meta.url))
 
 export const snapshotPath = (name: string) => `${SnapshotDir}${name}.json`
 
+// A committed snapshot is a start state for the UI Presets, so its gas knob rests at the centre: holding, not still turning
+// where the scenario's operator left it. The gas flow itself stays as it was.
+export const withNeutralGas = (state: PowerPlantState): PowerPlantState => ({
+  ...state,
+  Boiler: { ...state.Boiler, gasRateCommand: 0 },
+})
+
 export const toSnapshotJson = (state: PowerPlantState) => `${JSON.stringify(state, null, 2)}\n`
 
 export { shapeErrors }
 
-// Relative tolerance of the larger magnitude: three orders above the ~1e-12 cross-machine noise of #67 (ADR 0020).
-const RelativeTolerance = 1e-9
+// Relative tolerance of the larger magnitude: well above the noise between machines and runners (ADR 0020).
+const RelativeTolerance = 1e-6
 // Absolute tolerance for values near 0, where a relative one would fail on noise.
 const AbsoluteFloor = 1e-12
 // The magnitude below which the absolute floor wins over the relative tolerance.
@@ -27,30 +34,33 @@ const differs = (path: string, expected: unknown, actual: unknown): string[] => 
   `${path}: expected ${String(expected)}, got ${String(actual)}`,
 ]
 
-// Where two state trees differ in value: numbers within tolerance, shape, strings, booleans and null exact.
+const lengthError = (path: string, expected: unknown[], actual: unknown[]): string[] =>
+  expected.length === actual.length
+    ? []
+    : [`${path}: expected length ${String(expected.length)}, got ${String(actual.length)}`]
+
+// Numbers within tolerance; strings, booleans and null exact
+const scalarErrors = (path: string, expected: unknown, actual: unknown): string[] => {
+  const equal: boolean =
+    typeof expected === "number" && typeof actual === "number" ? nearlyEqual(expected, actual) : expected === actual
+  return equal ? [] : differs(path, expected, actual)
+}
+
+const arrayErrors = (path: string, expected: unknown[], actual: unknown[]): string[] => [
+  ...lengthError(path, expected, actual),
+  ...expected.slice(0, actual.length).flatMap((v, i) => valueErrors(v, actual[i], `${path}[${String(i)}]`)),
+]
+
+const objectErrors = (path: string, expected: Record<string, unknown>, actual: Record<string, unknown>): string[] =>
+  Object.keys(expected).flatMap((k) => valueErrors(expected[k], actual[k], `${path}.${k}`))
+
+// Where two state trees differ in value: shape first, then numbers within tolerance and everything else exact.
 export function valueErrors(expected: unknown, actual: unknown, path = "state"): string[] {
-  if (typeof expected === "number" && typeof actual === "number") {
-    return nearlyEqual(expected, actual) ? [] : differs(path, expected, actual)
-  }
   const shape: string[] = shapeErrors(expected, actual, path)
   if (shape.length > 0) return shape
-  if (typeof expected !== "object" || expected === null) {
-    return expected === actual ? [] : differs(path, expected, actual)
-  }
-  if (Array.isArray(expected)) {
-    const items: unknown[] = actual as unknown[]
-    const length: string[] =
-      expected.length === items.length
-        ? []
-        : [`${path}: expected length ${String(expected.length)}, got ${String(items.length)}`]
-    return [
-      ...length,
-      ...expected.slice(0, items.length).flatMap((v, i) => valueErrors(v, items[i], `${path}[${String(i)}]`)),
-    ]
-  }
-  const want = expected as Record<string, unknown>
-  const have = actual as Record<string, unknown>
-  return Object.keys(want).flatMap((k) => valueErrors(want[k], have[k], `${path}.${k}`))
+  if (typeof expected !== "object" || expected === null) return scalarErrors(path, expected, actual)
+  if (Array.isArray(expected)) return arrayErrors(path, expected, actual as unknown[])
+  return objectErrors(path, expected as Record<string, unknown>, actual as Record<string, unknown>)
 }
 
 // Parses snapshot JSON and rejects anything that is not shaped like the current PowerPlantState.

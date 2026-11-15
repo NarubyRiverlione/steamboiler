@@ -13,7 +13,7 @@ One reducer and one provider for the whole plant.
 - Simulation core is pure functions, decoupled from React: `PowerPlantTick` calls `BoilerTick`, `TurbineTick`, `CondenserTick` (in `src/context/<Subsystem>/`). Order per tick: the relief valve vents (`BoilerVent`), the main steam valve closes on low pressure (`MainSteamValveLowPressureClosure`), remove bypass steam, `TurbineTick`, remove turbine steam, `CondenserTick` with those same-tick flows, then `BoilerTick` with the return.
 - Physics lives in `src/utils/` (`boilerCalculations`, `condenserCalculation`, `turbineCalculations`, `steamTable`, `steamData`). Display helpers (`formatSigned`, `flowUnits`: l/s design values shown as kg/s, #123) sit beside them.
 - State is immutable. Every update creates a new state object.
-- Display-only values are calculated in components, not stored in state. `useEMA` smooths readouts.
+- Display-only values are calculated in components, not stored in state. `useEMA` smooths readouts with one rule (#122): a time constant in wall seconds (`CstSimulation.ReadoutSmoothingSeconds`), `alpha = 1 - exp(-dt/tau)` from the wall time since the previous step (`smoothingAlpha`), one step per change of value (no timer), `dt` capped at 5 tau so the first change after a pause snaps. The lag does not depend on playback speed or render cadence; level trends are shown raw.
 
 ```mermaid
 flowchart TD
@@ -77,7 +77,7 @@ scripts/roadmap.ts                    # generates ROADMAP.md from the GitHub iss
 
 ## Steam tables
 
-`steamData.ts` holds IAPWS-IF97 saturation data from 80 °C to the critical point (373.946 °C, 220.64 bar): pressure, specific volume, enthalpy, specific heat, latent heat. `steamTable.ts` interpolates it linearly. `steamEntropyData.ts` is a second, pressure-keyed saturation table (hf, hg, sf, sg, 0.01–220 bar) for `getIsentropicEnthalpyDrop`, interpolated in ln(pressure) (#14). Outside that range:
+`steamData.ts` holds IAPWS-IF97 saturation data from 80 °C to the critical point (373.946 °C, 220.64 bar): pressure, specific volume, enthalpy, specific heat, latent heat. `steamTable.ts` interpolates it linearly. `steamEntropyData.ts` is a second, pressure-keyed saturation table (hf, hg, sf, sg, 0.01–220 bar) for `getIsentropicEnthalpyDrop`, interpolated in ln(pressure) (#14). Outside that range: `steamSuperheatedData.ts` (#113, ADR 0044) is a third table, superheated steam by pressure and superheat above saturation (enthalpy and entropy, 1 to 200 bar), read by `getSteamEnthalpy`, `getSteamEntropy` and `getSteamTemperature` in `steamTable.ts`. The superheater stage is in `utils/flueGas.ts`; the spray attemperator PID and the steam temperature equilibrium are in `context/Boiler/Attemperator.ts`, called from `BoilerTick`.
 
 - Above the critical point (temperature or pressure): clamp to the critical-point row, never throw
 - Boiling point below the table: Antoine equation

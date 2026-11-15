@@ -1,18 +1,20 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../context/const"
 import { makeInitialState } from "../context/PowerPlantReducer"
-import { getIsentropicEnthalpyDrop } from "./steamTable"
+import { getIsentropicEnthalpyDrop, getSuperheatedIsentropicDrop } from "./steamTable"
 import {
   calculateRPM,
   generatorFrequency,
   isAboveVacuumLimit,
   isAtSyncSpeed,
+  isAtOverspeed,
   loadAfter,
   loadSetpointRefusal,
   maxTurbineValvePosition,
   ratedOutputMW,
+  runUpPointRefusal,
   shaftWorkFraction,
-  turbineTrippedAfter,
+  speedModeRefusal,
 } from "./turbineCalculations"
 
 const { CstCondenser, CstTurbine } = CstSimulation
@@ -61,14 +63,14 @@ describe("shaftWorkFraction", () => {
 })
 
 describe("ratedOutputMW", () => {
-  test("is the 141.9 MW of the rated flow, the 31 mbar design vacuum and the extraction steam that stops working at the tap (ADR 0031)", () => {
-    // 192 kg/s x 0.85 x 0.98 x the drop that does work: 1016 kJ/kg less the extracted share (about a quarter: the deaerator tap and the heater) of what is below
+  test("is the 152.4 MW of the rated flow, the 31 mbar design vacuum and the extraction steam that stops working at the tap (ADR 0031)", () => {
+    // 134 kg/s x 0.85 x 0.98 x the drop that does work: 1496 kJ/kg (540 °C steam, #113) less the extracted share (about a quarter: the deaerator tap and the heater) of what is below
     // the tap; with no extraction it would be 162.5 MW
-    expect(ratedOutputMW).toBeCloseTo(141.9, 1)
+    expect(ratedOutputMW).toBeCloseTo(152.4, 1)
   })
 
-  test("RatedSteamFlow is the measured 192 kg/s: re-derive it from max-output if the plant changes (ADR 0031)", () => {
-    expect(CstTurbine.RatedSteamFlow).toBe(192)
+  test("RatedSteamFlow is the measured 134 kg/s: re-derive it from max-output if the plant changes (ADR 0031)", () => {
+    expect(CstTurbine.RatedSteamFlow).toBe(134)
     expect(CstTurbine.RatedSteamFlow).toBeLessThan(CstTurbine.MaxSteamRemovalRate)
   })
 
@@ -127,12 +129,6 @@ describe("vacuum limit", () => {
     expect(maxTurbineValvePosition(0.3, limit)).toBe(1)
   })
 
-  test("the trip flag clears on an opening and stays on otherwise", () => {
-    expect(turbineTrippedAfter(true, 0, 0.01)).toBe(false)
-    expect(turbineTrippedAfter(true, 0.2, 0.2)).toBe(true)
-    expect(turbineTrippedAfter(true, 0.2, 0.1)).toBe(true)
-    expect(turbineTrippedAfter(false, 0, 0.5)).toBe(false)
-  })
 })
 
 describe("calculateRPM", () => {
@@ -144,8 +140,8 @@ describe("calculateRPM", () => {
   //   S = 161 x 917e3 x 0.85 x 0.98 = 122.97 MW;  J = 2 x 4 x S / ω_s² = 9 967 kg·m²
   //   Δω = T / J x 0.1 s = 0.4886 rad/s = 4.665 rpm
   test("hand-calculated first tick from standstill", () => {
-    // J scales with the rated output (141.9 MW since the deaerator, #119; 141.3 MW with the heater alone, ADR 0031; 4.292 at 133.7 MW, 4.665 at 123.0 MW)
-    expect(calculateRPM(0, 10, 900)).toBeCloseTo(4.043, 2)
+    // J scales with the rated output (152.4 MW with the superheater, #113; 141.9 MW since the deaerator, #119; 141.3 MW with the heater alone, ADR 0031; 4.292 at 133.7 MW, 4.665 at 123.0 MW)
+    expect(calculateRPM(0, 10, 900)).toBeCloseTo(3.765, 2)
   })
 
   // Load power at sync speed: the generator draws load / efficiency from the shaft, so the steam must cover the
@@ -223,7 +219,35 @@ describe("calculateRPM", () => {
     expect(calculateRPM(SyncRPM, flow, drop)).toBeCloseTo(SyncRPM, 6)
   })
 
-  test("RatedEnthalpyDrop matches the steam table at 165 bar and the 31 mbar design vacuum", () => {
-    expect(Math.abs(getIsentropicEnthalpyDrop(165, 0.031) - RatedEnthalpyDrop)).toBeLessThan(RatedEnthalpyDrop * 0.005)
+  test("RatedEnthalpyDrop matches the steam table at 165 bar, 540 °C and the 31 mbar design vacuum", () => {
+    expect(Math.abs(getSuperheatedIsentropicDrop(165, CstTurbine.RatedSteamTemperature, 0.031) - RatedEnthalpyDrop)).toBeLessThan(RatedEnthalpyDrop * 0.005)
+  })
+})
+
+describe("overspeed limit", () => {
+  const limit = CstTurbine.MaxRPM
+
+  test("isAtOverspeed is true at the limit and above, false just below", () => {
+    expect(isAtOverspeed(limit)).toBe(true)
+    expect(isAtOverspeed(limit + 0.1)).toBe(true)
+    expect(isAtOverspeed(limit - 0.1)).toBe(false)
+    expect(isAtOverspeed(0)).toBe(false)
+  })
+})
+
+describe("speed refusals with the breaker closed (#135)", () => {
+  const closed = { ...makeInitialState().Turbine, generatorBreaker: true, mainSteamValve: true }
+  const reasons: (string | undefined)[] = [
+    ...(["free", "rampUp", "hold"] as const).map((mode) => speedModeRefusal(closed, mode)),
+    ...CstTurbine.RunUpPoints.map((point) => runUpPointRefusal(closed, point)),
+  ]
+
+  test("every mode and every run-up point is refused with the one constant reason", () => {
+    expect(new Set(reasons).size).toBe(1)
+    expect(reasons[0]).toBeTypeOf("string")
+  })
+
+  test("with the breaker open Free is allowed again", () => {
+    expect(speedModeRefusal({ ...closed, generatorBreaker: false }, "free")).toBeUndefined()
   })
 })

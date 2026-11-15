@@ -5,10 +5,10 @@
 import { CstDeaerator, CstHeater, CstSimulation } from "../context/const"
 import {
   getBoilingPoint,
-  getIsentropicEnthalpyDrop,
+  getInletEnthalpy,
+  getInletIsentropicDrop,
   getLiquidEnthalpy,
   getLiquidTemperature,
-  getSaturationEnthalpies,
 } from "./steamTable"
 
 const { CstCondenser, CstTurbine } = CstSimulation
@@ -24,6 +24,7 @@ export type ExtractionInput = {
   turbineFlow: number // kg/s through the turbine valve
   workFraction: number // 0-1, the share of the work the shaft takes from the steam before the tap (shaftWorkFraction of the speed)
   boilerPressure: number // bar
+  steamTemperature?: number // Celsius, the inlet steam (#113): the saturated steam when left out
   returnFlow: number // kg/s of Return from the hotwell
   returnTemperature: number // Celsius, the hotwell temperature
 }
@@ -37,9 +38,9 @@ export type Extraction = {
 
 // Steam enthalpy (kJ/kg) at the tap: on the expansion line from the inlet, the share of the isentropic drop to the tap
 // pressure that the shaft takes, at the isentropic efficiency (so at sync speed the same line as the exhaust)
-function tapEnthalpyAt(boilerPressure: number, tapPressure: number, workFraction: number): number {
-  const inlet: number = getSaturationEnthalpies(boilerPressure).vapor
-  const drop: number = Math.max(0, getIsentropicEnthalpyDrop(boilerPressure, tapPressure))
+function tapEnthalpyAt(boilerPressure: number, tapPressure: number, workFraction: number, steamTemperature: number): number {
+  const inlet: number = getInletEnthalpy(boilerPressure, steamTemperature)
+  const drop: number = Math.max(0, getInletIsentropicDrop(boilerPressure, tapPressure, steamTemperature))
   return inlet - workFraction * CstTurbine.IsentropicEfficiency * drop
 }
 
@@ -52,12 +53,13 @@ export function calculateExtraction({
   turbineFlow,
   workFraction,
   boilerPressure,
+  steamTemperature = 0,
   returnFlow,
   returnTemperature,
 }: ExtractionInput): Extraction {
   const tapPressure: number = tapPressureOf(turbineFlow)
   const heaterPressure: number = heaterPressureOf(tapPressure)
-  const tapEnthalpy: number = tapEnthalpyAt(boilerPressure, tapPressure, workFraction)
+  const tapEnthalpy: number = tapEnthalpyAt(boilerPressure, tapPressure, workFraction, steamTemperature)
   const none: Extraction = { flow: 0, tapPressure, heaterPressure, tapEnthalpy }
   if (turbineFlow <= 0 || returnFlow <= 0) return none
 
@@ -101,11 +103,12 @@ export function shaftDropWithExtraction(
   condenserPressure: number,
   turbineFlow: number,
   extractionFlow: number,
+  steamTemperature = 0,
 ): number {
-  const total: number = getIsentropicEnthalpyDrop(boilerPressure, condenserPressure)
+  const total: number = getInletIsentropicDrop(boilerPressure, condenserPressure, steamTemperature)
   if (turbineFlow <= 0 || extractionFlow <= 0) return total
   const share: number = Math.min(1, extractionFlow / turbineFlow)
-  const tapDrop: number = Math.min(total, Math.max(0, getIsentropicEnthalpyDrop(boilerPressure, tapPressureOf(turbineFlow))))
+  const tapDrop: number = Math.min(total, Math.max(0, getInletIsentropicDrop(boilerPressure, tapPressureOf(turbineFlow), steamTemperature)))
   return total - share * (total - tapDrop)
 }
 
@@ -121,6 +124,7 @@ export const ratedExtractionShare: number = (() => {
     turbineFlow: CstTurbine.RatedSteamFlow,
     workFraction: 1,
     boilerPressure: CstTurbine.ValveRatingPressure,
+    steamTemperature: CstTurbine.RatedSteamTemperature,
     returnFlow: 1,
     returnTemperature: getBoilingPoint(CstDeaerator.Pressure),
   })

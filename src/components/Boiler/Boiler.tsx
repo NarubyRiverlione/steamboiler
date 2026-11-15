@@ -6,11 +6,14 @@ import { CstSimulation } from "../../context/const"
 import useEMA from "../../utils/useEMA"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
+import { TripResetButton } from "../board/TripResetButton"
 import { TurnSwitch } from "../board/TurnSwitch"
 import { Knob } from "../board/Knob"
 import { LevelInstrument } from "../board/LevelInstrument"
+import { levelZones } from "../board/levelZones"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
+import { heatingRateText } from "../../utils/heatingRateText"
 
 const {
   CstBoiler: {
@@ -19,6 +22,11 @@ const {
     ReliefClosePressure,
     HeatingRateLimit,
     BurnerLowLowLevel,
+    LowLevel,
+    HighLevel,
+    HighHighLevel,
+    WorkingLow,
+    WorkingHigh,
     WorkingLevel,
     GasRateDeadZone,
   },
@@ -33,7 +41,11 @@ const PRESSURE_ZONES: readonly GaugeZone[] = [
   { from: ValveRatingPressure, to: ReliefOpenPressure, tone: "warn" },
   { from: ReliefOpenPressure, to: PRESSURE_MAX, tone: "alarm" },
 ]
-const LEVEL_ZONES: readonly GaugeZone[] = [{ from: 0, to: BurnerLowLowLevel * 100, tone: "alarm" }]
+const LEVEL_ZONES: readonly GaugeZone[] = levelZones({
+  trip: { low: BurnerLowLowLevel, high: HighHighLevel },
+  alarm: { low: LowLevel, high: HighLevel },
+  working: { low: WorkingLow, high: WorkingHigh },
+})
 const LEVEL_TICKS: readonly number[] = [0, BurnerLowLowLevel * 100, 50, 100]
 
 function Boiler() {
@@ -53,6 +65,7 @@ function Boiler() {
         reliefValveOpen,
         ventedTotal,
         burnerTripped,
+        boilerLevelHighTripped,
         heatingRate,
         heatingRateOverLimit,
         drainValveOpen,
@@ -65,9 +78,9 @@ function Boiler() {
     toggleDrainValve,
   } = usePowerPlant()
 
-  const smoothPressure: number = useEMA(pressure, 0.01)
-  const smoothEnergyDelta: number = useEMA(energyDelta / 1e3, 0.01)
-  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.01)
+  const smoothPressure: number = useEMA(pressure, CstSimulation.ReadoutSmoothingSeconds)
+  const smoothEnergyDelta: number = useEMA(energyDelta / 1e3, CstSimulation.ReadoutSmoothingSeconds)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, CstSimulation.ReadoutSmoothingSeconds)
   const [advanced, setAdvanced] = useState<boolean>(false)
   const gasTrend: string =
     gasRateCommand > GasRateDeadZone
@@ -115,8 +128,18 @@ function Boiler() {
                 <Lamp
                   lit={burnerTripped}
                   label="Tripped"
-                  title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water, turn the gas knob up to restart`}
+                  title={`Gas shut off below ${String(BurnerLowLowLevel * 100)}% water: reset the trip, then turn the gas knob up`}
                 />
+                <TripResetButton trip="burner" label="burner trip" />
+              </div>
+              <div className="board-readout">
+                <span>High-high trip</span>
+                <Lamp
+                  lit={boilerLevelHighTripped}
+                  label="Tripped"
+                  title={`Feed pump and turbine shut at ${String(HighHighLevel * 100)}% water: reset the trip once the level is below it`}
+                />
+                <TripResetButton trip="boilerHighHigh" label="boiler high-high trip" />
               </div>
             </div>
             <div className="board-readout-col">
@@ -126,11 +149,11 @@ function Boiler() {
                   <Lamp
                     lit={heatingRateOverLimit}
                     label="Over limit"
-                    title={`Alarm above ${String(HeatingRateLimit * 60)} K/min`}
+                    title={`Alarm above ${heatingRateText(HeatingRateLimit)}`}
                   />
                   <Display
                     label="Heating rate"
-                    text={`${(heatingRate * 60).toFixed(1)} K/min`}
+                    text={heatingRateText(heatingRate)}
                     alarm={heatingRateOverLimit}
                     widest={STACKED_LCD_WIDEST}
                   />

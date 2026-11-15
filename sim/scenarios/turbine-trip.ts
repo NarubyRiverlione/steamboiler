@@ -4,7 +4,7 @@ import { turbineLoad } from "./turbine-load"
 // Seconds after the start at which the turbine trips: the load has been at 125 MW since about 2000 s
 export const TripAt = 2500
 
-// Edge (#88): the turbine trips at rated load. Hold goes back to Free and the turbine valve slams shut, while the bypass
+// Edge (#88): the turbine trips at rated load. The breaker opens (Free) and the turbine valve slams shut, while the bypass
 // opens fully to dump the steam to the condenser, as a real plant's turbine bypass does. The turbine takes no steam, so the
 // heater loses its tap and the Return turns cold at once (ADR 0031); the cold Return then costs the boiler heat, and the
 // pressure must stay under the design pressure. Same plant and operator as `turbine-load`, whose last 600 s the load
@@ -17,6 +17,8 @@ export const turbineTrip: Scenario = {
   initial: turbineLoad.initial,
   actions: [
     ...turbineLoad.actions,
+    // With the breaker closed the speed mode is locked (#135): opening the breaker is what returns to Free
+    { at: TripAt, action: { type: "TOGGLE_GENERATOR_BREAKER" } },
     { at: TripAt, action: { type: "SET_SPEED_MODE", payload: { speedMode: "free" } } },
     { at: TripAt, action: { type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: -1 } } },
     { at: TripAt, action: { type: "ADJUST_STEAM_BYPASS_VALVE", payload: { bypassValvePosition: 1 } } },

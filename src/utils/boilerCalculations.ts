@@ -37,6 +37,9 @@ export function waterMassOf(waterVolume: number, temperature: number): number {
   return waterVolume / getWaterSpecificVolume(temperature)
 }
 
+// Boiler level as a fraction (0-1) of the boiler volume; volumetric like the hotwell's (ADR 0007)
+export const boilerLevel = (waterVolume: number): number => waterVolume / CstSimulation.CstBoiler.TotalVolume
+
 // Mass (kg) a vessel of this capacity (L) can still take at the water temperature; none once it is full or over
 export function roomInKg(totalVolume: number, waterVolume: number, temperature: number): number {
   return Math.max(0, totalVolume - waterVolume) / getWaterSpecificVolume(temperature)

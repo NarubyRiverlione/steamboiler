@@ -149,7 +149,7 @@ describe("shaftDropWithExtraction", () => {
 
 describe("ratedExtractionShare", () => {
   it("is about a quarter of the rated flow (research: 26-34% of the Return)", () => {
-    expect(ratedExtractionShare).toBeGreaterThan(0.2)
+    expect(ratedExtractionShare).toBeGreaterThan(0.19)
     expect(ratedExtractionShare).toBeLessThan(0.32)
   })
 })

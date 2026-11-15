@@ -1,13 +1,15 @@
 import { describe, expect, test } from "vitest"
-import { firstTimeWhere, runScenario } from "../scenario"
+import { firstTimeWhere } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { hotwellHigh } from "../scenarios/hotwell-high"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
+import { activeAlarms } from "../../src/context/Alarms"
 import { CstSimulation } from "../../src/context/const"
 
 const { HotwellHighHigh } = CstSimulation.CstCondenser
 
 describe("hotwell-high", () => {
-  const samples = runScenario(hotwellHigh)
+  const { samples } = runChecked(hotwellHigh)
   const levels = samples.map((s) => hotwellLevel(s.state.Condenser.hotwellWaterVolume))
   const reachedAt = firstTimeWhere(samples, (s) => hotwellLevel(s.Condenser.hotwellWaterVolume) >= HotwellHighHigh)
 
@@ -20,6 +22,19 @@ describe("hotwell-high", () => {
   test("the level reaches high-high with the reject valve still shut as set", () => {
     expect(reachedAt).toBeDefined()
     for (const { state } of samples) expect(state.Condenser.rejectValvePosition).toBe(0)
+  })
+
+  test("the high level alarm is on before the level reaches high-high, where the clamp acts", () => {
+    const alarmAt = firstTimeWhere(samples, (s) => activeAlarms(s).includes("hotwellLevelHigh"))
+    expect(alarmAt).toBeDefined()
+    expect(alarmAt ?? Infinity).toBeLessThan(reachedAt ?? 0)
+  })
+
+  test("the high-high alarm comes on from the moment the clamp acts, after the high alarm", () => {
+    const highAt = firstTimeWhere(samples, (s) => activeAlarms(s).includes("hotwellLevelHigh"))
+    const highHighAt = firstTimeWhere(samples, (s) => activeAlarms(s).includes("hotwellLevelHighHigh"))
+    expect(highHighAt).toBe(reachedAt)
+    expect(highHighAt ?? 0).toBeGreaterThan(highAt ?? Infinity)
   })
 
   test("from high-high the clamp rejects as much as the makeup brings: the hotwell never overflows", () => {

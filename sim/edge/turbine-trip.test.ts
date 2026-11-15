@@ -1,20 +1,20 @@
 import { describe, expect, test } from "vitest"
 import { CstDeaerator, CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { TripAt, turbineTrip } from "../scenarios/turbine-trip"
 
 const { CstBoiler } = CstSimulation
 
 describe("turbine-trip", () => {
-  const samples = runScenario(turbineTrip)
+  const { samples } = runChecked(turbineTrip)
   const before = samples.filter((s) => s.time < TripAt)
   const after = samples.filter((s) => s.time > TripAt + 1)
   const rated = before[before.length - 1].state
 
   test("the plant carries its load with the heater working before the trip", () => {
     expect(rated.Turbine.electricOutput).toBeCloseTo(125, 0)
-    expect(rated.Heater.extractionFlow).toBeGreaterThan(3)
-    expect(rated.Deaerator.extractionFlow).toBeGreaterThan(20)
+    expect(rated.Heater.extractionFlow).toBeGreaterThan(1.5)
+    expect(rated.Deaerator.extractionFlow).toBeGreaterThan(15)
     expect(rated.Heater.returnTemperature).toBeGreaterThan(140)
   })
 

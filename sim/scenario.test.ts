@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest"
 import { finalState, firstTimeWhere, runScenario, Scenario, trackLifts } from "./scenario"
 import { scenarios } from "./scenarios"
 import { loadSnapshot } from "./snapshot"
-import { initialPowerPlantState, makeInitialState, powerPlantReducer } from "../src/context/PowerPlantReducer"
-import { CstPhysics } from "../src/context/const"
+import { initialPowerPlantState, makeInitialState, makeUiStartState, powerPlantReducer } from "../src/context/PowerPlantReducer"
+import { CstPhysics, CstSimulation } from "../src/context/const"
 
 const heatUp: Scenario = {
   name: "test-heat-up",
@@ -26,7 +26,7 @@ describe("runScenario", () => {
   })
 
   test("matches stepping the reducer by hand", () => {
-    let state = initialPowerPlantState
+    let state = makeInitialState()
     state = powerPlantReducer(state, { type: "SET_GAS_RATE", payload: { gasRateCommand: 1 } })
     for (let i = 0; i < 100; i++) state = powerPlantReducer(state, { type: "SIMULATE_TICK" })
     const [, second] = runScenario(heatUp)
@@ -119,8 +119,12 @@ describe("cold initial state", () => {
   const cold = makeInitialState()
   const rest: Scenario = { name: "test-rest", description: "Nothing on", duration: 600, sampleEvery: 60, actions: [] }
 
-  test("is what the UI starts from", () => {
-    expect(initialPowerPlantState).toEqual(cold)
+  // The scenarios start with the 35% drum, the app with 40% (ADR 0018); everything else is the same cold plant
+  test("is what the scenarios start from, and the UI differs only in the drum fill", () => {
+    expect(cold.Boiler.waterVolume).toBe(CstSimulation.CstBoiler.StartWaterVolume)
+    expect(initialPowerPlantState).toEqual(makeUiStartState())
+    expect(initialPowerPlantState.Boiler.waterVolume).toBe(CstSimulation.CstBoiler.UiStartWaterVolume)
+    expect({ ...initialPowerPlantState, Boiler: cold.Boiler }).toEqual(cold)
   })
 
   // 35 t of water at 4.196 kJ/kg·K plus 100 t of steel at 0.5 kJ/kg·K, 20 K above 0 °C: about 2932 + 1000 MJ
@@ -192,13 +196,17 @@ describe("scenario registry", () => {
       "hotwell-high",
       "hotwell-low",
       "boiler-low",
+      "boiler-high",
+      "deaerator-high",
       "heat-up",
       "low-pressure-close",
       "max-output",
       "return-stop",
+      "turbine-overspeed",
       "turbine-trip",
       "vacuum-loss",
       "sjae-closed-load",
+      "spray-stuck-closed",
       "deaerator-vent-closed",
       "deaerator-vent-open",
     ])

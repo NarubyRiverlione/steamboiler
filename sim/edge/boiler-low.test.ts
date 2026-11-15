@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
-import { runScenario } from "../scenario"
+import { runChecked } from "../scenario-checks"
 import { boilerLow } from "../scenarios/boiler-low"
 
 describe("boiler-low", () => {
   // every tick, so no overshoot hides between samples
-  const samples = runScenario({ ...boilerLow, sampleEvery: 0.1 })
+  const { samples } = runChecked(boilerLow, { sampleEvery: 0.1 })
 
   test("the relief valve lifts and pressure never exceeds design pressure in any tick", () => {
     expect(samples[samples.length - 1].state.Boiler.reliefLifts).toBeGreaterThan(0)

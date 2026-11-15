@@ -15,9 +15,13 @@ export const generatorFrequency = (rpm: number): number => (rpm * CstTurbine.Gen
 export const isWithinHoldWindow = (rpm: number, runUpPoint: number): boolean =>
   Math.abs(rpm - runUpPoint) <= CstTurbine.HoldEngageWindow
 
+// With the breaker closed (Synchronised, or the window after a trip) no speed mode or run-up point may be chosen (#135)
+const BreakerClosedRefusal = "Generator synchronised: open the breaker to change the speed mode"
+
 // Why a speed mode change is refused, or undefined when it is allowed (Free always is). The reducer refuses on it
 // and the UI shows it on the disabled control.
 export function speedModeRefusal(turbine: TurbineState, mode: SpeedMode): string | undefined {
+  if (turbine.generatorBreaker) return BreakerClosedRefusal
   if (mode === "rampUp") return rampUpRefusal(turbine)
   if (mode === "hold") return holdRefusal(turbine)
   return undefined
@@ -37,6 +41,7 @@ function holdRefusal({ rpm, runUpPoint }: TurbineState): string | undefined {
 // Why selecting a run-up point is refused, or undefined when it is allowed: in Free any point selects the target,
 // in Ramp up or Hold only a point above the current speed, with the main steam valve open, restarts Ramp up
 export function runUpPointRefusal(turbine: TurbineState, point: number): string | undefined {
+  if (turbine.generatorBreaker) return BreakerClosedRefusal
   if (!CstTurbine.RunUpPoints.includes(point)) return "Not a run-up point"
   if (turbine.speedMode === "free") return undefined
   if (!turbine.mainSteamValve) return "Open the main steam valve first"
@@ -51,13 +56,12 @@ export const isAboveMainSteamValveMinimum = (boilerPressure: number): boolean =>
 // True when condenser pressure (mbar absolute) is above the vacuum limit; a deep vacuum is never refused (ADR 0003)
 export const isAboveVacuumLimit = (condenserPressure: number): boolean => condenserPressure > CstCondenser.VacuumLimit
 
+// True when the turbine speed (rpm) is at or above the overspeed limit MaxRPM: an open valve trips, an opening is refused (ADR 0040)
+export const isAtOverspeed = (rpm: number): boolean => rpm >= CstTurbine.MaxRPM
+
 // Highest turbine valve position allowed: above the vacuum limit the valve may close but not open further
 export const maxTurbineValvePosition = (currentPosition: number, condenserPressure: number): number =>
   isAboveVacuumLimit(condenserPressure) ? currentPosition : 1
-
-// The turbine trip flag clears on the next opening of the turbine valve, by the operator or the hold-mode PID
-export const turbineTrippedAfter = (tripped: boolean, previousPosition: number, newPosition: number): boolean =>
-  tripped && newPosition <= previousPosition
 
 const RadPerSecPerRpm = (2 * Math.PI) / 60
 const JPerKJ = 1000 // kJ to J, so kg/s x kJ/kg gives W
@@ -73,6 +77,7 @@ const ratedOutput: number =
     CstCondenser.OptimalPressure / 1000,
     CstTurbine.RatedSteamFlow,
     ratedExtractionShare * CstTurbine.RatedSteamFlow,
+    CstTurbine.RatedSteamTemperature,
   ) *
   JPerKJ *
   CstTurbine.IsentropicEfficiency *

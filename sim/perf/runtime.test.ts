@@ -23,8 +23,8 @@ describe("runner speed", () => {
 
 describe("playback batch", () => {
   test("a capped batch fits in one loop update interval", () => {
-    // Gas on, so the tick does real work; the cap is where this stays under UpdateInterval (ADR 0034)
-    const start = powerPlantReducer(makeInitialState(), { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.3 } })
+    // Gas on, so the tick does real work, but gently so the heating-rate alarm does not stop the batch (ADR 0034)
+    const start = powerPlantReducer(makeInitialState(), { type: "SET_GAS_RATE", payload: { gasRateCommand: 0.1 } })
     runTicks(start, 100) // warm up the JIT
     const t0 = performance.now()
     const { ticksRun } = runTicks(start, CstSimulation.MaxTicksPerUpdate)

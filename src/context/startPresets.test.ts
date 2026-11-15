@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { loadSnapshot } from "../../sim/snapshot"
-import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
+import { CstSimulation } from "./const"
+import { makeInitialState, makeUiStartState, powerPlantReducer } from "./PowerPlantReducer"
 import type PowerPlantState from "./PowerPlantState"
 import { START_PRESETS, presetState, validatedState, type StartPreset } from "./startPresets"
 
@@ -16,13 +17,20 @@ describe("start presets", () => {
     expect(START_PRESETS.every((p: StartPreset) => p.description.length > 0)).toBe(true)
   })
 
-  test("Cold & dark is the cold initial state", () => {
-    expect(presetState(find("cold"))).toEqual(makeInitialState())
+  test("Cold & dark is what the app starts from: the cold plant with the 40% drum", () => {
+    expect(presetState(find("cold"))).toEqual(makeUiStartState())
+    expect(presetState(find("cold")).Boiler.waterVolume).toBe(CstSimulation.CstBoiler.UiStartWaterVolume)
   })
 
   test("Hot standby is the bypass-loop snapshot, At pressure the turbine-runup snapshot", () => {
     expect(presetState(find("hot-standby"))).toEqual(loadSnapshot("bypass-loop"))
     expect(presetState(find("at-pressure"))).toEqual(loadSnapshot("turbine-runup"))
+  })
+
+  test("every preset loads with the gas knob on neutral, holding", () => {
+    for (const preset of START_PRESETS) {
+      expect(Math.abs(presetState(preset).Boiler.gasRateCommand)).toBeLessThanOrEqual(CstSimulation.CstBoiler.GasRateDeadZone)
+    }
   })
 
   test("a snapshot whose shape no longer matches the current state is rejected", () => {

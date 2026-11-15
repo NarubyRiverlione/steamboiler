@@ -12,5 +12,5 @@ The boiler is modelled as a single vessel: one fixed volume shared by water and 
 - No swell and shrink: opening the steam valve lowers the level only through boiling off, never with the sudden rise a real drum shows. Level control is easier than in a real plant.
 - The level is a volume fraction of the whole boiler, not a drum level, so level setpoints and trips (the burner low-low level of [ADR 0017](0017-burner-trips-on-low-water-level.md)) have no direct real-plant equivalent and stay UNVERIFIED.
 - The steam space is the total minus the water, larger than a real drum's upper half ([design-basis.md](../plant/design-basis.md)).
-- Thermal stress needs a separate metal temperature, which this model does not have.
+- Thermal stress needs a separate metal temperature, which this model does not have. The superheater of #113 ([ADR 0044](0044-superheater-with-spray-attemperator.md)) adds one lag for the steam temperature, with the tube metal in it, outside the vessel: this ADR still holds.
 - Splitting the boiler later is a new ADR that supersedes this one, and a ticket.

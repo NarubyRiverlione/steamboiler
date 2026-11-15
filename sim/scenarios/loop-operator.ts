@@ -15,7 +15,7 @@ const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 const { DeltaTime } = CstSimulation
 
 export const LoopSettings = {
-  BypassLoadOpening: 0.1, // bypass position once the main steam valve opens: 20 kg/s, close to the turbine's ~18 kg/s at sync speed
+  BypassLoadOpening: 0.06, // bypass position once the main steam valve opens: about 13 kg/s at 165 bar, what the heat-up gas holds with the superheater taking its heat first (was 0.1, 20 kg/s, before #113)
   SjaeOpening: 1, // SJAE valve position once there is steam
   CoolingWaterMinimum: 0.1, // the cooling water never goes below it: a surge of steam (load rejection) must find the exchanger running
   CoolingWaterOpening: 0.1, // cooling water valve position when the main steam valve opens: the bypass steam has somewhere to condense at once
@@ -24,12 +24,14 @@ export const LoopSettings = {
   BoilerLevelTarget: 0.5, // fraction of boiler capacity
   BoilerLevelBand: 0.05, // the level the scenarios judge the hold by: target ± band
   LevelGain: 1, // feed pump position per unit of drum level error: 0.05 of level trims 0.05 of the pump (15 L/s)
+  HeatUpLevelMargin: 0.03, // share of TotalVolume above the low level alarm that the heat-up feed holds the drum at (#137)
+  HeatUpLevelGain: 10, // feed pump position per unit of drum level error during heat-up: stiff, the let-down steam draw is small
   DeaeratorLevelTarget: 0.5, // fraction of the deaerator volume: the working level
   DeaeratorLevelBand: 0.05, // the level the scenarios judge the deaerator hold by: target ± band
   DeaeratorLevelGain: 2, // condensation pump position per second per unit of deaerator level error: plain level feedback, no feedforward (#112)
   DeaeratorLevelDamping: 60, // condensation pump position per unit of level rate (share of the volume per second): damps the integrating vessel
-  HotwellBandLow: 0.55, // fraction of condenser capacity: makeup opens below the working band (normal level 70%)
-  HotwellBandHigh: 0.75, // reject opens above the working band
+  HotwellBandLow: CstSimulation.CstCondenser.HotwellWorkingLow, // makeup opens below the working band (normal level 70%)
+  HotwellBandHigh: 0.8, // reject opens above it: the operator's own edge, above the gauge's green band (75%) and under the 85% alarm, so the water the 50% deaerator fill adds stays in the hotwell
   HotwellRamp: 0.15, // distance beyond a band edge at which makeup or reject is fully open
   CondenserPressureHigh: 33, // mbar condenser pressure: more cooling water (the design vacuum is 31 mbar)
   CondenserPressureLow: 28, // mbar: less cooling water
@@ -128,10 +130,22 @@ function startSteam(state: PowerPlantState): PowerPlantAction[] {
 // comes back through the feed pump (#112), in litres at the deaerator temperature, plus LevelGain per unit of level error.
 function holdBoilerLevel({ Boiler, Deaerator, Turbine }: PowerPlantState): PowerPlantAction[] {
   if (!Turbine.mainSteamValve) return []
+  // After the high-high trip the pump stays shut until the operator decides to open it again (ADR 0041)
+  if (Boiler.boilerLevelHighTripped) return []
   const level = Boiler.waterVolume / CstBoiler.TotalVolume
   const steamOut = Turbine.turbineSteamFlowOut + Turbine.bypassSteamFlowOut + Deaerator.letDownFlow
   const feedforward = (steamOut * getWaterSpecificVolume(Deaerator.temperature)) / CstCondenser.CondensationPump_MaxFlowRate
   const wanted = Math.max(0, Math.min(1, feedforward + S.LevelGain * (S.BoilerLevelTarget - level)))
+  return toPosition(Deaerator.feedPumpValvePosition, wanted, feedPumpPayload)
+}
+
+// Heat-up (#137): the let-down steam to the deaerator takes water out of the drum while the main steam valve is shut and
+// nothing feeds it back, so the drum would sink below the low level alarm. The operator feeds only what keeps it at the
+// low level alarm plus a margin (stiff proportional action, no feedforward); the expansion is not fed back (ADR 0018)
+export function holdHeatUpLevel({ Boiler, Deaerator, Turbine }: PowerPlantState): PowerPlantAction[] {
+  if (Turbine.mainSteamValve) return []
+  const level = Boiler.waterVolume / CstBoiler.TotalVolume
+  const wanted = Math.max(0, Math.min(1, S.HeatUpLevelGain * (CstBoiler.LowLevel + S.HeatUpLevelMargin - level)))
   return toPosition(Deaerator.feedPumpValvePosition, wanted, feedPumpPayload)
 }
 
@@ -190,7 +204,7 @@ export function holdLoop(
 }
 
 export function loopOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
-  return [...startUpVent(state, time), ...startSteam(state), ...holdLoop(state, time)]
+  return [...startUpVent(state, time), ...startSteam(state), ...holdHeatUpLevel(state), ...holdLoop(state, time)]
 }
 
 // The loop operator with its hotwell hold taken away, for edge scenarios that force makeup and reject themselves

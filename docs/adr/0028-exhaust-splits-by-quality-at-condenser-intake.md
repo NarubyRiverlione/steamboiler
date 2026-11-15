@@ -1,6 +1,6 @@
 # The turbine exhaust splits by its quality at the condenser intake
 
-All steam entering the condenser joined one steam pool and was charged the full latent heat at condenser pressure. With no superheater the turbine exhaust carries moisture: about two-thirds vapour by mass at 165 bar to 100 mbar, so it was charged about 1.5× too much and 25% on the turbine valve behaved exactly like 25% on the bypass. Decided in #81.
+All steam entering the condenser joined one steam pool and was charged the full latent heat at condenser pressure. With saturated steam the turbine exhaust carried moisture: about two-thirds vapour by mass at 165 bar to 100 mbar, so it was charged about 1.5× too much and 25% on the turbine valve behaved exactly like 25% on the bypass. Decided in #81.
 
 ## Considered options
 
@@ -20,7 +20,7 @@ All steam entering the condenser joined one steam pool and was charged the full 
 - At rated output (`turbine-load`, 130.6 MW before #74) the condenser settled at 39–40 mbar instead of 69 mbar, and the better vacuum took 162 kg/s of steam instead of 170. After #74 rated output was 123.0 MW, 150 kg/s and 33 mbar; after #82 `turbine-load` carries 125 MW at 152 kg/s and 29 mbar ([ADR 0032](0032-limited-condenser-and-stream-enthalpy.md)).
 - The bypass was plain vapour on the latent heat, under 1% off at 165 bar and about 8% at 10 bar. ADR 0032 (#82) puts every stream on its real enthalpy, so that departure is gone.
 - Quality used to ignore shaft speed. ADR 0032 (#82) takes the exhaust enthalpy from the work the shaft actually took, so a turbine running up has a drier exhaust and a standing one passes the inlet steam.
-- The exhaust holds far more moisture than a real last stage allows, a result of having no superheater. Moisture is not a turbine limit here.
+- The exhaust holds more moisture than a real last stage allows. Since #113 the superheater ([ADR 0044](0044-superheater-with-spray-attemperator.md)) brings it from 35% to about 17% wet at the design vacuum; the quality is taken from the superheated inlet enthalpy and entropy. Reheat is the later fix. Moisture is not a turbine limit here.
 - The recirculation pump kept its 3600 L/s then, with a note starting from the real heat load; #82 re-sized it to 7400 L/s with a limited exchanger ([design-basis.md](../plant/design-basis.md#condenser-and-water-loop)).
-- Goal check: `sim/golden/exhaust-split.test.ts`, the same 25% through the bypass and the turbine valve from `bypass-loop` no longer gives the same condenser.
+- Goal check: `sim/golden/exhaust-split.test.ts`, the same 15% (25% before #113, when the plant made 192 kg/s) through the bypass and the turbine valve from `bypass-loop` no longer gives the same condenser.
 - The fixed `steamOutflowTemperature` and `steamOutflowPressure` are gone, as are the unused `temp` and `pressure` condenser inputs.

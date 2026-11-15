@@ -19,9 +19,16 @@ export type BoilerState = {
   ventedTotal: number // kg of steam vented to the atmosphere since start (totalizer)
   reliefLifts: number // lifts of the relief valve since start (counter)
   burnerTripped: boolean // set by the low-low level trip, cleared by the next gas raise past the dead zone
+  boilerLevelHighTripped: boolean // set by the high-high level trip of the feed pump (ADR 0041), cleared by the next successful opening of the feed pump
   stackTemperature: number // Celsius, flue gas after the economizer (ADR 0029)
   boilerEfficiency: number // 0-1, heat into the water over fuel heat; 0 with no gas
   returnTemperatureOut: number // Celsius, the Return after the economizer (the hotwell temperature when it takes no heat)
+  steamTemperature: number // Celsius, the steam after the superheater and attemperator (one lumped lag, steam and metal together, ADR 0044); saturation with no flow
+  superheaterHeat: number // kW the flue gas gives the steam in the superheater
+  sprayValvePosition: number // 0-1 (0-100%) open, the attemperator valve: the PID moves it in Auto, the operator in Manual
+  sprayFlow: number // kg/s of feedwater the attemperator injects into the steam, taken from the feed pump discharge
+  attemperatorAuto: boolean // Auto: the PID holds the steam temperature; Manual: the operator sets the valve
+  attemperatorIntegralError: number // K·s, the accumulated error of the PID, clamped
 }
 export type CondenserState = {
   pressure: number // in mBar (negative pressure)
@@ -47,7 +54,7 @@ export type CondenserState = {
   rejectTotal: number // kg rejected since start (totalizer)
   deltaWaterMass: number // kg change of the hotwell over the last tick
 }
-export type SpeedMode = "free" | "rampUp" | "hold" // Free: operator moves the valve; Ramp up and Hold: the PID does (ADR 0021)
+export type SpeedMode = "free" | "rampUp" | "hold" | "synchronised" // Free: operator moves the valve; Ramp up, Hold and Synchronised: the PID does (ADR 0021); Synchronised is entered by closing the breaker, never chosen (#135)
 export type TurbineState = {
   electricOutput: number // MW, the load the generator carries (an input to the shaft balance, ADR 0027)
   loadSetpoint: number // MW, the operator's load target; the load moves toward it at LoadRate
@@ -58,7 +65,7 @@ export type TurbineState = {
   mainSteamValve: boolean // open/close MSV
   rpm: number // Current RPM of the turbine
   runUpPoint: number // Selected run-up point (rpm): the target of Ramp up and Hold
-  speedMode: SpeedMode // Free, Ramp up or Hold
+  speedMode: SpeedMode // Free, Ramp up, Hold or Synchronised
   speedReference: number // rpm the PID aims at in Ramp up; follows the speed while the PID is inactive
   generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
   pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
@@ -95,6 +102,7 @@ export type DeaeratorState = {
   deltaWaterMass: number // kg change of the vessel over the last tick: the level trend the operator damps on
   feedPumpValvePosition: number // 0-1 (0-100%) open: the boiler feed pump, a flow actuator (ADR 0030)
   feedPumpTripped: boolean // set by the low-low trip, cleared by the next successful opening
+  deaeratorHighHighTripped: boolean // set by the high-high trip of the condensation pump (#129, ADR 0045), cleared only by a trip reset
 }
 
 type PowerPlantState = {

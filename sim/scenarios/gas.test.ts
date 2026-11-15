@@ -2,10 +2,9 @@ import { describe, expect, test } from "vitest"
 import { gasRateOf } from "../../src/context/Boiler/BoilerTick"
 import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import { CstSimulation } from "../../src/context/const"
-import { gasCommandFor, rampGas, setGasCommand, steerGas } from "./gas"
+import { gasCommandFor, setGasCommand, steerGas } from "./gas"
 
 const { GasRateMax, MaxGasFlow } = CstSimulation.CstBoiler
-const { DeltaTime } = CstSimulation
 const boiler = (gasFlow: number, gasRateCommand = 0) => ({
   ...makeInitialState().Boiler,
   gasFlow,
@@ -52,32 +51,5 @@ describe("steerGas", () => {
     expect(steerGas(boiler(500, 0), 500, 1)).toEqual([])
     expect(steerGas(boiler(0, -1), 0, 1)).toEqual([setGasCommand(0)])
     expect(steerGas(boiler(0, 1), 5000, 1)).toEqual([])
-  })
-})
-
-describe("rampGas", () => {
-  test("is nothing when the gas is already there", () => {
-    expect(rampGas(0, 500, 500)).toEqual([])
-  })
-
-  test("full deflection for whole ticks, the remainder in one tick, then centred", () => {
-    const actions = rampGas(5, 0, 2000)
-    const ticks = Math.floor(2000 / (GasRateMax * DeltaTime))
-    expect(actions).toHaveLength(3)
-    expect(actions[0]).toEqual({ at: 5, action: setGasCommand(1) })
-    expect(actions[1].at).toBeCloseTo(5 + ticks * DeltaTime, 9)
-    expect(actions[2]).toEqual({ at: actions[1].at + DeltaTime, action: setGasCommand(0) })
-    const remainder = 2000 - ticks * GasRateMax * DeltaTime
-    const middle = actions[1].action
-    if (middle.type !== "SET_GAS_RATE") throw new Error("not a gas rate action")
-    expect(gasRateOf(middle.payload.gasRateCommand) * DeltaTime).toBeCloseTo(remainder, 6)
-  })
-
-  test("goes down with the knob to the left, and has no remainder tick for a whole number of ticks", () => {
-    const actions = rampGas(0, 3000, 0)
-    expect(actions).toHaveLength(2)
-    expect(actions[0]).toEqual({ at: 0, action: setGasCommand(-1) })
-    expect(actions[1].at).toBeCloseTo(10, 6)
-    expect(actions[1].action).toEqual(setGasCommand(0))
   })
 })
