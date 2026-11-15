@@ -82,6 +82,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0043](adr/0043-trip-reset.md) | Only a trip reset clears a latched trip, once its cause has gone; a RESET button beside each trip tile |
 | [0044](adr/0044-superheater-with-spray-attemperator.md) | A passive flue gas superheater before the boiler stage; one spray attemperator holds the steam at 540 °C; the turbine runs on the superheated steam |
 | [0046](adr/0046-from-island-to-town-grid-in-milestones.md) | From island to the town grid in milestones M1–M7; island means house load operation |
+| [0047](adr/0047-first-public-release-on-itch-io.md) | First public release on itch.io: a goal, help cards in markdown, a startup guide; desktop, English, early access |
 
 ## Research (dated, frozen)
 
