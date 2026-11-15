@@ -84,6 +84,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0046](adr/0046-from-island-to-town-grid-in-milestones.md) | From island to the town grid in milestones M1–M7; island means house load operation |
 | [0047](adr/0047-first-public-release-on-itch-io.md) | First public release on itch.io: a goal, help cards in markdown, a startup guide; desktop, English, early access |
 | [0048](adr/0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) | From roll on demand to a real cold start in milestones M1–M4: oil and gear, auxiliary steam and gland seals, prewarming the casing, the full start-up |
+| [0049](adr/0049-sustainable-operation-in-milestones.md) | Proposed: sustainable operation over many sessions: save and load, operating record, an account, wear as cost, gross damage |
 
 ## Research (dated, frozen)
 
