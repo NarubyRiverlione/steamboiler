@@ -15,12 +15,13 @@ Next: nothing ready (every ticket is waiting or needs triage).
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 1 | [#139](https://github.com/NarubyRiverlione/steamboiler/issues/139) Generator takes a 10 MW basic load when the breaker closes | needs-triage |  |  |
-| 2 | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) Auxiliary load: the four pumps draw power, net output = electric output − auxiliary load | needs-triage |  | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |
-| 3 | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) Grid supply breaker and the auxiliary bus: pumps need power | needs-triage | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |
-| 4 | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) Board: grid supply breaker switch, auxiliary load and net output readouts | needs-triage | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |  |
-| 5 | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) Vital bus and UPS: a dead bus darkens the board until the operator closes the UPS breaker | needs-triage | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) |
-| 6 | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) Board: red emergency state on a dead vital bus, UPS panel with charge and UPS breaker | needs-triage | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
+| 1 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Grid-connected model: droop and grid frequency | needs-triage |  |  |
+| 2 | [#139](https://github.com/NarubyRiverlione/steamboiler/issues/139) Generator takes a 10 MW basic load when the breaker closes | needs-triage |  |  |
+| 3 | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) Auxiliary load: the four pumps draw power, net output = electric output − auxiliary load | needs-triage |  | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |
+| 4 | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) Grid supply breaker and the auxiliary bus: pumps need power | needs-triage | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |
+| 5 | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) Board: grid supply breaker switch, auxiliary load and net output readouts | needs-triage | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |  |
+| 6 | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) Vital bus and UPS: a dead bus darkens the board until the operator closes the UPS breaker | needs-triage | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) |
+| 7 | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) Board: red emergency state on a dead vital bus, UPS panel with charge and UPS breaker | needs-triage | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
 
 ## Turbine auxiliaries: lube oil, turning gear, gland steam
 
@@ -28,10 +29,10 @@ Next: nothing ready (every ticket is waiting or needs triage).
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 7 | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) Lube oil system: pressure permissive and low-pressure trip | needs-triage |  | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
-| 8 | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) Turning gear: the stopped rotor turns slowly, the turbine valve cannot open on gear | needs-triage | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
-| 9 | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) Gland seal steam: the shaft seals decide how much air leaks into the vacuum | needs-triage | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
-| 10 | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-up scenario: lube oil, turning gear, gland steam, vacuum, roll | needs-triage | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) |  |
+| 8 | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) Lube oil system: pressure permissive and low-pressure trip | needs-triage |  | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
+| 9 | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) Turning gear: the stopped rotor turns slowly, the turbine valve cannot open on gear | needs-triage | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
+| 10 | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) Gland seal steam: the shaft seals decide how much air leaks into the vacuum | needs-triage | [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) |
+| 11 | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-up scenario: lube oil, turning gear, gland steam, vacuum, roll | needs-triage | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) |  |
 
 ## Plant systems: components and physics expansion
 
@@ -39,8 +40,7 @@ Next: nothing ready (every ticket is waiting or needs triage).
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 11 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | needs-triage |  |  |
-| 12 | [#108](https://github.com/NarubyRiverlione/steamboiler/issues/108) Generator: revise the speed modes once synchronised | needs-triage |  |  |
+| 12 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | needs-triage |  |  |
 | 13 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | needs-triage |  |  |
 | 14 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage |  |  |
 | 15 | [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) Bypass desuperheating spray | needs-triage |  |  |
