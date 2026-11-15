@@ -1,4 +1,4 @@
-/** Board keyboard: Page Down or Right and Page Up or Left cycle the parts, Esc returns to the overview. A field in use keeps its keys; a knob only keeps Up, Down, Home and End, so the arrows always change the page. */
+/** Board keyboard: Page Down or Right and Page Up or Left cycle the parts, Esc, h or Backspace return to the overview. A field in use keeps its keys; a knob only keeps Up, Down, Home and End, so the arrows always change the page. */
 
 import { useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -8,6 +8,9 @@ const OWN_KEYS = "input, textarea, select, [contenteditable], [role='spinbutton'
 
 // A focused button or link keeps the arrows (Close and Open on the pages not yet migrated), not Esc
 const OWN_ARROWS = "button, a[href]"
+
+// Keys that jump to the overview
+const OVERVIEW_KEYS: ReadonlySet<string> = new Set(["Escape", "h", "Backspace"])
 
 const STEPS: Readonly<Partial<Record<string, 1 | -1>>> = {
   PageDown: 1,
@@ -24,7 +27,7 @@ function keepsKeys(target: EventTarget | null, key: string): boolean {
 
 // The path a key goes to from the current path; undefined for a key the board does not use
 function targetPath(key: string, pathname: string): string | undefined {
-  if (key === "Escape") return OVERVIEW_PATH
+  if (OVERVIEW_KEYS.has(key)) return OVERVIEW_PATH
   const step: 1 | -1 | undefined = STEPS[key]
   return step === undefined ? undefined : neighbourPath(pathname, step)
 }

@@ -87,10 +87,30 @@ describe("keyboard", () => {
     expect(where()).toBe("/")
   })
 
+  it("returns to the overview on h", () => {
+    renderAt("/turbine")
+    fireEvent.keyDown(window, { key: "h" })
+    expect(where()).toBe("/")
+  })
+
+  it("returns to the overview on Backspace", () => {
+    renderAt("/turbine")
+    fireEvent.keyDown(window, { key: "Backspace" })
+    expect(where()).toBe("/")
+  })
+
+  it("ignores capital H", () => {
+    renderAt("/turbine")
+    fireEvent.keyDown(window, { key: "H" })
+    expect(where()).toBe("/turbine")
+  })
+
   it("leaves the keys to a field in use", () => {
     renderAt("/boiler", undefined, <input aria-label="field" />)
     fireEvent.keyDown(screen.getByLabelText("field"), { key: "ArrowRight", bubbles: true })
     fireEvent.keyDown(screen.getByLabelText("field"), { key: "Escape", bubbles: true })
+    fireEvent.keyDown(screen.getByLabelText("field"), { key: "h", bubbles: true })
+    fireEvent.keyDown(screen.getByLabelText("field"), { key: "Backspace", bubbles: true })
     expect(where()).toBe("/boiler")
   })
 
