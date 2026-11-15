@@ -9,17 +9,17 @@ The plant runs as an island today: with the breaker closed, the load is a resist
 - **Town grid:** the plant feeds a town grid of finite size, with a demand of its own and the **rest of the grid** as one aggregate supplier that is always there. Other suppliers are not modelled one by one, so there is always a live grid to sync to.
 - **Island** from now on means **house load operation**: the breaker to the grid open, the generator feeding only the plant's own pumps.
 - **Ladder:**
-  - **M1, on the grid with auto-sync:** an auto-sync turn switch trims the speed and closes the breaker itself; the closed breaker holds the speed (a stiff grid); the load setpoint drives the valve through a MW controller; reverse power (the generator motoring) past a delay trips the turbine and opens the breaker; the vacuum and overspeed trips are re-checked; the basic load on close (#139).
+  - **M1, on the grid with auto-sync:** an auto-sync turn switch trims the speed and closes the breaker itself; the closed breaker holds the speed (a stiff grid); the load setpoint drives the valve through a MW controller; reverse power (the generator motoring) past a delay trips the turbine and opens the breaker; the vacuum and overspeed trips are re-checked (with the speed held, overspeed can only follow a breaker opening, a load rejection); the basic load on close (#139).
   - **M2, the plant's own power:** auxiliary load and net output; the auxiliary bus fed by the grid supply, the generator or an onsite diesel generator; a dark start from the diesel; house load operation (#140, #141, #142).
   - **M3, the town grid:** finite grid inertia; the frequency follows the balance of demand against the plant plus the rest of the grid; governor droop.
   - **M4, manual sync:** a synchroscope with phase; auto-sync stays as the alternative.
   - **M5, operating for the town:** the load set from frequency and demand, by the operator or later automatically.
   - **M6, day-night cycle:** a 24-hour demand curve.
-  - **M7, satisfaction and growth:** a satisfaction score from how well the town is served; demand growing over time.
+  - **M7, satisfaction and growth:** a satisfaction score from how well the town is served (the frequency kept in its band, all demand served with no load shedding); demand growing over time, so the plant's sizing becomes the operator's problem.
   - **Side track, any time after M2:** vital bus and UPS (#143, #144).
 - **Stiff grid before the moving frequency:** M1 holds the speed, so the load controller and the protections are built against a fixed frequency first.
 - **Auto-sync before manual sync:** manual sync only gets interesting with a moving frequency (M3).
-- **Reverse power trips:** a generator that motors with too little steam overheats the last turbine stages by windage; past a short delay it trips the turbine and opens the breaker. The delay and threshold come from a research note in M1.
+- **Reverse power trips:** a generator that motors with too little steam overheats the last turbine stages by windage; past a short delay it trips the turbine and opens the breaker. The delay and threshold come from a research note in M1. Real plants also use it the other way round (a sequential trip): after a turbine trip the breaker waits for reverse power before it opens, so the unloaded shaft cannot overspeed; the M1 ticket decides whether the sim follows that order.
 
 ## Considered options
 
