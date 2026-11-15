@@ -39,7 +39,7 @@ These are our own scaling to the simulator, agreed on #19, not sourced values.
 
 | Boiler (capacity 100 000 L) | Level |
 |---|---|
-| Cold start | 35% (35 000 L), thermal expansion brings it to the target at 165 bar ([ADR 0018](../adr/0018-cold-fill-at-35-percent.md)) |
+| Cold start | 35% (35 000 L) in the scenarios, 40% in the app, thermal expansion brings it to the target at 165 bar ([ADR 0018](../adr/0018-cold-fill-of-the-boiler.md)) |
 | Target | 50% (50 000 L) |
 | Control band | ±5% |
 | Alarm | from 65% (`HighLevel`, "Boiler level high") |

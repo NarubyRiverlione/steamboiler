@@ -17,17 +17,17 @@ const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 const { AmbientTemperature } = CstPhysics
 
 // Initial fills are specified in litres at ambient and held as kg
-const startBoilerMass: number = waterMassOf(CstBoiler.StartWaterVolume, AmbientTemperature)
 const startHotwellMass: number = waterMassOf(
   CstSimulation.CstCondenser.HotwellStartVolume,
   AmbientTemperature,
 )
 
-// Truly cold plant: everything at ambient temperature and atmospheric pressure, all pumps, valves and gas off
-export const makeInitialState = (): PowerPlantState => ({
+// Truly cold plant: everything at ambient temperature and atmospheric pressure, all pumps, valves and gas off.
+// The headless scenarios start with the 35% drum; the app starts with makeUiStartState (40%)
+export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWaterVolume): PowerPlantState => ({
   Boiler: {
-    waterMass: startBoilerMass, // kg, the start volume (litres at ambient) converted
-    waterVolume: CstBoiler.StartWaterVolume, // liters, derived
+    waterMass: waterMassOf(boilerStartVolume, AmbientTemperature), // kg, the start volume (litres at ambient) converted
+    waterVolume: boilerStartVolume, // liters, derived
     deltaWaterMass: 0,
     temperature: AmbientTemperature, // Celsius
     pressure: CstPhysics.AtmosphericPressure_mBar / 1e3, // bar
@@ -50,12 +50,12 @@ export const makeInitialState = (): PowerPlantState => ({
     attemperatorAuto: true,
     attemperatorIntegralError: 0,
     energy:
-      calculateHeatingEnergy(startBoilerMass, 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
+      calculateHeatingEnergy(waterMassOf(boilerStartVolume, AmbientTemperature), 0, AmbientTemperature) + metalEnergyOf(AmbientTemperature), // kJ above 0 °C, water and metal
     energyDelta: 0, // kJ/s
     heatLoss: 0, // kW
     heatingRate: 0, // K/s
     heatingRateOverLimit: false,
-    steamMass: calculateSteamInventory(AmbientTemperature, CstBoiler.StartWaterVolume), // kg - vapour over the water, in equilibrium
+    steamMass: calculateSteamInventory(AmbientTemperature, boilerStartVolume), // kg - vapour over the water, in equilibrium
     deltaSteamMass: 0,
   },
   Condenser: {
@@ -83,7 +83,7 @@ export const makeInitialState = (): PowerPlantState => ({
     rejectTotal: 0,
     deltaWaterMass: 0,
   },
-  Deaerator: makeColdDeaerator(), // filled cold to 38% at ambient (ADR 0037)
+  Deaerator: makeColdDeaerator(), // filled cold to 50% at ambient (ADR 0037)
   Heater: {
     extractionFlow: 0, // kg/s
     tapPressure: 0, // bar
@@ -108,7 +108,10 @@ export const makeInitialState = (): PowerPlantState => ({
   },
 })
 
-export const initialPowerPlantState: PowerPlantState = makeInitialState()
+// What the app starts from: the cold plant with the drum filled to 40% (ADR 0018)
+export const makeUiStartState = (): PowerPlantState => makeInitialState(CstBoiler.UiStartWaterVolume)
+
+export const initialPowerPlantState: PowerPlantState = makeUiStartState()
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 const withBoiler = (state: PowerPlantState, patch: Partial<BoilerState>): PowerPlantState => ({

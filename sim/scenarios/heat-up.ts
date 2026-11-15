@@ -4,6 +4,7 @@ import PowerPlantAction from "../../src/context/PowerPlantActions"
 import PowerPlantState, { BoilerState } from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
 import { steerGas } from "./gas"
+import { holdHeatUpLevel } from "./loop-operator"
 import { isAdjustTime, startUpVent } from "./steps"
 
 // Cold to working pressure with everything closed, the operator ramping the gas at the heating-rate limit:
@@ -34,8 +35,9 @@ export function steerHeatingRate(boiler: BoilerState, time: number): PowerPlantA
 export function rampOperator(state: PowerPlantState, time: number): PowerPlantAction[] {
   const { Boiler } = state
   const vent: PowerPlantAction[] = startUpVent(state, time)
-  if (Boiler.pressure >= S.PressureTarget) return [...vent, ...steerGas(Boiler, 0, S.AdjustEvery)]
-  return [...vent, ...steerHeatingRate(Boiler, time)]
+  const feed: PowerPlantAction[] = holdHeatUpLevel(state) // the let-down steam of the 50% deaerator fill would drain the drum to the burner low-low trip
+  if (Boiler.pressure >= S.PressureTarget) return [...vent, ...feed, ...steerGas(Boiler, 0, S.AdjustEvery)]
+  return [...vent, ...feed, ...steerHeatingRate(Boiler, time)]
 }
 
 export const heatUpAtLimit: Scenario = {

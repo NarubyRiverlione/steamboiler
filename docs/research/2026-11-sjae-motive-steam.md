@@ -140,7 +140,7 @@ Our own reading of `src/utils/condenserCalculation.ts` and `src/context/const.ts
   about 0.1–0.15 kg/s (*inference*), under 1 % of the 20 kg/s bypass flow. It drains back to the hotwell, so the
   loop inventory does not change. Only the vapour vented with the air leaves, and it is small. Over a
   2 h start, 0.15 kg/s is about 1 t moved from boiler to hotwell around the main steam valve, small next to the
-  ~15 t thermal-expansion surplus of [ADR 0018](../adr/0018-cold-fill-at-35-percent.md). A steam hogger would lose
+  ~15 t thermal-expansion surplus of [ADR 0018](../adr/0018-cold-fill-of-the-boiler.md). A steam hogger would lose
   about 0.4–1 t to atmosphere per start. The sim hogs with the CAR, so it loses none. **Leaving the consumption out
   does not matter for the water balance.**
 - **Not modeled:** auxiliary steam header, gland steam, the inter- and after-condenser and their minimum condensate

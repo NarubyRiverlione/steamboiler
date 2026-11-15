@@ -27,6 +27,6 @@ The trip is enforced in `PowerPlantTick`, whatever the operator or a scenario do
 - The room rule of ADR 0004 is now a second line: the pump is shut at 70%, so a Return into a nearly full boiler is only reached by a state loaded or set from outside the tick.
 - The old 30–70% level band is dropped (the operator band and the low-low trip cover it).
 - The loop operator's feedwater control holds the pump shut while the flag is set, so a scenario that trips it needs the operator to open the pump again.
-- The cold fill (35%, [ADR 0018](0018-cold-fill-at-35-percent.md)) and its expansion to 50% at 165 bar stay clear of both levels.
+- The cold fill (35%, [ADR 0018](0018-cold-fill-of-the-boiler.md)) and its expansion to 50% at 165 bar stay clear of both levels.
 - Water carry-over, wet steam and turbine damage are not modelled: the trip protects the plant, it does not remove the effect.
 - The two levels are estimates with no source. Replace them when a source is found.
