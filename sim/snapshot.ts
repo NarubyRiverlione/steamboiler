@@ -9,6 +9,13 @@ const SnapshotDir = fileURLToPath(new URL("./snapshots/", import.meta.url))
 
 export const snapshotPath = (name: string) => `${SnapshotDir}${name}.json`
 
+// A committed snapshot is a start state for the UI Presets, so its gas knob rests at the centre: holding, not still turning
+// where the scenario's operator left it. The gas flow itself stays as it was.
+export const withNeutralGas = (state: PowerPlantState): PowerPlantState => ({
+  ...state,
+  Boiler: { ...state.Boiler, gasRateCommand: 0 },
+})
+
 export const toSnapshotJson = (state: PowerPlantState) => `${JSON.stringify(state, null, 2)}\n`
 
 export { shapeErrors }

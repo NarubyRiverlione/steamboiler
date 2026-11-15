@@ -6,7 +6,7 @@
     "temperature": 349.8330749465355,
     "pressure": 164.95497831705512,
     "gasFlow": 1296.000000001908,
-    "gasRateCommand": 0.29528894525980304,
+    "gasRateCommand": 0,
     "drainValveOpen": false,
     "drainedTotal": 0,
     "reliefValveOpen": false,

@@ -140,7 +140,7 @@ The slack above the measured drift (a factor of 3 to 4, 4 at the end of the 1400
 
 ## State snapshots
 
-A snapshot is a full `PowerPlantState` as plain JSON in `sim/snapshots/<name>.json`,
+A snapshot is a full `PowerPlantState` (gas knob reset to the centre by `withNeutralGas`, so a preset holds the gas) as plain JSON in `sim/snapshots/<name>.json`,
 committed. A scenario starts from one with `initial: loadSnapshot("<name>")` (`sim/snapshot.ts`);
 the loader compares the file with the shape of `makeInitialState()` and throws on missing or extra
 keys or a wrong type, so a snapshot from an older state shape fails loudly instead of running.
