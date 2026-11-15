@@ -44,6 +44,7 @@ function Deaerator() {
         warnVentOpenNoAir,
         feedPumpValvePosition,
         feedPumpTripped,
+        deaeratorHighHighTripped,
         extractionFlow,
         letDownFlow,
       },
@@ -121,6 +122,12 @@ function Deaerator() {
             title="The deaerator level fell below low-low: reset the trip once the level is back, then open the pump"
           />
           <TripResetButton trip="feedPump" label="feed pump trip" />
+          <Lamp
+            lit={deaeratorHighHighTripped}
+            label="Condensation pump high-high trip"
+            title={`The deaerator level reached ${String(CstDeaerator.HighHighLevel * 100)}%: the condensation pump is shut; reset the trip once the level is below it, then open the pump`}
+          />
+          <TripResetButton trip="deaeratorHighHigh" label="deaerator high-high trip" />
         </div>
 
         <div className="board-deaerator-side">

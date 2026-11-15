@@ -3,6 +3,7 @@ import { activeAlarms, newAlarms } from "./Alarms"
 import { CstDeaerator, CstPhysics, CstSimulation, CstSuperheater } from "./const"
 import { makeHotDeaerator } from "./Deaerator/DeaeratorTick"
 import PowerPlantState from "./PowerPlantState"
+import { ALARMS } from "../navigation/alarms"
 import { makeInitialState } from "./PowerPlantReducer"
 import { SimulationState, makeInitialSimulation, simulationReducer } from "./SimulationReducer"
 import { waterMassOf } from "../utils/boilerCalculations"
@@ -136,6 +137,14 @@ describe("boiler and deaerator level alarms (#137)", () => {
     [CstDeaerator.HighHighLevel, true],
   ])("deaerator high at level %f is active: %s (from 75%%)", (level: number, on: boolean) => {
     expect(activeAlarms(deaeratorAt(level)).includes("deaeratorLevelHigh")).toBe(on)
+  })
+
+  test("the high-high trip row follows deaeratorHighHighTripped, is an error and opens the deaerator", () => {
+    const tripped: PowerPlantState = { ...deaeratorAt(0.5), Deaerator: { ...deaeratorAt(0.5).Deaerator, deaeratorHighHighTripped: true } }
+    expect(activeAlarms(tripped)).toEqual(["deaeratorHighHighTripped"])
+    expect(activeAlarms(deaeratorAt(CstDeaerator.HighHighLevel))).not.toContain("deaeratorHighHighTripped")
+    const row = ALARMS.find((a) => a.id === "deaeratorHighHighTripped")
+    expect(row).toMatchObject({ severity: "error", part: "deaerator", label: "Deaerator level high-high trip" })
   })
 
   test("the feed pump trip row follows feedPumpTripped, not the level", () => {
