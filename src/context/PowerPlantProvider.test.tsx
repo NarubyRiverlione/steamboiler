@@ -123,17 +123,19 @@ describe("simulation loop", () => {
   })
 
   it("restarts the wall clock on a visibility change, even when the interval was throttled", () => {
+    // wall time jumps without the interval firing, as in a throttled background tab
+    let wallMs = 0
+    const now = vi.spyOn(performance, "now").mockImplementation(() => wallMs)
     const { result } = mount()
-    // time passes with no interval firing, as in a throttled background tab
+    wallMs = 60_000
+    document.dispatchEvent(new Event("visibilitychange"))
+    wallMs += CstSimulation.UpdateInterval
     act(() => {
-      vi.setSystemTime(Date.now() + 1000)
-      vi.advanceTimersByTime(0)
-    })
-    act(() => {
-      document.dispatchEvent(new Event("visibilitychange"))
       vi.advanceTimersByTime(CstSimulation.UpdateInterval)
     })
-    expect(result.current.simulatedSeconds).toBeLessThan(0.5)
+    // without the restart the 60 s gap would run as the capped burst of ticks
+    expect(result.current.simulatedSeconds).toBeLessThan(1)
+    now.mockRestore()
   })
 
   it("clears the interval and the listener on unmount", () => {
@@ -190,7 +192,7 @@ const rows: Row[] = [
       s.Boiler.sprayValvePosition = 0.2
     },
     act: (c) => { c.adjustSprayValve(0.1); },
-    expected: () => ({ "Boiler.sprayValvePosition": 0.30000000000000004 }),
+    expected: (s) => ({ "Boiler.sprayValvePosition": s.Boiler.sprayValvePosition + 0.1 }),
   },
   {
     name: "adjustBypassValve",
@@ -316,7 +318,7 @@ describe("action creators", () => {
     const creators: string[] = Object.keys(result.current).filter(
       (key: string) => typeof (result.current as Record<string, unknown>)[key] === "function",
     )
-    const covered: string[] = rows.map((row: Row) => row.name.split(" ")[0])
+    const covered: string[] = rows.map((row: Row) => row.name.replace(/ \(.*\)$/, ""))
     const exempt: string[] = ["dispatch", "setPlaybackSpeed"]
     expect(creators.filter((key: string) => !covered.includes(key) && !exempt.includes(key))).toEqual([])
   })
