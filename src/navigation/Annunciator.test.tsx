@@ -63,7 +63,7 @@ const lit = (name: string): boolean => tile(name).className.includes("board-tile
 describe("Annunciator", () => {
   it("has one tile per alarm flag, all dark while nothing is set", () => {
     render(tree(stateWith({})))
-    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high", "Boiler level low", "Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"]) {
+    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high", "Hotwell level high-high", "Boiler level low", "Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"]) {
       expect(lit(name)).toBe(false)
       expect(flashing(name)).toBe(false)
     }
@@ -199,6 +199,16 @@ describe("Annunciator", () => {
     expect(screen.getByTestId("where").textContent).toBe("/condenser")
   })
 
+  it("lights the hotwell high-high tile from the level, as an error, and opens the condenser", () => {
+    const { rerender } = render(tree(stateWith({ hotwellLevel: 0.9 })))
+    expect(lit("Hotwell level high-high")).toBe(false)
+    expect(tile("Hotwell level high-high").className).toContain("board-tile-error")
+    rerender(tree(stateWith({ hotwellLevel: 0.95 })))
+    expect(lit("Hotwell level high-high")).toBe(true)
+    fireEvent.click(tile("Hotwell level high-high"))
+    expect(screen.getByTestId("where").textContent).toBe("/condenser")
+  })
+
   it("lights the boiler low and deaerator level tiles from the level and opens the owning part", () => {
     const { rerender } = render(tree(stateWith({ boilerLevel: 0.34, deaeratorLevel: 0.2 })))
     expect(lit("Boiler level low")).toBe(true)
@@ -295,7 +305,7 @@ describe("Annunciator", () => {
     expect(within(group("Boiler")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Heating rate over limit", "Burner trip", "Boiler level low", "Boiler level high", "Boiler level high-high trip"])
     expect(within(group("Steam")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Steam temperature high"])
     expect(within(group("Deaerator")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"])
-    expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(3)
+    expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(4)
     expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)
   })
 

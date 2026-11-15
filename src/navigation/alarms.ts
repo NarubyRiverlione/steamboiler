@@ -7,7 +7,7 @@ import { boilerLevel } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
 import type { PartId } from "./plantParts"
 
-export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh"
+export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh"
 
 // error = red tile backlight, warning = yellow; every alarm must declare one
 export type AlarmSeverity = "error" | "warning"
@@ -20,7 +20,7 @@ export type Alarm = {
   readonly active: (state: PowerPlantState) => boolean
 }
 
-const { HotwellLow, HotwellHigh } = CstSimulation.CstCondenser
+const { HotwellLow, HotwellHigh, HotwellHighHigh } = CstSimulation.CstCondenser
 const { HighLevel, LowLevel } = CstSimulation.CstBoiler
 
 export const ALARMS: readonly Alarm[] = [
@@ -33,6 +33,7 @@ export const ALARMS: readonly Alarm[] = [
   { id: "turbineTripped", label: "Turbine trip", severity: "error", part: "turbine", active: (s: PowerPlantState) => s.Turbine.turbineTripped },
   { id: "hotwellLevelLow", label: "Hotwell level low", severity: "warning", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) < HotwellLow },
   { id: "hotwellLevelHigh", label: "Hotwell level high", severity: "warning", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) >= HotwellHigh },
+  { id: "hotwellLevelHighHigh", label: "Hotwell level high-high", severity: "error", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) >= HotwellHighHigh },
   { id: "deaeratorLevelLow", label: "Deaerator level low", severity: "warning", part: "deaerator", active: (s: PowerPlantState) => deaeratorLevel(s.Deaerator.waterVolume) < CstDeaerator.LowLevel },
   { id: "deaeratorLevelHigh", label: "Deaerator level high", severity: "warning", part: "deaerator", active: (s: PowerPlantState) => deaeratorLevel(s.Deaerator.waterVolume) >= CstDeaerator.HighLevel },
   { id: "deaeratorHighHighTripped", label: "Deaerator level high-high trip", severity: "error", part: "deaerator", active: (s: PowerPlantState) => s.Deaerator.deaeratorHighHighTripped },

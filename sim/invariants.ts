@@ -202,7 +202,7 @@ const raised =
 // The golden path is how the plant is meant to be run, so it never raises a level alarm or a level trip;
 // edge scenarios drive the plant into them on purpose
 export const goldenInvariants: Invariant[] = [
-  { name: "the hotwell level alarms never come on", check: everySample(raised(["hotwellLevelLow", "hotwellLevelHigh"])) },
+  { name: "the hotwell level alarms never come on", check: everySample(raised(["hotwellLevelLow", "hotwellLevelHigh", "hotwellLevelHighHigh"])) },
   {
     name: "the boiler level alarm and the high-high trip never come on (#62)",
     check: everySample(raised(["boilerLevelHigh", "boilerLevelHighTripped"])),

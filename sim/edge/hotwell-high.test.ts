@@ -30,6 +30,13 @@ describe("hotwell-high", () => {
     expect(alarmAt ?? Infinity).toBeLessThan(reachedAt ?? 0)
   })
 
+  test("the high-high alarm comes on from the moment the clamp acts, after the high alarm", () => {
+    const highAt = firstTimeWhere(samples, (s) => activeAlarms(s).includes("hotwellLevelHigh"))
+    const highHighAt = firstTimeWhere(samples, (s) => activeAlarms(s).includes("hotwellLevelHighHigh"))
+    expect(highHighAt).toBe(reachedAt)
+    expect(highHighAt ?? 0).toBeGreaterThan(highAt ?? Infinity)
+  })
+
   test("from high-high the clamp rejects as much as the makeup brings: the hotwell never overflows", () => {
     expect(Math.max(...levels)).toBeLessThan(1)
     const at = samples.find((s) => s.time === reachedAt)?.state.Condenser
