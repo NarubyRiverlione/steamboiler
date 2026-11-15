@@ -53,7 +53,7 @@ function Deaerator() {
   } = usePowerPlant()
 
   const level: number = waterVolume / CstDeaerator.TotalVolume
-  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.5)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, CstSimulation.ReadoutSmoothingSeconds)
   const warning: string = warningText(warnVentClosedWithAir, warnVentOpenNoAir)
 
   return (

@@ -78,9 +78,9 @@ function Boiler() {
     toggleDrainValve,
   } = usePowerPlant()
 
-  const smoothPressure: number = useEMA(pressure, 0.01)
-  const smoothEnergyDelta: number = useEMA(energyDelta / 1e3, 0.01)
-  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, 0.01)
+  const smoothPressure: number = useEMA(pressure, CstSimulation.ReadoutSmoothingSeconds)
+  const smoothEnergyDelta: number = useEMA(energyDelta / 1e3, CstSimulation.ReadoutSmoothingSeconds)
+  const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, CstSimulation.ReadoutSmoothingSeconds)
   const [advanced, setAdvanced] = useState<boolean>(false)
   const gasTrend: string =
     gasRateCommand > GasRateDeadZone
