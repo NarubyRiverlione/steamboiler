@@ -1,6 +1,6 @@
 # The turbine runs up on steam power, in Ramp up mode between fixed run-up points
 
-**Status: accepted; implemented: the speed model (#69), the speed modes and the run-up rate (#70).** Split from #66.
+**Status: accepted; implemented: the speed model (#69), the speed modes and the run-up rate (#70).** Split from #66. [ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) M3 amends it with a steam-to-metal mismatch permissive on the roll and a heat soak at 2500 rpm.
 
 The turbine's speed follows from the **shaft power** the steam delivers (flow × enthalpy drop × efficiency), minus losses that rise steeply with speed, on a shaft line with a real inertia. The turbine has three **speed modes**: Free (the operator moves the valve), Ramp up (the PID takes the turbine to a fixed run-up point at the run-up rate) and Hold (the PID keeps it there). Every start is meant to go through Ramp up. The fixed turbine valve opening that has to land on an asymptote is no longer used.
 

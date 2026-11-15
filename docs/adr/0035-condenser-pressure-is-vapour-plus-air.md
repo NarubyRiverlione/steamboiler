@@ -2,6 +2,8 @@
 
 The condenser pressure stops being a made-up number (atmospheric, minus a vacuum that builds at a fixed rate, plus `steamMass / 1000`) and becomes two physical parts, as in the `GLOSSARY.md` section Condenser vacuum: the **shell vapour pressure** and the **air pressure**. Decided in the #91 grilling; the figures are sourced in the [research note](../research/2026-11-condenser-air-system.md) (#100). Built in #91.
 
+[ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) M2 rewrites the constant air in-leakage into a leak that follows the gland seal state; until then this decision stays in force.
+
 ## The model
 
 - **Shell vapour pressure is algebraic.** Each tick, solve for the saturation temperature at which the limited exchanger ([ADR 0032](0032-limited-condenser-and-stream-enthalpy.md), `condenserHeatCapacity`) takes the heat the intake brings. The exchanger is linear in Tsat (Q = ε · ṁ · cp · (Tsat − Tin), ε fixed by the flow), so the root is Tsat = Tin + Q ÷ (ε · ṁ · cp). The intake heat itself depends on Tsat (the latent heat, the stream split of [ADR 0028](0028-exhaust-splits-by-quality-at-condenser-intake.md)), so the solve is a short fixed point or a bisection, not a closed form. The steam-mass pool and the `steamMass / 1000` term are gone; the shell holds no vapour inventory.

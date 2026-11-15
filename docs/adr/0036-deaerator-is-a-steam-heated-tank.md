@@ -2,6 +2,8 @@
 
 A deaerator sits between the hotwell and the boiler. It heats the feedwater to saturation so dissolved gas comes out, and the steam scrubs the gas to the vent. Decided in #40; built in #119 (the vessel) and #120 (the air, vents, relief valve and panel, [ADR 0038](0038-deaerator-air-and-vents.md)); the boiler feed pump is #112 (built).
 
+[ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) M2 grows the let-down line into an auxiliary steam header behind a master valve, with the let-down valve as the deaerator's valve on it; until then this decision stays in force.
+
 ## The model
 
 - **Vessel:** a lumped tank in the style of [ADR 0019](0019-boiler-is-one-lumped-vessel.md). The pressure is the saturation pressure of the water plus the air pressure ([ADR 0038](0038-deaerator-air-and-vents.md), #120); the 3 bar setpoint is the saturation temperature the steam control heats to.
