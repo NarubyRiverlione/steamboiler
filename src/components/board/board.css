@@ -899,7 +899,7 @@ path.board-zone {
 
 /* Annunciator: tiles flash until acknowledged (ACK), latch until RESET */
 :root {
-  --board-tile-off-bg: #5a5a52;
+  --board-tile-off-bg: var(--board-lens-bg);
   --board-tile-off-text: #3b3b3b;
   --board-tile-error-bg: #ff8a7a;
   --board-tile-error-text: #2b0000;
@@ -907,11 +907,11 @@ path.board-zone {
   --board-tile-warning-bg: #ffd84a;
   --board-tile-warning-text: #2b2000;
   --board-tile-warning-glow: #ffb800;
-  --board-annun-well: #1b1b1b;
+  /* Room the header takes above the unfolded panel; caps the panel to the viewport */
+  --board-annun-header-space: 9rem;
 }
 
 .board-annunciator {
-  position: relative;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.4rem;
@@ -945,19 +945,30 @@ path.board-zone {
   padding-right: 0.75rem;
 }
 
-/* The unfolded panel overlays the page; the header and shell keep their size */
+/* The unfolded panel overlays the page edge to edge (the header is its positioning context, the shell padding is 0.5rem) */
 .board-annun-panel {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: -0.5rem;
+  right: -0.5rem;
   z-index: 50;
-  width: min(36rem, 90vw);
-  margin-top: 0.4rem;
-  padding: 0.5rem;
-  background: var(--board-annun-well);
-  border: 2px solid var(--board-panel-edge);
-  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--board-annun-header-space));
+  padding: 1rem;
+  background: var(--board-plate-bg);
+  border-bottom: 2px solid var(--board-plate-border);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* The inset grey panel on the plate; only it scrolls, so the screws stay put */
+.board-annun-inset {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.75rem 1.25rem 0.75rem;
+  background: var(--board-panel-bg);
+  border: 2px solid var(--board-panel-edge);
+  border-radius: 36px;
 }
 
 .board-annun-panel[hidden] {
@@ -968,7 +979,7 @@ path.board-zone {
   margin: 0.3rem 0 0.2rem;
   padding: 0;
   background: none;
-  color: var(--board-tile-off-bg);
+  color: var(--board-tile-off-text);
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-align: left;
@@ -977,7 +988,7 @@ path.board-zone {
 
 .board-annun-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
   gap: 0.25rem;
 }
 
@@ -1008,6 +1019,7 @@ path.board-zone {
   background: var(--board-tile-error-bg);
   color: var(--board-tile-error-text);
   box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.55),
     0 0 10px var(--board-tile-error-glow),
     inset 0 0 8px #ffffff;
 }
@@ -1016,6 +1028,7 @@ path.board-zone {
   background: var(--board-tile-warning-bg);
   color: var(--board-tile-warning-text);
   box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.55),
     0 0 10px var(--board-tile-warning-glow),
     inset 0 0 8px #ffffff;
 }
