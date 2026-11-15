@@ -77,7 +77,8 @@
     "outflowMass": 1.9189194391838034,
     "deltaWaterMass": -0.0011512162309372798,
     "feedPumpValvePosition": 0.06866287009042707,
-    "feedPumpTripped": false
+    "feedPumpTripped": false,
+    "deaeratorHighHighTripped": false
   },
   "Heater": {
     "extractionFlow": 0,

@@ -2,7 +2,7 @@ import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, BoilerVent, isAtBoilerHighHigh } from "./Boiler/BoilerTick"
 
-import { DeaeratorResult, DeaeratorTick } from "./Deaerator/DeaeratorTick"
+import { DeaeratorResult, DeaeratorTick, deaeratorLevel } from "./Deaerator/DeaeratorTick"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, HeaterState, TurbineState } from "./PowerPlantState"
 import { CstDeaerator, CstSimulation } from "./const"
 import { sprayFlowOf } from "./Boiler/Attemperator"
@@ -107,12 +107,15 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     roomInKg(CstDeaerator.TotalVolume, state.Deaerator.waterVolume, state.Deaerator.temperature) -
       (extraction.flow + tapFlow + state.Deaerator.letDownFlow) * CstSimulation.DeltaTime,
   )
+  // The high-high level (ADR 0045) shuts the condensation pump before anything is returned this tick, and latches
+  const deaeratorHighHigh: boolean = state.Deaerator.deaeratorHighHighTripped || deaeratorLevel(state.Deaerator.waterVolume) >= CstDeaerator.HighHighLevel
   const condenserNewState: CondenserState = CondenserTick(
     state.Condenser,
     state.Boiler.pressure,
     steamFromBypass,
     steamFromTurbine,
     deaeratorRoom,
+    deaeratorHighHigh,
   )
 
   // Deaerator: takes this tick's Return and the heater drain, holds 3 bar with the tap steam and the let-down valve, and the
@@ -129,7 +132,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     // The feed pump stops short of a full boiler (ADR 0004)
     boilerRoom: roomInKg(CstSimulation.CstBoiler.TotalVolume, state.Boiler.waterVolume, state.Boiler.temperature),
   })
-  const deaeratorNewState: DeaeratorState = deaerator.state
+  const deaeratorNewState: DeaeratorState = { ...deaerator.state, deaeratorHighHighTripped: deaeratorHighHigh }
 
   // The spray water left the pump discharge before the heater, so the heater heats the rest of the outflow
   const sprayMass: number = sprayFlow * CstSimulation.DeltaTime

@@ -528,3 +528,35 @@ describe("PowerPlantTick boiler high-high level trip (#62, ADR 0041)", () => {
     expect(next.Boiler.burnerTripped).toBe(false)
   })
 })
+
+describe("PowerPlantTick deaerator high-high trip (#129, ADR 0045)", () => {
+  const { HighHighLevel, TotalVolume } = CstDeaerator
+  // A plant with the deaerator at this level and the condensation pump full open on a hotwell with water to give
+  const filling = (level: number): PowerPlantState => {
+    const plant: PowerPlantState = pumping(CstBoiler.TotalVolume * 0.5, CstSimulation.CstCondenser.TotalVolume * 0.7)
+    return { ...plant, Deaerator: { ...makeHotDeaerator(TotalVolume * level), feedPumpValvePosition: 0 } }
+  }
+
+  test("just below 85% the pump is untouched and returns water", () => {
+    const next = PowerPlantTick(filling(HighHighLevel - 0.001))
+    expect(next.Deaerator.deaeratorHighHighTripped).toBe(false)
+    expect(next.Condenser.condensationPumpValvePosition).toBe(1)
+    expect(next.Condenser.returnRate).toBeGreaterThan(0)
+  })
+
+  test("at 85% the pump valve shuts, nothing is returned and the flag is set; the hotwell's own flag is not", () => {
+    const next = PowerPlantTick(filling(HighHighLevel))
+    expect(next.Deaerator.deaeratorHighHighTripped).toBe(true)
+    expect(next.Condenser.condensationPumpValvePosition).toBe(0)
+    expect(next.Condenser.returnRate).toBe(0)
+    expect(next.Condenser.condensationPumpTripped).toBe(false)
+  })
+
+  test("the flag latches while the level falls back, and the pump stays shut", () => {
+    let state: PowerPlantState = PowerPlantTick(filling(HighHighLevel))
+    state = { ...state, Deaerator: { ...state.Deaerator, waterVolume: TotalVolume * 0.5 } }
+    for (let i = 0; i < 10; i++) state = PowerPlantTick(state)
+    expect(state.Deaerator.deaeratorHighHighTripped).toBe(true)
+    expect(state.Condenser.condensationPumpValvePosition).toBe(0)
+  })
+})

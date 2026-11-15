@@ -70,6 +70,7 @@ export function makeColdDeaerator(): DeaeratorState {
     deltaWaterMass: 0,
     feedPumpValvePosition: 0,
     feedPumpTripped: false,
+    deaeratorHighHighTripped: false,
   }
 }
 
@@ -198,6 +199,7 @@ export function DeaeratorTick(state: DeaeratorState, input: DeaeratorInput): Dea
       deltaWaterMass: waterMass - state.waterMass,
       feedPumpValvePosition,
       feedPumpTripped,
+      deaeratorHighHighTripped: state.deaeratorHighHighTripped,
     },
     outflow: { mass: outflowMass, temperature: waterTemperature },
     letDownMass,

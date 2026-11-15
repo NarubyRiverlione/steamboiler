@@ -13,7 +13,7 @@ import PowerPlantState from "./PowerPlantState"
 
 const { CstCondenser } = CstSimulation
 
-export type TripId = "burner" | "boilerHighHigh" | "feedPump" | "condensationPump" | "turbine"
+export type TripId = "burner" | "boilerHighHigh" | "feedPump" | "condensationPump" | "deaeratorHighHigh" | "turbine"
 
 type TripRule = {
   readonly tripped: (state: PowerPlantState) => boolean
@@ -42,6 +42,11 @@ const rules: Record<TripId, TripRule> = {
     tripped: ({ Condenser }) => Condenser.condensationPumpTripped,
     refusal: ({ Condenser }) => (hotwellLevel(Condenser.hotwellWaterVolume) < CstCondenser.HotwellLowLow ? "Hotwell level is still below low-low" : undefined),
     clear: (state) => ({ ...state, Condenser: { ...state.Condenser, condensationPumpTripped: false } }),
+  },
+  deaeratorHighHigh: {
+    tripped: ({ Deaerator }) => Deaerator.deaeratorHighHighTripped,
+    refusal: ({ Deaerator }) => (deaeratorLevel(Deaerator.waterVolume) >= CstDeaerator.HighHighLevel ? "Deaerator level is still at the high-high level" : undefined),
+    clear: (state) => ({ ...state, Deaerator: { ...state.Deaerator, deaeratorHighHighTripped: false } }),
   },
   // Evaluated live; the low-pressure closure of the main steam valve has no persistent condition and never blocks
   turbine: {

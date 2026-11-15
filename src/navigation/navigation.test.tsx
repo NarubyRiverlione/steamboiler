@@ -353,6 +353,12 @@ describe("partAlarms", () => {
     expect(partAlarms(state)).toEqual({ boiler: false, steam: true, deaerator: false, condenser: false, turbine: false, generation: false })
   })
 
+  it("raises the deaerator from its high-high trip (#129)", () => {
+    const state: PowerPlantState = makeInitialState()
+    state.Deaerator.deaeratorHighHighTripped = true
+    expect(partAlarms(state).deaerator).toBe(true)
+  })
+
   it("raises the deaerator from its feed pump trip (#137)", () => {
     const state: PowerPlantState = makeInitialState()
     state.Deaerator.feedPumpTripped = true
