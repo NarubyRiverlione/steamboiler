@@ -29,6 +29,6 @@ describe("runChecked", () => {
   })
 })
 
-test("every snapshot source is a registered scenario under its own name, so its file checks the snapshot", () => {
-  for (const [name, scenario] of Object.entries(snapshotSources)) expect(scenarios[name]).toBe(scenario)
+test("every snapshot source is a registered scenario under its own name, so its file checks the snapshot", async () => {
+  for (const [name, load] of Object.entries(snapshotSources)) expect(scenarios[name]).toBe(await load())
 })
