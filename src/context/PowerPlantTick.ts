@@ -1,4 +1,5 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
+import { TurningGearTick } from "./Turbine/TurningGear"
 import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripOnLowOil, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, BoilerVent, isAtBoilerHighHigh } from "./Boiler/BoilerTick"
@@ -31,14 +32,16 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   const bypassResult = BoilerRemoveSteam(ventedBoiler, turbineAfterClosure, "BYPASS")
 
   // Turbine
-  const turbineNewState: TurbineState = TurbineTick(
+  const turbineTicked: TurbineState = TurbineTick(
     bypassResult.turbineState,
     bypassResult.boilerState.pressure,
     state.Condenser.pressure,
     state.Heater.extractionFlow + state.Deaerator.extractionFlow,
     state.Boiler.steamTemperature,
-    isAtOilPermissive(oilNewState),
+    isAtOilPermissive(oilNewState) && !bypassResult.turbineState.turningGearEngaged,
   )
+  // Turning gear (ADR 0051): holds the stopped rotor at gear speed, drops out on low oil
+  const turbineNewState: TurbineState = TurningGearTick(turbineTicked, oilNewState)
 
   // remove steam via turbine valve
   const drumResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")

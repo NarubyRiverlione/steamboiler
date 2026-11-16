@@ -87,6 +87,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0048](adr/0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) | From roll on demand to a real cold start in milestones M1–M4: oil and gear, auxiliary steam and gland seals, prewarming the casing, the full start-up |
 | [0049](adr/0049-sustainable-operation-in-milestones.md) | Proposed: sustainable operation over many sessions: save and load, operating record, an account, wear as cost, gross damage |
 | [0050](adr/0050-lube-oil-pressure-permissive-and-trip.md) | Lube oil: a header pressure permissive to roll and a low-pressure trip |
+| [0051](adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md) | Turning gear: a manual gear holds the stopped rotor and blocks the turbine valve |
 
 ## Research (dated, frozen)
 
@@ -102,6 +103,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
 | Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
 | Nov 2026 | [SJAE motive steam: where it comes from on a cold start (sourced)](research/2026-11-sjae-motive-steam.md) |
+| Nov 2026 | [Turning gear: gear speed and the standstill threshold (UNVERIFIED)](research/2026-11-turning-gear.md) |
 | Nov 2026 | [Turbine lube oil: header pressure, permissive and trip limits (UNVERIFIED)](research/2026-11-lube-oil.md) |
 
 ## Agent configuration

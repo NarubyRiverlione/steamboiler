@@ -100,7 +100,8 @@
     "speedReference": 3000,
     "generatorBreaker": false,
     "pidIntegralError": 0.0002762293136130758,
-    "turbineTripped": false
+    "turbineTripped": false,
+    "turningGearEngaged": false
   },
   "Oil": {
     "pumpRunning": true,

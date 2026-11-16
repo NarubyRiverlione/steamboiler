@@ -28,7 +28,7 @@ const SecondsPerMinute = 60
  * @param condenserPressure - The current condenser pressure (mbar absolute), checked against the vacuum limit.
  * @param extractionFlow - The steam (kg/s) the heater took at the tap in the last tick, which no longer does work after the tap (ADR 0031).
  * @param steamTemperature - The steam temperature (°C) after the superheater (ADR 0044); saturated steam when left out.
- * @param oilPermissive - False below the lube oil permissive pressure (ADR 0050): the Ramp up / Hold PID may not open the valve.
+ * @param rollPermissive - False below the lube oil permissive pressure (ADR 0050) or on the turning gear (ADR 0051): the Ramp up / Hold PID may not open the valve.
  * @returns The updated turbine state.
  */
 function TurbineTick(
@@ -37,14 +37,14 @@ function TurbineTick(
   condenserPressure: number,
   extractionFlow = 0,
   steamTemperature = 0,
-  oilPermissive = true,
+  rollPermissive = true,
 ): TurbineState {
   const { ticked, newRPM, generatorBreaker } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature)
 
   // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) an open valve trips
   if (isTripCondition(newRPM, condenserPressure) && turbineState.turbineValvePosition > 0) return { ...ticked, ...turbineTrip }
 
-  return { ...ticked, ...speedControlTick(turbineState, newRPM, generatorBreaker, condenserPressure, oilPermissive) }
+  return { ...ticked, ...speedControlTick(turbineState, newRPM, generatorBreaker, condenserPressure, rollPermissive) }
 }
 
 // True above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040)
@@ -90,12 +90,12 @@ function speedControlTick(
   newRPM: number,
   generatorBreaker: boolean,
   condenserPressure: number,
-  oilPermissive: boolean,
+  rollPermissive: boolean,
 ): Pick<TurbineState, "runUpPoint"> & SpeedControl {
   const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
   const lostSync: boolean = turbineState.speedMode === "synchronised" && !generatorBreaker
   const control: TurbineState = lostSync ? { ...turbineState, speedMode: "hold", runUpPoint: CstTurbine.SyncRPM } : turbineState
-  const pid = updateTurbineValve(control, newRPM, turbineTripped || !oilPermissive ? currentPosition : maxTurbineValvePosition(currentPosition, condenserPressure))
+  const pid = updateTurbineValve(control, newRPM, turbineTripped || !rollPermissive ? currentPosition : maxTurbineValvePosition(currentPosition, condenserPressure))
   return { runUpPoint: control.runUpPoint, ...pid }
 }
 

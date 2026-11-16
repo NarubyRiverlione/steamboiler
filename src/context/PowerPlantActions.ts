@@ -24,6 +24,8 @@ type PowerPlantAction =
   | { type: "SET_LOAD_SETPOINT"; payload: { loadSetpoint: number } }
   // Lube oil Action (ADR 0050): the oil pump on or off
   | { type: "SET_OIL_PUMP"; payload: { pumpRunning: boolean } }
+  // Turning gear Action (ADR 0051): engage or disengage by hand
+  | { type: "SET_TURNING_GEAR"; payload: { engaged: boolean } }
   // Deaerator Actions
   | { type: "TOGGLE_DEAERATOR_VENT" } // the manual start-up vent, open or closed
   | { type: "SET_FEED_PUMP_VALVE_POSITION"; payload: { feedPumpValvePosition: number } } // the boiler feed pump (#112)
