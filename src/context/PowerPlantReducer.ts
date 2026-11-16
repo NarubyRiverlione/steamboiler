@@ -1,4 +1,4 @@
-import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
+import { CstDeaerator, CstPhysics, CstSimulation, CstTurningGear } from "./const"
 import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { getBoilingPoint } from "../utils/steamTable"
@@ -12,6 +12,7 @@ import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
 import { isAtOilPermissive } from "./Oil/OilTick"
+import { turningGearRefusal } from "./Turbine/TurningGear"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
@@ -106,6 +107,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     generatorBreaker: false, // Phase 4: Initially open
     pidIntegralError: 0,
     turbineTripped: false,
+    turningGearEngaged: false,
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
 })
@@ -252,7 +254,16 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     if (requested > current && (turbineTripped || isAtOverspeed(rpm))) return state
     // Below the lube oil permissive the turbine may not be rolled (ADR 0050)
     if (requested > current && !isAtOilPermissive(state.Oil)) return state
+    // On the turning gear the turbine may not be rolled (ADR 0051)
+    if (requested > current && state.Turbine.turningGearEngaged) return state
     return withTurbine(state, { turbineValvePosition: requested })
+  },
+  // Engaging is refused without oil, above gear speed or with the valve open; disengaging is always allowed (ADR 0051)
+  // A rotor at gear speed stops when the gear lets go: the loss torque is ∝ rpm², so the model would coast it for hours
+  SET_TURNING_GEAR: (state, { payload: { engaged } }) => {
+    if (engaged && turningGearRefusal(state.Turbine, state.Oil)) return state
+    const { rpm } = state.Turbine
+    return withTurbine(state, { turningGearEngaged: engaged, rpm: !engaged && rpm <= CstTurningGear.Rpm ? 0 : rpm })
   },
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
   SET_SPEED_MODE: (state, { payload: { speedMode } }) => {

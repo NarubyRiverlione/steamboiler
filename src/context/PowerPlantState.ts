@@ -70,6 +70,7 @@ export type TurbineState = {
   generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
   pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
   turbineTripped: boolean // set by a turbine trip, cleared only by a trip reset
+  turningGearEngaged: boolean // the turning gear holds the stopped rotor at a few rpm and the valve cannot open (ADR 0051)
 }
 
 export type HeaterState = {
