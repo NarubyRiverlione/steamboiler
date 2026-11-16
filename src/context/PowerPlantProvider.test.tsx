@@ -235,6 +235,24 @@ const rows: Row[] = [
     }),
   },
   { name: "toggleOilPump", act: (c) => { c.toggleOilPump(); }, expected: (s) => ({ "Oil.pumpRunning": !s.Oil.pumpRunning }) },
+  {
+    name: "toggleTurningGear (engage)",
+    prepare: (s) => {
+      s.Oil.pumpRunning = true
+      s.Oil.headerPressure = 1
+      s.Turbine.rpm = 0
+    },
+    act: (c) => { c.toggleTurningGear(); },
+    expected: () => ({ "Turbine.turningGearEngaged": true }),
+  },
+  {
+    name: "toggleTurningGear (disengage)",
+    prepare: (s) => {
+      s.Turbine.turningGearEngaged = true
+    },
+    act: (c) => { c.toggleTurningGear(); },
+    expected: () => ({ "Turbine.turningGearEngaged": false }),
+  },
   { name: "setLoadSetpoint", act: (c) => { c.setLoadSetpoint(50); }, expected: () => ({ "Turbine.loadSetpoint": 50 }) },
   { name: "toggleDeaeratorVent", act: (c) => { c.toggleDeaeratorVent(); }, expected: () => ({ "Deaerator.startUpVentOpen": true }) },
   {

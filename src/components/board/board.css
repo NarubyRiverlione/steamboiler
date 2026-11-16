@@ -1156,7 +1156,7 @@ path.board-zone {
 
 .board-turbine-aux-main {
   display: grid;
-  grid-template-columns: minmax(0, 24rem);
+  grid-template-columns: repeat(2, minmax(0, 24rem));
   gap: 1rem;
   align-items: start;
 }
