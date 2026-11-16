@@ -23,6 +23,8 @@ type PowerPlantContextType = {
   setLoadSetpoint: (loadSetpoint: number) => void
   // Lube oil (ADR 0050)
   toggleOilPump: () => void
+  // Turning gear (ADR 0051)
+  toggleTurningGear: () => void
   // Superheater attemperator
   setAttemperatorAuto: (auto: boolean) => void
   adjustSprayValve: (amount: number) => void
