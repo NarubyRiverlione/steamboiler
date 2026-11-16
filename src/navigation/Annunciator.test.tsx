@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 import type { ContextType } from "react"
@@ -63,7 +63,7 @@ const lit = (name: string): boolean => tile(name).className.includes("board-tile
 describe("Annunciator", () => {
   it("has one tile per alarm flag, all dark while nothing is set", () => {
     render(tree(stateWith({})))
-    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high", "Hotwell level high-high", "Boiler level low", "Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"]) {
+    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high", "Hotwell level high-high", "Boiler level low", "Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip", "Lube oil pressure low"]) {
       expect(lit(name)).toBe(false)
       expect(flashing(name)).toBe(false)
     }
@@ -307,6 +307,30 @@ describe("Annunciator", () => {
     expect(within(group("Deaerator")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"])
     expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(4)
     expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)
+    expect(within(group("Turbine aux")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Lube oil pressure low"])
+  })
+
+  it("lights the lube oil warning only while the turbine runs below the permissive pressure, and opens the Turbine aux page (#160)", () => {
+    const running: PowerPlantState = stateWith({})
+    running.Turbine.turbineValvePosition = 0.3
+    running.Oil = { pumpRunning: false, headerPressure: 0.5 }
+    render(tree(running))
+    expect(lit("Lube oil pressure low")).toBe(true)
+    expect(tile("Lube oil pressure low").className).toContain("board-tile-warning")
+    fireEvent.click(toggle())
+    fireEvent.click(tile("Lube oil pressure low"))
+    expect(screen.getByTestId("where").textContent).toBe("/turbine-aux")
+  })
+
+  it("keeps the lube oil tile dark on the cold plant and at nominal pressure with the turbine running", () => {
+    render(tree(stateWith({})))
+    expect(lit("Lube oil pressure low")).toBe(false)
+    cleanup()
+    const running: PowerPlantState = stateWith({})
+    running.Turbine.turbineValvePosition = 0.3
+    running.Oil = { pumpRunning: true, headerPressure: 1 }
+    render(tree(running))
+    expect(lit("Lube oil pressure low")).toBe(false)
   })
 
   it("never opens the panel by itself when an annunciation arrives", () => {
