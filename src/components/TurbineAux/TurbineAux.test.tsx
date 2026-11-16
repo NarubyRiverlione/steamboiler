@@ -8,11 +8,16 @@ import TurbineAux from "./TurbineAux"
 
 type Ctx = ContextType<typeof PowerPlantContext>
 
-function renderAux(oil: Partial<PowerPlantState["Oil"]> = {}, turbine: Partial<PowerPlantState["Turbine"]> = {}) {
+function renderAux(
+  oil: Partial<PowerPlantState["Oil"]> = {},
+  turbine: Partial<PowerPlantState["Turbine"]> = {},
+  condenser: Partial<PowerPlantState["Condenser"]> = {},
+) {
   const state: PowerPlantState = makeInitialState()
   state.Oil = { ...state.Oil, ...oil }
   state.Turbine = { ...state.Turbine, ...turbine }
-  const fns = { toggleOilPump: vi.fn(), toggleTurningGear: vi.fn() }
+  state.Condenser = { ...state.Condenser, ...condenser }
+  const fns = { toggleOilPump: vi.fn(), toggleTurningGear: vi.fn(), toggleGlandSteam: vi.fn() }
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
@@ -110,5 +115,66 @@ describe("Turbine aux page", () => {
       expect(screen.getByLabelText("Gear state").textContent).toBe("Thrown out by the steam")
       expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-checked")).toBe("false")
     })
+  })
+})
+
+describe("Gland steam group", () => {
+  it("toggles the gland steam with the switch while the rotor turns", () => {
+    const fns = renderAux({}, { turningGearEngaged: true })
+    const sw: HTMLElement = screen.getByRole("switch", { name: "Gland steam" })
+    expect(sw.getAttribute("aria-checked")).toBe("false")
+    fireEvent.click(sw)
+    expect(fns.toggleGlandSteam).toHaveBeenCalledTimes(1)
+  })
+
+  it("refuses the admission on a stopped rotor and says why", () => {
+    const fns = renderAux({}, { turningGearEngaged: false, rpm: 0 })
+    const sw: HTMLElement = screen.getByRole("switch", { name: "Gland steam" })
+    fireEvent.click(sw)
+    expect(fns.toggleGlandSteam).not.toHaveBeenCalled()
+    expect(screen.getAllByText("The rotor must be turning: engage the turning gear first").length).toBeGreaterThan(0)
+  })
+
+  it("always lets the steam be shut off", () => {
+    const fns = renderAux({}, { glandSteamOn: true, turningGearEngaged: false, rpm: 0 })
+    fireEvent.click(screen.getByRole("switch", { name: "Gland steam" }))
+    expect(fns.toggleGlandSteam).toHaveBeenCalledTimes(1)
+  })
+
+  it("shows the seal state, the air in-leakage effect and the condenser vacuum", () => {
+    renderAux({}, { glandSteamOn: true, turningGearEngaged: true }, { pressure: 42 })
+    expect(screen.getByLabelText("Seal state").textContent).toContain("Sealed")
+    expect(screen.getByLabelText("Air in-leakage").textContent).toContain("Low")
+    expect(screen.getByLabelText("Condenser pressure").textContent).toContain("42 mBar")
+  })
+
+  it("shows unsealed glands as an air in-leakage that stalls the vacuum", () => {
+    renderAux({}, { glandSteamOn: false, turningGearEngaged: true })
+    expect(screen.getByLabelText("Seal state").textContent).toContain("Unsealed")
+    expect(screen.getByLabelText("Air in-leakage").textContent).toContain("High")
+  })
+
+  it("shows the automatic shut-off when the rotor stops while the steam was on", () => {
+    const state: PowerPlantState = makeInitialState()
+    state.Turbine = { ...state.Turbine, glandSteamOn: true, turningGearEngaged: true }
+    const make = (s: PowerPlantState) => ({ state: s, dispatch: vi.fn(), toggleOilPump: vi.fn(), toggleTurningGear: vi.fn(), toggleGlandSteam: vi.fn() }) as unknown as Ctx
+    const { rerender } = render(<PowerPlantContext.Provider value={make(state)}><TurbineAux /></PowerPlantContext.Provider>)
+    expect(screen.queryByText(/Gland steam shut off/)).toBeNull()
+    const stopped: PowerPlantState = { ...state, Turbine: { ...state.Turbine, glandSteamOn: false, turningGearEngaged: false, rpm: 0 } }
+    rerender(<PowerPlantContext.Provider value={make(stopped)}><TurbineAux /></PowerPlantContext.Provider>)
+    expect(screen.getByText(/Gland steam shut off: the rotor stopped turning/)).toBeTruthy()
+    const back: PowerPlantState = { ...stopped, Turbine: { ...stopped.Turbine, turningGearEngaged: true, glandSteamOn: true } }
+    rerender(<PowerPlantContext.Provider value={make(back)}><TurbineAux /></PowerPlantContext.Provider>)
+    expect(screen.queryByText(/Gland steam shut off/)).toBeNull()
+  })
+
+  it("does not report a shut-off when the operator switched the steam off", () => {
+    const state: PowerPlantState = makeInitialState()
+    state.Turbine = { ...state.Turbine, glandSteamOn: true, turningGearEngaged: true }
+    const make = (s: PowerPlantState) => ({ state: s, dispatch: vi.fn(), toggleOilPump: vi.fn(), toggleTurningGear: vi.fn(), toggleGlandSteam: vi.fn() }) as unknown as Ctx
+    const { rerender } = render(<PowerPlantContext.Provider value={make(state)}><TurbineAux /></PowerPlantContext.Provider>)
+    const off: PowerPlantState = { ...state, Turbine: { ...state.Turbine, glandSteamOn: false } }
+    rerender(<PowerPlantContext.Provider value={make(off)}><TurbineAux /></PowerPlantContext.Provider>)
+    expect(screen.queryByText(/Gland steam shut off/)).toBeNull()
   })
 })

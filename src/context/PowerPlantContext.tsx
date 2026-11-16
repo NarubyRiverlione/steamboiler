@@ -25,6 +25,8 @@ type PowerPlantContextType = {
   toggleOilPump: () => void
   // Turning gear (ADR 0051)
   toggleTurningGear: () => void
+  // Gland seal steam (ADR 0047)
+  toggleGlandSteam: () => void
   // Superheater attemperator
   setAttemperatorAuto: (auto: boolean) => void
   adjustSprayValve: (amount: number) => void
