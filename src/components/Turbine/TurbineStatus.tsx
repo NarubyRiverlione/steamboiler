@@ -41,7 +41,7 @@ export function TurbineStatus({ turbine }: TurbineStatusProps) {
           <Lamp
             lit={turbine.turbineTripped}
             label="Turbine trip"
-            title="Turbine tripped: vacuum limit, overspeed, boiler high-high level or the main steam valve closed on low boiler pressure"
+            title="Turbine tripped: vacuum limit, overspeed, low lube oil pressure, boiler high-high level or the main steam valve closed on low boiler pressure"
           />
           <TripResetButton trip="turbine" label="turbine trip" />
         </div>

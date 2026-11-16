@@ -351,6 +351,7 @@ describe("plant overview", () => {
 describe("partAlarms", () => {
   it("raises each part from any of its flags", () => {
     const state: PowerPlantState = makeInitialState()
+    state.Oil = { pumpRunning: true, headerPressure: 1 }
     state.Boiler.burnerTripped = true
     state.Condenser.condensationPumpTripped = true
     expect(partAlarms(state)).toEqual({ boiler: true, steam: false, deaerator: false, condenser: true, turbine: false, turbineAux: false, generation: false })
@@ -361,6 +362,7 @@ describe("partAlarms", () => {
 
   it("raises the steam part from the high steam temperature, not the boiler", () => {
     const state: PowerPlantState = makeInitialState()
+    state.Oil = { pumpRunning: true, headerPressure: 1 }
     state.Boiler.steamTemperature = CstSuperheater.AlarmTemperature
     expect(partAlarms(state)).toEqual({ boiler: false, steam: true, deaerator: false, condenser: false, turbine: false, turbineAux: false, generation: false })
   })
@@ -373,15 +375,15 @@ describe("partAlarms", () => {
 
   it("raises the deaerator from its feed pump trip (#137)", () => {
     const state: PowerPlantState = makeInitialState()
+    state.Oil = { pumpRunning: true, headerPressure: 1 }
     state.Deaerator.feedPumpTripped = true
     expect(partAlarms(state)).toEqual({ boiler: false, steam: false, deaerator: true, condenser: false, turbine: false, turbineAux: false, generation: false })
   })
 })
 
 describe("partAlarms, lube oil (#160)", () => {
-  it("raises the Turbine aux part, not the turbine, from the low lube oil pressure of a running turbine", () => {
+  it("raises the Turbine aux part, not the turbine, from the low lube oil pressure, also on the cold plant", () => {
     const state: PowerPlantState = makeInitialState()
-    state.Turbine.turbineValvePosition = 0.5
     state.Oil = { pumpRunning: false, headerPressure: 0.3 }
     expect(partAlarms(state)).toEqual({ boiler: false, steam: false, deaerator: false, condenser: false, turbine: false, turbineAux: true, generation: false })
   })
