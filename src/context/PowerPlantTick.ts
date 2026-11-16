@@ -1,5 +1,6 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
-import { TurningGearTick } from "./Turbine/TurningGear"
+import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
+import { GlandSteamTick, glandSteamMass } from "./Turbine/GlandSteam"
 import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripOnLowOil, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, BoilerVent, isAtBoilerHighHigh } from "./Boiler/BoilerTick"
@@ -38,10 +39,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     state.Condenser.pressure,
     state.Heater.extractionFlow + state.Deaerator.extractionFlow,
     state.Boiler.steamTemperature,
-    isAtOilPermissive(oilNewState) && !bypassResult.turbineState.turningGearEngaged,
+    isAtOilPermissive(oilNewState) && rotorTurns(bypassResult.turbineState),
   )
-  // Turning gear (ADR 0051): holds the stopped rotor at gear speed, drops out on low oil
-  const turbineNewState: TurbineState = TurningGearTick(turbineTicked, oilNewState)
+  // Turning gear (ADR 0051): holds the stopped rotor at gear speed, throws itself out above standstill speed, drops out on low oil
+  // Gland seal steam (ADR 0047): shut off when the rotor stops turning
+  const turbineNewState: TurbineState = GlandSteamTick(TurningGearTick(turbineTicked, oilNewState))
 
   // remove steam via turbine valve
   const drumResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
@@ -62,6 +64,9 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     },
   }
   const steamTemperature: number = state.Boiler.steamTemperature
+
+  // What the gland steam takes from the boiler returns to the hotwell; it cannot take more steam than the drum holds
+  const glandMass: number = Math.min(glandSteamMass(turbineNewState), turbineResult.boilerState.steamMass)
 
   // Condenser: receives the steam removed from the boiler in this same tick
   const boilerPressure: number = bypassResult.boilerState.pressure
@@ -124,6 +129,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     steamFromBypass,
     steamFromTurbine,
     deaeratorRoom,
+    { sealed: turbineNewState.glandSteamOn, returnMass: glandMass },
     deaeratorHighHigh,
   )
 
@@ -159,7 +165,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // the let-down steam leaves the boiler and comes back as water in the outflow, which joins before the boiler state is recalculated
   const boilerRemovedSteam: BoilerState = {
     ...turbineResult.boilerState,
-    steamMass: turbineResult.boilerState.steamMass - deaerator.letDownMass,
+    steamMass: turbineResult.boilerState.steamMass - deaerator.letDownMass - glandMass,
     waterMass: turbineResult.boilerState.waterMass + feedMass,
   }
 

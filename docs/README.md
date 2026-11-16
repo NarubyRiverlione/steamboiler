@@ -83,11 +83,12 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0043](adr/0043-trip-reset.md) | Only a trip reset clears a latched trip, once its cause has gone; a RESET button beside each trip tile |
 | [0044](adr/0044-superheater-with-spray-attemperator.md) | A passive flue gas superheater before the boiler stage; one spray attemperator holds the steam at 540 °C; the turbine runs on the superheated steam |
 | [0046](adr/0046-from-island-to-town-grid-in-milestones.md) | From island to the town grid in milestones M1–M7; island means house load operation |
-| [0047](adr/0047-first-public-release-on-itch-io.md) | First public release on itch.io: a goal, help cards in markdown, a startup guide; desktop, English, early access |
+| [0047](adr/0047-gland-seal-steam-sets-the-air-in-leakage.md) | Gland seal steam: a switch that sets the condenser's air in-leakage between a sealed and an open-gland rate |
 | [0048](adr/0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) | From roll on demand to a real cold start in milestones M1–M4: oil and gear, auxiliary steam and gland seals, prewarming the casing, the full start-up |
 | [0049](adr/0049-sustainable-operation-in-milestones.md) | Proposed: sustainable operation over many sessions: save and load, operating record, an account, wear as cost, gross damage |
 | [0050](adr/0050-lube-oil-pressure-permissive-and-trip.md) | Lube oil: a header pressure permissive to roll and a low-pressure trip |
-| [0051](adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md) | Turning gear: holds the stopped rotor and throws itself out when steam rolls it (amended; the manual gear of #146 is still what is built) |
+| [0051](adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md) | Turning gear: a manual gear holds the stopped rotor and blocks the turbine valve |
+| [0052](adr/0052-first-public-release-on-itch-io.md) | First public release on itch.io: a goal, help cards in markdown, a startup guide; desktop, English, early access |
 
 ## Research (dated, frozen)
 
@@ -103,6 +104,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
 | Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
 | Nov 2026 | [SJAE motive steam: where it comes from on a cold start (sourced)](research/2026-11-sjae-motive-steam.md) |
+| Nov 2026 | [Gland seal steam: the open-gland air leak and the steam flow (UNVERIFIED)](research/2026-11-gland-seal-steam.md) |
 | Nov 2026 | [Turning gear: gear speed and the standstill threshold (UNVERIFIED)](research/2026-11-turning-gear.md) |
 | Nov 2026 | [Turbine lube oil: header pressure, permissive and trip limits (UNVERIFIED)](research/2026-11-lube-oil.md) |
 

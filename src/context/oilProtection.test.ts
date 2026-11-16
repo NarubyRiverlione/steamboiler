@@ -21,9 +21,10 @@ describe("lube oil protection (ADR 0050)", () => {
 
   describe("permissive", () => {
     test("the valve cannot be opened below the permissive pressure, and can at it", () => {
-      const low: PowerPlantState = withOil(CstOil.PermissivePressure - 0.01)
+      const onGear: Partial<PowerPlantState["Turbine"]> = { turningGearEngaged: true } // the rotor turns, so only the oil can refuse
+      const low: PowerPlantState = withOil(CstOil.PermissivePressure - 0.01, true, onGear)
       expect(openValve(low, 0.1)).toBe(low)
-      expect(openValve(withOil(CstOil.PermissivePressure), 0.1).Turbine.turbineValvePosition).toBeCloseTo(0.1)
+      expect(openValve(withOil(CstOil.PermissivePressure, true, onGear), 0.1).Turbine.turbineValvePosition).toBeCloseTo(0.1)
     })
 
     test("closing is always allowed, with no oil", () => {
@@ -31,7 +32,7 @@ describe("lube oil protection (ADR 0050)", () => {
     })
 
     test("the Ramp up PID does not open the valve below the permissive", () => {
-      const rolling: Partial<PowerPlantState["Turbine"]> = { mainSteamValve: true, speedMode: "rampUp", runUpPoint: 500, speedReference: 0 }
+      const rolling: Partial<PowerPlantState["Turbine"]> = { mainSteamValve: true, speedMode: "rampUp", runUpPoint: 500, speedReference: 0, turningGearEngaged: true }
       const boiler = { pressure: 165 }
       const noOil: PowerPlantState = withOil(CstOil.PermissivePressure - 0.1, true, rolling)
       const state = (s: PowerPlantState): PowerPlantState => ({ ...s, Boiler: { ...s.Boiler, ...boiler } })

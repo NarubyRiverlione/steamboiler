@@ -283,8 +283,8 @@ describe("air inventory (ADR 0035)", () => {
     CondenserState,
     "airMass" | "pressure" | "isAirExtractionPumpEnabled" | "isSjaeEnabled" | "sjaeValvePosition"
   > = { airMass: 1, pressure: 30, isAirExtractionPumpEnabled: false, isSjaeEnabled: false, sjaeValvePosition: 0 }
-  const step = (patch: Partial<typeof stopped>, boiler = 100) =>
-    calculateAirInventory({ ...stopped, ...patch } as CondenserState, boiler)
+  const step = (patch: Partial<typeof stopped>, boiler = 100, glandSealed = true) =>
+    calculateAirInventory({ ...stopped, ...patch } as CondenserState, boiler, glandSealed)
 
   test("air mass and pressure convert both ways through the ideal gas law", () => {
     const mass: number = airMassOf(1000, 20)
@@ -296,6 +296,32 @@ describe("air inventory (ADR 0035)", () => {
 
   test("with the vacuum system stopped the in-leakage is all that changes the air", () => {
     expect(step({}).airMass).toBeCloseTo(1 + Cst.AirLeakRate * DeltaTime, 12)
+  })
+
+  test("with the glands unsealed the in-leakage takes the open-gland rate, at once (ADR 0047)", () => {
+    expect(step({}, 100, false).airMass).toBeCloseTo(1 + Cst.OpenGlandAirLeakRate * DeltaTime, 12)
+    expect(Cst.OpenGlandAirLeakRate).toBeGreaterThan(Cst.AirLeakRate)
+  })
+
+  test("the SJAE alone holds the design vacuum with the glands sealed and stalls short of it unsealed (ADR 0047)", () => {
+    const settle = (glandSealed: boolean): number => {
+      let air = airMassOf(100, 25)
+      for (let i = 0; i < 40000; i++)
+        air = calculateAirInventory({ ...stopped, airMass: air, pressure: 100, isSjaeEnabled: true, sjaeValvePosition: 1 } as CondenserState, 100, glandSealed).airMass
+      return airPressureOf(air, 25)
+    }
+    // the air alone: a few mbar sealed, the whole design vacuum (31 mbar, vapour on top) unsealed
+    expect(settle(true)).toBeLessThan(Cst.OptimalPressure / 10)
+    expect(settle(false)).toBeGreaterThan(Cst.OptimalPressure * 0.95)
+  })
+
+  test("the pump pulls the design vacuum with the glands open as well as sealed (ADR 0047)", () => {
+    for (const glandSealed of [true, false]) {
+      let air: number = airMassOf(CstPhysics.AtmosphericPressure_mBar, 20)
+      for (let i = 0; i < 6000; i++)
+        air = calculateAirInventory({ ...stopped, airMass: air, pressure: 500, isAirExtractionPumpEnabled: true } as CondenserState, 100, glandSealed).airMass
+      expect(airPressureOf(air, 25)).toBeLessThan(Cst.OptimalPressure / 10)
+    }
   })
 
   test("no air leaks in once the shell is at atmospheric pressure", () => {
@@ -312,7 +338,7 @@ describe("air inventory (ADR 0035)", () => {
     let air: number = airMassOf(CstPhysics.AtmosphericPressure_mBar, 20)
     let seconds = 0
     while (airPressureOf(air, 25) > Cst.OptimalPressure && seconds < 600) {
-      air = calculateAirInventory({ ...stopped, airMass: air, pressure: 500, isAirExtractionPumpEnabled: true } as CondenserState, 100).airMass
+      air = calculateAirInventory({ ...stopped, airMass: air, pressure: 500, isAirExtractionPumpEnabled: true } as CondenserState, 100, true).airMass
       seconds += DeltaTime
     }
     expect(seconds).toBeGreaterThan(40)

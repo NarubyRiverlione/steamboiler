@@ -6,7 +6,7 @@ import { PressureHoldSettings } from "../scenarios/pressure-hold"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { StartupSettings, startupOperator, turbineRunup } from "../scenarios/turbine-runup"
 import { StartGas } from "../scenarios/steps"
-import { CstSimulation } from "../../src/context/const"
+import { CstSimulation, CstTurningGear } from "../../src/context/const"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { describeVacuumAtOpening } from "./vacuum-at-opening"
 
@@ -38,7 +38,7 @@ describe("turbine-runup", () => {
 
   test("the turbine spins up only after the main steam valve opens", () => {
     expect(valveOpenAt).toBeLessThan(turbineRunup.duration)
-    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > 0)).toBeGreaterThan(valveOpenAt)
+    expect(firstTimeWhere(samples, (s) => s.Turbine.rpm > CstTurningGear.Rpm)).toBeGreaterThan(valveOpenAt) // above the gear speed of the turning gear (ADR 0051)
   })
 
   const { Target, Band } = PressureHoldSettings

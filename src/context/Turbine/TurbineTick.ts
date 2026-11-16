@@ -28,7 +28,7 @@ const SecondsPerMinute = 60
  * @param condenserPressure - The current condenser pressure (mbar absolute), checked against the vacuum limit.
  * @param extractionFlow - The steam (kg/s) the heater took at the tap in the last tick, which no longer does work after the tap (ADR 0031).
  * @param steamTemperature - The steam temperature (°C) after the superheater (ADR 0044); saturated steam when left out.
- * @param rollPermissive - False below the lube oil permissive pressure (ADR 0050) or on the turning gear (ADR 0051): the Ramp up / Hold PID may not open the valve.
+ * @param rollPermissive - False below the lube oil permissive pressure (ADR 0050) or on a stopped rotor off the turning gear (ADR 0051): the Ramp up / Hold PID may not open the valve.
  * @returns The updated turbine state.
  */
 function TurbineTick(
