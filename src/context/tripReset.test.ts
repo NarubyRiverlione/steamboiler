@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { CstDeaerator, CstSimulation } from "./const"
+import { CstDeaerator, CstOil, CstSimulation } from "./const"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import { isTripped, tripResetRefusal, type TripId } from "./tripReset"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const base: PowerPlantState = makeInitialState()
+// The lube oil pump runs: its trip cause has gone (ADR 0050)
+const base: PowerPlantState = { ...makeInitialState(), Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure } }
 const reset = (state: PowerPlantState, trip: TripId): PowerPlantState => powerPlantReducer(state, { type: "RESET_TRIP", payload: { trip } })
 
 const boilerAt = (level: number, extra: Partial<PowerPlantState["Boiler"]> = {}): PowerPlantState => ({

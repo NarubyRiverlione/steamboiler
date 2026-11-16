@@ -103,6 +103,16 @@ export const CstSimulation = {
   },
 }
 
+// Turbine lube oil (ADR 0050, figures in docs/plant/design-basis.md and docs/research/2026-11-lube-oil.md); all UNVERIFIED estimates
+export const CstOil = {
+  NominalPressure: 1.0, // bar g, the header pressure with the pump running
+  PermissivePressure: 0.7, // bar g: the turbine valve cannot be opened below it
+  TripPressure: 0.4, // bar g: a running turbine trips below it, and the trip cannot be reset below it
+  BuildTimeConstant: 5, // s, first-order lag of the header toward nominal with the pump running
+  DecayTimeConstant: 20, // s, first-order lag toward 0 with the pump stopped: slower than the build, the header drains through the bearings
+  RunningRPM: 100, // rpm: above it the turbine counts as running (with the valve open, ADR 0050)
+}
+
 // Extraction heater (ADR 0031, figures in docs/plant/design-basis.md and docs/research/2026-11-extraction-heaters.md)
 export const CstHeater = {
   TapPressureAtRated: 5, // bar, the turbine tap at RatedSteamFlow (own estimate: the Return leaves at about 150 °C); proportional to turbine flow

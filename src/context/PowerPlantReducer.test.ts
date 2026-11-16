@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstDeaerator, CstSimulation, CstSuperheater } from "./const"
+import { CstDeaerator, CstOil, CstSimulation, CstSuperheater } from "./const"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -7,7 +7,8 @@ import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import { ratedOutputMW } from "../utils/turbineCalculations"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const base = makeInitialState()
+// The lube oil pump runs: the turbine valve may open (ADR 0050)
+const base: PowerPlantState = { ...makeInitialState(), Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure } }
 const reduce = (action: PowerPlantAction, state: PowerPlantState = base) => powerPlantReducer(state, action)
 
 describe("powerPlantReducer", () => {

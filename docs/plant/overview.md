@@ -27,7 +27,8 @@ The feedwater path is hotwell → condensation pump → deaerator → boiler fee
 | Spray attemperator | A valve that injects feedwater from the feed pump discharge into the steam; a PID (Auto) or the operator (Manual) holds the steam at 540 °C. The spray water joins the steam flow. A high steam temperature alarm at 555 °C | [boiler.md](boiler.md#superheater-and-attemperator-113-adr-0044) |
 | Relief valve | Vents steam to the atmosphere at high pressure, upstream of the main steam valve | [boiler.md](boiler.md#relief-valve) |
 | Main steam valve | Opens or shuts the boiler to both the turbine valve and the bypass | [turbine.md](turbine.md#low-pressure-closure) |
-| Turbine valve | Sets the steam flow to the turbine | [turbine.md](turbine.md) |
+| Turbine valve | Sets the steam flow to the turbine; refused below the lube oil permissive | [turbine.md](turbine.md) |
+| Lube oil pump | An operator-started pump that builds the lube oil header pressure (1.0 bar g, UNVERIFIED); below 0.7 bar the turbine cannot be rolled, below 0.4 bar a running turbine trips (#145, ADR 0050) | [turbine.md](turbine.md) |
 | Bypass valve | Sends steam straight to the condenser, past the turbine | [condenser.md](condenser.md#intakes) |
 | Turbine | Takes the enthalpy drop from boiler pressure to condenser pressure as shaft power, in one stage. The steam is the 540 °C superheated steam, and the exhaust is about 17% wet (no reheat) | [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried) |
 | Deaerator | Feedwater tank (150 m³) between the hotwell and the boiler, held at 3 bar (134 °C) by turbine tap steam first and boiler steam through a let-down valve for the rest; the boiler feed pump takes the water out toward the boiler and trips on low-low (#112) | [deaerator.md](deaerator.md) |

@@ -1,9 +1,10 @@
+import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
 import { CondenserTick } from "./Condenser/CondenserTick"
-import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
+import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripOnLowOil, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, BoilerVent, isAtBoilerHighHigh } from "./Boiler/BoilerTick"
 
 import { DeaeratorResult, DeaeratorTick, deaeratorLevel } from "./Deaerator/DeaeratorTick"
-import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, HeaterState, TurbineState } from "./PowerPlantState"
+import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, HeaterState, OilState, TurbineState } from "./PowerPlantState"
 import { CstDeaerator, CstSimulation } from "./const"
 import { sprayFlowOf } from "./Boiler/Attemperator"
 import { roomInKg } from "../utils/boilerCalculations"
@@ -20,7 +21,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
 
   // The main steam valve closes on low pressure before any steam leaves through it (ADR 0026)
   const turbineAfterLowPressure: TurbineState = MainSteamValveLowPressureClosure(state.Turbine, state.Boiler.pressure)
-  const turbineAfterClosure: TurbineState = levelHighHigh ? TurbineTripWhenOpen(turbineAfterLowPressure) : turbineAfterLowPressure
+  const turbineAfterLevel: TurbineState = levelHighHigh ? TurbineTripWhenOpen(turbineAfterLowPressure) : turbineAfterLowPressure
+
+  // Lube oil (ADR 0050): the header pressure of this tick trips a running turbine before any steam leaves through the valve
+  const oilNewState: OilState = OilTick(state.Oil)
+  const turbineAfterClosure: TurbineState = TurbineTripOnLowOil(turbineAfterLevel, oilNewState)
 
   // remove steam via bypass valve
   const bypassResult = BoilerRemoveSteam(ventedBoiler, turbineAfterClosure, "BYPASS")
@@ -32,6 +37,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     state.Condenser.pressure,
     state.Heater.extractionFlow + state.Deaerator.extractionFlow,
     state.Boiler.steamTemperature,
+    isAtOilPermissive(oilNewState),
   )
 
   // remove steam via turbine valve
@@ -186,6 +192,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     Condenser: condenserNewState,
     Deaerator: deaeratorNewState,
     Heater: heaterNewState,
+    Oil: oilNewState,
     Turbine: updatedTurbineState,
   }
 }

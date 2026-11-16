@@ -69,7 +69,7 @@ export type TurbineState = {
   speedReference: number // rpm the PID aims at in Ramp up; follows the speed while the PID is inactive
   generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
   pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
-  turbineTripped: boolean // set by a turbine trip, cleared by the next opening of the turbine valve
+  turbineTripped: boolean // set by a turbine trip, cleared only by a trip reset
 }
 
 export type HeaterState = {
@@ -105,11 +105,17 @@ export type DeaeratorState = {
   deaeratorHighHighTripped: boolean // set by the high-high trip of the condensation pump (#129, ADR 0045), cleared only by a trip reset
 }
 
+export type OilState = {
+  pumpRunning: boolean // the lube oil pump, an operator action (ADR 0050)
+  headerPressure: number // bar g, the lube oil header: builds toward nominal with the pump running, decays without it
+}
+
 type PowerPlantState = {
   Boiler: BoilerState
   Deaerator: DeaeratorState
   Heater: HeaterState
   Condenser: CondenserState
   Turbine: TurbineState
+  Oil: OilState
 }
 export default PowerPlantState

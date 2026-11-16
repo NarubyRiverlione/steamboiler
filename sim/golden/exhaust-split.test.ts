@@ -19,7 +19,7 @@ const after3s = (bypassValvePosition: number, turbineValvePosition: number, rpm:
     description: "Same flow through the bypass or the turbine valve",
     duration: 3,
     sampleEvery: 1,
-    initial: { ...settled, Turbine: { ...settled.Turbine, bypassValvePosition, turbineValvePosition, rpm } },
+    initial: { ...settled, Oil: { pumpRunning: true, headerPressure: 1 }, Turbine: { ...settled.Turbine, bypassValvePosition, turbineValvePosition, rpm } },
     actions: [],
   }
   return finalState(scenario)

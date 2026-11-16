@@ -10,7 +10,7 @@ One reducer and one provider for the whole plant.
 
 - `PowerPlantReducer` (`src/context/`) is the only state-transition point. It handles user actions, the tick and `LOAD_STATE`, which replaces the whole state with a UI preset (#24). The preset list is `src/context/startPresets.ts`; the shape check that rejects a stale snapshot is `src/utils/stateShape.ts`, shared with the headless runner.
 - `PowerPlantProvider` owns the simulation loop and exposes state through `PowerPlantContext`.
-- Simulation core is pure functions, decoupled from React: `PowerPlantTick` calls `BoilerTick`, `TurbineTick`, `CondenserTick` (in `src/context/<Subsystem>/`). Order per tick: the relief valve vents (`BoilerVent`), the main steam valve closes on low pressure (`MainSteamValveLowPressureClosure`), remove bypass steam, `TurbineTick`, remove turbine steam, `CondenserTick` with those same-tick flows, then `BoilerTick` with the return.
+- Simulation core is pure functions, decoupled from React: `PowerPlantTick` calls `BoilerTick`, `TurbineTick`, `CondenserTick` (in `src/context/<Subsystem>/`). Order per tick: the relief valve vents (`BoilerVent`), the main steam valve closes on low pressure (`MainSteamValveLowPressureClosure`), the lube oil header advances (`OilTick`) and a running turbine trips on low oil pressure (`TurbineTripOnLowOil`, ADR 0050), remove bypass steam, `TurbineTick`, remove turbine steam, `CondenserTick` with those same-tick flows, then `BoilerTick` with the return.
 - Physics lives in `src/utils/` (`boilerCalculations`, `condenserCalculation`, `turbineCalculations`, `steamTable`, `steamData`). Display helpers (`formatSigned`, `flowUnits`: l/s design values shown as kg/s, #123) sit beside them.
 - State is immutable. Every update creates a new state object.
 - Display-only values are calculated in components, not stored in state. `useEMA` smooths readouts with one rule (#122): a time constant in wall seconds (`CstSimulation.ReadoutSmoothingSeconds`), `alpha = 1 - exp(-dt/tau)` from the wall time since the previous step (`smoothingAlpha`), one step per change of value (no timer), `dt` capped at 5 tau so the first change after a pause snaps. The lag does not depend on playback speed or render cadence; level trends are shown raw.
@@ -55,7 +55,7 @@ src/
 │   ├── PowerPlant{Actions,Batch,Context,Provider,Reducer,State,Tick}
 │   ├── SimulationReducer, Playback, Alarms   # clock, playback speed, alarm rule
 │   ├── const.ts                      # all tunable constants (Cst* objects)
-│   └── Boiler/ Condenser/ Turbine/   # <Subsystem>Tick.ts
+│   └── Boiler/ Condenser/ Oil/ Turbine/   # <Subsystem>Tick.ts
 ├── navigation/                       # routing, header, annunciator, plant overview
 └── utils/                            # calculations, steam tables, useEMA
 sim/                                  # headless scenario runner, see headless-runner.md
