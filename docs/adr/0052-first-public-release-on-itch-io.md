@@ -11,7 +11,7 @@ The simulator has only been played by its owner. The first public release puts i
 - **Release bar:** the game ships when a stranger can, without outside help:
   - **Get a goal:** the first screen says what to do (from Cold & dark to a synchronised generator) and offers the startup guide and the presets.
   - **Find help on every page:** a "?" opens a help card for that component: what it does, what to watch, the normal range, what trips it and how to recover.
-  - **Follow a startup guide:** one page walks through the cold start to grid sync, step by step.
+  - **Follow a startup guide:** one page walks through the cold start to grid sync, step by step. Each step says why it comes before the next (no vacuum without gland steam, because air leaks in along the shaft), so a player can reason out the order instead of memorising it.
   - **Start over:** restart and the presets can be found from the first screen. Today they're behind the presets button.
 - **Help cards are markdown files next to the code.** One file per component, imported by the app, and updated in the same commit as the matching `docs/plant/` page, under the same rule as the reference docs.
 - **The help is written for players:** the same physics as `docs/plant/`, for a reader who has never seen a steam plant.
@@ -31,6 +31,6 @@ The simulator has only been played by its owner. The first public release puts i
 ## Consequences
 
 - The first ticket adds the `release` theme to `THEMES` (`scripts/roadmap-helpers.ts`) and to `docs/agents/issue-tracker.md`. It is a code change, so it goes on a ticket branch.
-- The tickets to draft: the relative-base build and a zip script; the first screen; the help card framework; one help card per component (boiler, turbine and generator, condenser, deaerator, feedwater loop); the startup guide; the minimum screen size and fullscreen hint; the itch.io page (description, 3–5 screenshots or a GIF, tags, early access note).
+- The tickets to draft: the relative-base build and a zip script; the first screen; the help card framework; one help card per component (boiler, turbine and generator, condenser, deaerator, feedwater loop, and the turbine auxiliaries of [ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md): lube oil, turning gear, gland steam, with a card for each auxiliary added as it lands); the startup guide; the minimum screen size and fullscreen hint; the itch.io page (description, 3–5 screenshots or a GIF, tags, early access note).
 - `docs/dev/branching.md` gets a section on the itch build.
 - A `docs/dev/` page describes the help cards: where they live and how they stay in step with `docs/plant/`.
