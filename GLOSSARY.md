@@ -195,6 +195,10 @@ _Avoid_: Gland leak, seal air
 The sealed or unsealed state of the glands, set by whether gland seal steam is on.
 _Avoid_: Gland pressure
 
+**Lube oil header**:
+The oil line that feeds the turbine bearings. One oil pump builds its pressure; the turbine cannot be rolled below the permissive pressure, and a running turbine trips below the trip pressure.
+_Avoid_: Trip oil (the hydraulic oil of the trip system)
+
 **Vacuum breaker**:
 A valve that lets outside air into the condenser shell. The operator opens it in an emergency stop; a trip never opens it. While it is open the vacuum cannot be held.
 _Avoid_: Breaker (the generator breaker closes the circuit), hood relief
