@@ -298,8 +298,8 @@ describe("powerPlantReducer", () => {
         type === "ADJUST_STEAM_BYPASS_VALVE"
           ? { type, payload: { bypassValvePosition: delta } }
           : { type, payload: { turbineValvePosition: delta } }
-      // under vacuum, so the turbine valve may open
-      const vacuum = { ...base, Condenser: { ...base.Condenser, pressure: CstCondenser.VacuumLimit } }
+      // under vacuum and with the rotor on the turning gear, so the turbine valve may open
+      const vacuum = { ...base, Condenser: { ...base.Condenser, pressure: CstCondenser.VacuumLimit }, Turbine: { ...base.Turbine, turningGearEngaged: true } }
       const opened = reduce(act(0.3), vacuum)
       expect(opened.Turbine[field]).toBe(0.3)
       expect(reduce(act(5), vacuum).Turbine[field]).toBe(1)
@@ -344,7 +344,7 @@ describe("powerPlantReducer", () => {
       const atCondenser = (pressure: number, turbineValvePosition = 0): PowerPlantState => ({
         ...base,
         Condenser: { ...base.Condenser, pressure },
-        Turbine: { ...base.Turbine, turbineValvePosition },
+        Turbine: { ...base.Turbine, turbineValvePosition, turningGearEngaged: true }, // the rotor turns, so only the vacuum can refuse
       })
       const turbineValve = (delta: number, state: PowerPlantState) =>
         reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: delta } }, state).Turbine

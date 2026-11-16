@@ -37,7 +37,8 @@ export const CstSimulation = {
     OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
     VacuumLimit: 327, // mbar absolute, turbine trip above it (-0.7 kg/cm² gauge, see design-basis.md)
     ShellVolume: 450, // m³ steam space of the shell with the exhaust neck and casing (UNVERIFIED, ADR 0035)
-    AirLeakRate: 0.0022, // kg/s of air in-leakage, 3.75 SCFM (ASME PTC 12.2 Table 10-1, ADR 0035)
+    AirLeakRate: 0.0022, // kg/s of air in-leakage with the glands sealed, 3.75 SCFM (ASME PTC 12.2 Table 10-1, ADR 0035)
+    OpenGlandAirLeakRate: 0.0347, // kg/s of air in-leakage with the glands unsealed, 60 SCFM: the top of the leaky-unit probe readings (EPRI TR-112819), UNVERIFIED for open glands (ADR 0047)
     CAR_Capacity: 26, // m³/s of air: over-dimensioned utility, pulls 1 bar to the design vacuum in about 60 s (design-basis.md)
     SJAE_Capacity: 0.96, // m³/s at the full valve (HEI holding example, ADR 0035)
     SJAE_SuctionLimit: 170, // mbar absolute: above it the ejector breaks and removes nothing (EPRI §8.3.8)
@@ -111,6 +112,11 @@ export const CstOil = {
   BuildTimeConstant: 5, // s, first-order lag of the header toward nominal with the pump running
   DecayTimeConstant: 20, // s, first-order lag toward 0 with the pump stopped: slower than the build, the header drains through the bearings
   RunningRPM: 100, // rpm: above it the turbine counts as running (with the valve open, ADR 0050)
+}
+
+// Gland seal steam (ADR 0047, figure in docs/plant/design-basis.md and docs/research/2026-11-gland-seal-steam.md); UNVERIFIED estimate
+export const CstGlandSteam = {
+  Flow: 0.1, // kg/s taken from the boiler while the gland steam is on, returned to the hotwell (800 lb/h gland condenser of a vendor example)
 }
 
 // Turning gear (ADR 0051, figure in docs/plant/design-basis.md); UNVERIFIED estimate

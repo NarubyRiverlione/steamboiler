@@ -26,6 +26,8 @@ type PowerPlantAction =
   | { type: "SET_OIL_PUMP"; payload: { pumpRunning: boolean } }
   // Turning gear Action (ADR 0051): engage or disengage by hand
   | { type: "SET_TURNING_GEAR"; payload: { engaged: boolean } }
+  // Gland seal steam Action (ADR 0047): on or off; on is refused while the rotor is not turning
+  | { type: "SET_GLAND_STEAM"; payload: { on: boolean } }
   // Deaerator Actions
   | { type: "TOGGLE_DEAERATOR_VENT" } // the manual start-up vent, open or closed
   | { type: "SET_FEED_PUMP_VALVE_POSITION"; payload: { feedPumpValvePosition: number } } // the boiler feed pump (#112)

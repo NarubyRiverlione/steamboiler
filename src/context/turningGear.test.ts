@@ -37,15 +37,17 @@ describe("turning gear (ADR 0051)", () => {
   })
 
   describe("valve", () => {
-    test("cannot be opened while the gear is engaged, and can once disengaged", () => {
-      const onGear: PowerPlantState = engage(plant(CstOil.NominalPressure))
-      expect(openValve(onGear, 0.1)).toBe(onGear)
-      expect(openValve(engage(onGear, false), 0.1).Turbine.turbineValvePosition).toBeCloseTo(0.1)
+    test("cannot be opened on a stopped rotor off the gear, can on the gear and above standstill speed", () => {
+      const stopped: PowerPlantState = plant(CstOil.NominalPressure)
+      expect(openValve(stopped, 0.1)).toBe(stopped)
+      expect(openValve(engage(stopped), 0.1).Turbine.turbineValvePosition).toBeCloseTo(0.1)
+      const turning: PowerPlantState = plant(CstOil.NominalPressure, { rpm: CstTurningGear.StandstillRpm + 1 })
+      expect(openValve(turning, 0.1).Turbine.turbineValvePosition).toBeCloseTo(0.1)
     })
 
-    test("the Ramp up PID does not open the valve on gear", () => {
-      const onGear: PowerPlantState = plant(CstOil.NominalPressure, { turningGearEngaged: true, mainSteamValve: true, speedMode: "rampUp", runUpPoint: 500 })
-      let state: PowerPlantState = onGear
+    test("the Ramp up PID does not open the valve on a stopped rotor off the gear", () => {
+      const stopped: PowerPlantState = plant(CstOil.NominalPressure, { mainSteamValve: true, speedMode: "rampUp", runUpPoint: 500 })
+      let state: PowerPlantState = stopped
       for (let i = 0; i < 30; i++) state = PowerPlantTick(state)
       expect(state.Turbine.turbineValvePosition).toBe(0)
     })
@@ -79,6 +81,15 @@ describe("turning gear (ADR 0051)", () => {
       expect(state.Turbine.rpm).toBe(0)
       for (let i = 0; i < 100; i++) state = PowerPlantTick(state)
       expect(state.Turbine.rpm).toBe(0)
+    })
+
+    test("the gear throws itself out when the rotor passes the standstill speed, and the rotor keeps its speed", () => {
+      const fast: PowerPlantState = plant(CstOil.NominalPressure, { turningGearEngaged: true, rpm: CstTurningGear.StandstillRpm + 5 })
+      const after: PowerPlantState = PowerPlantTick(fast)
+      expect(after.Turbine.turningGearEngaged).toBe(false)
+      expect(after.Turbine.rpm).toBeGreaterThan(CstTurningGear.StandstillRpm)
+      const slow: PowerPlantState = plant(CstOil.NominalPressure, { turningGearEngaged: true, rpm: CstTurningGear.StandstillRpm })
+      expect(PowerPlantTick(slow).Turbine.turningGearEngaged).toBe(true)
     })
 
     test("a rotor above gear speed keeps its speed when the gear is disengaged", () => {
