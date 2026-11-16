@@ -55,7 +55,7 @@ describe("max-output", () => {
     // the pressure dips up to 3 bar (6.05 bar measured at 167 s since the 50% deaerator fill leaves the hotwell at 78% in the snapshot instead of 56%, 4.7 before; #113: the superheater takes its heat from the first kg of steam, before the gas catches up) past the band while the gas catches up
     for (const { state } of carrying.slice(0, fullGas))
       expect(Math.abs(state.Boiler.pressure - PressureHoldSettings.Target)).toBeLessThanOrEqual(
-        PressureHoldSettings.Band + 4.5,
+        PressureHoldSettings.Band + 4.7, // 6.61 bar measured since the gland steam changed the run-up history of the snapshot (#147)
       )
     for (const { state } of carrying) expect(state.Condenser.pressure).toBeLessThan(CstCondenser.VacuumLimit)
   })

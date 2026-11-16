@@ -7,7 +7,7 @@ The turbine has a **turning gear**, an operator switch (`SET_TURNING_GEAR`, stat
 - **Rotor:** `TurningGearTick` runs after `TurbineTick` and holds the rotor at gear speed as a floor (`max(rpm, gear rpm)`): the gear never drives it faster, and there is no start-up lag (3 rpm has no meaningful inertia to model).
 - **Disengage:** a rotor at or below gear speed stops at once (rpm 0, as the stopped rotor reads today): the loss torque of the speed model is ∝ rpm², so left alone the rotor would coast at 3 rpm for hours. A faster rotor keeps its speed.
 - **Low oil:** the gear drops out (disengages) when the header pressure falls below `PermissivePressure`, the same limit it needs to engage: the real gear motor is interlocked on oil. It must be engaged again by hand.
-- **Gland steam:** `turningGearEngaged` is the "rotor turns" signal that [ADR 0047](0047-gland-seal-steam-sets-the-air-in-leakage.md) reads (#147).
+- **Gland steam:** `turningGearEngaged` is part of the "rotor turns" signal that [ADR 0047](0047-gland-seal-steam-sets-the-air-in-leakage.md) reads (#147); the roll that follows the disengage keeps the gland steam because the main steam valve is open.
 
 ## Considered options
 

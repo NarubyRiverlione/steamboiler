@@ -206,6 +206,7 @@ describe("scenario registry", () => {
       "turbine-trip",
       "lube-oil-trip",
       "turning-gear",
+      "gland-seal",
       "vacuum-loss",
       "sjae-closed-load",
       "spray-stuck-closed",

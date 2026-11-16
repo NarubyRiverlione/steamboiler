@@ -13,6 +13,7 @@ import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler
 import { resetTrip } from "./tripReset"
 import { isAtOilPermissive } from "./Oil/OilTick"
 import { turningGearRefusal } from "./Turbine/TurningGear"
+import { glandSteamRefusal } from "./Turbine/GlandSteam"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
@@ -108,6 +109,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     pidIntegralError: 0,
     turbineTripped: false,
     turningGearEngaged: false,
+    glandSteamOn: false, // the glands unsealed (ADR 0047)
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
 })
@@ -265,6 +267,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     const { rpm } = state.Turbine
     return withTurbine(state, { turningGearEngaged: engaged, rpm: !engaged && rpm <= CstTurningGear.Rpm ? 0 : rpm })
   },
+  // Admitting is refused while the rotor is not turning (steam on a stationary rotor bows it); shutting off is always allowed (ADR 0047)
+  SET_GLAND_STEAM: (state, { payload: { on } }) =>
+    on && glandSteamRefusal(state.Turbine) ? state : withTurbine(state, { glandSteamOn: on }),
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
   SET_SPEED_MODE: (state, { payload: { speedMode } }) => {
     if (speedModeRefusal(state.Turbine, speedMode)) return state

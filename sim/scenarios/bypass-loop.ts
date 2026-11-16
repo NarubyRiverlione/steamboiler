@@ -5,7 +5,7 @@ import PowerPlantState from "../../src/context/PowerPlantState"
 import { steerHeatingRate } from "./heat-up"
 import { loopOperator } from "./loop-operator"
 import { atWorkingPressure } from "./pressure-hold"
-import { airPumpOn } from "./steps"
+import { airPumpOn, glandSteamUp, oilPumpOn } from "./steps"
 
 // The closed water loop without the turbine: boiler → main steam valve → bypass → condenser →
 // hotwell → condensation pump → boiler. The operator holds boiler and hotwell level.
@@ -25,6 +25,7 @@ export const bypassLoop: Scenario = {
   duration: 32400,
   sampleEvery: 10,
   initial: makeInitialState(),
-  actions: [airPumpOn],
+  // The standby ends with the gland steam on, the gear out and the lube oil pump stopped (the turbine stands still, ADR 0047)
+  actions: [airPumpOn, oilPumpOn, ...glandSteamUp, { at: 32000, action: { type: "SET_OIL_PUMP", payload: { pumpRunning: false } } }],
   operator: rampedLoopOperator,
 }

@@ -71,6 +71,7 @@ export type TurbineState = {
   pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
   turbineTripped: boolean // set by a turbine trip, cleared only by a trip reset
   turningGearEngaged: boolean // the turning gear holds the stopped rotor at a few rpm and the valve cannot open (ADR 0051)
+  glandSteamOn: boolean // gland seal steam, an operator switch: the glands are sealed while it is on (ADR 0047)
 }
 
 export type HeaterState = {

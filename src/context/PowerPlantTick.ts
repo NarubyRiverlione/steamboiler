@@ -1,5 +1,6 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
 import { TurningGearTick } from "./Turbine/TurningGear"
+import { GlandSteamTick, glandSteamMass } from "./Turbine/GlandSteam"
 import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripOnLowOil, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
 import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, BoilerVent, isAtBoilerHighHigh } from "./Boiler/BoilerTick"
@@ -41,7 +42,9 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     isAtOilPermissive(oilNewState) && !bypassResult.turbineState.turningGearEngaged,
   )
   // Turning gear (ADR 0051): holds the stopped rotor at gear speed, drops out on low oil
-  const turbineNewState: TurbineState = TurningGearTick(turbineTicked, oilNewState)
+  // Gland seal steam (ADR 0047): shut off when the rotor stops turning; what it takes from the boiler returns to the hotwell
+  const turbineNewState: TurbineState = GlandSteamTick(TurningGearTick(turbineTicked, oilNewState))
+  const glandMass: number = glandSteamMass(turbineNewState)
 
   // remove steam via turbine valve
   const drumResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
@@ -125,6 +128,8 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     steamFromTurbine,
     deaeratorRoom,
     deaeratorHighHigh,
+    turbineNewState.glandSteamOn,
+    glandMass,
   )
 
   // Deaerator: takes this tick's Return and the heater drain, holds 3 bar with the tap steam and the let-down valve, and the
@@ -159,7 +164,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // the let-down steam leaves the boiler and comes back as water in the outflow, which joins before the boiler state is recalculated
   const boilerRemovedSteam: BoilerState = {
     ...turbineResult.boilerState,
-    steamMass: turbineResult.boilerState.steamMass - deaerator.letDownMass,
+    steamMass: turbineResult.boilerState.steamMass - deaerator.letDownMass - glandMass,
     waterMass: turbineResult.boilerState.waterMass + feedMass,
   }
 
