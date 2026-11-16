@@ -199,6 +199,10 @@ _Avoid_: Gland pressure
 The oil line that feeds the turbine bearings. One oil pump builds its pressure; the turbine cannot be rolled below the permissive pressure, and a running turbine trips below the trip pressure.
 _Avoid_: Trip oil (the hydraulic oil of the trip system)
 
+**Roll-off**:
+The moment the steam takes the rotor off the turning gear: the turbine valve opens with the gear still engaged, and the gear throws itself out once the rotor passes the standstill speed. Nobody disengages the gear to roll.
+_Avoid_: Disengage to roll
+
 **Turning gear**:
 The gear that turns the stopped rotor at a few rpm. The operator engages it by hand (it needs lube oil pressure). The turbine valve cannot be opened on a stopped rotor off the gear, so the roll starts on the gear: the steam takes the rotor above the standstill speed and the gear throws itself out.
 _Avoid_: Barring gear (use one name)

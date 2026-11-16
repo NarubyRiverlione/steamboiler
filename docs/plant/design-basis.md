@@ -155,7 +155,7 @@ No utility is over-dimensioned: one pump with no capacity limit, and no emergenc
 | Standstill threshold to engage | 20 rpm (`StandstillRpm`) | UNVERIFIED | one plant's interlock for the manual start |
 | Engage needs | oil at the permissive (0.7 bar g), rotor at or below the threshold | ticket | no engage without lube oil pressure, nor on a turning rotor |
 | Drops out | oil below the permissive (0.7 bar g) | ticket | the real gear motor is interlocked on oil |
-| Throws itself out | rotor above the standstill threshold (20 rpm, the same figure) | UNVERIFIED (#147) | real gears disengage on overspeed ([research](../research/2026-11-gland-seal-steam.md)); no source for the speed. The valve cannot open on a stopped rotor off the gear, so the roll always starts on the gear |
+| Throws itself out | rotor above the standstill threshold (20 rpm, the same figure) | UNVERIFIED (#147) | real gears throw themselves out when the rotor overtakes them (an overrunning drive, not the overspeed trip; [research](../research/2026-11-gland-seal-steam.md)); no source for the speed. The valve cannot open on a stopped rotor off the gear, so the roll always starts on the gear |
 
 No utility is over-dimensioned: the gear has no motor model, no start-up lag and no electrical load (#141).
 
