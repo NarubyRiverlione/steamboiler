@@ -77,6 +77,7 @@
   --board-mimic-cooling: #0c8599;
   --board-mimic-power: #b08900;
   --board-mimic-vacuum: #6c757d;
+  --board-mimic-oil: #2b8a3e;
   --board-lens-bezel: #1b1b1b;
   --board-lens-bezel-light: #4a4a4a;
   --board-lens-bg: rgba(70, 70, 70, 0.4);
@@ -447,6 +448,9 @@
 .board-medium-vacuum {
   stroke: var(--board-mimic-vacuum);
 }
+.board-medium-oil {
+  stroke: var(--board-mimic-oil);
+}
 .board-medium-line-heat {
   stroke: var(--board-mimic-heat);
 }
@@ -465,6 +469,9 @@
 .board-medium-line-vacuum {
   stroke: var(--board-mimic-vacuum);
 }
+.board-medium-line-oil {
+  stroke: var(--board-mimic-oil);
+}
 .board-medium-fill-heat {
   fill: var(--board-mimic-heat);
 }
@@ -482,6 +489,9 @@
 }
 .board-medium-fill-vacuum {
   fill: var(--board-mimic-vacuum);
+}
+.board-medium-fill-oil {
+  fill: var(--board-mimic-oil);
 }
 
 .board-node {
@@ -1156,9 +1166,15 @@ path.board-zone {
 
 .board-turbine-aux-main {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 24rem));
+  grid-template-columns: repeat(3, minmax(0, 24rem));
   gap: 1rem;
   align-items: start;
+}
+
+/* A readout spans its group, label left and LCD right, so the LCD ends line up with each other and with the message LCD */
+.board-turbine-aux-main .board-readout {
+  justify-self: stretch;
+  justify-content: space-between;
 }
 
 .board-generation-main {

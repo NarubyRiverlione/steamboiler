@@ -324,7 +324,7 @@ describe("plant overview", () => {
     ["Main steam valve", "/turbine"],
     ["Turbine valve", "/turbine"],
     ["Bypass valve", "/turbine"],
-    ["Lube oil", "/turbine-aux"],
+    ["Turbine aux", "/turbine-aux"],
     ["Generator", "/generation"],
     ["Condenser", "/condenser"],
     ["Condensation pump", "/condenser"],

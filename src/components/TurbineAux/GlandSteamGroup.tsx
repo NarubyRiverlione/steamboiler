@@ -13,7 +13,7 @@ type GlandSteamGroupProps = {
   readonly onToggleGlandSteam: () => void
 }
 
-const UNSEALED_LEAK_TEXT = "High: vacuum degrades"
+const UNSEALED_LEAK_TEXT = "High"
 const SHUT_OFF_TEXT = "Gland steam shut off: the rotor stopped turning"
 
 // The plant shuts the steam off when the rotor stops; the state keeps no trace, so the group remembers it until the steam is back on. An operator switch-off is not one.

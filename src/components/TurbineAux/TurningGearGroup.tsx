@@ -1,10 +1,14 @@
-/** Turning Gear group of the Turbine aux page: the gear switch, the gear state, the slow rotor speed and the reason an engage is refused (ADR 0051). */
+/** Turning Gear group of the Turbine aux page: the gear switch (its position is the gear state; the steam throws it OUT), the slow rotor speed and the reason an engage is refused (ADR 0051). */
 
 import { CstTurningGear } from "../../context/const"
 import type { OilState, TurbineState } from "../../context/PowerPlantState"
 import { turningGearRefusal } from "../../context/Turbine/TurningGear"
 import { Display } from "../board/Display"
 import { TurnSwitch } from "../board/TurnSwitch"
+import useRampUp from "../../utils/useRampUp"
+
+// rpm per wall second the readout climbs to gear speed: the model holds the rotor at gear speed in one tick, the operator should see it climb (UX only)
+const GearReadoutRampRpmPerSecond = 1
 
 type TurningGearGroupProps = {
   readonly turbine: TurbineState
@@ -12,16 +16,13 @@ type TurningGearGroupProps = {
   readonly onToggleTurningGear: () => void
 }
 
-// The gear out with the rotor above standstill is the gear thrown out by the steam (ADR 0051), not an operator action
-function gearStateText({ turningGearEngaged, rpm }: TurbineState): string {
-  if (turningGearEngaged) return "Engaged"
-  return rpm > CstTurningGear.StandstillRpm ? "Thrown out by the steam" : "Out"
-}
-
 export function TurningGearGroup({ turbine, oil, onToggleTurningGear }: TurningGearGroupProps) {
   const engaged: boolean = turbine.turningGearEngaged
   // Disengaging is always allowed; only an engage can be refused
   const refusal: string | undefined = engaged ? undefined : turningGearRefusal(turbine, oil)
+  const ramped: number = useRampUp(turbine.rpm, GearReadoutRampRpmPerSecond)
+  // Only the gear range is ramped; a steam roll shows the true speed
+  const shownRpm: number = turbine.rpm > CstTurningGear.Rpm ? turbine.rpm : ramped
   return (
     <div className="board-group">
       <h3 className="board-group-title">Turning gear</h3>
@@ -39,12 +40,8 @@ export function TurningGearGroup({ turbine, oil, onToggleTurningGear }: TurningG
       </div>
       <span className="board-readout-label">Turning gear</span>
       <div className="board-readout">
-        <span>Gear state</span>
-        <Display label="Gear state" text={gearStateText(turbine)} widest="Thrown out by the steam" />
-      </div>
-      <div className="board-readout">
         <span>Rotor speed</span>
-        <Display label="Rotor speed" text={`${turbine.rpm.toFixed(1)} rpm`} widest="9999.9 rpm" />
+        <Display label="Rotor speed" text={`${shownRpm.toFixed(1)} rpm`} widest="9999.9 rpm" />
       </div>
       {refusal !== undefined && <p className="board-lcd-msg">{refusal}</p>}
     </div>

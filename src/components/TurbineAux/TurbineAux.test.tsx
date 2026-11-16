@@ -88,7 +88,6 @@ describe("Turbine aux page", () => {
     it("shows the engaged gear and the slow rotor speed", () => {
       renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: true, rpm: 3 })
       expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-checked")).toBe("true")
-      expect(screen.getByLabelText("Gear state").textContent).toBe("Engaged")
       expect(screen.getByLabelText("Rotor speed").textContent).toBe("3.0 rpm")
     })
 
@@ -104,7 +103,7 @@ describe("Turbine aux page", () => {
     it("shows no refusal when the gear can be engaged", () => {
       renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: false, rpm: 0 })
       expect(screen.queryByText(/permissive$/, { selector: "p" })).toBeNull()
-      expect(screen.getByLabelText("Gear state").textContent).toBe("Out")
+      expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-checked")).toBe("false")
     })
 
     it("still lets the operator disengage when the oil is gone", () => {
@@ -113,9 +112,9 @@ describe("Turbine aux page", () => {
       expect(fns.toggleTurningGear).toHaveBeenCalledTimes(1)
     })
 
-    it("shows the gear thrown out by the steam when the rotor rolls off it", () => {
+    it("shows the gear thrown out by the steam as the switch at OUT, with no gear state readout", () => {
       renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: false, rpm: 150 })
-      expect(screen.getByLabelText("Gear state").textContent).toBe("Thrown out by the steam")
+      expect(screen.queryByLabelText("Gear state")).toBeNull()
       expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-checked")).toBe("false")
     })
   })

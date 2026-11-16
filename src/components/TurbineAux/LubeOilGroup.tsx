@@ -38,12 +38,12 @@ export function LubeOilGroup({ oil, onToggleOilPump }: LubeOilGroupProps) {
           on={oil.pumpRunning}
           onToggle={onToggleOilPump}
         />
-        <Lamp
-          lit={oil.headerPressure < PermissivePressure}
-          label="Oil pressure low"
-          title={`The turbine valve opens from ${PermissivePressure.toFixed(1)} bar g; a running turbine trips below ${TripPressure.toFixed(1)} bar g`}
-        />
       </div>
+      <Lamp
+        lit={oil.headerPressure < PermissivePressure}
+        label="Oil pressure low"
+        title={`The turbine valve opens from ${PermissivePressure.toFixed(1)} bar g; a running turbine trips below ${TripPressure.toFixed(1)} bar g`}
+      />
       <span className="board-readout-label">Oil pump</span>
       <RoundGauge
         label="Lube oil header pressure"
