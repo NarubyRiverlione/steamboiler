@@ -53,7 +53,7 @@ const cases: { trip: TripId; latch: (s: PowerPlantState) => void; cause: (s: Pow
   },
   {
     trip: "turbine",
-    latch: (s) => { s.Turbine.turbineTripped = true; s.Condenser.pressure = 100 },
+    latch: (s) => { s.Turbine.turbineTripped = true; s.Condenser.pressure = 100; s.Oil = { pumpRunning: true, headerPressure: 1 } },
     cause: (s) => { s.Condenser.pressure = CstCondenser.VacuumLimit + 1 },
   },
 ]

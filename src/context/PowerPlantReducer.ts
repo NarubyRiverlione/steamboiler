@@ -11,6 +11,7 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
+import { isAtOilPermissive } from "./Oil/OilTick"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
 
@@ -106,6 +107,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     pidIntegralError: 0,
     turbineTripped: false,
   },
+  Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
 })
 
 // What the app starts from: the cold plant with the drum filled to 40% (ADR 0018)
@@ -226,6 +228,10 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     }),
   //#endregion
 
+  //#region Oil
+  SET_OIL_PUMP: (state, { payload: { pumpRunning } }) => ({ ...state, Oil: { ...state.Oil, pumpRunning } }),
+  //#endregion
+
   //#region Turbine
   // only open Main Steam Valve if pressure is above Minimum (pressure remains in Boiler)
   TOGGLE_MAIN_STEAM_VALVE: (state) =>
@@ -244,6 +250,8 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     if (requested > maxTurbineValvePosition(current, state.Condenser.pressure)) return state
     // At or above the overspeed limit the turbine may not take more steam either (ADR 0040)
     if (requested > current && (turbineTripped || isAtOverspeed(rpm))) return state
+    // Below the lube oil permissive the turbine may not be rolled (ADR 0050)
+    if (requested > current && !isAtOilPermissive(state.Oil)) return state
     return withTurbine(state, { turbineValvePosition: requested })
   },
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)

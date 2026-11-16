@@ -12,6 +12,9 @@ export const airPumpOn: ScenarioAction = {
   action: { type: "SET_AIR_EXTRACTION_PUMP_ENABLED", payload: { isAirExtractionPumpEnabled: true } },
 }
 
+// t=0: lube oil pump on, the first step of the start-up order (ADR 0050). The turbine valve cannot be opened without the header pressure.
+export const oilPumpOn: ScenarioAction = { at: 0, action: { type: "SET_OIL_PUMP", payload: { pumpRunning: true } } }
+
 // At pressure: open the main steam valve and hold the vacuum (SJAE on and open, recirculation pump
 // open so the exhaust condenses, condensation pump and feed pump open so the condensate returns to the boiler),
 // then crack the bypass valve to build pressure (the turbine valve stays shut: a cracked turbine valve would spin the

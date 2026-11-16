@@ -101,5 +101,9 @@
     "generatorBreaker": false,
     "pidIntegralError": 0,
     "turbineTripped": false
+  },
+  "Oil": {
+    "pumpRunning": false,
+    "headerPressure": 0
   }
 }

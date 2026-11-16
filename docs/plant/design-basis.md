@@ -128,6 +128,21 @@ In `turbine-load` at rated output (#74): gas 11 240 L/s, stack 148 °C, efficien
 | Electric output at rated steam flow | ≈ 152 MWe (134 kg/s, 165 bar, 540 °C, 31 mbar, about a fifth of it extracted at 5 bar); ≈ 190 MWe at the 200 kg/s valve capacity with no extraction | derived from the isentropic enthalpy drop of 540 °C steam (1496 kJ/kg from 165 bar to the 31 mbar design vacuum, IF97, ADR 0032, ADR 0044; 1016 kJ/kg and 141 MWe with saturated steam before #113) × `IsentropicEfficiency` 0.85 × `GeneratorEfficiency` 0.98, less the work the extraction steam no longer does after the tap: the drop below the tap for the extracted share of the flow (`shaftDropWithExtraction`, `ratedExtractionShare`, ADR 0031, [ADR 0022](../adr/0022-electric-output-from-enthalpy-drop.md)). With no extraction it is the plain drop × flow. The rated-flow value is pinned by `turbineCalculations.test.ts`. The rated output cannot be held: the no-load steam (3% of rated flow) comes off the full-gas flow, so the plant carries about 146 MW sustained (`max-output`), and `turbine-load` aims at 125 MW. |
 | Maximum electric output | ≈ 166 MWe, measured in `max-output` (#84, #74, #88, #113): the gas is the limit. Full gas is reached at about 146 MWe and 133 kg/s at 165 bar (t ≈ 1900 s) with the valve at 67%; pressure then sags and Hold opens the valve fully at about 156 kg/s, living off the boiler's stored heat (142 MWe at 198 kg/s with saturated steam). Above that the speed sags and the breaker opens at −2 rpm | the figures in the row above leave out the no-load loss of about 5 MW; this one is measured and includes it |
 
+### Lube oil figures (#145)
+
+All **UNVERIFIED**: the sources are search snippets of plant documents, none read in full ([research/2026-11-lube-oil.md](../research/2026-11-lube-oil.md), [ADR 0050](../adr/0050-lube-oil-pressure-permissive-and-trip.md)). Deliberate choices, scaled to the one source with a full ladder in bar.
+
+| | Value in the code | Label | Note |
+|---|---|---|---|
+| Nominal header pressure | 1.0 bar g (`CstOil.NominalPressure`) | UNVERIFIED | plants range 0.8-2.5 bar |
+| Permissive to open the turbine valve | 0.7 bar g (`PermissivePressure`) | UNVERIFIED | just under the auxiliary pump start of a source plant (0.69 bar) |
+| Low-pressure trip | 0.4 bar g (`TripPressure`) | UNVERIFIED | 0.4-0.5 bar in two sources; no delay in the first cut |
+| Pressure build, pump running | time constant 5 s (`BuildTimeConstant`) | estimate | not sourced |
+| Pressure decay, pump stopped | time constant 20 s (`DecayTimeConstant`) | estimate | not sourced; slower than the build |
+| "Running" | rpm above 100 (`RunningRPM`) or the valve open | choice | the ADR defines it |
+
+No utility is over-dimensioned: one pump with no capacity limit, and no emergency pump (a real plant bridges a stop with it; out of scope, so stopping the pump with the turbine running always trips).
+
 ### Turbine speed model figures
 
 Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbine-runup-figures.md) for [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md). In the code since #69 (`CstTurbine`), except the run-up rate, the run-up points and the hold engage window (#70, modes in ADR 0021).

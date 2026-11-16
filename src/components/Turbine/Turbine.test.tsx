@@ -13,6 +13,7 @@ type Ctx = ContextType<typeof PowerPlantContext>
 function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPressure?: number, condenserPressure?: number) {
   const state: PowerPlantState = makeInitialState()
   state.Turbine = { ...state.Turbine, ...patch }
+  state.Oil = { pumpRunning: true, headerPressure: 1 } // the lube oil is up: its trip cause has gone (ADR 0050)
   if (boilerPressure !== undefined) state.Boiler = { ...state.Boiler, pressure: boilerPressure }
   if (condenserPressure !== undefined) state.Condenser = { ...state.Condenser, pressure: condenserPressure }
   const fns = {
