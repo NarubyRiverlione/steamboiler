@@ -7,7 +7,7 @@ Today the turbine rolls whenever the vacuum is below the limit and the main stea
 ## Decisions
 
 - **Ladder:**
-  - **M1, oil and gear:** a lube oil pump builds the header pressure; low oil pressure trips the running turbine; the turning gear turns the stopped rotor, needs oil pressure to engage, and the turbine valve is refused while it is engaged (#145, #146).
+  - **M1, oil and gear:** a lube oil pump builds the header pressure; low oil pressure trips the running turbine; the turning gear turns the stopped rotor, needs oil pressure to engage, and throws itself out when steam rolls the rotor (#145, #146; [ADR 0051](0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md), amended: #146 built a manual gear that blocks the valve, the owner builds the overrunning gear with #147).
   - **M2, auxiliary steam and sealed vacuum:** the auxiliary steam header (below), with the deaerator moved onto it; gland seal steam from the header; without it the air leaking in at the glands keeps the vacuum above the vacuum limit (#147, rewritten, and a new header ticket before it).
   - **M3, warm metal:** one lumped casing metal temperature, heated by the steam through the casing and cooling toward ambient over hours after a stop; prewarming on the turning gear; the steam-to-metal mismatch as a permissive on the roll; the start class (cold, warm, hot) from the casing temperature, and a heat soak at the 2500 rpm run-up point.
   - **M4, the full start-up:** the start-up scenario in the real order (#148), and a hot restart after a trip.
@@ -15,7 +15,7 @@ Today the turbine rolls whenever the vacuum is below the limit and the main stea
 - **Physical order:** oil, gear, gland steam, vacuum, prewarm, roll. Steam on the rotor (gland steam and prewarming) only with the gear turning, since steam on a stationary rotor bows it.
 - **Auxiliary steam header, from the plant's own boiler:** the deaerator's let-down line (ADR 0036) grows into one header. A hand **master valve** at the boiler take-off, before the main steam valve, feeds it through a reducing station; with the master valve shut the header is dead. The header pressure sits above the deaerator's 3 bar. Each user has its own valve on the header:
   - **deaerator valve:** the existing let-down valve, still automatic on the 3 bar loop;
-  - **gland steam valve:** a hand turn switch ([ADR 0039](0039-latching-controls-are-turn-switches.md)), refused unless the gear is engaged;
+  - **gland steam valve:** a hand turn switch ([ADR 0039](0039-latching-controls-are-turn-switches.md)), refused unless the rotor turns (on the gear, or rolled off it; [ADR 0047](0047-gland-seal-steam-sets-the-air-in-leakage.md));
   - **prewarming valve:** a hand position knob; its opening sets how fast the casing heats, and too much steam rolls the rotor off the gear.
   The header passes steam only while the boiler pressure is above the header pressure, so when each user becomes available falls out of the physics, as for the deaerator today.
 - **Main steam valve shut until working pressure:** the economic start-up of today stays. The prewarm comes from the header, not from the main steam line, so the operator can warm the casing during the boiler heat-up.
@@ -37,7 +37,7 @@ Today the turbine rolls whenever the vacuum is below the limit and the main stea
 Not decided yet; each is settled before the rung that needs it is drafted, and this ADR is edited in place.
 
 1. **Mismatch permissive or hard refusal (M3).** The Decisions above follow the recommendation: a mismatch permissive with a heat soak (B), not a refusal below a casing temperature (A). The owner has not chosen between them.
-2. **Gear and roll-off (M1, M3).** #146 has a gear engaged by hand; "too much prewarm steam rolls the rotor off the gear" only happens with an overrunning clutch. Either the gear gets an overrunning clutch, or the gear stays manual and too much prewarm steam does something else (for example the gear motor trips).
+2. **Gear and roll-off (M1, M3).** Settled: the gear is an overrunning gear ([ADR 0051](0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md)). Steam that drives the rotor above gear speed throws it out, at the roll and with too much prewarm steam alike.
 3. **Take-off of the auxiliary steam header (M2, M3).** From the drum, as the let-down line today: the throttled steam is only about 150 to 180 °C, so the soak on main steam adds time, sized by the research note. Or after the superheater: hot enough to prewarm toward the roll, but with the main steam valve shut nothing flows through the superheater during the heat-up until the start-up vent and drains of #152 exist.
 4. **Valve types (M2, M3).** Proposed, not decided: the gland steam valve as a turn switch, the prewarming valve as a position knob.
 
@@ -49,6 +49,6 @@ Not decided yet; each is settled before the rung that needs it is drafted, and t
 - M2 adds an edge scenario with the master valve forgotten: the deaerator stays cold and the vacuum cannot be drawn.
 - M3 amends ADR 0021: the mismatch permissive on the roll and the soak at 2500 rpm in Ramp up. The run-up goldens move.
 - M1 adds the low oil pressure trip to the trip reset of [ADR 0043](0043-trip-reset.md).
-- Tickets: #145 and #146 stay as they are (M1); #146's out-of-scope note on metal temperature now points to M3. #147 is rewritten for M2: its gland steam comes from the header valve, and without it the vacuum cannot reach the vacuum limit. #148 waits for M3 and gains the hot restart (M4). The header and the M3 work are new tickets, drafted with their rung.
+- Tickets: #145 and #146 are built (M1); the overrunning gear that replaces #146's valve refusal is built with #147; #146's out-of-scope note on metal temperature now points to M3. #147 is rewritten for M2: its gland steam comes from the header valve, and without it the vacuum cannot reach the vacuum limit. #148 waits for M3 and gains the hot restart (M4). The header and the M3 work are new tickets, drafted with their rung.
 - Links to other themes, not blockers: the oil pump and gear motor are auxiliary loads for Electrical M2 (#141, [ADR 0046](0046-from-island-to-town-grid-in-milestones.md)); an emergency DC oil pump belongs with the vital bus side track (#143); there is no shutdown scenario (#38 closed as not planned), so the coast-down onto the gear is covered within this ladder. The SJAE taking its motive steam from the header is an open question.
 - `GLOSSARY.md` terms (Turning gear, Gland seal steam, Auxiliary steam header, Master valve, Prewarming, Steam-to-metal mismatch, Start class, Heat soak, Roll-off) land with the tickets that build them.
