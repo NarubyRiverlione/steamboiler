@@ -253,6 +253,24 @@ const rows: Row[] = [
     act: (c) => { c.toggleTurningGear(); },
     expected: () => ({ "Turbine.turningGearEngaged": false }),
   },
+  {
+    name: "toggleGlandSteam (admit)",
+    prepare: (s) => {
+      s.Turbine.glandSteamOn = false
+      s.Turbine.turningGearEngaged = true
+    },
+    act: (c) => { c.toggleGlandSteam(); },
+    expected: () => ({ "Turbine.glandSteamOn": true }),
+  },
+  {
+    name: "toggleGlandSteam (shut off)",
+    prepare: (s) => {
+      s.Turbine.glandSteamOn = true
+      s.Turbine.turningGearEngaged = true
+    },
+    act: (c) => { c.toggleGlandSteam(); },
+    expected: () => ({ "Turbine.glandSteamOn": false }),
+  },
   { name: "setLoadSetpoint", act: (c) => { c.setLoadSetpoint(50); }, expected: () => ({ "Turbine.loadSetpoint": 50 }) },
   { name: "toggleDeaeratorVent", act: (c) => { c.toggleDeaeratorVent(); }, expected: () => ({ "Deaerator.startUpVentOpen": true }) },
   {

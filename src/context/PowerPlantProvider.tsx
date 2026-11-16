@@ -89,6 +89,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleTurningGear = () => {
     dispatch({ type: "SET_TURNING_GEAR", payload: { engaged: !state.Turbine.turningGearEngaged } })
   }
+  const toggleGlandSteam = () => {
+    dispatch({ type: "SET_GLAND_STEAM", payload: { on: !state.Turbine.glandSteamOn } })
+  }
   //#endregion
 
   //#region Condenser action creators
@@ -163,6 +166,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         toggleOilPump,
         // turning gear action
         toggleTurningGear,
+        // gland steam action
+        toggleGlandSteam,
         // deaerator actions
         toggleDeaeratorVent,
         adjustFeedPumpValvePosition,
