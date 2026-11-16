@@ -83,6 +83,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const setLoadSetpoint = (loadSetpoint: number) => {
     dispatch({ type: "SET_LOAD_SETPOINT", payload: { loadSetpoint } })
   }
+  const toggleOilPump = () => {
+    dispatch({ type: "SET_OIL_PUMP", payload: { pumpRunning: !state.Oil.pumpRunning } })
+  }
   //#endregion
 
   //#region Condenser action creators
@@ -153,6 +156,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         selectRunUpPoint,
         setLoadSetpoint,
         toggleGeneratorBreaker,
+        // lube oil action
+        toggleOilPump,
         // deaerator actions
         toggleDeaeratorVent,
         adjustFeedPumpValvePosition,

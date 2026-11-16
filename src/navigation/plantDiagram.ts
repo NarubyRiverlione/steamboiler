@@ -145,6 +145,7 @@ export const NODES: readonly DiagramNode[] = [
     part: "turbine",
     led: true,
   },
+  { id: "lubeoil", name: ["Lube oil"], x: 1370, y: 224, w: 120, h: 44, medium: "water", part: "turbineAux", led: true },
   { id: "generator", name: ["Generator"], x: 1370, y: 146, w: 120, h: 54, medium: "power", part: "generation" },
   { id: "load", name: ["Load"], x: 1550, y: 150, w: 80, h: 46, medium: "power", round: true },
   {

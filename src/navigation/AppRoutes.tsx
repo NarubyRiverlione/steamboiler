@@ -6,6 +6,7 @@ import Deaerator from "../components/Deaerator/Deaerator"
 import Generation from "../components/Generation/Generation"
 import Steam from "../components/Steam/Steam"
 import Turbine from "../components/Turbine/Turbine"
+import TurbineAux from "../components/TurbineAux/TurbineAux"
 import PlantOverview from "./PlantOverview"
 
 function AppRoutes() {
@@ -18,6 +19,7 @@ function AppRoutes() {
         <Route path="deaerator" element={<Deaerator />} />
         <Route path="condenser" element={<Condenser />} />
         <Route path="turbine" element={<Turbine />} />
+        <Route path="turbine-aux" element={<TurbineAux />} />
         <Route path="generation" element={<Generation />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

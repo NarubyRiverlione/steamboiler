@@ -2,8 +2,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { describe, expect, it } from "vitest"
 import type { ContextType } from "react"
-import { CstDeaerator, CstSimulation } from "../context/const"
+import { CstDeaerator, CstOil, CstSimulation } from "../context/const"
 import { PowerPlantContext } from "../context/PowerPlantContext"
+import PowerPlantTick from "../context/PowerPlantTick"
 import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
 import { AnnunciatorProvider } from "./AnnunciatorProvider"
@@ -32,6 +33,7 @@ function stateWith(flags: { heat?: boolean; burner?: boolean; pump?: boolean; tu
   state.Boiler.burnerTripped = flags.burner === true
   state.Condenser.condensationPumpTripped = flags.pump === true
   state.Turbine.turbineTripped = flags.turbine === true
+  state.Oil = { pumpRunning: true, headerPressure: 1 } // healthy oil, so the cold plant fixture has nothing lit
   return state
 }
 
@@ -63,7 +65,7 @@ const lit = (name: string): boolean => tile(name).className.includes("board-tile
 describe("Annunciator", () => {
   it("has one tile per alarm flag, all dark while nothing is set", () => {
     render(tree(stateWith({})))
-    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high", "Hotwell level high-high", "Boiler level low", "Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"]) {
+    for (const name of ["Heating rate over limit", "Burner trip", "Boiler level high", "Boiler level high-high trip", "Condensation pump trip", "Turbine trip", "Hotwell level low", "Hotwell level high", "Hotwell level high-high", "Boiler level low", "Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip", "Lube oil pressure low"]) {
       expect(lit(name)).toBe(false)
       expect(flashing(name)).toBe(false)
     }
@@ -307,6 +309,35 @@ describe("Annunciator", () => {
     expect(within(group("Deaerator")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"])
     expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(4)
     expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)
+    expect(within(group("Turbine aux")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Lube oil pressure low"])
+  })
+
+  it("lights the lube oil warning below the permissive pressure, cold plant included, and opens the Turbine aux page (#160)", () => {
+    const cold: PowerPlantState = makeInitialState()
+    render(tree(cold))
+    expect(lit("Lube oil pressure low")).toBe(true)
+    expect(tile("Lube oil pressure low").className).toContain("board-tile-warning")
+    fireEvent.click(toggle())
+    fireEvent.click(tile("Lube oil pressure low"))
+    expect(screen.getByTestId("where").textContent).toBe("/turbine-aux")
+  })
+
+  it("lights the Turbine trip error and the lube oil warning together on a low-oil trip (#160)", () => {
+    let plant: PowerPlantState = stateWith({})
+    plant.Condenser = { ...plant.Condenser, pressure: 50 }
+    plant.Turbine = { ...plant.Turbine, turbineValvePosition: 0.3, mainSteamValve: true }
+    plant.Oil = { pumpRunning: false, headerPressure: CstOil.TripPressure + 0.01 }
+    for (let tick = 0; tick < 600 && !plant.Turbine.turbineTripped; tick++) plant = PowerPlantTick(plant)
+    expect(plant.Turbine.turbineTripped).toBe(true)
+    render(tree(plant))
+    expect(lit("Turbine trip")).toBe(true)
+    expect(tile("Turbine trip").className).toContain("board-tile-error")
+    expect(lit("Lube oil pressure low")).toBe(true)
+  })
+
+  it("keeps the lube oil tile dark at nominal pressure", () => {
+    render(tree(stateWith({})))
+    expect(lit("Lube oil pressure low")).toBe(false)
   })
 
   it("never opens the panel by itself when an annunciation arrives", () => {
