@@ -53,7 +53,7 @@ Next: nothing ready (every ticket is waiting or needs triage).
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 18 | [#160](https://github.com/NarubyRiverlione/steamboiler/issues/160) Board: lube oil pump switch, header pressure readout and turbine trip tile for low oil | needs-triage | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) |  |
+| 18 | [#160](https://github.com/NarubyRiverlione/steamboiler/issues/160) Board: lube oil pump switch, header pressure readout and turbine trip tile for low oil | ready-for-agent | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) |  |
 
 ## Sim core: tests, CI, tooling, snapshots
 
