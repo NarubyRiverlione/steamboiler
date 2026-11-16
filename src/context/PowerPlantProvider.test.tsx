@@ -234,6 +234,7 @@ const rows: Row[] = [
       "Turbine.speedReference": s.Turbine.rpm,
     }),
   },
+  { name: "toggleOilPump", act: (c) => { c.toggleOilPump(); }, expected: (s) => ({ "Oil.pumpRunning": !s.Oil.pumpRunning }) },
   { name: "setLoadSetpoint", act: (c) => { c.setLoadSetpoint(50); }, expected: () => ({ "Turbine.loadSetpoint": 50 }) },
   { name: "toggleDeaeratorVent", act: (c) => { c.toggleDeaeratorVent(); }, expected: () => ({ "Deaerator.startUpVentOpen": true }) },
   {

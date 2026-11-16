@@ -1154,6 +1154,13 @@ path.board-zone {
   align-items: start;
 }
 
+.board-turbine-aux-main {
+  display: grid;
+  grid-template-columns: minmax(0, 24rem);
+  gap: 1rem;
+  align-items: start;
+}
+
 .board-generation-main {
   display: grid;
   grid-template-columns: 1fr 1fr;
