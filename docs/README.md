@@ -103,6 +103,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Nov 2026 | [Hotwell level control: how real plants run it (sourced)](research/2026-11-hotwell-level-control.md) |
 | Nov 2026 | [Hotwell sizing for this plant (sourced)](research/2026-11-hotwell-sizing.md) |
 | Nov 2026 | [SJAE motive steam: where it comes from on a cold start (sourced)](research/2026-11-sjae-motive-steam.md) |
+| Nov 2026 | [Turning gear: gear speed and the standstill threshold (UNVERIFIED)](research/2026-11-turning-gear.md) |
 | Nov 2026 | [Turbine lube oil: header pressure, permissive and trip limits (UNVERIFIED)](research/2026-11-lube-oil.md) |
 
 ## Agent configuration

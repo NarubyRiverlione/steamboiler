@@ -145,13 +145,14 @@ No utility is over-dimensioned: one pump with no capacity limit, and no emergenc
 
 ### Turning gear figures (#146)
 
-[ADR 0051](../adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md). No source was read: the figure is an **UNVERIFIED** estimate.
+[ADR 0051](../adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md). Sources are search snippets only ([research/2026-11-turning-gear.md](../research/2026-11-turning-gear.md)): both figures are **UNVERIFIED**.
 
 | | Value in the code | Label | Note |
 |---|---|---|---|
-| Gear speed | 3 rpm (`CstTurningGear.Rpm`) | UNVERIFIED | turning gears run at a few rpm (the ticket says "a few rpm"); also the highest rotor speed the gear can be engaged at |
-| Engage needs | oil at the permissive (0.7 bar g), valve shut | choice | the ticket: no engage without lube oil pressure |
-| Drops out | oil below the trip limit (0.4 bar g) | choice | the real gear motor is interlocked on oil |
+| Gear speed | 3 rpm (`CstTurningGear.Rpm`) | UNVERIFIED | patents: 3-5 rpm; other plants run 20-150 rpm; the ticket says "a few rpm" |
+| Standstill threshold to engage | 20 rpm (`StandstillRpm`) | UNVERIFIED | one plant's interlock for the manual start |
+| Engage needs | oil at the permissive (0.7 bar g), rotor at or below the threshold | ticket | no engage without lube oil pressure, nor on a turning rotor |
+| Drops out | oil below the permissive (0.7 bar g) | ticket | the real gear motor is interlocked on oil |
 
 No utility is over-dimensioned: the gear has no motor model, no start-up lag and no electrical load (#141).
 

@@ -25,11 +25,10 @@ describe("turning gear (ADR 0051)", () => {
       expect(engage(plant(CstOil.PermissivePressure)).Turbine.turningGearEngaged).toBe(true)
     })
 
-    test("is refused above gear speed and with the valve open", () => {
-      const rolling: PowerPlantState = plant(CstOil.NominalPressure, { rpm: CstTurningGear.Rpm + 1 })
+    test("is refused on a turning rotor and allowed at standstill speed", () => {
+      const rolling: PowerPlantState = plant(CstOil.NominalPressure, { rpm: CstTurningGear.StandstillRpm + 1 })
       expect(engage(rolling)).toBe(rolling)
-      const open: PowerPlantState = plant(CstOil.NominalPressure, { turbineValvePosition: 0.1 })
-      expect(engage(open)).toBe(open)
+      expect(engage(plant(CstOil.NominalPressure, { rpm: CstTurningGear.StandstillRpm })).Turbine.turningGearEngaged).toBe(true)
     })
 
     test("disengaging is always allowed, with no oil", () => {
@@ -65,11 +64,26 @@ describe("turning gear (ADR 0051)", () => {
       expect(state.Turbine.rpm).toBe(0)
     })
 
-    test("the gear drops out when the oil falls below the trip limit", () => {
-      let state: PowerPlantState = engage(plant(CstOil.NominalPressure))
-      state = { ...state, Oil: { pumpRunning: false, headerPressure: CstOil.TripPressure - 0.01 } }
-      state = PowerPlantTick(state)
-      expect(state.Turbine.turningGearEngaged).toBe(false)
+    test("the gear drops out when the oil falls below the permissive, not before", () => {
+      const onGear: PowerPlantState = engage(plant(CstOil.NominalPressure))
+      const held: PowerPlantState = PowerPlantTick({ ...onGear, Oil: { pumpRunning: true, headerPressure: CstOil.PermissivePressure + 0.05 } })
+      expect(held.Turbine.turningGearEngaged).toBe(true)
+      const low: PowerPlantState = PowerPlantTick({ ...onGear, Oil: { pumpRunning: false, headerPressure: CstOil.PermissivePressure - 0.01 } })
+      expect(low.Turbine.turningGearEngaged).toBe(false)
+    })
+
+    test("after the disengage the stopped rotor reads 0 again", () => {
+      let state: PowerPlantState = PowerPlantTick(engage(plant(CstOil.NominalPressure)))
+      expect(state.Turbine.rpm).toBeCloseTo(CstTurningGear.Rpm, 5)
+      state = engage(state, false)
+      expect(state.Turbine.rpm).toBe(0)
+      for (let i = 0; i < 100; i++) state = PowerPlantTick(state)
+      expect(state.Turbine.rpm).toBe(0)
+    })
+
+    test("a rotor above gear speed keeps its speed when the gear is disengaged", () => {
+      const state: PowerPlantState = plant(CstOil.NominalPressure, { turningGearEngaged: true, rpm: CstTurningGear.StandstillRpm })
+      expect(engage(state, false).Turbine.rpm).toBe(CstTurningGear.StandstillRpm)
     })
   })
 })

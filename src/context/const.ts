@@ -115,7 +115,8 @@ export const CstOil = {
 
 // Turning gear (ADR 0051, figure in docs/plant/design-basis.md); UNVERIFIED estimate
 export const CstTurningGear = {
-  Rpm: 3, // rpm the engaged gear holds the stopped rotor at; also the highest speed the gear can be engaged at
+  Rpm: 3, // rpm the engaged gear holds the stopped rotor at
+  StandstillRpm: 20, // rpm: the gear can be engaged at or below it (one plant's interlock, UNVERIFIED)
 }
 
 // Extraction heater (ADR 0031, figures in docs/plant/design-basis.md and docs/research/2026-11-extraction-heaters.md)

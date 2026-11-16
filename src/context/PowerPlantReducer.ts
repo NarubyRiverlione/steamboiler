@@ -1,4 +1,4 @@
-import { CstDeaerator, CstPhysics, CstSimulation } from "./const"
+import { CstDeaerator, CstPhysics, CstSimulation, CstTurningGear } from "./const"
 import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { getBoilingPoint } from "../utils/steamTable"
@@ -259,8 +259,12 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     return withTurbine(state, { turbineValvePosition: requested })
   },
   // Engaging is refused without oil, above gear speed or with the valve open; disengaging is always allowed (ADR 0051)
-  SET_TURNING_GEAR: (state, { payload: { engaged } }) =>
-    engaged && turningGearRefusal(state.Turbine, state.Oil) ? state : withTurbine(state, { turningGearEngaged: engaged }),
+  // A rotor at gear speed stops when the gear lets go: the loss torque is ∝ rpm², so the model would coast it for hours
+  SET_TURNING_GEAR: (state, { payload: { engaged } }) => {
+    if (engaged && turningGearRefusal(state.Turbine, state.Oil)) return state
+    const { rpm } = state.Turbine
+    return withTurbine(state, { turningGearEngaged: engaged, rpm: !engaged && rpm <= CstTurningGear.Rpm ? 0 : rpm })
+  },
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
   SET_SPEED_MODE: (state, { payload: { speedMode } }) => {
     if (speedModeRefusal(state.Turbine, speedMode)) return state

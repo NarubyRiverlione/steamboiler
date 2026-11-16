@@ -1,11 +1,12 @@
 # Turning gear: a manual gear holds the stopped rotor and blocks the turbine valve
 
-The turbine has a **turning gear**, an operator switch (`SET_TURNING_GEAR`, state `Turbine.turningGearEngaged`). Engaged, it turns the stopped rotor at `CstTurningGear.Rpm` (3 rpm). Decided in #146, M1 of [ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md); the figure is UNVERIFIED, see [design-basis.md](../plant/design-basis.md).
+The turbine has a **turning gear**, an operator switch (`SET_TURNING_GEAR`, state `Turbine.turningGearEngaged`). Engaged, it turns the stopped rotor at `CstTurningGear.Rpm` (3 rpm). Decided in #146, M1 of [ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md); the figures are UNVERIFIED, see [research/2026-11-turning-gear.md](../research/2026-11-turning-gear.md) and [design-basis.md](../plant/design-basis.md).
 
 - **Manually engaged gear:** the operator disengages it by hand before rolling. While it is engaged the turbine valve cannot be opened: the reducer refuses an opening silently like the other refusals of [ADR 0043](0043-trip-reset.md), and the Ramp up / Hold PID may not open it either (`TurbineTick` takes one roll permissive: oil pressure at the permissive and the gear out). Closing is always allowed.
-- **Engage:** refused below the oil permissive pressure ([ADR 0050](0050-lube-oil-pressure-permissive-and-trip.md)), with the rotor above gear speed or with the valve open. So it engages at standstill, or on a coast-down once the rotor has slowed to gear speed. Disengaging is always allowed.
+- **Engage:** refused below the oil permissive pressure ([ADR 0050](0050-lube-oil-pressure-permissive-and-trip.md)) or with the rotor above `StandstillRpm` (20 rpm). So it engages at standstill, or on a coast-down once the rotor has slowed to it. Disengaging is always allowed.
 - **Rotor:** `TurningGearTick` runs after `TurbineTick` and holds the rotor at gear speed as a floor (`max(rpm, gear rpm)`): the gear never drives it faster, and there is no start-up lag (3 rpm has no meaningful inertia to model).
-- **Low oil:** the gear drops out (disengages) when the header pressure falls below `TripPressure`: the real gear motor is interlocked on oil. It must be engaged again by hand.
+- **Disengage:** a rotor at or below gear speed stops at once (rpm 0, as the stopped rotor reads today): the loss torque of the speed model is ∝ rpm², so left alone the rotor would coast at 3 rpm for hours. A faster rotor keeps its speed.
+- **Low oil:** the gear drops out (disengages) when the header pressure falls below `PermissivePressure`, the same limit it needs to engage: the real gear motor is interlocked on oil. It must be engaged again by hand.
 - **Gland steam:** `turningGearEngaged` is the "rotor turns" signal that [ADR 0047](0047-gland-seal-steam-sets-the-air-in-leakage.md) reads (#147).
 
 ## Considered options
