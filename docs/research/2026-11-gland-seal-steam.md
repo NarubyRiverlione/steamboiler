@@ -29,3 +29,13 @@ Web search, Nov 2026: two searches for an open-gland air leak and for a gland st
 
 - A sourced open-gland leak or an OEM gland steam flow for a 100 to 200 MW unit.
 - The seal pressure (0.2 kg/cm² vacuum on the 210 MW unit): not modelled (ADR 0047).
+
+## Start-up order and the turning gear (second search, Nov 2026)
+
+Extended web search, snippets only (CANDU module 234-11, a turning gear patent US 7,309,208, a 2014 Polish journal paper, a steam turbine start-up patent). Order, as the sources agree:
+
+- **Oil, then turning gear, then gland steam.** The sealing steam is not placed in service until the turbine is on the turning gear and the lube oil runs. A rotor left stationary with gland steam applied bows, even within minutes; the gear turns it at about 3 to 5 rpm.
+- **Gland steam against vacuum varies by plant.** Some start gland steam with the condensate system to stop in-leakage; one ejector procedure applies it after about 0.2 kg/cm² of vacuum; one patent says the vacuum can only be drawn once the glands are sealed. The CANDU module says plants differ.
+- **The gear lets go by itself.** Steam leaking past the glands can speed the rotor up, so the gear carries an overspeed protection that disengages it when the rotor speed passes a set level. Rolling therefore starts with the gear still engaged and the rotor accelerates off it; a disengage to roll is not part of the described procedure.
+
+Not found: the speed at which a gear disengages, and a procedure for rolling off the gear. Inference for the model: the "valve blocked while the gear is engaged" rule of ADR 0051 is the opposite of this practice and is what forces the disengage-then-roll deadlock with the gland steam.
