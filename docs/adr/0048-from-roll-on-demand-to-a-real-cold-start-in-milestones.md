@@ -37,7 +37,7 @@ Today the turbine rolls whenever the vacuum is below the limit and the main stea
 Not decided yet; each is settled before the rung that needs it is drafted, and this ADR is edited in place.
 
 1. **Mismatch permissive or hard refusal (M3).** The Decisions above follow the recommendation: a mismatch permissive with a heat soak (B), not a refusal below a casing temperature (A). The owner has not chosen between them.
-2. **Gear and roll-off (M1, M3).** #146 has a gear engaged by hand; "too much prewarm steam rolls the rotor off the gear" only happens with an overrunning clutch. Either the gear gets an overrunning clutch, or the gear stays manual and too much prewarm steam does something else (for example the gear motor trips).
+2. **Gear and roll-off (M1, M3).** #146 has a gear engaged by hand; "too much prewarm steam rolls the rotor off the gear" only happens with an overrunning clutch. (Since #147 the gear throws itself out above the standstill speed, which is that overrunning clutch.) Either the gear gets an overrunning clutch, or the gear stays manual and too much prewarm steam does something else (for example the gear motor trips).
 3. **Take-off of the auxiliary steam header (M2, M3).** From the drum, as the let-down line today: the throttled steam is only about 150 to 180 °C, so the soak on main steam adds time, sized by the research note. Or after the superheater: hot enough to prewarm toward the roll, but with the main steam valve shut nothing flows through the superheater during the heat-up until the start-up vent and drains of #152 exist.
 4. **Valve types (M2, M3).** Proposed, not decided: the gland steam valve as a turn switch, the prewarming valve as a position knob.
 

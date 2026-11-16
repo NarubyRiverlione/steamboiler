@@ -3,8 +3,10 @@ import PowerPlantState from "../../src/context/PowerPlantState"
 import { Scenario } from "../scenario"
 import { loadSnapshot } from "../snapshot"
 import { holdLoop } from "./loop-operator"
+import { GearEngageAt, withStoppedRotor } from "./steps"
 
 export const OilStartAt = 0 // s: the pump starts, the header builds
+export const GearOnAt = GearEngageAt // s: the header has built, the gear takes the rotor so that the valve may open
 export const RollAt = 60 // s: Ramp up toward 500 rpm, the valve opens on the built pressure
 export const PumpStopAt = 300 // s: the pump stops with the turbine running; the header decays through the trip limit
 export const RefusedResetAt = 400 // s: no oil, the reset is refused
@@ -22,9 +24,10 @@ export const lubeOilTrip: Scenario = {
   description: "From the bypass-loop snapshot: oil pump on, turbine rolls, pump off, the low-pressure trip, a refused reset, pump on, the reset",
   duration: 500,
   sampleEvery: 1,
-  initial: loadSnapshot("bypass-loop"),
+  initial: withStoppedRotor(loadSnapshot("bypass-loop")),
   actions: [
     act(OilStartAt, { type: "SET_OIL_PUMP", payload: { pumpRunning: true } }),
+    act(GearOnAt, { type: "SET_TURNING_GEAR", payload: { engaged: true } }),
     act(RollAt, { type: "SELECT_RUN_UP_POINT", payload: { runUpPoint: 500 } }),
     act(RollAt, { type: "SET_SPEED_MODE", payload: { speedMode: "rampUp" } }),
     act(PumpStopAt, { type: "SET_OIL_PUMP", payload: { pumpRunning: false } }),

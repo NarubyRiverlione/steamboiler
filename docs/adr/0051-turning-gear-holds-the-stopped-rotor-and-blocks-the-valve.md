@@ -1,22 +1,23 @@
-# Turning gear: a manual gear holds the stopped rotor and blocks the turbine valve
+# Turning gear: a manual gear holds the stopped rotor, and a stopped rotor off the gear blocks the turbine valve
 
 The turbine has a **turning gear**, an operator switch (`SET_TURNING_GEAR`, state `Turbine.turningGearEngaged`). Engaged, it turns the stopped rotor at `CstTurningGear.Rpm` (3 rpm). Decided in #146, M1 of [ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md); the figures are UNVERIFIED, see [research/2026-11-turning-gear.md](../research/2026-11-turning-gear.md) and [design-basis.md](../plant/design-basis.md).
 
-- **Manually engaged gear:** the operator disengages it by hand before rolling. While it is engaged the turbine valve cannot be opened: the reducer refuses an opening silently like the other refusals of [ADR 0043](0043-trip-reset.md), and the Ramp up / Hold PID may not open it either (`TurbineTick` takes one roll permissive: oil pressure at the permissive and the gear out). Closing is always allowed.
+- **Manually engaged gear, thrown out by the steam:** the operator engages it at standstill and the steam rolls the rotor off it, as on a real unit: the gear is left engaged, the turbine valve is opened (by hand or by the Ramp up PID), and the gear throws itself out once the rotor passes `StandstillRpm` (20 rpm; the real overspeed protection of the gear, no source for the speed, UNVERIFIED). Nobody disengages it to roll; the hand disengage stays allowed at any time.
+- **A stopped rotor may not be rolled:** the turbine valve cannot be opened unless the rotor turns, the gear engaged or the rotor above `StandstillRpm` (`rotorTurns` in `TurningGear.ts`). The reducer refuses an opening silently like the other refusals of [ADR 0043](0043-trip-reset.md), and the Ramp up / Hold PID may not open it either (`TurbineTick` takes one roll permissive: oil pressure at the permissive and the rotor turning). Closing is always allowed. The rule makes the gear the only way to start the roll, and steam admitted onto a rotor at rest would bow it.
 - **Engage:** refused below the oil permissive pressure ([ADR 0050](0050-lube-oil-pressure-permissive-and-trip.md)) or with the rotor above `StandstillRpm` (20 rpm). So it engages at standstill, or on a coast-down once the rotor has slowed to it. Disengaging is always allowed.
 - **Rotor:** `TurningGearTick` runs after `TurbineTick` and holds the rotor at gear speed as a floor (`max(rpm, gear rpm)`): the gear never drives it faster, and there is no start-up lag (3 rpm has no meaningful inertia to model).
-- **Disengage:** a rotor at or below gear speed stops at once (rpm 0, as the stopped rotor reads today): the loss torque of the speed model is ∝ rpm², so left alone the rotor would coast at 3 rpm for hours. A faster rotor keeps its speed.
+- **Hand disengage:** a rotor at or below gear speed stops at once (rpm 0, as the stopped rotor reads today): the loss torque of the speed model is ∝ rpm², so left alone the rotor would coast at 3 rpm for hours. A faster rotor keeps its speed. The automatic throw-out above `StandstillRpm` leaves the rpm alone.
 - **Low oil:** the gear drops out (disengages) when the header pressure falls below `PermissivePressure`, the same limit it needs to engage: the real gear motor is interlocked on oil. It must be engaged again by hand.
-- **Gland steam:** `turningGearEngaged` is part of the "rotor turns" signal that [ADR 0047](0047-gland-seal-steam-sets-the-air-in-leakage.md) reads (#147); the roll that follows the disengage keeps the gland steam because the main steam valve is open.
+- **Gland steam:** `rotorTurns` (the gear engaged or the rotor above `StandstillRpm`) is the signal that [ADR 0047](0047-gland-seal-steam-sets-the-air-in-leakage.md) reads for the admission and the shut-off (#147). The roll keeps the gland steam because the gear holds the rotor until the steam has it above the standstill speed.
 
 ## Considered options
 
-- **An overrunning clutch** that throws the gear out on steam torque (some units): rejected for the first cut. The gear is engaged by hand and the valve refuses to open on it. The variant stays open for the prewarming ticket ([ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) open question 2: it is the only way prewarm steam can roll the rotor off the gear).
+- **Disengage by hand before rolling, the valve blocked on the gear (the first cut of #146):** rejected in #147. Real units roll off the engaged gear, and the rule forced the operator through a moment with the rotor stopped and gland steam on (or off), which no source describes. Research: [2026-11-gland-seal-steam.md](../research/2026-11-gland-seal-steam.md).
 - **Gear speed as a first-order lag** from standstill: rejected, no source for the time and nothing depends on it.
 - **The gear in `OilState`:** rejected. It is a turbine part that needs oil, as the valve does.
 
 ## Consequences
 
 - `TurbineState` gains `turningGearEngaged` (cold plant: `false`); snapshots regenerated for the new field.
-- Every scenario that rolls the turbine starts with the gear out, so none changed. `turning-gear` (edge) shows the refusal, the engage and the disengage.
+- The `bypass-loop` standby ends with the oil on, the rotor on the gear at 3 rpm and the gland steam on (#147), so every scenario that starts from it starts on the gear. `turning-gear` (edge) shows the hand disengage, the refusals on the stopped rotor, the engage and the roll off the gear; `lube-oil-trip` and `gland-seal` start from `withStoppedRotor`.
 - The gear motor is no electrical load yet (it moves onto the auxiliary bus with #141). The app has no gear switch: that is the follow-up `ui` ticket, with the gear and vacuum readout in the turbine start-up board. The coast-down onto the gear is the shutdown scenario (#38). Hot-restart wait and rotor bow need metal temperature (M3).

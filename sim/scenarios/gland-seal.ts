@@ -4,6 +4,7 @@ import { airMassOf } from "../../src/utils/condenserCalculation"
 import { Scenario } from "../scenario"
 import { loadSnapshot } from "../snapshot"
 import { holdLoop } from "./loop-operator"
+import { withStoppedRotor } from "./steps"
 
 export const OilOnAt = 0 // s: the lube oil pump starts, the header builds
 export const GearOnAt = 20 // s: the header has built and the turning gear takes the stopped rotor
@@ -22,10 +23,10 @@ export const glandSeal: Scenario = {
   sampleEvery: 10,
   initial: (() => {
     const loop: PowerPlantState = loadSnapshot("bypass-loop")
+    const stopped: PowerPlantState = withStoppedRotor(loop)
     return {
-      ...loop,
-      Turbine: { ...loop.Turbine, glandSteamOn: false },
-      Condenser: { ...loop.Condenser, isAirExtractionPumpEnabled: false, airMass: airMassOf(StartAirMbar, 25) },
+      ...stopped,
+      Condenser: { ...stopped.Condenser, isAirExtractionPumpEnabled: false, airMass: airMassOf(StartAirMbar, 25) },
     }
   })(),
   actions: [

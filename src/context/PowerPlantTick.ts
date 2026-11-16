@@ -1,5 +1,5 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
-import { TurningGearTick } from "./Turbine/TurningGear"
+import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
 import { GlandSteamTick, glandSteamMass } from "./Turbine/GlandSteam"
 import { CondenserTick } from "./Condenser/CondenserTick"
 import TurbineTick, { MainSteamValveLowPressureClosure, TurbineTripOnLowOil, TurbineTripWhenOpen } from "./Turbine/TurbineTick"
@@ -39,9 +39,9 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     state.Condenser.pressure,
     state.Heater.extractionFlow + state.Deaerator.extractionFlow,
     state.Boiler.steamTemperature,
-    isAtOilPermissive(oilNewState) && !bypassResult.turbineState.turningGearEngaged,
+    isAtOilPermissive(oilNewState) && rotorTurns(bypassResult.turbineState),
   )
-  // Turning gear (ADR 0051): holds the stopped rotor at gear speed, drops out on low oil
+  // Turning gear (ADR 0051): holds the stopped rotor at gear speed, throws itself out above standstill speed, drops out on low oil
   // Gland seal steam (ADR 0047): shut off when the rotor stops turning; what it takes from the boiler returns to the hotwell
   const turbineNewState: TurbineState = GlandSteamTick(TurningGearTick(turbineTicked, oilNewState))
   const glandMass: number = glandSteamMass(turbineNewState)

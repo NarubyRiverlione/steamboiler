@@ -23,6 +23,16 @@ export const glandSteamUp: ScenarioAction[] = [
   { at: GearEngageAt + 1, action: { type: "SET_GLAND_STEAM", payload: { on: true } } },
 ]
 
+// The settled bypass-loop standby has the lube oil, the turning gear and the gland steam on. A scenario that needs the stopped rotor
+// off the gear and the oil to build from empty starts from this state instead.
+export function withStoppedRotor(state: PowerPlantState): PowerPlantState {
+  return {
+    ...state,
+    Oil: { pumpRunning: false, headerPressure: 0 },
+    Turbine: { ...state.Turbine, turningGearEngaged: false, glandSteamOn: false, rpm: 0 },
+  }
+}
+
 // At pressure: open the main steam valve and hold the vacuum (SJAE on and open, recirculation pump
 // open so the exhaust condenses, condensation pump and feed pump open so the condensate returns to the boiler),
 // then crack the bypass valve to build pressure (the turbine valve stays shut: a cracked turbine valve would spin the
@@ -30,7 +40,6 @@ export const glandSteamUp: ScenarioAction[] = [
 // the vacuum limit by now (ADR 0003).
 export const openMainSteamActions: PowerPlantAction[] = [
   { type: "TOGGLE_MAIN_STEAM_VALVE" },
-  { type: "SET_TURNING_GEAR", payload: { engaged: false } }, // the gear lets go of the rotor; the gland steam stays while the main steam valve is open
   { type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } },
   { type: "SET_SJAE_VALVE_POSITION", payload: { sjaeValvePosition: 1 } },
   { type: "SET_RECIRCULATION_PUMP_VALVE_POSITION", payload: { recirculationPumpValvePosition: 1 } },

@@ -9,7 +9,7 @@ describe("lube-oil-trip", () => {
   const tripTime: number = samples.find((s) => s.state.Turbine.turbineTripped)?.time ?? -1
 
   test("the header builds toward nominal while the pump runs", () => {
-    expect(at(OilStartAt).Oil.headerPressure).toBeCloseTo(0, 6) // the bypass-loop standby stopped the pump 400 s before the end
+    expect(at(OilStartAt).Oil.headerPressure).toBe(0)
     expect(at(OilStartAt + 5).Oil.headerPressure).toBeGreaterThan(0)
     expect(at(RollAt).Oil.headerPressure).toBeCloseTo(CstOil.NominalPressure, 2)
   })

@@ -12,7 +12,7 @@ import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
 import { isAtOilPermissive } from "./Oil/OilTick"
-import { turningGearRefusal } from "./Turbine/TurningGear"
+import { rotorTurns, turningGearRefusal } from "./Turbine/TurningGear"
 import { glandSteamRefusal } from "./Turbine/GlandSteam"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
@@ -256,11 +256,11 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     if (requested > current && (turbineTripped || isAtOverspeed(rpm))) return state
     // Below the lube oil permissive the turbine may not be rolled (ADR 0050)
     if (requested > current && !isAtOilPermissive(state.Oil)) return state
-    // On the turning gear the turbine may not be rolled (ADR 0051)
-    if (requested > current && state.Turbine.turningGearEngaged) return state
+    // A stopped rotor may not be rolled: on the turning gear or above standstill it may (ADR 0051)
+    if (requested > current && !rotorTurns(state.Turbine)) return state
     return withTurbine(state, { turbineValvePosition: requested })
   },
-  // Engaging is refused without oil, above gear speed or with the valve open; disengaging is always allowed (ADR 0051)
+  // Engaging is refused without oil or above the standstill speed; disengaging is always allowed (ADR 0051)
   // A rotor at gear speed stops when the gear lets go: the loss torque is ∝ rpm², so the model would coast it for hours
   SET_TURNING_GEAR: (state, { payload: { engaged } }) => {
     if (engaged && turningGearRefusal(state.Turbine, state.Oil)) return state

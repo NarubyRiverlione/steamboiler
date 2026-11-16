@@ -70,7 +70,7 @@
     "warnVentClosedWithAir": false,
     "warnVentOpenNoAir": false,
     "extractionFlow": 0,
-    "tapDemand": 2.334647344558682,
+    "tapDemand": 2.3368884006881605,
     "extractionValvePosition": 0,
     "letDownFlow": 3.3192558327554993,
     "letDownValvePosition": 0.06638511665510999,
@@ -94,18 +94,18 @@
     "turbineValvePosition": 0,
     "turbineSteamFlowOut": 0,
     "mainSteamValve": true,
-    "rpm": 0,
+    "rpm": 3,
     "runUpPoint": 3000,
     "speedMode": "free",
-    "speedReference": 0,
+    "speedReference": 2.9999987420114453,
     "generatorBreaker": false,
     "pidIntegralError": 0,
     "turbineTripped": false,
-    "turningGearEngaged": false,
+    "turningGearEngaged": true,
     "glandSteamOn": true
   },
   "Oil": {
-    "pumpRunning": false,
-    "headerPressure": 2.0611536224386013e-9
+    "pumpRunning": true,
+    "headerPressure": 0.9999999999999972
   }
 }

@@ -36,17 +36,14 @@ describe("gland seal steam (ADR 0047)", () => {
   })
 
   describe("losing the rotor", () => {
-    test("shuts the steam off when the rotor is not turning and the main steam valve is shut", () => {
+    test("shuts the steam off when the rotor is not turning, with the main steam valve open or shut", () => {
+      expect(GlandSteamTick(plant({ glandSteamOn: true, mainSteamValve: true }).Turbine).glandSteamOn).toBe(false)
       expect(GlandSteamTick(plant({ glandSteamOn: true }).Turbine).glandSteamOn).toBe(false)
     })
 
     test("keeps the steam while the gear or the speed turns the rotor", () => {
       expect(GlandSteamTick(plant({ glandSteamOn: true, turningGearEngaged: true }).Turbine).glandSteamOn).toBe(true)
       expect(GlandSteamTick(plant({ glandSteamOn: true, rpm: 500 }).Turbine).glandSteamOn).toBe(true)
-    })
-
-    test("keeps the steam through the disengage that starts a roll: the main steam valve is open", () => {
-      expect(GlandSteamTick(plant({ glandSteamOn: true, mainSteamValve: true }).Turbine).glandSteamOn).toBe(true)
     })
 
     test("the plant tick shuts it off and unseals the glands", () => {

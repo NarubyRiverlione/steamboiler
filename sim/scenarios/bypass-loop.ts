@@ -25,7 +25,7 @@ export const bypassLoop: Scenario = {
   duration: 32400,
   sampleEvery: 10,
   initial: makeInitialState(),
-  // The standby ends with the gland steam on, the gear out and the lube oil pump stopped (the turbine stands still, ADR 0047)
-  actions: [airPumpOn, oilPumpOn, ...glandSteamUp, { at: 32000, action: { type: "SET_OIL_PUMP", payload: { pumpRunning: false } } }],
+  // The standby ends with the lube oil on, the rotor on the turning gear at 3 rpm and the gland steam on (ADR 0047, ADR 0051)
+  actions: [airPumpOn, oilPumpOn, ...glandSteamUp],
   operator: rampedLoopOperator,
 }
