@@ -35,7 +35,7 @@ Next: [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-u
 
 ## Plant systems: components and physics expansion
 
-Next: nothing ready (every ticket is waiting or needs triage).
+Next: [#165](https://github.com/NarubyRiverlione/steamboiler/issues/165) The air pump gets its real size and the open glands a sourced leak
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
@@ -44,7 +44,7 @@ Next: nothing ready (every ticket is waiting or needs triage).
 | 13 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage |  |  |
 | 14 | [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) Bypass desuperheating spray | needs-triage |  |  |
 | 15 | [#152](https://github.com/NarubyRiverlione/steamboiler/issues/152) Superheater protection: outlet safety valve, start-up vent and drains, high steam temperature trip | needs-triage |  |  |
-| 16 | [#165](https://github.com/NarubyRiverlione/steamboiler/issues/165) The air pump gets its real size | needs-triage |  | [#166](https://github.com/NarubyRiverlione/steamboiler/issues/166) |
+| 16 | [#165](https://github.com/NarubyRiverlione/steamboiler/issues/165) The air pump gets its real size and the open glands a sourced leak | ready-for-agent |  | [#166](https://github.com/NarubyRiverlione/steamboiler/issues/166) |
 | 17 | [#166](https://github.com/NarubyRiverlione/steamboiler/issues/166) Air pump seal water: ultimate pressure, high-temperature warning and cavitation trip | needs-triage | [#165](https://github.com/NarubyRiverlione/steamboiler/issues/165) |  |
 
 ## UI and UX
