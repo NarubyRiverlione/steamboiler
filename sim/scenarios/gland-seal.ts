@@ -4,10 +4,10 @@ import { airMassOf } from "../../src/utils/condenserCalculation"
 import { Scenario } from "../scenario"
 import { loadSnapshot } from "../snapshot"
 import { holdLoop } from "./loop-operator"
-import { withStoppedRotor } from "./steps"
+import { GearEngageAt, withStoppedRotor } from "./steps"
 
 export const OilOnAt = 0 // s: the lube oil pump starts, the header builds
-export const GearOnAt = 20 // s: the header has built and the turning gear takes the stopped rotor
+export const GearOnAt = GearEngageAt // s: the header has built and the turning gear takes the stopped rotor
 export const RefusedAt = 10 // s: the gland steam asked for with the rotor stopped and the gear out: refused
 export const GlandOnAt = 2500 // s: the vacuum has stalled; the operator admits the gland steam
 export const StartAirMbar = 100 // mbar of air at the start: under the SJAE suction limit, as after the hogging

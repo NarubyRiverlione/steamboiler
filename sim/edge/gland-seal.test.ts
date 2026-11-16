@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
+import { loopWater } from "../invariants"
 import { runChecked } from "../scenario-checks"
 import { GearOnAt, GlandOnAt, RefusedAt, glandSeal } from "../scenarios/gland-seal"
 
@@ -32,7 +33,9 @@ describe("gland-seal", () => {
     expect(OpenGlandAirLeakRate).toBeGreaterThan(AirLeakRate)
   })
 
-  test("the gland steam takes a small flow from the boiler and returns it: the water invariant held (runChecked)", () => {
+  test("the gland steam takes a small flow from the boiler and returns it to the hotwell: the loop water holds", () => {
     expect(at(GlandOnAt + 5).Turbine.glandSteamOn).toBe(true)
+    const [start, end] = [loopWater(samples[0].state), loopWater(samples[samples.length - 1].state)]
+    expect(Math.abs(end - start) / start).toBeLessThan(1e-9)
   })
 })

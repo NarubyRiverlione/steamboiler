@@ -127,9 +127,8 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     steamFromBypass,
     steamFromTurbine,
     deaeratorRoom,
+    { sealed: turbineNewState.glandSteamOn, returnMass: glandMass },
     deaeratorHighHigh,
-    turbineNewState.glandSteamOn,
-    glandMass,
   )
 
   // Deaerator: takes this tick's Return and the heater drain, holds 3 bar with the tap steam and the let-down valve, and the
