@@ -42,9 +42,8 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     isAtOilPermissive(oilNewState) && rotorTurns(bypassResult.turbineState),
   )
   // Turning gear (ADR 0051): holds the stopped rotor at gear speed, throws itself out above standstill speed, drops out on low oil
-  // Gland seal steam (ADR 0047): shut off when the rotor stops turning; what it takes from the boiler returns to the hotwell
+  // Gland seal steam (ADR 0047): shut off when the rotor stops turning
   const turbineNewState: TurbineState = GlandSteamTick(TurningGearTick(turbineTicked, oilNewState))
-  const glandMass: number = glandSteamMass(turbineNewState)
 
   // remove steam via turbine valve
   const drumResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
@@ -65,6 +64,9 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     },
   }
   const steamTemperature: number = state.Boiler.steamTemperature
+
+  // What the gland steam takes from the boiler returns to the hotwell; it cannot take more steam than the drum holds
+  const glandMass: number = Math.min(glandSteamMass(turbineNewState), turbineResult.boilerState.steamMass)
 
   // Condenser: receives the steam removed from the boiler in this same tick
   const boilerPressure: number = bypassResult.boilerState.pressure

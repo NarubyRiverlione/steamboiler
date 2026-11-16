@@ -68,6 +68,16 @@ describe("gland seal steam (ADR 0047)", () => {
     })
   })
 
+  test("the draw is limited to the steam the drum holds, and the same mass is returned", () => {
+    const start: PowerPlantState = plant({ glandSteamOn: true, rpm: CstTurningGear.StandstillRpm + 1 })
+    const drum: PowerPlantState = { ...start, Boiler: { ...start.Boiler, steamMass: 1e-4 } }
+    const after: PowerPlantState = PowerPlantTick(drum)
+    expect(after.Boiler.steamMass).toBeGreaterThanOrEqual(0)
+    const water = (s: PowerPlantState): number => s.Boiler.waterMass + s.Boiler.steamMass + s.Condenser.hotwellWaterMass + s.Deaerator.waterMass
+    const off: PowerPlantState = PowerPlantTick({ ...drum, Turbine: { ...drum.Turbine, glandSteamOn: false } })
+    expect(water(after)).toBeCloseTo(water(off), 6)
+  })
+
   test("the air in-leakage follows the seal through the plant tick", () => {
     const base: PowerPlantState = plant({ rpm: CstTurningGear.StandstillRpm + 1 })
     const shell = (glandSteamOn: boolean): PowerPlantState => ({

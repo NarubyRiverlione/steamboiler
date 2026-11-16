@@ -76,7 +76,7 @@ export function CondenserTick(
     streams,
     condenserState.recirculationPumpValvePosition,
     vapourPressure,
-    hotwellRoom,
+    Math.max(0, hotwellRoom - gland.returnMass), // the gland condensate takes its room in the hotwell first
   )
   // The gland steam comes back as condensate at the outlet temperature, on top of the condensed exhaust
   const condensedWithGland: number = condensed + gland.returnMass

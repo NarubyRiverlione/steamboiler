@@ -383,6 +383,14 @@ describe("CondenserTick", () => {
       expect(next.ventedTotal + entered).toBeCloseTo(1, 9)
     })
 
+    it("the gland condensate takes its room first: the exhaust moisture gets what is left, so the hotwell does not overfill", () => {
+      // Room for about 0.1 kg, all of it taken by the gland return: the exhaust moisture is vented
+      const nearlyFull: CondenserState = { ...noCondensation, hotwellWaterVolume: CstCondenser.TotalVolume - 0.1 }
+      const next = CondenserTick(nearlyFull, 100, noBypass, exhaust, boilerRoom, { sealed: true, returnMass: 0.1 })
+      expect(next.condensationRate * DeltaTime).toBeLessThan(0.01)
+      expect(next.ventedTotal).toBeGreaterThan(0.9)
+    })
+
     it("moisture takes room from the makeup, so the two never overfill the hotwell", () => {
       const nearlyFull: CondenserState = {
         ...noCondensation,
