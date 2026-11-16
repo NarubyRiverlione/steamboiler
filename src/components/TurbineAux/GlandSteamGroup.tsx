@@ -13,24 +13,36 @@ type GlandSteamGroupProps = {
   readonly onToggleGlandSteam: () => void
 }
 
+const UNSEALED_LEAK_TEXT = "High: vacuum degrades"
 const SHUT_OFF_TEXT = "Gland steam shut off: the rotor stopped turning"
 
-// The plant shuts the steam off when the rotor stops; the state keeps no trace, so the group remembers it until the steam is back on
-function useAutoShutOff(on: boolean, turns: boolean): boolean {
+// The plant shuts the steam off when the rotor stops; the state keeps no trace, so the group remembers it until the steam is back on. An operator switch-off is not one.
+function useAutoShutOff(on: boolean, turns: boolean): { autoShutOff: boolean; markOperatorSwitch: () => void } {
   const [prevOn, setPrevOn] = useState<boolean>(on)
   const [shutOff, setShutOff] = useState<boolean>(false)
+  const [operatorSwitched, setOperatorSwitched] = useState<boolean>(false)
   if (on !== prevOn) {
     setPrevOn(on)
-    setShutOff(on ? false : !turns)
+    setShutOff(on ? false : !turns && !operatorSwitched)
+    setOperatorSwitched(false)
   }
-  return shutOff && !on
+  return {
+    autoShutOff: shutOff && !on,
+    markOperatorSwitch: () => {
+      setOperatorSwitched(true)
+    },
+  }
 }
 
 export function GlandSteamGroup({ turbine, condenser, onToggleGlandSteam }: GlandSteamGroupProps) {
   const on: boolean = turbine.glandSteamOn
   // Shutting off is always allowed; only an admission can be refused
   const refusal: string | undefined = on ? undefined : glandSteamRefusal(turbine)
-  const autoShutOff: boolean = useAutoShutOff(on, rotorTurns(turbine))
+  const { autoShutOff, markOperatorSwitch } = useAutoShutOff(on, rotorTurns(turbine))
+  const toggle = (): void => {
+    markOperatorSwitch()
+    onToggleGlandSteam()
+  }
   const message: string | undefined = autoShutOff ? SHUT_OFF_TEXT : refusal
   return (
     <div className="board-group">
@@ -42,7 +54,7 @@ export function GlandSteamGroup({ turbine, condenser, onToggleGlandSteam }: Glan
           onLabel="ON"
           tone="machine"
           on={on}
-          onToggle={onToggleGlandSteam}
+          onToggle={toggle}
           disabled={refusal !== undefined}
           title={refusal}
         />
@@ -54,7 +66,7 @@ export function GlandSteamGroup({ turbine, condenser, onToggleGlandSteam }: Glan
       </div>
       <div className="board-readout">
         <span>Air in-leakage</span>
-        <Display label="Air in-leakage" text={on ? "Low" : "High: vacuum stalls"} widest="High: vacuum stalls" />
+        <Display label="Air in-leakage" text={on ? "Low" : UNSEALED_LEAK_TEXT} widest={UNSEALED_LEAK_TEXT} />
       </div>
       <div className="board-readout">
         <span>Condenser pressure</span>
