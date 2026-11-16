@@ -184,8 +184,16 @@ The pressure of the air in the condenser shell, from the air inventory.
 _Avoid_: Vacuum offset, air partial vacuum
 
 **Air in-leakage**:
-Air that leaks into the shell from outside, in kg/s. With the vacuum system stopped it is the only reason the vacuum is lost.
+Air that leaks into the shell from outside, in kg/s. With the vacuum system stopped it is the only reason the vacuum is lost. It is small while the gland seal holds and large while it does not.
 _Avoid_: Leak (the Vent is steam leaving the boiler), vacuum decay
+
+**Gland seal steam**:
+Steam admitted to the shaft glands, where the shaft leaves the casing, to keep air out of the casing. The operator switches it on, and only while the rotor turns.
+_Avoid_: Gland leak, seal air
+
+**Gland seal**:
+The sealed or unsealed state of the glands, set by whether gland seal steam is on.
+_Avoid_: Gland pressure
 
 **Vacuum system**:
 The air extraction pump and the SJAE together: the machines that remove air from the shell.
