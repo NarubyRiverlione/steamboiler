@@ -77,6 +77,6 @@ export function runChecked(scenario: Scenario, options: { sampleEvery?: number }
   assertOwnFile(scenario)
   const run: Run = runScenarioWithLifts({ ...scenario, sampleEvery: options.sampleEvery ?? scenario.sampleEvery })
   describeInvariants(scenario, run)
-  if (snapshotSources[scenario.name] === scenario) describeSnapshot(scenario.name, run)
+  if (scenario.name in snapshotSources) describeSnapshot(scenario.name, run)
   return run
 }
