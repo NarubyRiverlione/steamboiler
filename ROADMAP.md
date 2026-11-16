@@ -34,7 +34,7 @@ Next: [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) Lube oi
 | 10 | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-up order: lube oil, turning gear, gland steam, vacuum, roll in the cold-start golden path | ready-for-agent | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) [#146](https://github.com/NarubyRiverlione/steamboiler/issues/146) [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) |  |
 | 11 | [#159](https://github.com/NarubyRiverlione/steamboiler/issues/159) Lube oil: emergency (coast-down) oil pump keeps pressure while the rotor coasts down | ready-for-agent | [#145](https://github.com/NarubyRiverlione/steamboiler/issues/145) [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
 | 12 | [#161](https://github.com/NarubyRiverlione/steamboiler/issues/161) Gland seal: does a turbine trip lose it? Research first, build only if sourced | ready-for-agent | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) |  |
-| 13 | [#162](https://github.com/NarubyRiverlione/steamboiler/issues/162) Vacuum breaker: an emergency stop lets air into the condenser and brakes the rotor | needs-triage | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) |  |
+| 13 | [#162](https://github.com/NarubyRiverlione/steamboiler/issues/162) Vacuum breaker: an emergency stop lets air into the condenser and brakes the rotor | ready-for-agent | [#147](https://github.com/NarubyRiverlione/steamboiler/issues/147) |  |
 
 ## Plant systems: components and physics expansion
 

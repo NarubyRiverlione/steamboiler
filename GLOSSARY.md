@@ -195,6 +195,10 @@ _Avoid_: Gland leak, seal air
 The sealed or unsealed state of the glands, set by whether gland seal steam is on.
 _Avoid_: Gland pressure
 
+**Vacuum breaker**:
+A valve that lets outside air into the condenser shell. The operator opens it in an emergency stop; a trip never opens it. While it is open the vacuum cannot be held.
+_Avoid_: Breaker (the generator breaker closes the circuit), hood relief
+
 **Vacuum system**:
 The air extraction pump and the SJAE together: the machines that remove air from the shell.
 _Avoid_: Vacuum reducers, vacuum pumps
