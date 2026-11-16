@@ -199,6 +199,10 @@ _Avoid_: Gland pressure
 The oil line that feeds the turbine bearings. One oil pump builds its pressure; the turbine cannot be rolled below the permissive pressure, and a running turbine trips below the trip pressure.
 _Avoid_: Trip oil (the hydraulic oil of the trip system)
 
+**Turning gear**:
+The gear that turns the stopped rotor at a few rpm. The operator engages it by hand (it needs lube oil pressure) and disengages it before rolling; the turbine valve cannot be opened while it is engaged.
+_Avoid_: Barring gear (use one name)
+
 **Vacuum breaker**:
 A valve that lets outside air into the condenser shell. The operator opens it in an emergency stop; a trip never opens it. While it is open the vacuum cannot be held.
 _Avoid_: Breaker (the generator breaker closes the circuit), hood relief

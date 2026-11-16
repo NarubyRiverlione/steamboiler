@@ -28,6 +28,7 @@ The feedwater path is hotwell → condensation pump → deaerator → boiler fee
 | Relief valve | Vents steam to the atmosphere at high pressure, upstream of the main steam valve | [boiler.md](boiler.md#relief-valve) |
 | Main steam valve | Opens or shuts the boiler to both the turbine valve and the bypass | [turbine.md](turbine.md#low-pressure-closure) |
 | Turbine valve | Sets the steam flow to the turbine; refused below the lube oil permissive | [turbine.md](turbine.md) |
+| Turning gear | A manually engaged gear that holds the stopped rotor at 3 rpm (UNVERIFIED) and blocks the turbine valve; needs lube oil to engage (#146, ADR 0051) | [turbine.md](turbine.md) |
 | Lube oil pump | An operator-started pump that builds the lube oil header pressure (1.0 bar g, UNVERIFIED); below 0.7 bar the turbine cannot be rolled, below 0.4 bar a running turbine trips (#145, ADR 0050) | [turbine.md](turbine.md) |
 | Bypass valve | Sends steam straight to the condenser, past the turbine | [condenser.md](condenser.md#intakes) |
 | Turbine | Takes the enthalpy drop from boiler pressure to condenser pressure as shaft power, in one stage. The steam is the 540 °C superheated steam, and the exhaust is about 17% wet (no reheat) | [turbine.md](turbine.md#electric-output-14-since-71-the-load-carried) |

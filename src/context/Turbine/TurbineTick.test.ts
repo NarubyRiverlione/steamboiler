@@ -22,6 +22,7 @@ describe("TurbineTick", () => {
     generatorBreaker: false,
     pidIntegralError: 0,
     turbineTripped: false,
+    turningGearEngaged: false,
   }
   
   const valvePositions = [0, 0.25, 0.5, 0.75, 1]

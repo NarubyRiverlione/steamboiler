@@ -113,6 +113,11 @@ export const CstOil = {
   RunningRPM: 100, // rpm: above it the turbine counts as running (with the valve open, ADR 0050)
 }
 
+// Turning gear (ADR 0051, figure in docs/plant/design-basis.md); UNVERIFIED estimate
+export const CstTurningGear = {
+  Rpm: 3, // rpm the engaged gear holds the stopped rotor at; also the highest speed the gear can be engaged at
+}
+
 // Extraction heater (ADR 0031, figures in docs/plant/design-basis.md and docs/research/2026-11-extraction-heaters.md)
 export const CstHeater = {
   TapPressureAtRated: 5, // bar, the turbine tap at RatedSteamFlow (own estimate: the Return leaves at about 150 °C); proportional to turbine flow

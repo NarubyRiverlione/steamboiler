@@ -143,6 +143,18 @@ All **UNVERIFIED**: the sources are search snippets of plant documents, none rea
 
 No utility is over-dimensioned: one pump with no capacity limit, and no emergency pump (a real plant bridges a stop with it; out of scope, so stopping the pump with the turbine running always trips).
 
+### Turning gear figures (#146)
+
+[ADR 0051](../adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md). No source was read: the figure is an **UNVERIFIED** estimate.
+
+| | Value in the code | Label | Note |
+|---|---|---|---|
+| Gear speed | 3 rpm (`CstTurningGear.Rpm`) | UNVERIFIED | turning gears run at a few rpm (the ticket says "a few rpm"); also the highest rotor speed the gear can be engaged at |
+| Engage needs | oil at the permissive (0.7 bar g), valve shut | choice | the ticket: no engage without lube oil pressure |
+| Drops out | oil below the trip limit (0.4 bar g) | choice | the real gear motor is interlocked on oil |
+
+No utility is over-dimensioned: the gear has no motor model, no start-up lag and no electrical load (#141).
+
 ### Turbine speed model figures
 
 Sourced in [research/2026-11-turbine-runup-figures.md](../research/2026-11-turbine-runup-figures.md) for [ADR 0021](../adr/0021-turbine-runup-from-steam-power.md). In the code since #69 (`CstTurbine`), except the run-up rate, the run-up points and the hold engage window (#70, modes in ADR 0021).
