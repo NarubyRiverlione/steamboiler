@@ -8,10 +8,11 @@ import TurbineAux from "./TurbineAux"
 
 type Ctx = ContextType<typeof PowerPlantContext>
 
-function renderAux(oil: Partial<PowerPlantState["Oil"]> = {}) {
+function renderAux(oil: Partial<PowerPlantState["Oil"]> = {}, turbine: Partial<PowerPlantState["Turbine"]> = {}) {
   const state: PowerPlantState = makeInitialState()
   state.Oil = { ...state.Oil, ...oil }
-  const fns = { toggleOilPump: vi.fn() }
+  state.Turbine = { ...state.Turbine, ...turbine }
+  const fns = { toggleOilPump: vi.fn(), toggleTurningGear: vi.fn() }
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
   render(
     <PowerPlantContext.Provider value={value}>
@@ -60,5 +61,54 @@ describe("Turbine aux page", () => {
   it("leaves the lamp dark at nominal pressure", () => {
     renderAux({ pumpRunning: true, headerPressure: 1 })
     expect(screen.getByRole("img", { name: "Oil pressure low: off" })).toBeTruthy()
+  })
+
+  describe("turning gear", () => {
+    it("has its own group", () => {
+      renderAux()
+      expect(screen.getByRole("heading", { name: "Turning gear" })).toBeTruthy()
+    })
+
+    it("turns the gear with the switch when the oil is up", () => {
+      const fns = renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: false, rpm: 0 })
+      const gear: HTMLElement = screen.getByRole("switch", { name: "Turning gear" })
+      expect(gear.getAttribute("aria-checked")).toBe("false")
+      fireEvent.click(gear)
+      expect(fns.toggleTurningGear).toHaveBeenCalledTimes(1)
+    })
+
+    it("shows the engaged gear and the slow rotor speed", () => {
+      renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: true, rpm: 3 })
+      expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-checked")).toBe("true")
+      expect(screen.getByLabelText("Gear state").textContent).toBe("Engaged")
+      expect(screen.getByLabelText("Rotor speed").textContent).toBe("3.0 rpm")
+    })
+
+    it("refuses engaging without lube oil pressure and says why", () => {
+      const fns = renderAux({ pumpRunning: false, headerPressure: 0 }, { turningGearEngaged: false, rpm: 0 })
+      const gear: HTMLElement = screen.getByRole("switch", { name: "Turning gear" })
+      expect(gear.getAttribute("aria-disabled")).toBe("true")
+      expect(screen.getByText("Lube oil pressure is below the permissive", { selector: "p" })).toBeTruthy()
+      fireEvent.click(gear)
+      expect(fns.toggleTurningGear).not.toHaveBeenCalled()
+    })
+
+    it("shows no refusal when the gear can be engaged", () => {
+      renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: false, rpm: 0 })
+      expect(screen.queryByText(/permissive$/, { selector: "p" })).toBeNull()
+      expect(screen.getByLabelText("Gear state").textContent).toBe("Out")
+    })
+
+    it("still lets the operator disengage when the oil is gone", () => {
+      const fns = renderAux({ pumpRunning: false, headerPressure: 0 }, { turningGearEngaged: true, rpm: 3 })
+      fireEvent.click(screen.getByRole("switch", { name: "Turning gear" }))
+      expect(fns.toggleTurningGear).toHaveBeenCalledTimes(1)
+    })
+
+    it("shows the gear thrown out by the steam when the rotor rolls off it", () => {
+      renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: false, rpm: 150 })
+      expect(screen.getByLabelText("Gear state").textContent).toBe("Thrown out by the steam")
+      expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-checked")).toBe("false")
+    })
   })
 })

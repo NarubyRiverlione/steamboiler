@@ -86,6 +86,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleOilPump = () => {
     dispatch({ type: "SET_OIL_PUMP", payload: { pumpRunning: !state.Oil.pumpRunning } })
   }
+  const toggleTurningGear = () => {
+    dispatch({ type: "SET_TURNING_GEAR", payload: { engaged: !state.Turbine.turningGearEngaged } })
+  }
   //#endregion
 
   //#region Condenser action creators
@@ -158,6 +161,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         toggleGeneratorBreaker,
         // lube oil action
         toggleOilPump,
+        // turning gear action
+        toggleTurningGear,
         // deaerator actions
         toggleDeaeratorVent,
         adjustFeedPumpValvePosition,
