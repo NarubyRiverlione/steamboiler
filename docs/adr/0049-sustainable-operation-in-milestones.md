@@ -1,8 +1,8 @@
 # Sustainable operation in milestones
 
-**Status: proposed.** A brainstorm for a new epic, written down so it can rest; nothing here is decided. No milestones or tickets until it is accepted. Touches [ADR 0006](0006-heating-rate-alarm-only.md), [ADR 0046](0046-from-island-to-town-grid-in-milestones.md) (M7) and [ADR 0047](0047-first-public-release-on-itch-io.md) (saving deferred); none of them changes while this is proposed.
+**Status: proposed.** A brainstorm for a new epic, written down so it can rest; nothing here is decided. No milestones or tickets until it is accepted. Touches [ADR 0006](0006-heating-rate-alarm-only.md), [ADR 0046](0046-from-island-to-town-grid-in-milestones.md) (M7) and [ADR 0052](0052-first-public-release-on-itch-io.md) (saving deferred); none of them changes while this is proposed.
 
-The plant forgives everything that does not trip it. A heating rate over the limit is an alarm and "nothing else happens" (ADR 0006); the exhaust runs 17% wet where a real plant loses last-stage blade life; load above rated "has no consequence" (`design-basis.md`); a hot start with a steam-to-metal mismatch will cost nothing ([ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md)). The player's only goal is to reach sync (ADR 0047).
+The plant forgives everything that does not trip it. A heating rate over the limit is an alarm and "nothing else happens" (ADR 0006); the exhaust runs 17% wet where a real plant loses last-stage blade life; load above rated "has no consequence" (`design-basis.md`); a hot start with a steam-to-metal mismatch will cost nothing ([ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md)). The player's only goal is to reach sync (ADR 0052).
 
 The idea is **sustainable operation**: the player runs one plant for a long time, over many sessions, and is judged on how well it is kept and how well it pays, not on one start. Electricity sold pays for the fuel, the wear and the repairs.
 
@@ -24,7 +24,7 @@ The idea is **sustainable operation**: the player runs one plant for a long time
 - **M2, the operating record:** every limit that is alarm-only today logs its excursions (how long, how far over).- **M3, the account:** fuel cost now; income once Electrical M1 exists.
 - **M4, wear as cost:** sourced life consumption per component: drum (heating rate), rotor (mismatch), last-stage blades (wet exhaust), superheater tubes (overtemperature), deaerator corrosion (#114).
 - **M5, gross damage:** forced outage, repair time and repair cost.
-- **M6, sustainability as the goal:** the score over a long run; scenario goals building on ADR 0047's "Get a goal".
+- **M6, sustainability as the goal:** the score over a long run; scenario goals building on ADR 0052's "Get a goal".
 
 ## Open questions
 
@@ -43,7 +43,7 @@ The idea is **sustainable operation**: the player runs one plant for a long time
 
 ## Consequences (if accepted)
 
-- ADR 0047's deferred "Saving the game" is taken up here, or by an earlier release rung.
+- ADR 0052's deferred "Saving the game" is taken up here, or by an earlier release rung.
 - ADR 0006 gains a cost for the heating rate: its "nothing else happens" ends with M4.
 - ADR 0046 M7 is redrawn depending on open questions 1 and 2.
 - #114's damage model becomes part of M4.

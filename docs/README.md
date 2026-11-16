@@ -83,12 +83,12 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0043](adr/0043-trip-reset.md) | Only a trip reset clears a latched trip, once its cause has gone; a RESET button beside each trip tile |
 | [0044](adr/0044-superheater-with-spray-attemperator.md) | A passive flue gas superheater before the boiler stage; one spray attemperator holds the steam at 540 °C; the turbine runs on the superheated steam |
 | [0046](adr/0046-from-island-to-town-grid-in-milestones.md) | From island to the town grid in milestones M1–M7; island means house load operation |
-| [0047](adr/0047-first-public-release-on-itch-io.md) | First public release on itch.io: a goal, help cards in markdown, a startup guide; desktop, English, early access |
 | [0047](adr/0047-gland-seal-steam-sets-the-air-in-leakage.md) | Gland seal steam: a switch that sets the condenser's air in-leakage between a sealed and an open-gland rate |
 | [0048](adr/0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) | From roll on demand to a real cold start in milestones M1–M4: oil and gear, auxiliary steam and gland seals, prewarming the casing, the full start-up |
 | [0049](adr/0049-sustainable-operation-in-milestones.md) | Proposed: sustainable operation over many sessions: save and load, operating record, an account, wear as cost, gross damage |
 | [0050](adr/0050-lube-oil-pressure-permissive-and-trip.md) | Lube oil: a header pressure permissive to roll and a low-pressure trip |
 | [0051](adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md) | Turning gear: a manual gear holds the stopped rotor and blocks the turbine valve |
+| [0052](adr/0052-first-public-release-on-itch-io.md) | First public release on itch.io: a goal, help cards in markdown, a startup guide; desktop, English, early access |
 
 ## Research (dated, frozen)
 
