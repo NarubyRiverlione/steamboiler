@@ -28,7 +28,7 @@ export function capacityFraction(sealWaterTemperature: number, shellPressure: nu
  *
  * @param temperature Seal water temperature (°C)
  * @param running The pump runs: it takes its shaft power even stalled at its floor
- * @param pumpFlow Volumetric flow the pump moves (m³/s), zero when it is off, tripped or at its floor
+ * @param pumpFlow Volumetric flow the pump moves (m³/s): zero when it is off or tripped, falling to nothing at its floor
  * @param vapourPressure Shell vapour pressure (mbar)
  * @param shellTemperature Shell temperature (°C)
  * @param coolerOn The seal water cooler works
