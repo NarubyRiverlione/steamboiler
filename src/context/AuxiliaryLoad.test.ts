@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstAuxiliary } from "./const"
+import { CstAuxiliary, CstOil } from "./const"
 import { auxiliaryLoadOf, netOutputOf } from "./AuxiliaryLoad"
 import { makeInitialState } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
@@ -40,6 +40,13 @@ describe("auxiliary load (#140)", () => {
   test("the oil pump and the turning gear motor draw their rated power while on", () => {
     expect(auxiliaryLoadOf({ ...idle, Oil: { ...idle.Oil, pumpRunning: true } })).toBeCloseTo(CstAuxiliary.LubeOilPump)
     expect(auxiliaryLoadOf({ ...idle, Turbine: { ...idle.Turbine, turningGearEngaged: true } })).toBeCloseTo(CstAuxiliary.TurningGearMotor)
+  })
+
+  test("the turning gear motor stops when the gear throws out on the roll-off", () => {
+    const engaged: PowerPlantState = { ...idle, Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure }, Turbine: { ...idle.Turbine, turningGearEngaged: true, rpm: 3 } }
+    expect(PowerPlantTick(engaged).auxiliaryLoad).toBeCloseTo(CstAuxiliary.TurningGearMotor + CstAuxiliary.LubeOilPump)
+    const rolling: PowerPlantState = { ...engaged, Turbine: { ...engaged.Turbine, rpm: 500 } }
+    expect(PowerPlantTick(rolling).auxiliaryLoad).toBeCloseTo(CstAuxiliary.LubeOilPump)
   })
 
   test("all six at full draw about 5% of the rated output", () => {

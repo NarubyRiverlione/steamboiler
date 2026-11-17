@@ -120,7 +120,7 @@ export const CstOil = {
   RunningRPM: 100, // rpm: above it the turbine counts as running (with the valve open, ADR 0050)
 }
 
-// Auxiliary load (#140, docs/research/2026-11-auxiliary-power.md): rated electric power of each consumer, MW; UNVERIFIED estimates but the turning gear
+// Auxiliary load (#140, docs/research/2026-11-auxiliary-power.md): rated electric power of each consumer, MW; UNVERIFIED estimates except the turning gear
 export const CstAuxiliary = {
   FeedPump: 4.5, // MW at full flow, drawn in proportion to the valve position
   RecirculationPump: 1.75, // MW at full flow (cooling water, 7400 l/s)
