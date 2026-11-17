@@ -54,4 +54,4 @@ Next: [#167](https://github.com/NarubyRiverlione/steamboiler/issues/167) Board: 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
 | 18 | [#167](https://github.com/NarubyRiverlione/steamboiler/issues/167) Board: knob and switch rims take the overview colour of their component | ready-for-agent |  |  |
-| 19 | [#168](https://github.com/NarubyRiverlione/steamboiler/issues/168) Board: the deaerator vents warning in an LCD message | needs-triage |  |  |
+| 19 | [#168](https://github.com/NarubyRiverlione/steamboiler/issues/168) Board: the deaerator vents warning in an LCD message | ready-for-agent |  |  |
