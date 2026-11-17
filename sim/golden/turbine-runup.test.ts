@@ -6,7 +6,7 @@ import { PressureHoldSettings } from "../scenarios/pressure-hold"
 import { hotwellLevel } from "../../src/utils/condenserCalculation"
 import { StartupSettings, startupOperator, turbineRunup } from "../scenarios/turbine-runup"
 import { StartGas } from "../scenarios/steps"
-import { CstSimulation, CstTurningGear } from "../../src/context/const"
+import { CstOil, CstSimulation, CstTurningGear } from "../../src/context/const"
 import PowerPlantState from "../../src/context/PowerPlantState"
 import { describeVacuumAtOpening } from "./vacuum-at-opening"
 
@@ -69,6 +69,45 @@ describe("turbine-runup", () => {
       expect(level).toBeGreaterThanOrEqual(LoopSettings.HotwellBandLow - LoopSettings.HotwellRamp)
       expect(level).toBeLessThanOrEqual(LoopSettings.HotwellBandHigh)
     }
+  })
+
+  // The start-up order (ADR 0047, 0050, 0051): each step's effect stands before the next step starts. Samples are 10 s apart
+  describe("start-up order: lube oil, turning gear, gland steam, vacuum, roll", () => {
+    const { OptimalPressure, OptimalPressureBellWidth } = CstSimulation.CstCondenser
+    const oilAt = firstTimeWhere(samples, (s) => s.Oil.headerPressure >= CstOil.PermissivePressure) ?? Infinity
+    const gearAt = firstTimeWhere(samples, (s) => s.Turbine.turningGearEngaged) ?? Infinity
+    const glandAt = firstTimeWhere(samples, (s) => s.Turbine.glandSteamOn) ?? Infinity
+    const vacuumAt = firstTimeWhere(samples, (s) => s.Condenser.pressure <= OptimalPressure + OptimalPressureBellWidth) ?? Infinity
+    const rollAt = firstTimeWhere(samples, (s) => s.Turbine.turbineValvePosition > 0) ?? Infinity
+    const gearOutAt = samples.find((s) => s.time > rollAt && !s.state.Turbine.turningGearEngaged)?.time ?? Infinity
+
+    test("the oil header reaches the permissive before the gear takes the rotor", () => {
+      expect(oilAt).toBeLessThan(gearAt)
+      expect(samples.find((s) => s.time === gearAt)?.state.Oil.headerPressure).toBeGreaterThanOrEqual(CstOil.PermissivePressure)
+    })
+
+    test("the gear holds the rotor at its few rpm before the gland steam goes on", () => {
+      expect(gearAt).toBeLessThanOrEqual(glandAt)
+      expect(samples.find((s) => s.time === glandAt)?.state.Turbine.rpm).toBeCloseTo(CstTurningGear.Rpm, 3)
+    })
+
+    test("the gland seals before the vacuum is drawn to design, and the vacuum is at design before the roll", () => {
+      expect(glandAt).toBeLessThan(vacuumAt)
+      expect(vacuumAt).toBeLessThan(rollAt)
+    })
+
+    test("the roll starts on the engaged gear: no disengage step, and the gear throws itself out above standstill", () => {
+      expect(samples.find((s) => s.time === rollAt - 10)?.state.Turbine.turningGearEngaged).toBe(true)
+      expect(gearOutAt).toBeGreaterThan(rollAt)
+      expect(samples.find((s) => s.time === gearOutAt)?.state.Turbine.rpm).toBeGreaterThan(CstTurningGear.StandstillRpm)
+      expect(samples.find((s) => s.time === gearOutAt)?.state.Turbine.glandSteamOn).toBe(true)
+    })
+
+    test("the start-up steps are done early, so the timeline is the heat-up's: the roll falls at working pressure", () => {
+      expect(glandAt).toBeLessThanOrEqual(60)
+      expect(rollAt).toBeGreaterThanOrEqual(valveOpenAt)
+      expect(rollAt).toBeLessThan(inBandAt + 2000)
+    })
   })
 
   // Hold lasts a single tick at 500, 1500 and 2500 rpm (the operator moves on as soon as it engages) and never
