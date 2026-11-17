@@ -19,8 +19,7 @@ Next: [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) Auxilia
 | 2 | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) Auxiliary load: the pumps and turbine auxiliaries draw power, net output = electric output − auxiliary load | ready-for-agent |  | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |
 | 3 | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) Grid supply breaker and the auxiliary bus: pumps need power | ready-for-agent | [#140](https://github.com/NarubyRiverlione/steamboiler/issues/140) | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) [#159](https://github.com/NarubyRiverlione/steamboiler/issues/159) [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) |
 | 4 | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) Vital bus and UPS: a dead bus darkens the board until the operator closes the UPS breaker | ready-for-agent | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) [#159](https://github.com/NarubyRiverlione/steamboiler/issues/159) |
-| 5 | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) Board: red emergency state on a dead vital bus, UPS panel with charge and UPS breaker | needs-triage | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
-| 6 | [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) Onsite diesel generator feeds the auxiliary bus (dark start) | needs-triage | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |  |
+| 5 | [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) Onsite diesel generator feeds the auxiliary bus (dark start) | needs-triage | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |  |
 
 ## Turbine auxiliaries: lube oil, turning gear, gland steam
 
@@ -28,10 +27,10 @@ Next: [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-u
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 7 | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-up order: lube oil, turning gear, gland steam, vacuum, roll in the cold-start golden path | ready-for-agent |  |  |
-| 8 | [#159](https://github.com/NarubyRiverlione/steamboiler/issues/159) Lube oil: emergency (coast-down) oil pump keeps pressure while the rotor coasts down | ready-for-agent | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
-| 9 | [#161](https://github.com/NarubyRiverlione/steamboiler/issues/161) Gland seal: does a turbine trip lose it? Research first, build only if sourced | ready-for-agent |  |  |
-| 10 | [#162](https://github.com/NarubyRiverlione/steamboiler/issues/162) Vacuum breaker: an emergency stop lets air into the condenser and brakes the rotor | ready-for-agent |  |  |
+| 6 | [#148](https://github.com/NarubyRiverlione/steamboiler/issues/148) Start-up order: lube oil, turning gear, gland steam, vacuum, roll in the cold-start golden path | ready-for-agent |  |  |
+| 7 | [#159](https://github.com/NarubyRiverlione/steamboiler/issues/159) Lube oil: emergency (coast-down) oil pump keeps pressure while the rotor coasts down | ready-for-agent | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
+| 8 | [#161](https://github.com/NarubyRiverlione/steamboiler/issues/161) Gland seal: does a turbine trip lose it? Research first, build only if sourced | ready-for-agent |  |  |
+| 9 | [#162](https://github.com/NarubyRiverlione/steamboiler/issues/162) Vacuum breaker: an emergency stop lets air into the condenser and brakes the rotor | ready-for-agent |  |  |
 
 ## Plant systems: components and physics expansion
 
@@ -39,12 +38,12 @@ Next: [#166](https://github.com/NarubyRiverlione/steamboiler/issues/166) Air pum
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 11 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | needs-triage |  |  |
-| 12 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | needs-triage |  |  |
-| 13 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage |  |  |
-| 14 | [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) Bypass desuperheating spray | needs-triage |  |  |
-| 15 | [#152](https://github.com/NarubyRiverlione/steamboiler/issues/152) Superheater protection: outlet safety valve, start-up vent and drains, high steam temperature trip | needs-triage |  |  |
-| 16 | [#166](https://github.com/NarubyRiverlione/steamboiler/issues/166) Air pump seal water: ultimate pressure, high-temperature warning and cavitation trip | ready-for-agent |  |  |
+| 10 | [#90](https://github.com/NarubyRiverlione/steamboiler/issues/90) Air preheater: flue gas heats the combustion air | needs-triage |  |  |
+| 11 | [#114](https://github.com/NarubyRiverlione/steamboiler/issues/114) Deaerator O2 readout and corrosion consequences | needs-triage |  |  |
+| 12 | [#150](https://github.com/NarubyRiverlione/steamboiler/issues/150) Reheat: steam returns to the boiler between turbine stages | needs-triage |  |  |
+| 13 | [#151](https://github.com/NarubyRiverlione/steamboiler/issues/151) Bypass desuperheating spray | needs-triage |  |  |
+| 14 | [#152](https://github.com/NarubyRiverlione/steamboiler/issues/152) Superheater protection: outlet safety valve, start-up vent and drains, high steam temperature trip | needs-triage |  |  |
+| 15 | [#166](https://github.com/NarubyRiverlione/steamboiler/issues/166) Air pump seal water: ultimate pressure, high-temperature warning and cavitation trip | ready-for-agent |  |  |
 
 ## UI and UX
 
@@ -52,6 +51,7 @@ Next: [#167](https://github.com/NarubyRiverlione/steamboiler/issues/167) Board: 
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 17 | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) Board: grid supply breaker switch, auxiliary load and net output readouts | ready-for-agent | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |  |
+| 16 | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) Board: grid supply breaker switch, auxiliary load and net output readouts | ready-for-agent | [#141](https://github.com/NarubyRiverlione/steamboiler/issues/141) |  |
+| 17 | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) Board: red emergency state on a dead vital bus, UPS panel with charge and UPS breaker | ready-for-agent | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
 | 18 | [#167](https://github.com/NarubyRiverlione/steamboiler/issues/167) Board: knob and switch rims take the overview colour of their component | ready-for-agent |  |  |
 | 19 | [#168](https://github.com/NarubyRiverlione/steamboiler/issues/168) Board: the deaerator vents warning in an LCD message | ready-for-agent |  |  |
