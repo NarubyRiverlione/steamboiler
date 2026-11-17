@@ -207,6 +207,7 @@ describe("scenario registry", () => {
       "lube-oil-trip",
       "turning-gear",
       "gland-seal",
+      "start-up-order",
       "seal-water-steady",
       "seal-water-trip",
       "vacuum-loss",
