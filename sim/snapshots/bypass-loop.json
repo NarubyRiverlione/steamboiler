@@ -110,5 +110,6 @@
   "Oil": {
     "pumpRunning": true,
     "headerPressure": 0.9999999999999972
-  }
+  },
+  "auxiliaryLoad": 0.7355665919930631
 }

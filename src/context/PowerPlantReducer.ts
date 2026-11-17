@@ -115,6 +115,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     glandSteamOn: false, // the glands unsealed (ADR 0047)
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
+  auxiliaryLoad: 0, // MW: no pump runs
 })
 
 // What the app starts from: the cold plant with the drum filled to 40% (ADR 0018)

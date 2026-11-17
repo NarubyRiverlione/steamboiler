@@ -120,6 +120,16 @@ export const CstOil = {
   RunningRPM: 100, // rpm: above it the turbine counts as running (with the valve open, ADR 0050)
 }
 
+// Auxiliary load (#140, docs/research/2026-11-auxiliary-power.md): rated electric power of each consumer, MW; UNVERIFIED estimates but the turning gear
+export const CstAuxiliary = {
+  FeedPump: 4.5, // MW at full flow, drawn in proportion to the valve position
+  RecirculationPump: 1.75, // MW at full flow (cooling water, 7400 l/s)
+  CondensationPump: 0.4, // MW at full flow
+  AirExtractionPump: 0.1, // MW while enabled (liquid ring pump, 55 kW shaft power plus motor margin)
+  LubeOilPump: 0.1, // MW while running
+  TurningGearMotor: 0.03, // MW while engaged (30 kW motor of a 110 MW turbine)
+}
+
 // Gland seal steam (ADR 0047, figure in docs/plant/design-basis.md and docs/research/2026-11-gland-seal-steam.md); UNVERIFIED estimate
 export const CstGlandSteam = {
   Flow: 0.1, // kg/s taken from the boiler while the gland steam is on, returned to the hotwell (800 lb/h gland condenser of a vendor example)

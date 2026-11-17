@@ -1,4 +1,5 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
+import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
 import { GlandSteamTick, glandSteamMass } from "./Turbine/GlandSteam"
 import { CondenserTick } from "./Condenser/CondenserTick"
@@ -195,7 +196,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     turbineSteamFlowOut: turbineResult.turbineState.turbineSteamFlowOut,
   }
   
-  return {
+  const next: PowerPlantState = {
     ...state,
     Boiler: boilerNewState,
     Condenser: condenserNewState,
@@ -204,4 +205,6 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     Oil: oilNewState,
     Turbine: updatedTurbineState,
   }
+  // Auxiliary load (#140): metering only, read from the new state so a trip this tick already stops the pump
+  return { ...next, auxiliaryLoad: auxiliaryLoadOf(next) }
 }

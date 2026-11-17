@@ -122,5 +122,6 @@ type PowerPlantState = {
   Condenser: CondenserState
   Turbine: TurbineState
   Oil: OilState
+  auxiliaryLoad: number // MW, what the pumps and turbine auxiliaries draw (#140); net output = electric output - this
 }
 export default PowerPlantState
