@@ -288,8 +288,9 @@ describe("CondenserTick", () => {
         pressure: CstPhysics.AtmosphericPressure_mBar,
         isAirExtractionPumpEnabled: true,
       }
-      for (let i = 0; i < 2400; i++) state = CondenserTick(state, 100, bypassOf(0), bypassOf(0), boilerRoom, Sealed)
-      expect(state.airMass).toBeLessThan(0.1)
+      for (let i = 0; i < 120000; i++) state = CondenserTick(state, 100, bypassOf(0), bypassOf(0), boilerRoom, Sealed)
+      // the pump alone settles at L·V/S = 3.3 kg
+      expect(state.airMass).toBeLessThan(4)
       expect(state.pressure).toBeLessThan(CstCondenser.VacuumLimit)
     })
 
