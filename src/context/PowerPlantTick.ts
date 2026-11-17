@@ -9,7 +9,7 @@ import BoilerTick, { BoilerBurnerTrip, BoilerLevelHighTrip, BoilerRemoveSteam, B
 import { DeaeratorResult, DeaeratorTick, deaeratorLevel } from "./Deaerator/DeaeratorTick"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, HeaterState, OilState, TurbineState } from "./PowerPlantState"
 import { CstDeaerator, CstSimulation } from "./const"
-import { sprayFlowOf } from "./Boiler/Attemperator"
+import { sprayInjection } from "./Boiler/Attemperator"
 import { roomInKg } from "../utils/boilerCalculations"
 import { getExhaustEnthalpy, getInletEnthalpy, getLiquidEnthalpy } from "../utils/steamTable"
 import { shaftWorkFraction } from "../utils/turbineCalculations"
@@ -53,9 +53,11 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   // from the feed pump discharge, so it cannot exceed what the pump delivered in the last tick, and the steam flows below
   // (turbine, bypass, extraction, condenser) count it. The boiler is fed the rest of the pump outflow.
   const drumFlow: number = drumResult.turbineState.turbineSteamFlowOut + drumResult.turbineState.bypassSteamFlowOut
-  const sprayFlow: number =
-    drumFlow > 0 ? Math.min(sprayFlowOf(state.Boiler.sprayValvePosition), state.Deaerator.outflowMass / CstSimulation.DeltaTime) : 0
-  const sprayShare: number = drumFlow > 0 ? 1 + sprayFlow / drumFlow : 1
+  const { flow: sprayFlow, share: sprayShare } = sprayInjection(
+    drumFlow,
+    state.Boiler.sprayValvePosition,
+    state.Deaerator.outflowMass / CstSimulation.DeltaTime,
+  )
   const turbineResult = {
     boilerState: drumResult.boilerState,
     turbineState: {

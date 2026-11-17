@@ -123,6 +123,11 @@ export const makeUiStartState = (): PowerPlantState => makeInitialState(CstBoile
 
 export const initialPowerPlantState: PowerPlantState = makeUiStartState()
 
+// An opening is refused when the turbine is tripped or at the overspeed limit (ADR 0040), below the lube oil permissive
+// (ADR 0050) or on a stopped rotor off the turning gear (ADR 0051)
+const isOpeningRefused = ({ Turbine, Oil }: PowerPlantState): boolean =>
+  Turbine.turbineTripped || isAtOverspeed(Turbine.rpm) || !isAtOilPermissive(Oil) || !rotorTurns(Turbine)
+
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 const withBoiler = (state: PowerPlantState, patch: Partial<BoilerState>): PowerPlantState => ({
   ...state,
@@ -254,16 +259,10 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // Tripped, above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) the turbine may not take more steam: an
   // opening is refused, closing is always allowed; only a trip reset clears the flag (ADR 0043)
   ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) => {
-    const { turbineValvePosition: current, turbineTripped, rpm } = state.Turbine
-    const requested = clamp(current + payload.turbineValvePosition, 0, 1)
+    const current: number = state.Turbine.turbineValvePosition
+    const requested: number = clamp(current + payload.turbineValvePosition, 0, 1)
     if (requested > maxTurbineValvePosition(current, state.Condenser.pressure)) return state
-    // At or above the overspeed limit the turbine may not take more steam either (ADR 0040)
-    if (requested > current && (turbineTripped || isAtOverspeed(rpm))) return state
-    // Below the lube oil permissive the turbine may not be rolled (ADR 0050)
-    if (requested > current && !isAtOilPermissive(state.Oil)) return state
-    // A stopped rotor may not be rolled: on the turning gear or above standstill it may (ADR 0051)
-    if (requested > current && !rotorTurns(state.Turbine)) return state
-    return withTurbine(state, { turbineValvePosition: requested })
+    return requested > current && isOpeningRefused(state) ? state : withTurbine(state, { turbineValvePosition: requested })
   },
   // Engaging is refused without oil or above the standstill speed; disengaging is always allowed (ADR 0051)
   // A rotor at gear speed stops when the gear lets go: the loss torque is ∝ rpm², so the model would coast it for hours
