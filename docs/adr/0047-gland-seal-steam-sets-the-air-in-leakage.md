@@ -23,4 +23,4 @@
 
 ## Out of scope
 
-- Losing the seal on a turbine trip (the vacuum breaker and lost gland steam of a real trip): a follow-up ticket.
+- Losing the seal on a turbine trip: **researched in #161 and not built.** No source says a trip cuts the sealing steam; the header is fed from auxiliary or main steam ahead of the control valves and a trip does not touch it ([research](../research/2026-11-gland-seal-on-trip.md)). A trip keeps the seal; the operator's gland steam switch and the stopped-rotor rule remain the only ways to lose it. A faster vacuum collapse after a trip would come from the vacuum breaker (own ticket) or a lost auxiliary steam supply (needs-triage), not from the seal.
