@@ -3,7 +3,7 @@ import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { getBoilingPoint } from "../utils/steamTable"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, isAtOverspeed, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -11,8 +11,8 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
-import { isAtOilPermissive } from "./Oil/OilTick"
-import { rotorTurns, turningGearRefusal } from "./Turbine/TurningGear"
+import { turningGearRefusal } from "./Turbine/TurningGear"
+import { isOpeningRefused } from "./Turbine/ValveOpening"
 import { glandSteamRefusal } from "./Turbine/GlandSteam"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
@@ -122,11 +122,6 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
 export const makeUiStartState = (): PowerPlantState => makeInitialState(CstBoiler.UiStartWaterVolume)
 
 export const initialPowerPlantState: PowerPlantState = makeUiStartState()
-
-// An opening is refused when the turbine is tripped or at the overspeed limit (ADR 0040), below the lube oil permissive
-// (ADR 0050) or on a stopped rotor off the turning gear (ADR 0051)
-const isOpeningRefused = ({ Turbine, Oil }: PowerPlantState): boolean =>
-  Turbine.turbineTripped || isAtOverspeed(Turbine.rpm) || !isAtOilPermissive(Oil) || !rotorTurns(Turbine)
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
 const withBoiler = (state: PowerPlantState, patch: Partial<BoilerState>): PowerPlantState => ({
@@ -262,7 +257,8 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     const current: number = state.Turbine.turbineValvePosition
     const requested: number = clamp(current + payload.turbineValvePosition, 0, 1)
     if (requested > maxTurbineValvePosition(current, state.Condenser.pressure)) return state
-    return requested > current && isOpeningRefused(state) ? state : withTurbine(state, { turbineValvePosition: requested })
+    if (requested > current && isOpeningRefused(state.Turbine, state.Oil)) return state
+    return withTurbine(state, { turbineValvePosition: requested })
   },
   // Engaging is refused without oil or above the standstill speed; disengaging is always allowed (ADR 0051)
   // A rotor at gear speed stops when the gear lets go: the loss torque is ∝ rpm², so the model would coast it for hours
