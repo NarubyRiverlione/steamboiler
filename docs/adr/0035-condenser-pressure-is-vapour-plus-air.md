@@ -21,13 +21,13 @@ The in-leakage is not one constant: [ADR 0047](0047-gland-seal-steam-sets-the-ai
 | Constant (new) | Value | Source |
 |---|---|---|
 | Shell steam-space volume `ShellVolume` | 450 m³ | **UNVERIFIED.** Derived from a 30 minute hogging time to 10 inHgA with a 200 SCFM hogger (Maarky table pair 10/200) and the ideal gas law; good to a factor 2. Includes the exhaust neck and turbine casing. Research (b) |
-| Air in-leakage `AirLeakRate` with the glands sealed (replaces `LeakingRate` 0.01); `OpenGlandAirLeakRate` 0.0347 kg/s (60 SCFM, UNVERIFIED) with them unsealed, ADR 0047 | 0.0022 kg/s (3.75 SCFM) | ASME PTC 12.2 Table 10-1, one shell, 1 to 2 million lb/h of exhaust (158 kg/s is 1.25 million), via EPRI TR-112819 §10.1. The sourced range is 0.0007 (Westinghouse, 1 SCFM per 100 MW) to 0.0087 (HEI-class design, 15 SCFM). Research (a) |
+| Air in-leakage `AirLeakRate` with the glands sealed (replaces `LeakingRate` 0.01); `OpenGlandAirLeakRate` 0.14 kg/s (labyrinth estimate, UNVERIFIED) with them unsealed, ADR 0047 | 0.0022 kg/s (3.75 SCFM) | ASME PTC 12.2 Table 10-1, one shell, 1 to 2 million lb/h of exhaust (158 kg/s is 1.25 million), via EPRI TR-112819 §10.1. The sourced range is 0.0007 (Westinghouse, 1 SCFM per 100 MW) to 0.0087 (HEI-class design, 15 SCFM). Research (a) |
 | SJAE capacity `SJAE_Capacity` | 0.96 m³/s at the full valve | 57.5 m³/min of air and vapour for an HEI holding requirement of 15 SCFM at 1 inHgA (POWER, HEI Table 9 worked example). The air-only convention makes the true load smaller, so this holds the air at about 2 mbar. The unit size of the example is not stated. Research (c) |
 | SJAE suction limit `SJAE_SuctionLimit` (replaces `SJAE_MaxPressureDifference`) | 170 mbar (5 inHgA) | an ejector designed for 1 inHgA "breaks" to 4 to 5 inHgA (EPRI §8.3.8); 135 mbar at the lower end. Above the limit it removes nothing. Research (c) |
-| Air pump capacity `CAR_Capacity` (replaces `CAR_MaxVacuum`, `CAR_TimeNeeded`) | about 26 m³/s | **Over-dimensioned utility, not a real size**: the volume that pulls 1013 mbar down to 31 mbar in one minute for 450 m³ (V · ln(1013 ÷ 31) ÷ 60). A real hogger takes 30 minutes (HEI Table 8) and is about 0.3 m³/s. A pull-down of "about a minute" is a playability choice recorded in `design-basis.md`; there is no speed-up constant. Research (c) |
+| Air pump capacity `CAR_Capacity` (replaces `CAR_MaxVacuum`, `CAR_TimeNeeded`) | 0.3 m³/s | A real hogger: about 30 minutes to the vacuum limit for 450 m³ (V · ln(1013 ÷ 327) ÷ S = 1700 s; HEI Table 8). Not over-dimensioned since #165; there is no speed-up constant, playability comes from the playback speed (ADR 0034). Research (c) |
 | Hood relief pressure `HoodReliefPressure` | 1353 mbar abs (0.34 barg) | atmospheric relief diaphragm bursts at 0.34 barg (a plant blog; a patent says 5 psi, the same). A failure analysis says 0.7 barg (snippet only, UNVERIFIED). Research (d) |
 
-`ShellVolume` and the capacities were checked with the headless runner in #91: the pump pulls 1 bar to 31 mbar in about 60 s, the SJAE alone holds the air at about 2 mbar (`calculateAirInventory` tests), and the pump alone holds the vacuum at 125 MW (`sjae-closed-load`).
+`ShellVolume` and the capacities were checked with the headless runner in #91: with the 26 m³/s pump of that time the pump pulled 1 bar to 31 mbar in about 60 s (since #165 it is 0.3 m³/s: 1810 s to the vacuum limit), the SJAE alone holds the air at about 2 mbar (`calculateAirInventory` tests), and the pump alone holds the vacuum at 125 MW (`sjae-closed-load`).
 
 ## Constants replaced
 
@@ -51,7 +51,6 @@ The in-leakage is not one constant: [ADR 0047](0047-gland-seal-steam-sets-the-ai
 
 | Item | Our value | Real plant | Why |
 |---|---|---|---|
-| Air extraction pump over-dimensioned (utility) | about 26 m³/s, a pull-down from 1 bar to the design vacuum in about 1 minute | a 0.3 m³/s hogger takes 30 minutes (HEI Table 8), then it is shut and the holding unit runs | playability by sizing the utility, no speed-up constant; the pump may stay on at no cost |
 | Pumps remove air only | the pump and SJAE move air only | they carry the water vapour with the air; capacities are quoted for the mixture | simplified; the SJAE capacity is taken for the mixture so the air-only error is on the safe side |
 | Air blanketing not modelled | UA is independent of the air pressure | air blankets the tubes and raises the pressure above the two-term sum | out of scope; [ADR 0032](0032-limited-condenser-and-stream-enthalpy.md) already leaves it out |
 | Shell volume UNVERIFIED | 450 m³ | unit specific | derived, see sized values |

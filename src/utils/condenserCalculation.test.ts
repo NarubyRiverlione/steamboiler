@@ -311,17 +311,19 @@ describe("air inventory (ADR 0035)", () => {
       return airPressureOf(air, 25)
     }
     // the air alone: a few mbar sealed, the whole design vacuum (31 mbar, vapour on top) unsealed
-    expect(settle(true)).toBeLessThan(Cst.OptimalPressure / 10)
+    expect(settle(true)).toBeLessThan(Cst.OptimalPressure / 4) // about 6 mbar of air
     expect(settle(false)).toBeGreaterThan(Cst.OptimalPressure * 0.95)
   })
 
-  test("the pump pulls the design vacuum with the glands open as well as sealed (ADR 0047)", () => {
-    for (const glandSealed of [true, false]) {
+  test("the pump alone holds the vacuum with the glands sealed and stalls above the vacuum limit with them open (#165, ADR 0047)", () => {
+    const settle = (glandSealed: boolean): number => {
       let air: number = airMassOf(CstPhysics.AtmosphericPressure_mBar, 20)
-      for (let i = 0; i < 6000; i++)
+      for (let i = 0; i < 200000; i++)
         air = calculateAirInventory({ ...stopped, airMass: air, pressure: 500, isAirExtractionPumpEnabled: true } as CondenserState, 100, glandSealed).airMass
-      expect(airPressureOf(air, 25)).toBeLessThan(Cst.OptimalPressure / 10)
+      return airPressureOf(air, 25)
     }
+    expect(settle(true)).toBeLessThan(Cst.OptimalPressure / 4) // about 6 mbar of air
+    expect(settle(false)).toBeGreaterThan(Cst.VacuumLimit)
   })
 
   test("no air leaks in once the shell is at atmospheric pressure", () => {
@@ -334,15 +336,15 @@ describe("air inventory (ADR 0035)", () => {
     expect(1 - next).toBeCloseTo((1 * DeltaTime) / timeConstant, 2)
   })
 
-  test("the pump pulls 1 bar down to the design vacuum in about a minute", () => {
+  test("the pump pulls 1 bar down to the vacuum limit in about 30 minutes (HEI Table 8, #165)", () => {
     let air: number = airMassOf(CstPhysics.AtmosphericPressure_mBar, 20)
     let seconds = 0
-    while (airPressureOf(air, 25) > Cst.OptimalPressure && seconds < 600) {
+    while (airPressureOf(air, 25) > Cst.VacuumLimit && seconds < 6000) {
       air = calculateAirInventory({ ...stopped, airMass: air, pressure: 500, isAirExtractionPumpEnabled: true } as CondenserState, 100, true).airMass
       seconds += DeltaTime
     }
-    expect(seconds).toBeGreaterThan(40)
-    expect(seconds).toBeLessThan(80)
+    expect(seconds).toBeGreaterThan(1500)
+    expect(seconds).toBeLessThan(2000)
   })
 
   test("a pump bigger than the shell stays stable and never goes negative", () => {
@@ -384,8 +386,8 @@ describe("air inventory (ADR 0035)", () => {
   })
 
   test("the pump keeps pulling above the SJAE limit (it hogs, the SJAE holds)", () => {
-    const next = step({ isAirExtractionPumpEnabled: true, pressure: 500 })
-    expect(next.airMass).toBeLessThan(1)
+    const next = step({ airMass: 100, isAirExtractionPumpEnabled: true, pressure: 500 })
+    expect(next.airMass).toBeLessThan(100)
   })
 
   test("a disabled SJAE ignores its valve", () => {

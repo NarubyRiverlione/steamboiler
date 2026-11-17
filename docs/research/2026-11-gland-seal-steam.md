@@ -39,3 +39,32 @@ Extended web search, snippets only (CANDU module 234-11, a turning gear patent U
 - **The gear lets go by itself.** Steam leaking past the glands can speed the rotor up, so the gear carries an overspeed protection that disengages it when the rotor speed passes a set level. Rolling therefore starts with the gear still engaged and the rotor accelerates off it; a disengage to roll is not part of the described procedure.
 
 Not found: the speed at which a gear disengages, and a procedure for rolling off the gear. Inference for the model: the "valve blocked while the gear is engaged" rule of ADR 0051 is the opposite of this practice and is what forces the disengage-then-roll deadlock with the gland steam.
+
+## Real pump size and the open-gland leak (#165, Nov 2026)
+
+Two more web searches (snippets only). **No sourced open-gland air figure was found**, so the open-gland leak stays UNVERIFIED, now as a labyrinth estimate instead of the EPRI top-of-range value.
+
+What the searches gave:
+
+- Labyrinth glands "allow a considerable amount of air leakage" and carbon rings a "nominal amount" past the LP gland (steam seal air removal patents US 5,913,812 and US 5,749,227); the last LP stages run under vacuum, so air enters through the glands (Power Generation Handbook, gland sealing chapter). No number.
+- A forum thread guesses 3 to 6 SCFM for a labyrinth with the seal working (informal, not a design value). This is a sealed figure and matches the sourced 0.0022 kg/s (3.75 SCFM).
+- Labyrinth leakage methods exist (Martin 1908, Egli, Stodola, Hodkinson); the sources seen give the models, not turbine gland geometry.
+
+Estimate (Stodola, straight-through labyrinth), per gland: ṁ = μ · A · √((p₁² − p₂²) ÷ (n · R · T)).
+
+| Input | Value | Label |
+|---|---|---|
+| Method | Stodola, p₁ = 101 325 Pa (atmosphere), p₂ = 5 000 Pa (about the LP exhaust), no choking (the ratio per fin is small) | sourced method |
+| Shaft diameter D | 0.6 m | assumed, LP rotor of a 150 to 200 MW unit |
+| Radial clearance c | 0.5 mm | assumed, typical order of a gland |
+| Flow area A = π · D · c | 9.4 × 10⁻⁴ m² | derived |
+| Fins n | 12 | assumed |
+| Flow coefficient μ | 0.75 | assumed (carry-over and contraction) |
+| T, R | 300 K, 287 J/(kg·K) | air at ambient |
+| Glands | 2 (one per end of the LP cylinder) | assumed |
+
+Result: 0.070 kg/s per gland, **0.14 kg/s** for two (about 260 SCFM). Every input is an assumption, so this is an order of magnitude, not a source. It is consistent with the older remark that real open glands are probably worse than 60 SCFM.
+
+Hogger size: HEI Table 8 (research note 2026-11-condenser-air-system, (c)) gives about 0.3 m³/s and about 30 minutes for the unit. For 450 m³ that is 1700 s to the 327 mbar vacuum limit.
+
+Measured (headless, #165): from cold with the glands sealed (`bypass-loop`) the pump reaches 327 mbar at 1810 s. With the glands never sealed the pump and SJAE settle at 416 mbar (210 kg of air) from about 12 000 s; the SJAE never takes over because the shell stays above its 170 mbar suction limit. The stall needs only about 0.108 kg/s, so the estimate has margin.
