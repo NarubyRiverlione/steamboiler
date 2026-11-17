@@ -75,6 +75,9 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     coolingRate: 1,
     coolingWaterOutletTemperature: CstSimulation.CstCondenser.RecirculationPump_IntakeTemperature,
     isAirExtractionPumpEnabled: false,
+    airPumpTripped: false,
+    sealWaterTemperature: CstSimulation.CstCondenser.RecirculationPump_IntakeTemperature, // Celsius: in step with the cooling water at rest
+    sealWaterCoolerOn: true,
     isSjaeEnabled: false,
     sjaeValvePosition: 0, // 0% open
     recirculationPumpValvePosition: 0, // 0% open
@@ -194,8 +197,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#endregion
 
   //#region Condenser
+  // A tripped pump may not be started, stopping is always allowed; only a trip reset clears the flag (ADR 0043)
   SET_AIR_EXTRACTION_PUMP_ENABLED: (state, { payload: { isAirExtractionPumpEnabled } }) =>
-    withCondenser(state, { isAirExtractionPumpEnabled }),
+    isAirExtractionPumpEnabled && state.Condenser.airPumpTripped ? state : withCondenser(state, { isAirExtractionPumpEnabled }),
   SET_SJAE_ENABLED: (state, { payload: { isSjaeEnabled } }) => withCondenser(state, { isSjaeEnabled }),
   SET_SJAE_VALVE_POSITION: (state, { payload }) =>
     withCondenser(state, {

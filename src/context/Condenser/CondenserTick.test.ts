@@ -42,6 +42,9 @@ const initialState: CondenserState = {
   coolingRate: 0,
   coolingWaterOutletTemperature: CstSimulation.CstCondenser.RecirculationPump_IntakeTemperature,
   isAirExtractionPumpEnabled: false,
+  airPumpTripped: false,
+  sealWaterTemperature: 20,
+  sealWaterCoolerOn: true,
   sjaeValvePosition: 0,
   isSjaeEnabled: true,
 }
@@ -289,9 +292,29 @@ describe("CondenserTick", () => {
         isAirExtractionPumpEnabled: true,
       }
       for (let i = 0; i < 120000; i++) state = CondenserTick(state, 100, bypassOf(0), bypassOf(0), boilerRoom, Sealed)
-      // the pump alone settles at L·V/S = 3.3 kg
-      expect(state.airMass).toBeLessThan(4)
+      // the pump alone settles above L·V/S = 3.3 kg: its capacity falls toward the seal water floor (#166)
+      expect(state.airMass).toBeLessThan(12) // L·V/S = 3.3 kg at full capacity, more as the pump nears the floor of its seal water
       expect(state.pressure).toBeLessThan(CstCondenser.VacuumLimit)
+    })
+
+    it("the pump heats its seal water and the cooler holds it; with the cooler lost it passes the warning and trips the pump (#166)", () => {
+      const pumping: CondenserState = { ...running, airMass: 50, pressure: 500, isAirExtractionPumpEnabled: true }
+      const warm: CondenserState = CondenserTick(pumping, 100, bypassOf(0), bypassOf(0), boilerRoom, Sealed)
+      expect(warm.sealWaterTemperature).toBeGreaterThan(pumping.sealWaterTemperature)
+      let lost: CondenserState = { ...pumping, sealWaterCoolerOn: false }
+      for (let i = 0; i < 20000 && !lost.airPumpTripped; i++) lost = CondenserTick(lost, 100, bypassOf(0), bypassOf(0), boilerRoom, Sealed)
+      expect(lost.airPumpTripped).toBe(true)
+      expect(lost.isAirExtractionPumpEnabled).toBe(false)
+      expect(lost.sealWaterTemperature).toBeGreaterThanOrEqual(CstCondenser.CAR_SealWaterTrip)
+      // tripped: the pump moves no air, and the latch holds
+      const after: CondenserState = CondenserTick({ ...lost, isAirExtractionPumpEnabled: true }, 100, bypassOf(0), bypassOf(0), boilerRoom, Sealed)
+      expect(after.airPumpTripped).toBe(true)
+      expect(after.airMass).toBeGreaterThan(lost.airMass)
+    })
+
+    it("a stopped pump does not heat its seal water", () => {
+      const stopped: CondenserState = { ...running, sealWaterTemperature: 30, isAirExtractionPumpEnabled: false }
+      expect(CondenserTick(stopped, 100, bypassOf(0), bypassOf(0), boilerRoom, Sealed).sealWaterTemperature).toBeLessThan(30)
     })
 
     it("without the pump or the SJAE the air in-leakage raises the pressure over time", () => {

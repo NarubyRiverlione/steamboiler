@@ -43,6 +43,9 @@ export type CondenserState = {
   coolingRate: number
   coolingWaterOutletTemperature: number // Celsius, the cooling water after the condenser (the intake temperature with no flow)
   isAirExtractionPumpEnabled: boolean
+  airPumpTripped: boolean // set by the seal water cavitation trip (#166), cleared only by a trip reset; the pump stops and cannot start
+  sealWaterTemperature: number // Celsius of the air pump's seal water: its vapour pressure is the pump's lowest pressure (ADR 0035)
+  sealWaterCoolerOn: boolean // the seal water cooler works; a scenario takes it away, no operator action yet (#166)
   isSjaeEnabled: boolean
   sjaeValvePosition: number // 0-1 (0-100%) open
   recirculationPumpValvePosition: number // 0-1 (0-100%) open

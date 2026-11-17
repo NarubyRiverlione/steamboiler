@@ -40,6 +40,12 @@ export const CstSimulation = {
     AirLeakRate: 0.0022, // kg/s of air in-leakage with the glands sealed, 3.75 SCFM (ASME PTC 12.2 Table 10-1, ADR 0035)
     OpenGlandAirLeakRate: 0.14, // kg/s of air in-leakage with the glands unsealed: Stodola labyrinth estimate for two LP glands with assumed geometry, UNVERIFIED (ADR 0047, research 2026-11-gland-seal-steam)
     CAR_Capacity: 0.3, // m³/s of air: a real hogger for this unit, pulls 1 bar to the 327 mbar vacuum limit in about 28 min (HEI Table 8, design-basis.md)
+    CAR_SealWaterMass: 500, // kg of seal water in the ring, separator and cooler (UNVERIFIED, design-basis.md)
+    CAR_ShaftPower: 55, // kW: nearly all of it ends up as heat in the seal water; a liquid ring pump of this size (UNVERIFIED, design-basis.md)
+    CAR_CondensationFactor: 0.5, // share of the vapour drawn in that condenses in the ring (a tested pump was credited 0.5, EPRI via the condenser air system note)
+    CAR_SealCoolerUA: 6, // kW/K seal water cooler: with the 10 °C cooling water the seal water settles at about 20 °C running (pump 5 to 14 K above the supply, Nash; UNVERIFIED, design-basis.md)
+    CAR_SealWaterWarning: 40, // °C: high seal water temperature warning; the floor (74 mbar) is then twice the design vacuum (our own number, design-basis.md)
+    CAR_SealWaterTrip: 55, // °C: cavitation trip; a liquid ring pump at 55 °C and above has a problem (Nash "Hot Pump Operating"), floor 157 mbar
     SJAE_Capacity: 0.96, // m³/s at the full valve (HEI holding example, ADR 0035)
     SJAE_SuctionLimit: 170, // mbar absolute: above it the ejector breaks and removes nothing (EPRI §8.3.8)
     HoodReliefPressure: 1353, // mbar absolute: the atmospheric relief diaphragm, the ceiling of the condenser pressure

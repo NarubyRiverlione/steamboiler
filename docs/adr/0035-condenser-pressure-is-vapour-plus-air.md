@@ -15,6 +15,7 @@ The in-leakage is not one constant: [ADR 0047](0047-gland-seal-steam-sets-the-ai
 - **The vacuum system removes volume, not pressure.** Air removed per second = S · ρ_air(P_air, T). The air extraction pump and the SJAE each have a volumetric capacity S. Operator controls are unchanged (pump toggle, SJAE toggle and valve). SJAE capacity scales linearly with the valve position. The SJAE keeps its two conditions: boiler pressure above `MainSteamValveMinimumPressure`, and the shell pressure below the ejector limit (the "break", below). The pump hogs; the SJAE holds.
 - **No vacuum decay constant.** With the vacuum system stopped, the vacuum is lost by air in-leakage only.
 - **Pumps remove air only, not vapour.** A real pump carries the vapour with the air. Air blanketing of the exchanger (UA) is not modelled.
+- **The air pump has a seal water floor (#166).** The CAR is a liquid ring pump: its seal water, a lump of `CAR_SealWaterMass`, sets the lowest pressure it reaches (the vapour pressure of the water) and its capacity falls to nothing there: `S · (1 − floor ÷ shell pressure)`. While the pump runs, the water takes the shaft power (`CAR_ShaftPower`) and the latent heat of the vapour condensing in the ring (`CAR_CondensationFactor` of the vapour carried); the seal water cooler takes `CAR_SealCoolerUA` × (seal water − cooling water intake). The pump stalled at its floor still takes its shaft power. No timer: the warning (`CAR_SealWaterWarning`, 40 °C, alarm `airPumpSealWaterHigh`) and the cavitation trip (`CAR_SealWaterTrip`, 55 °C, latch `airPumpTripped`, alarm `airPumpTripped`) come from the seal water temperature alone. A tripped pump stops and cannot start; the trip reset (ADR 0043) clears it once the water is under the warning. Cooling lost, standby pump and cooling control are not operator actions yet; the SJAE has no floor (an ejector has no seal water). One pump, not 2 × 100%.
 
 ## Sized values
 
@@ -51,7 +52,7 @@ The in-leakage is not one constant: [ADR 0047](0047-gland-seal-steam-sets-the-ai
 
 | Item | Our value | Real plant | Why |
 |---|---|---|---|
-| Pumps remove air only | the pump and SJAE move air only | they carry the water vapour with the air; capacities are quoted for the mixture | simplified; the SJAE capacity is taken for the mixture so the air-only error is on the safe side |
+| Pumps remove air only | the pump and SJAE move air only; the air pump has the seal water floor since #166, the SJAE none | they carry the water vapour with the air; capacities are quoted for the mixture | simplified; the SJAE capacity is taken for the mixture so the air-only error is on the safe side |
 | Air blanketing not modelled | UA is independent of the air pressure | air blankets the tubes and raises the pressure above the two-term sum | out of scope; [ADR 0032](0032-limited-condenser-and-stream-enthalpy.md) already leaves it out |
 | Shell volume UNVERIFIED | 450 m³ | unit specific | derived, see sized values |
 | Leak constant, and no gland seal or vacuum breaker leak | 0.0022 kg/s at all times | rises on a trip (vacuum breaker, lost gland seal steam) | simplified; this makes the vacuum last hours |

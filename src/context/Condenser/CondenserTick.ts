@@ -12,6 +12,7 @@ import {
   hotwellLevel,
 } from "../../utils/condenserCalculation"
 import { roomInKg, waterVolumeOf } from "../../utils/boilerCalculations"
+import { isSealWaterTrip, sealWaterTemperatureAfter } from "../../utils/sealWaterCalculation"
 import { CstSimulation } from "../const"
 
 // What the gland seal steam does to the condenser this tick (ADR 0047)
@@ -41,7 +42,7 @@ export function CondenserTick(
   const { DeltaTime, CstCondenser } = CstSimulation
 
   // Air first (ADR 0035): in-leakage, the air extraction pump and the SJAE
-  const { airMass, newIsSjaeEnabled } = calculateAirInventory(condenserState, boilerPressure, gland.sealed)
+  const { airMass, newIsSjaeEnabled, pumpFlow } = calculateAirInventory(condenserState, boilerPressure, gland.sealed)
 
   // All turbine exhaust and bypass steam enters the condenser; vacuum does not scale the mass flow
   const totalIntakeRate = steamFromTurbine.flow + steamFromBypass.flow
@@ -61,6 +62,17 @@ export function CondenserTick(
     CstCondenser.HoodReliefPressure,
     vapourPressure + airPressureOf(airMass, shellTemperature),
   )
+
+  // Seal water of the air pump (#166): the pump trips on cavitation when it is too hot, from the temperature alone
+  const sealWaterTemperature: number = sealWaterTemperatureAfter(
+    condenserState.sealWaterTemperature,
+    condenserState.isAirExtractionPumpEnabled && !condenserState.airPumpTripped,
+    pumpFlow,
+    vapourPressure,
+    shellTemperature,
+    condenserState.sealWaterCoolerOn,
+  )
+  const airPumpTripped: boolean = condenserState.airPumpTripped || isSealWaterTrip(sealWaterTemperature)
 
   // Room (kg) left in the hotwell; condensation and makeup stop there. Sized at the hotter of the hotwell and the
   // condensate, which takes more volume per kg, so the mix stays within the hotwell volume
@@ -121,6 +133,9 @@ export function CondenserTick(
     ...condenserState,
     pressure: newPressure,
     isSjaeEnabled: newIsSjaeEnabled,
+    sealWaterTemperature,
+    airPumpTripped,
+    isAirExtractionPumpEnabled: condenserState.isAirExtractionPumpEnabled && !airPumpTripped,
     condensationPumpValvePosition: pumpValvePosition,
     condensationPumpTripped: pumpTripped,
     intakeFlowRate: totalIntakeRate,
