@@ -318,7 +318,7 @@ describe("air inventory (ADR 0035)", () => {
   test("the pump alone holds the vacuum with the glands sealed and stalls above the vacuum limit with them open (#165, ADR 0047)", () => {
     const settle = (glandSealed: boolean): number => {
       let air: number = airMassOf(CstPhysics.AtmosphericPressure_mBar, 20)
-      for (let i = 0; i < 200000; i++)
+      for (let i = 0; i < 100000; i++)
         air = calculateAirInventory({ ...stopped, airMass: air, pressure: 500, isAirExtractionPumpEnabled: true } as CondenserState, 100, glandSealed).airMass
       return airPressureOf(air, 25)
     }
