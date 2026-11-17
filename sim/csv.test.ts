@@ -17,6 +17,8 @@ describe("toCsv", () => {
     expect(csv[0]).toContain("boiler_temperature")
     expect(csv[0]).toContain("turbine_rpm")
     expect(csv[0]).toContain("condenser_pressure")
+    expect(csv[0]).toContain("auxiliaryLoad")
+    expect(csv[0]).toContain("netOutput")
     expect(csv[1].split(",")).toHaveLength(csv[0].split(",").length)
   })
 

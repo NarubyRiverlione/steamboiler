@@ -72,6 +72,26 @@ _Avoid_: Net demand, demand, target load
 The rate at which the load moves toward the load setpoint: 3% of the rated output per minute, up and down. When the breaker opens the load is lost at once, whatever the load rate.
 _Avoid_: Ramp rate (that is the run-up rate), load ramp
 
+**Generator breaker**:
+The breaker between the generator and the plant's grid connection. Closed, the generator can carry load; open, the electric output is 0 MW.
+_Avoid_: Main breaker, sync breaker
+
+**Grid supply breaker**:
+The breaker through which the grid feeds the auxiliary bus. Closed, the plant can draw its own power from the grid.
+_Avoid_: Incomer, station service breaker
+
+**Auxiliary bus**:
+The electrical bus that powers the plant's own pumps and turbine auxiliaries.
+_Avoid_: Station bus, house bus
+
+**Auxiliary load**:
+The electric power the plant's own pumps and turbine auxiliaries draw, in MW: the feed, condensation, recirculation and air extraction pumps, the lube oil pump and the turning gear motor. Burner fan, vents and lighting are not counted. Not the basic load on synchronising.
+_Avoid_: Station service, parasitic load, house load (reserved for island operation, ADR 0046)
+
+**Net output**:
+The electric output less the auxiliary load, in MW. Negative means the plant imports power, drawn from the grid supply.
+_Avoid_: Net demand, net load
+
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
 _Avoid_: Bell curve, optimal pressure, vacuum permissive

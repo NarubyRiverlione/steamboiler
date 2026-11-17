@@ -28,6 +28,11 @@ describe("toReportHtml", () => {
     }
   })
 
+  test("charts the auxiliary load and the net output", () => {
+    expect(html).toContain("Auxiliary load and net output")
+    expect(html).toContain("Net output")
+  })
+
   test("is self-contained: no external scripts, stylesheets or images", () => {
     expect(html).not.toMatch(/<script[^>]+src=/)
     expect(html).not.toMatch(/<link[^>]+stylesheet/)

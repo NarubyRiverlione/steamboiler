@@ -12,6 +12,14 @@ const { SteamTemperature, PID_Kp, PID_Ki, PID_Kd, IntegralLimit } = CstSuperheat
 // Spray flow (kg/s) at a valve position (0-1)
 export const sprayFlowOf = (position: number): number => Math.max(0, Math.min(1, position)) * CstSuperheater.SprayCapacity
 
+// The spray that joins the steam leaving the drum: the valve flow, capped at what the feed pump delivered (kg/s), and the share
+// the steam flows grow by. No drum flow, no spray.
+export const sprayInjection = (drumFlow: number, valvePosition: number, pumpFlow: number): { flow: number; share: number } => {
+  if (drumFlow <= 0) return { flow: 0, share: 1 }
+  const flow: number = Math.min(sprayFlowOf(valvePosition), pumpFlow)
+  return { flow, share: 1 + flow / drumFlow }
+}
+
 type Attemperator = Pick<BoilerState, "sprayValvePosition" | "attemperatorIntegralError">
 
 // The PID after one tick: position = Kp·error + Ki·integral + Kd·rate of the measurement, clamped to 0-1. The error is

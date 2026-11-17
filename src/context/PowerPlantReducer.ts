@@ -3,7 +3,7 @@ import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { getBoilingPoint } from "../utils/steamTable"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, isAtOverspeed, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -11,8 +11,8 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
-import { isAtOilPermissive } from "./Oil/OilTick"
-import { rotorTurns, turningGearRefusal } from "./Turbine/TurningGear"
+import { turningGearRefusal } from "./Turbine/TurningGear"
+import { isOpeningRefused } from "./Turbine/ValveOpening"
 import { glandSteamRefusal } from "./Turbine/GlandSteam"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
@@ -115,6 +115,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     glandSteamOn: false, // the glands unsealed (ADR 0047)
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
+  auxiliaryLoad: 0, // MW: no pump runs
 })
 
 // What the app starts from: the cold plant with the drum filled to 40% (ADR 0018)
@@ -253,15 +254,10 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // Tripped, above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) the turbine may not take more steam: an
   // opening is refused, closing is always allowed; only a trip reset clears the flag (ADR 0043)
   ADJUST_STEAM_TURBINE_VALVE: (state, { payload }) => {
-    const { turbineValvePosition: current, turbineTripped, rpm } = state.Turbine
-    const requested = clamp(current + payload.turbineValvePosition, 0, 1)
+    const current: number = state.Turbine.turbineValvePosition
+    const requested: number = clamp(current + payload.turbineValvePosition, 0, 1)
     if (requested > maxTurbineValvePosition(current, state.Condenser.pressure)) return state
-    // At or above the overspeed limit the turbine may not take more steam either (ADR 0040)
-    if (requested > current && (turbineTripped || isAtOverspeed(rpm))) return state
-    // Below the lube oil permissive the turbine may not be rolled (ADR 0050)
-    if (requested > current && !isAtOilPermissive(state.Oil)) return state
-    // A stopped rotor may not be rolled: on the turning gear or above standstill it may (ADR 0051)
-    if (requested > current && !rotorTurns(state.Turbine)) return state
+    if (requested > current && isOpeningRefused(state.Turbine, state.Oil)) return state
     return withTurbine(state, { turbineValvePosition: requested })
   },
   // Engaging is refused without oil or above the standstill speed; disengaging is always allowed (ADR 0051)

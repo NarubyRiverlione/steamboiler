@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstSuperheater } from "../const"
-import { attemperatorAfter, equilibriumSteamTemperature, integralFor, sprayEnthalpyOf, sprayFlowOf } from "./Attemperator"
+import { attemperatorAfter, equilibriumSteamTemperature, integralFor, sprayEnthalpyOf, sprayFlowOf, sprayInjection } from "./Attemperator"
 import { getBoilingPoint, getSaturationEnthalpies } from "../../utils/steamTable"
 
 const { SteamTemperature, PID_Kp, PID_Ki, IntegralLimit, SprayCapacity } = CstSuperheater
@@ -88,5 +88,21 @@ describe("equilibriumSteamTemperature", () => {
 
   test("enough spray cools the steam to saturation, never below", () => {
     expect(equilibriumSteamTemperature(pressure, 10, 1e3, 200, water, saturation)).toBe(saturation)
+  })
+})
+
+describe("sprayInjection", () => {
+  test("no drum flow, no spray", () => {
+    expect(sprayInjection(0, 1, 100)).toEqual({ flow: 0, share: 1 })
+  })
+
+  test("the valve flow joins the drum flow", () => {
+    const { flow, share } = sprayInjection(100, 0.5, 100)
+    expect(flow).toBeCloseTo(sprayFlowOf(0.5))
+    expect(share).toBeCloseTo(1 + flow / 100)
+  })
+
+  test("the spray cannot exceed what the pump delivered", () => {
+    expect(sprayInjection(100, 1, 2).flow).toBe(2)
   })
 })

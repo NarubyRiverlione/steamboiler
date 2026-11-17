@@ -1,4 +1,5 @@
 import { CstDeaerator, CstSimulation } from "../src/context/const"
+import { netOutputOf } from "../src/context/AuxiliaryLoad"
 import PowerPlantState from "../src/context/PowerPlantState"
 import { saturationTemperature } from "../src/utils/condenserCalculation"
 import { generatorFrequency } from "../src/utils/turbineCalculations"
@@ -180,6 +181,17 @@ export const panels: Panel[] = [
     kind: "other",
     unit: "MW",
     series: one("Output", (s) => s.Turbine.electricOutput),
+  },
+  {
+    group: "Turbine",
+    row: 2,
+    title: "Auxiliary load and net output",
+    kind: "other",
+    unit: "MW",
+    series: [
+      { label: "Auxiliary load", value: (s) => s.auxiliaryLoad },
+      { label: "Net output", value: netOutputOf },
+    ],
   },
   // Condenser. Flows in kg/s: steam intake is kg/s, and 1 L of condensate is taken as 1 kg.
   {
