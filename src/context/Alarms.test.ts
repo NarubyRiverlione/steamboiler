@@ -57,6 +57,16 @@ describe("hotwell level alarms", () => {
     expect(activeAlarms(atLevel(level)).includes("hotwellLevelHighHigh")).toBe(on)
   })
 
+  test("the air pump seal water warning is on from its warning temperature, the trip alarm with the latch (#166)", () => {
+    const base: PowerPlantState = makeInitialState()
+    const withSeal = (sealWaterTemperature: number, airPumpTripped = false): PowerPlantState => ({ ...base, Condenser: { ...base.Condenser, sealWaterTemperature, airPumpTripped } })
+    const { CAR_SealWaterWarning } = CstSimulation.CstCondenser
+    expect(activeAlarms(withSeal(CAR_SealWaterWarning - 0.1))).not.toContain("airPumpSealWaterHigh")
+    expect(activeAlarms(withSeal(CAR_SealWaterWarning))).toContain("airPumpSealWaterHigh")
+    expect(activeAlarms(withSeal(20))).not.toContain("airPumpTripped")
+    expect(activeAlarms(withSeal(20, true))).toContain("airPumpTripped")
+  })
+
   test("none is active in the working band", () => {
     expect(activeAlarms(atLevel(0.7))).toEqual([])
   })

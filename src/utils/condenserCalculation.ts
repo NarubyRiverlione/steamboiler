@@ -1,6 +1,7 @@
 import { CondenserState } from "../context/PowerPlantState"
 import { CstPhysics, CstSimulation } from "../context/const"
 import { waterMassOf } from "./boilerCalculations"
+import { capacityFraction } from "./sealWaterCalculation"
 import { getBoilingPoint, getSaturationEnthalpies } from "./steamTable"
 
 const PaPerMbar = 100
@@ -29,7 +30,7 @@ export function calculateAirInventory(
   condenserState: CondenserState,
   boilerPressure: number,
   glandSealed: boolean,
-): { airMass: number; newIsSjaeEnabled: boolean } {
+): { airMass: number; newIsSjaeEnabled: boolean; pumpFlow: number } {
   const {
     DeltaTime,
     CstTurbine: { MainSteamValveMinimumPressure },
@@ -40,7 +41,11 @@ export function calculateAirInventory(
     condenserState.isSjaeEnabled &&
     boilerPressure > MainSteamValveMinimumPressure &&
     condenserState.pressure < SJAE_SuctionLimit
-  const pump: number = condenserState.isAirExtractionPumpEnabled ? CAR_Capacity : 0
+  // The pump's capacity falls toward the vapour pressure of its seal water (#166); a tripped pump moves nothing
+  const pump: number =
+    condenserState.isAirExtractionPumpEnabled && !condenserState.airPumpTripped
+      ? CAR_Capacity * capacityFraction(condenserState.sealWaterTemperature, condenserState.pressure)
+      : 0
   const ejector: number = newIsSjaeEnabled ? SJAE_Capacity * condenserState.sjaeValvePosition : 0
 
   const removalRate: number = (pump + ejector) / ShellVolume // 1/s
@@ -48,7 +53,7 @@ export function calculateAirInventory(
   const leak: number =
     condenserState.pressure < CstPhysics.AtmosphericPressure_mBar ? (glandSealed ? AirLeakRate : OpenGlandAirLeakRate) : 0
   const airMass: number = (condenserState.airMass + leak * DeltaTime) / (1 + removalRate * DeltaTime)
-  return { airMass, newIsSjaeEnabled }
+  return { airMass, newIsSjaeEnabled, pumpFlow: pump }
 }
 
 // Saturation temperature (°C) at the condenser pressure (mbar absolute)

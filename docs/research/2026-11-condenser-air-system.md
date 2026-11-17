@@ -167,3 +167,14 @@ leakage that this model does not have. With the sourced values, the pressure ris
 - HEI Standards for Steam Surface Condensers Table 8 and Table 9 would fix (a), (b) and the holding size in one read.
 - A shell steam-space volume from any OEM datasheet of a 100 to 200 MW unit.
 - The HEI rate-of-vacuum-drop criterion.
+
+## Air pump seal water: heat, cooler, warning and trip (#166, Nov 2026)
+
+Two web searches, snippets only. Nothing found is a condenser-specific design figure, so the sizes of the model are **UNVERIFIED** and recorded as such in `design-basis.md`.
+
+- The heat of compression and of condensing vapour is absorbed by the seal liquid, and its temperature rise is much lower than in a dry pump because of the water's specific heat (Busch, via Pumps & Systems). The service liquid goes through a separator and a liquid-to-liquid or air-to-liquid cooler (a pump manual). Principle sourced, no shaft power or duty figure.
+- The pump usually runs 5 to 14 K above the seal water supply; a typical rise across the pump is about 4 K (Nash). A liquid ring pump at 55 °C and above may have a problem, and high pump temperature points to low seal flow, plugged nozzles or low feed pressure (Nash, "Hot Pump Operating"). Taken for the trip temperature.
+- A seal water temperature above design is fixed with more cooling water or a cleaner cooler (Graham troubleshooting). Pump trips found are on seal liquid pressure and flow, not temperature; a bearing temperature alarm at 140 °F above ambient. No seal water temperature trip value found: the warning of 40 °C is our own number.
+- Cavitation: the pump cannot go below the vapour pressure of its seal water (EPRI §2.2.1, above); near the floor the ring cavitates. The model lets the capacity fall linearly to nothing at the floor: `S · (1 − floor ÷ shell pressure)`.
+
+Model: seal water lump of 500 kg (assumed), shaft power 55 kW and condensation factor 0.5, cooler UA 6 kW/K against the 10 °C cooling water (settles at about 19.5 °C). With the cooler lost the water heats at 0.026 K/s: warning at about 780 s, trip at about 1350 s.

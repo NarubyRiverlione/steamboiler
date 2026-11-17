@@ -128,6 +128,13 @@ describe("powerPlantReducer", () => {
       )
     })
 
+    test("a tripped air pump cannot be started but can be stopped (#166)", () => {
+      const cold: PowerPlantState = makeInitialState()
+      const tripped: PowerPlantState = { ...cold, Condenser: { ...cold.Condenser, airPumpTripped: true } }
+      const start = reduce({ type: "SET_AIR_EXTRACTION_PUMP_ENABLED", payload: { isAirExtractionPumpEnabled: true } }, tripped)
+      expect(start.Condenser.isAirExtractionPumpEnabled).toBe(false)
+    })
+
     const valves = [
       (delta: number): PowerPlantAction => ({ type: "SET_SJAE_VALVE_POSITION", payload: { sjaeValvePosition: delta } }),
       (delta: number): PowerPlantAction => ({

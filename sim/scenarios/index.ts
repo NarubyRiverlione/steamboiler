@@ -15,6 +15,8 @@ import { turningGear } from "./turning-gear"
 import { maxOutput } from "./max-output"
 import { reliefLift } from "./relief-lift"
 import { returnStop } from "./return-stop"
+import { sealWaterSteady } from "./seal-water-steady"
+import { sealWaterTrip } from "./seal-water-trip"
 import { sjaeClosedLoad } from "./sjae-closed-load"
 import { sprayStuckClosed } from "./spray-stuck-closed"
 import { turbineLoad } from "./turbine-load"
@@ -28,7 +30,7 @@ import { vacuumLoss } from "./vacuum-loss"
 export const goldenPath: Scenario[] = [bypassLoop, turbineRunup, turbineSync, turbineLoad]
 
 // Edge: drive the plant past one limit and check that its protection acts.
-export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, boilerHigh, deaeratorHigh, heatUpAtLimit, lowPressureClose, maxOutput, returnStop, turbineOverspeed, turbineTrip, lubeOilTrip, turningGear, glandSeal, vacuumLoss, sjaeClosedLoad, sprayStuckClosed, deaeratorVentClosed, deaeratorVentOpen]
+export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, boilerHigh, deaeratorHigh, heatUpAtLimit, lowPressureClose, maxOutput, returnStop, turbineOverspeed, turbineTrip, lubeOilTrip, turningGear, glandSeal, sealWaterSteady, sealWaterTrip, vacuumLoss, sjaeClosedLoad, sprayStuckClosed, deaeratorVentClosed, deaeratorVentOpen]
 
 // Every scenario here is selectable with `pnpm sim <name>` and checked against every invariant.
 export const scenarios: Record<string, Scenario> = Object.fromEntries([...goldenPath, ...edge].map((s) => [s.name, s]))

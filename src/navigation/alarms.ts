@@ -5,9 +5,10 @@ import { deaeratorLevel } from "../context/Deaerator/DeaeratorTick"
 import type PowerPlantState from "../context/PowerPlantState"
 import { boilerLevel } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
+import { isSealWaterWarning } from "../utils/sealWaterCalculation"
 import type { PartId } from "./plantParts"
 
-export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh" | "lubeOilPressureLow"
+export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "airPumpSealWaterHigh" | "airPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh" | "lubeOilPressureLow"
 
 // error = red tile backlight, warning = yellow; every alarm must declare one
 export type AlarmSeverity = "error" | "warning"
@@ -30,6 +31,8 @@ export const ALARMS: readonly Alarm[] = [
   { id: "boilerLevelHigh", label: "Boiler level high", severity: "warning", part: "boiler", active: (s: PowerPlantState) => boilerLevel(s.Boiler.waterVolume) >= HighLevel },
   { id: "boilerLevelHighTripped", label: "Boiler level high-high trip", severity: "error", part: "boiler", active: (s: PowerPlantState) => s.Boiler.boilerLevelHighTripped },
   { id: "condensationPumpTripped", label: "Condensation pump trip", severity: "error", part: "condenser", active: (s: PowerPlantState) => s.Condenser.condensationPumpTripped },
+  { id: "airPumpSealWaterHigh", label: "Air pump seal water hot", severity: "warning", part: "condenser", active: (s: PowerPlantState) => isSealWaterWarning(s.Condenser.sealWaterTemperature) },
+  { id: "airPumpTripped", label: "Air pump trip", severity: "error", part: "condenser", active: (s: PowerPlantState) => s.Condenser.airPumpTripped },
   { id: "turbineTripped", label: "Turbine trip", severity: "error", part: "turbine", active: (s: PowerPlantState) => s.Turbine.turbineTripped },
   { id: "hotwellLevelLow", label: "Hotwell level low", severity: "warning", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) < HotwellLow },
   { id: "hotwellLevelHigh", label: "Hotwell level high", severity: "warning", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) >= HotwellHigh },
