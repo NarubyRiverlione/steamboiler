@@ -155,9 +155,11 @@ function Deaerator() {
                 <Lamp lit={reliefValveOpen} label="Relief open" title="The 4 bar relief valve is lifted" />
               </div>
             </div>
-            <p className="board-warning" role="status" aria-label="Deaerator warning">
-              {warning}
-            </p>
+            {warning !== "" && (
+              <p className="board-lcd-msg" role="status" aria-label="Deaerator warning">
+                {warning}
+              </p>
+            )}
           </div>
 
           <div className="board-group board-group-plain board-steam-source">
