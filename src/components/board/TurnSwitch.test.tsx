@@ -83,10 +83,10 @@ describe("TurnSwitch", () => {
     expect(onToggleCover).toHaveBeenCalledTimes(1)
   })
 
-  it("does not lift a cover over a disabled switch", () => {
+  it("lifts a cover over a disabled switch, as the handle alone refuses", () => {
     const { onToggleCover, sw } = renderSwitch({ lifted: false, disabled: true })
     fireEvent.click(sw)
-    expect(onToggleCover).not.toHaveBeenCalled()
+    expect(onToggleCover).toHaveBeenCalledTimes(1)
   })
 
   it("turns with the cover up, and the cover strip or Escape puts it down", () => {

@@ -111,12 +111,14 @@ describe("Generation page", () => {
   })
 
   it("blocks the breaker outside the band and says why", () => {
-    renderGeneration({ rpm: 2500, generatorBreaker: false })
+    const fns = renderGeneration({ rpm: 2500, generatorBreaker: false })
     expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
     const blocked: HTMLElement = screen.getByRole("switch", { name: "Generator breaker, cover down" })
     expect(blocked.getAttribute("aria-disabled")).toBe("true")
     fireEvent.click(blocked)
-    expect(screen.getByRole("switch", { name: "Generator breaker, cover down" })).toBeTruthy()
+    expect(screen.getByRole("switch", { name: "Generator breaker, cover up" })).toBeTruthy() // the cover still lifts
+    fireEvent.click(screen.getByRole("switch", { name: "Generator breaker, cover up" }))
+    expect(fns.toggleGeneratorBreaker).not.toHaveBeenCalled() // only the handle refuses
     expect(screen.getByText(/Current RPM/).textContent).toContain("between 2998 and 3002")
   })
 

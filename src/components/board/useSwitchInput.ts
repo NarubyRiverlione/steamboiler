@@ -11,7 +11,7 @@ type SwitchInputOptions = {
 
 type SwitchHandlers = {
   readonly onClick: () => void
-  readonly onKeyDown: (e: KeyboardEvent<SVGSVGElement>) => void
+  readonly onKeyDown: (e: KeyboardEvent) => void
 }
 
 export function useSwitchInput({ disabled, guard, onToggle }: SwitchInputOptions): SwitchHandlers {
@@ -25,7 +25,7 @@ export function useSwitchInput({ disabled, guard, onToggle }: SwitchInputOptions
     onClick: () => {
       run(pressAction(covered, disabled))
     },
-    onKeyDown: (e: KeyboardEvent<SVGSVGElement>) => {
+    onKeyDown: (e: KeyboardEvent) => {
       const action: SwitchAction | "ignore" = keyAction(e.key, covered, lifted, disabled)
       if (action === "ignore") return
       e.preventDefault()

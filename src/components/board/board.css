@@ -62,6 +62,8 @@
   --board-zone-ok: #2f9e44;
   --board-zone-warn: #f08c00;
   --board-zone-alarm: #e03131;
+  --board-breaker-closed: #b02323; /* darker than the alarm red: a closed breaker is not an alarm */
+  --board-breaker-open: #2f9e44;
   --board-gauge-bezel-hi: #e8e8e8;
   --board-gauge-bezel-lo: #8f8f8f;
   --board-needle: #c92a2a;
@@ -706,15 +708,10 @@ path.board-zone {
   font-family: var(--board-font-label);
 }
 
-
-
 .board-valve-values {
   display: flex;
   gap: 0.35rem;
 }
-
-
-
 
 .board-section {
   margin-top: 0.75rem;
@@ -1142,7 +1139,6 @@ path.board-zone {
   justify-items: center;
 }
 
-
 .board-valve-knob .board-valve-values {
   justify-content: center;
 }
@@ -1201,14 +1197,6 @@ path.board-zone {
   font-family: var(--board-font-lcd);
   font-size: 0.85rem;
   line-height: 1.35;
-}
-
-.board-hazard {
-  justify-self: stretch;
-  padding: 0.9rem;
-  border-radius: 6px;
-  background: repeating-linear-gradient(-45deg, #f2c200 0 12px, #141414 12px 24px);
-  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.45);
 }
 
 .board-condenser-top {
@@ -1402,10 +1390,6 @@ path.board-zone {
   fill: var(--board-knob-pump-rim);
 }
 
-.board-switch-breaker .board-switch-rim {
-  fill: var(--board-knob-gas-rim);
-}
-
 .board-switch-rim {
   stroke: rgba(0, 0, 0, 0.35);
   stroke-width: 1;
@@ -1504,16 +1488,260 @@ path.board-zone {
   font-size: 8px;
 }
 
-.board-switch-in-housing {
-  display: grid;
-  justify-items: center;
-  padding: 0.3rem 0;
-  border-radius: 4px;
-  background: var(--board-panel-bg);
-}
-
 .board-valve-knob-row {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+/* Heavy breaker with a rocker handle (#172): cast body, nameplate, position flag, rocker in a well, flip cover */
+.board-breaker {
+  position: relative;
+  width: 250px;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 10px 12px 12px;
+  border: 1px solid #0d0d0d;
+  border-radius: 8px;
+  background: linear-gradient(#53565b, #2c2e31 55%, #232528);
+  box-shadow:
+    inset 0 1px 0 #81858b,
+    inset 0 -2px 3px rgba(0, 0, 0, 0.5),
+    0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.board-breaker::before,
+.board-breaker::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(#9a9da2, #4a4d51);
+  box-shadow: inset 0 0 0 1px #111;
+}
+
+.board-breaker::before {
+  left: 8px;
+}
+
+.board-breaker::after {
+  right: 8px;
+}
+
+.board-breaker-nameplate {
+  margin: 0 14px 10px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: #cfcfcf;
+  color: #1a1a1a;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px #8a8a8a;
+}
+
+.board-breaker-nameplate b {
+  display: block;
+  font-family: var(--board-font-stencil);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.board-breaker-nameplate small {
+  font-family: var(--board-font-lcd);
+  font-size: 0.68rem;
+  color: #444;
+}
+
+.board-breaker-flag {
+  display: grid;
+  place-items: center;
+  height: 58px;
+  margin-bottom: 12px;
+  border: 3px solid #0b0b0b;
+  border-radius: 4px;
+  color: #fff;
+  font-family: var(--board-font-stencil);
+  letter-spacing: 0.08em;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+  transition: background 250ms;
+}
+
+.board-breaker-flag-big {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.board-breaker-flag-small {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+}
+
+.board-breaker-flag-closed {
+  background: linear-gradient(
+    color-mix(in srgb, var(--board-breaker-closed) 80%, #fff),
+    var(--board-breaker-closed)
+  );
+}
+
+.board-breaker-flag-open {
+  background: linear-gradient(
+    color-mix(in srgb, var(--board-breaker-open) 80%, #fff),
+    var(--board-breaker-open)
+  );
+}
+
+.board-breaker-flag-refused {
+  filter: saturate(0.55) brightness(0.8);
+}
+
+.board-breaker-well {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 150px;
+  max-width: 100%;
+  height: 170px;
+  margin: 0 auto;
+  border-radius: 6px;
+  background: #0e0f10;
+  box-shadow:
+    inset 0 4px 10px #000,
+    0 1px 0 #5d6066;
+  cursor: pointer;
+  perspective: 420px;
+}
+
+.board-breaker-well:focus-visible {
+  outline: 3px solid var(--board-focus-ring);
+  outline-offset: 3px;
+}
+
+.board-breaker-well-disabled {
+  cursor: not-allowed;
+}
+
+.board-breaker-well-disabled .board-breaker-rocker {
+  filter: grayscale(0.8) brightness(0.7);
+}
+
+.board-breaker-rocker {
+  position: relative;
+  width: 104px;
+  height: 142px;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 2px #17181a,
+    0 5px 8px rgba(0, 0, 0, 0.7);
+  transition: transform 180ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.board-breaker-rocker-on {
+  transform: rotateX(16deg);
+  background: linear-gradient(#34373b 0 49%, #060606 49% 51%, #1c1d1f 51%);
+}
+
+.board-breaker-rocker-off {
+  transform: rotateX(-16deg);
+  background: linear-gradient(#1c1d1f 0 49%, #060606 49% 51%, #34373b 51%);
+}
+
+.board-breaker-grip {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  height: 40px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(0deg, #3d4044 0 3px, #26282b 3px 6px);
+  opacity: 0.9;
+}
+
+.board-breaker-grip-up {
+  top: 16px;
+}
+
+.board-breaker-grip-down {
+  bottom: 16px;
+}
+
+.board-breaker-leg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--board-font-stencil);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: #6c7075;
+}
+
+.board-breaker-leg-up {
+  top: 3px;
+}
+
+.board-breaker-leg-down {
+  bottom: 3px;
+}
+
+.board-breaker-rocker-on .board-breaker-leg-up {
+  color: #ff8f8f;
+  text-shadow: 0 0 6px var(--board-breaker-closed);
+}
+
+.board-breaker-rocker-off .board-breaker-leg-down {
+  color: #8fe3a2;
+  text-shadow: 0 0 6px var(--board-breaker-open);
+}
+
+.board-breaker-cover {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  background: linear-gradient(160deg, rgba(180, 190, 200, 0.38), rgba(60, 64, 70, 0.55));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* The nameplate and flag, with the lifted cover hinged at its bottom edge, the top of the well */
+.board-breaker-stage {
+  position: relative;
+  perspective: 600px;
+}
+
+.board-breaker-cover-lifted {
+  position: absolute;
+  inset: 0 14px;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+  background: linear-gradient(160deg, rgba(190, 200, 210, 0.3), rgba(40, 44, 50, 0.5));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transform-origin: 50% 100%;
+  animation: board-breaker-cover-lift 300ms ease-out;
+}
+
+.board-breaker-cover-lifted:hover {
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+@keyframes board-breaker-cover-lift {
+  from {
+    transform: rotateX(-80deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-breaker-cover-lifted {
+    animation: none;
+  }
 }
