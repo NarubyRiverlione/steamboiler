@@ -11,11 +11,11 @@ Next: the first ready ticket with nothing under Waiting on, in the theme you pic
 
 ## Electrical: auxiliary load, grid supply, vital bus, UPS
 
-Next: nothing ready (every ticket is waiting or needs triage).
+Next: [#174](https://github.com/NarubyRiverlione/steamboiler/issues/174) Breakers: consequences instead of refusals. Research first, then grill
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
-| 1 | [#174](https://github.com/NarubyRiverlione/steamboiler/issues/174) Breakers: consequences instead of refusals. Research first, then grill | needs-triage |  | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) |
+| 1 | [#174](https://github.com/NarubyRiverlione/steamboiler/issues/174) Breakers: consequences instead of refusals. Research first, then grill | ready-for-agent |  | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) |
 | 2 | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) Vital bus and safety bus: the UPS carries the emergency light and breaker control, 0% ends the simulation | ready-for-agent | [#174](https://github.com/NarubyRiverlione/steamboiler/issues/174) | [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) [#159](https://github.com/NarubyRiverlione/steamboiler/issues/159) [#171](https://github.com/NarubyRiverlione/steamboiler/issues/171) |
 | 3 | [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) Onsite diesel generator feeds the auxiliary bus (dark start) | needs-triage | [#174](https://github.com/NarubyRiverlione/steamboiler/issues/174) | [#171](https://github.com/NarubyRiverlione/steamboiler/issues/171) [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) |
 
