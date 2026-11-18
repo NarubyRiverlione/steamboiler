@@ -392,7 +392,6 @@
   opacity: 0.45;
 }
 
-
 .board-node-name {
   fill: var(--board-text);
   font-size: 16px;
