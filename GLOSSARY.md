@@ -92,6 +92,10 @@ _Avoid_: Station service, parasitic load, house load (reserved for island operat
 The electric output less the auxiliary load, in MW. Negative means the plant imports power, drawn from the grid supply.
 _Avoid_: Net demand, net load
 
+**Dead bus**:
+Both the grid supply breaker and the generator breaker are open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
+_Avoid_: Blackout, loss of power
+
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
 _Avoid_: Bell curve, optimal pressure, vacuum permissive

@@ -122,6 +122,7 @@ type PowerPlantState = {
   Condenser: CondenserState
   Turbine: TurbineState
   Oil: OilState
+  gridSupplyBreaker: boolean // the grid feeds the auxiliary bus while closed; closed in every scenario and a new game (#141, ADR 0053)
   auxiliaryLoad: number // MW, what the pumps and turbine auxiliaries draw (#140); net output = electric output - this
 }
 export default PowerPlantState
