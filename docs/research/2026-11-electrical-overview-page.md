@@ -63,7 +63,7 @@ Legend: ● live or drawing power, ○ dead or idle, ▮ closed, ▯ open.
 1. **Diesel generator:** #169 is not built; the diesel is drawn with an open breaker and no figures until it is.
 2. **Dead vital bus on this page:** red like the rest of the board, or the one page that stays readable? A dark start is exactly when the operator needs the diagram.
 3. **Consumer order:** the order above follows the #140 table (largest first); an alternative is by plant part.
-4. **Navigation:** a new route and entry in `AppRoutes.tsx` and the header, and a node on the plant overview linking to it, are not decided.
+4. **Navigation:** route `/electrical` in `AppRoutes.tsx` and an **Electrical overview** lens button in the header after Plant overview (decided in #171). A node on the plant overview linking to it is not decided.
 
 ## If it becomes a ticket
 
