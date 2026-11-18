@@ -74,7 +74,8 @@ describe("BreakerSwitch", () => {
   it("blocks the handle under a cover that is down, and a click or Enter lifts the cover", () => {
     const { onToggle, onToggleCover, sw } = renderBreaker({ lifted: false })
     expect(sw.getAttribute("aria-label")).toBe("Test breaker, cover down")
-    expect(screen.getByText("LIFT COVER")).toBeTruthy()
+    expect(document.querySelector(".board-breaker-cover")).not.toBeNull()
+    expect(document.querySelector(".board-breaker-cover-lifted")).toBeNull()
     fireEvent.click(sw)
     fireEvent.keyDown(sw, { key: "Enter" })
     expect(onToggle).not.toHaveBeenCalled()
@@ -88,12 +89,15 @@ describe("BreakerSwitch", () => {
     expect(onToggle).not.toHaveBeenCalled()
   })
 
-  it("rocks with the cover up, and the strip or Escape lowers the cover", () => {
+  it("rocks with the cover up, and a click on the lifted cover or Escape lowers it", () => {
     const { onToggle, onToggleCover, sw } = renderBreaker({ lifted: true })
     expect(sw.getAttribute("aria-label")).toBe("Test breaker, cover up")
     fireEvent.click(sw)
     expect(onToggle).toHaveBeenCalledTimes(1)
-    fireEvent.click(screen.getByText("LOWER COVER"))
+    expect(document.querySelector(".board-breaker-cover")).toBeNull()
+    const lid: Element | null = document.querySelector(".board-breaker-cover-lifted")
+    expect(lid).not.toBeNull()
+    if (lid !== null) fireEvent.click(lid)
     expect(onToggleCover).toHaveBeenCalledTimes(1)
     expect(onToggle).toHaveBeenCalledTimes(1)
     fireEvent.keyDown(sw, { key: "Escape" })

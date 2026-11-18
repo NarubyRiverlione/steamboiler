@@ -1,7 +1,7 @@
 /** Heavy breaker for a control that holds a state (#172): a cast body with a nameplate, a big position flag and a rocker handle in a recessed well, under the flip cover of ADR 0039. Same props as TurnSwitch, plus the nameplate text. Design: docs/research/2026-11-breaker-rocker-mockup.html. */
 
 import "./board.css"
-import { CoverDown, CoverStrip, Nameplate, PositionFlag, Rocker } from "./BreakerSwitchParts"
+import { CoverDown, CoverLifted, Nameplate, PositionFlag, Rocker } from "./BreakerSwitchParts"
 import { switchName, type SwitchGuard } from "./switchInput"
 import { useSwitchInput } from "./useSwitchInput"
 
@@ -34,8 +34,11 @@ export function BreakerSwitch({
     .join(" ")
   return (
     <div className="board-breaker">
-      <Nameplate plate={plate} rating={rating} />
-      <PositionFlag on={on} refused={disabled} />
+      <div className="board-breaker-stage">
+        <Nameplate plate={plate} rating={rating} />
+        <PositionFlag on={on} refused={disabled} />
+        {lifted && <CoverLifted onClick={() => guard?.onToggleCover()} />}
+      </div>
       <div
         role="switch"
         aria-checked={on}
@@ -49,7 +52,6 @@ export function BreakerSwitch({
         <Rocker on={on} />
         {covered && <CoverDown />}
       </div>
-      {lifted && <CoverStrip onClick={() => guard?.onToggleCover()} />}
     </div>
   )
 }

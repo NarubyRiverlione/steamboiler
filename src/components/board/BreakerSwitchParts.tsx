@@ -1,6 +1,4 @@
-/** The drawn parts of a breaker switch (#172): the nameplate, the position flag, the rocker handle and the flip cover. */
-
-import type { MouseEvent } from "react"
+/** The drawn parts of a breaker switch (#172): the nameplate, the position flag, the rocker handle and the flip cover (down over the well, lifted over the nameplate and flag). */
 
 type NameplateProps = { readonly plate: string; readonly rating: string }
 
@@ -46,27 +44,10 @@ export function Rocker({ on }: { readonly on: boolean }) {
 
 // The smoked cover over the well while it is down
 export function CoverDown() {
-  return (
-    <div className="board-breaker-cover" aria-hidden="true">
-      LIFT COVER
-    </div>
-  )
+  return <div className="board-breaker-cover" aria-hidden="true" />
 }
 
-type StripProps = { readonly onClick: () => void }
-
-// The strip under the body that drops a lifted cover (the keyboard uses Escape)
-export function CoverStrip({ onClick }: StripProps) {
-  return (
-    <div
-      className="board-breaker-strip"
-      aria-hidden="true"
-      onClick={(e: MouseEvent) => {
-        e.stopPropagation()
-        onClick()
-      }}
-    >
-      LOWER COVER
-    </div>
-  )
+// The cover swung up on its hinge at the top of the well: translucent over the nameplate and the flag; a click drops it (the keyboard uses Escape)
+export function CoverLifted({ onClick }: { readonly onClick: () => void }) {
+  return <div className="board-breaker-cover-lifted" aria-hidden="true" onClick={onClick} />
 }

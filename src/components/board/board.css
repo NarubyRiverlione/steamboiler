@@ -1713,30 +1713,50 @@ path.board-zone {
 .board-breaker-cover {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: end center;
-  padding-bottom: 8px;
   box-sizing: border-box;
   border: 2px solid rgba(255, 255, 255, 0.35);
   border-radius: 6px;
   background: linear-gradient(160deg, rgba(180, 190, 200, 0.38), rgba(60, 64, 70, 0.55));
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-  color: #eee;
-  font-family: var(--board-font-stencil);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
 }
 
-.board-breaker-strip {
-  width: fit-content;
-  margin: 8px auto 0;
-  padding: 3px 10px;
-  border: 1px solid #555;
-  border-radius: 3px;
-  background: #17181a;
-  color: #f2c200;
-  font-family: var(--board-font-stencil);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
+/* The nameplate and flag, with the lifted cover hinged at its bottom edge, the top of the well */
+.board-breaker-stage {
+  position: relative;
+  perspective: 600px;
+}
+
+.board-breaker-cover-lifted {
+  position: absolute;
+  inset: 0 14px;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+  background: linear-gradient(160deg, rgba(190, 200, 210, 0.3), rgba(40, 44, 50, 0.5));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   cursor: pointer;
+  transform-origin: 50% 100%;
+  animation: board-breaker-cover-lift 300ms ease-out;
+}
+
+.board-breaker-cover-lifted:hover {
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+@keyframes board-breaker-cover-lift {
+  from {
+    transform: rotateX(-80deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-breaker-cover-lifted {
+    animation: none;
+  }
 }
