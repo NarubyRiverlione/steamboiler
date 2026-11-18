@@ -28,7 +28,7 @@ Next: [#162](https://github.com/NarubyRiverlione/steamboiler/issues/162) Vacuum 
 | 4 | [#159](https://github.com/NarubyRiverlione/steamboiler/issues/159) Lube oil: emergency (coast-down) oil pump keeps pressure while the rotor coasts down | ready-for-agent | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) |  |
 | 5 | [#162](https://github.com/NarubyRiverlione/steamboiler/issues/162) Vacuum breaker: an emergency stop lets air into the condenser and brakes the rotor | ready-for-agent |  |  |
 | 6 | [#170](https://github.com/NarubyRiverlione/steamboiler/issues/170) Lost auxiliary steam supply collapses the vacuum (gland sealing steam) | needs-triage |  |  |
-| 7 | [#177](https://github.com/NarubyRiverlione/steamboiler/issues/177) Gland steam shut-off: a plant flag and an annunciator tile | needs-triage |  | [#178](https://github.com/NarubyRiverlione/steamboiler/issues/178) |
+| 7 | [#177](https://github.com/NarubyRiverlione/steamboiler/issues/177) Gland steam shut-off: a plant flag and an annunciator tile | ready-for-agent |  | [#178](https://github.com/NarubyRiverlione/steamboiler/issues/178) |
 
 ## Plant systems: components and physics expansion
 
@@ -54,10 +54,10 @@ Next: [#167](https://github.com/NarubyRiverlione/steamboiler/issues/167) Board: 
 | 16 | [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) Board: Diesel generator page, start, run-up and diesel breaker | needs-triage | [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) [#174](https://github.com/NarubyRiverlione/steamboiler/issues/174) | [#171](https://github.com/NarubyRiverlione/steamboiler/issues/171) |
 | 17 | [#171](https://github.com/NarubyRiverlione/steamboiler/issues/171) Board: electrical overview page, single-line schematic of breakers, buses and consumers | needs-triage | [#143](https://github.com/NarubyRiverlione/steamboiler/issues/143) [#169](https://github.com/NarubyRiverlione/steamboiler/issues/169) [#142](https://github.com/NarubyRiverlione/steamboiler/issues/142) [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) |  |
 | 18 | [#176](https://github.com/NarubyRiverlione/steamboiler/issues/176) Board: review Page Up/Down navigation, maybe navigate only via the overview pages | needs-triage |  |  |
-| 19 | [#178](https://github.com/NarubyRiverlione/steamboiler/issues/178) Turbine aux page: permissive lamps instead of message lines | needs-triage | [#177](https://github.com/NarubyRiverlione/steamboiler/issues/177) |  |
-| 20 | [#179](https://github.com/NarubyRiverlione/steamboiler/issues/179) Generation page: Breaker closed lamp, no message lines | needs-triage |  |  |
-| 21 | [#180](https://github.com/NarubyRiverlione/steamboiler/issues/180) Deaerator page: amber warning lamps for the start-up vent | needs-triage |  |  |
-| 22 | [#181](https://github.com/NarubyRiverlione/steamboiler/issues/181) Turbine page: Main steam valve open lamp in the speed control | needs-triage |  |  |
+| 19 | [#178](https://github.com/NarubyRiverlione/steamboiler/issues/178) Turbine aux page: permissive lamps instead of message lines | ready-for-agent | [#177](https://github.com/NarubyRiverlione/steamboiler/issues/177) |  |
+| 20 | [#179](https://github.com/NarubyRiverlione/steamboiler/issues/179) Generation page: Breaker closed lamp, no message lines | ready-for-agent |  |  |
+| 21 | [#180](https://github.com/NarubyRiverlione/steamboiler/issues/180) Deaerator page: amber warning lamps for the start-up vent | ready-for-agent |  |  |
+| 22 | [#181](https://github.com/NarubyRiverlione/steamboiler/issues/181) Turbine page: Main steam valve open lamp in the speed control | ready-for-agent |  |  |
 
 ## Sim core: tests, CI, tooling, snapshots
 

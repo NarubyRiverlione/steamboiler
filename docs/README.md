@@ -90,7 +90,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0051](adr/0051-turning-gear-holds-the-stopped-rotor-and-blocks-the-valve.md) | Turning gear: a manual gear holds the stopped rotor, and a stopped rotor off the gear blocks the turbine valve |
 | [0052](adr/0052-first-public-release-on-itch-io.md) | First public release on itch.io: a goal, help cards in markdown, a startup guide; desktop, English, early access |
 | [0053](adr/0053-the-auxiliary-bus-is-fed-by-the-grid-or-the-generator.md) | The auxiliary bus is fed by the grid or the generator |
-| [0054](adr/0054-status-by-lamps-not-text.md) | Proposed: status by lamps, not text: permissive lamps beside a control instead of message lines; tooltips stay; one mode |
+| [0054](adr/0054-status-by-lamps-not-text.md) | Status by lamps, not text: permissive lamps beside a control instead of message lines; tooltips stay; one mode |
 
 ## Research (dated, frozen)
 

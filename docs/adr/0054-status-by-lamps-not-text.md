@@ -1,6 +1,6 @@
 # Status by lamps, not text: permissive lamps instead of message lines
 
-**Status: proposed.** Owner discussion of 2026-11-18. Builds on the analog board of [ADR 0015](0015-ui-redo-analog-board-preferred.md) and the switch rules of [ADR 0039](0039-latching-controls-are-turn-switches.md). The refusals themselves are open in #174.
+**Status: accepted.** Owner discussion of 2026-11-18; tickets #177 to #181. Builds on the analog board of [ADR 0015](0015-ui-redo-analog-board-preferred.md) and the switch rules of [ADR 0039](0039-latching-controls-are-turn-switches.md). The refusals themselves are open in #174.
 
 The board says **why a control can or cannot work with lamps, never with sentences**. Each condition a control waits for is a **permissive lamp** beside that control, lit (`ok` tone, green) while the condition is met; when all of a control's lamps are lit, the control works. A warning about an operator mistake is an amber lamp in the group it concerns. An event the operator must notice even on another page is an **annunciator tile**. A real board has no prose: the operator reads the lamps, and the explanation lives in training, here the help cards of [ADR 0052](0052-first-public-release-on-itch-io.md).
 
@@ -36,6 +36,6 @@ Rules:
 
 ## Consequences
 
-- One ticket per page group (`ui`, blocked by this ADR): Turbine aux, Generation, Deaerator, Turbine. The gland steam tile also needs the new flag in the plant (sim-core part of the Turbine aux ticket) and an entry in `ALARMS`.
+- One `ui` ticket per page group: Turbine aux (#178), Generation (#179), Deaerator (#180), Turbine (#181). The gland steam tile needs the new flag in the plant and an entry in `ALARMS`: its own `turbine-aux` ticket (#177), which blocks #178.
 - `docs/dev/ui-board.md` drops the message lines from the page descriptions as each ticket lands, and gets the permissive-lamp rule under the layout rules.
 - A ticket that adds a refusal or a warning designs its lamp, not a line of text.
