@@ -111,5 +111,6 @@
     "pumpRunning": true,
     "headerPressure": 0.9999999999999972
   },
+  "gridSupplyBreaker": true,
   "auxiliaryLoad": 0.7423476172410206
 }

@@ -11,6 +11,7 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
+import { gridSupplyOpenRefusal, isBusLive, loadSetpointFloorRefusal } from "./AuxiliaryBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
 import { isOpeningRefused } from "./Turbine/ValveOpening"
 import { glandSteamRefusal } from "./Turbine/GlandSteam"
@@ -115,6 +116,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     glandSteamOn: false, // the glands unsealed (ADR 0047)
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
+  gridSupplyBreaker: true, // closed: the grid feeds the auxiliary bus (#141)
   auxiliaryLoad: 0, // MW: no pump runs
 })
 
@@ -237,6 +239,11 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     }),
   //#endregion
 
+  //#region Grid supply breaker (#141)
+  CLOSE_GRID_SUPPLY_BREAKER: (state) => ({ ...state, gridSupplyBreaker: true }),
+  OPEN_GRID_SUPPLY_BREAKER: (state) => (gridSupplyOpenRefusal(state) ? state : { ...state, gridSupplyBreaker: false }),
+  //#endregion
+
   //#region Oil
   SET_OIL_PUMP: (state, { payload: { pumpRunning } }) => ({ ...state, Oil: { ...state.Oil, pumpRunning } }),
   //#endregion
@@ -263,7 +270,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // Engaging is refused without oil or above the standstill speed; disengaging is always allowed (ADR 0051)
   // A rotor at gear speed stops when the gear lets go: the loss torque is ∝ rpm², so the model would coast it for hours
   SET_TURNING_GEAR: (state, { payload: { engaged } }) => {
-    if (engaged && turningGearRefusal(state.Turbine, state.Oil)) return state
+    if (engaged && turningGearRefusal(state.Turbine, state.Oil, isBusLive(state))) return state
     const { rpm } = state.Turbine
     return withTurbine(state, { turningGearEngaged: engaged, rpm: !engaged && rpm <= CstTurningGear.Rpm ? 0 : rpm })
   },
@@ -308,7 +315,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   },
   // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
-    loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
+    loadSetpointRefusal(state.Turbine) || loadSetpointFloorRefusal(state, loadSetpoint) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 
