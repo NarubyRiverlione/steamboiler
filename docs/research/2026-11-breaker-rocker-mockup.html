@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heavy breaker with rocker handle: mockup</title>
+<!--
+  Mockup of the industrial heavy breaker (rocker handle) that would replace the TurnSwitch for the four breakers:
+  generator (#142), grid supply (#141/#142), onsite diesel (#169) and UPS (#143). Throwaway: plain HTML, CSS and JS, no build.
+  Board colours are copied from the --board-* tokens in src/components/board/board.css. The refusal texts and the
+  grid and diesel rules are placeholders: the real ones come from the refusal functions of #141 and #169.
+-->
+<style>
+  :root {
+    --page: #2b2e31;
+    --plate: #d4d4d4;
+    --plate-edge: #8a8a8a;
+    --text: #1a1a1a;
+    --lcd-bg: #000;
+    --lcd-text: #7dff7d;
+    --closed: #c92a2a;
+    --open: #2f9e44;
+    --focus: #1f5fbf;
+    --stencil: "Stardos Stencil", Impact, "Arial Narrow", sans-serif;
+    --lcd: "Share Tech Mono", ui-monospace, monospace;
+    --label: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--page); color: #e8e8e8; font-family: var(--label); }
+  h1 { font-family: var(--stencil); font-size: 1.5rem; margin: 0 0 4px; letter-spacing: .04em; }
+  h2 { font-family: var(--stencil); font-size: 1.05rem; margin: 32px 0 10px; letter-spacing: .04em; color: #f2c200; }
+  p.note { margin: 0 0 12px; color: #b9bdc2; max-width: 70ch; font-size: .92rem; line-height: 1.45; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 14px 0 4px; font-size: .9rem; }
+  .controls label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+
+  .plate { background: var(--plate); color: var(--text); border: 2px solid var(--plate-edge); border-radius: 8px; padding: 18px; box-shadow: 0 3px 6px rgba(0,0,0,.5); }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; align-items: start; }
+  .group-title { font-family: var(--stencil); font-size: .95rem; letter-spacing: .06em; margin: 0 0 8px; text-transform: uppercase; }
+
+  /* --- the heavy breaker --- */
+  .hazard { padding: 12px; border-radius: 6px; background: repeating-linear-gradient(-45deg, #f2c200 0 12px, #141414 12px 24px); box-shadow: 0 3px 4px rgba(0,0,0,.45); }
+  .breaker { background: linear-gradient(#53565b, #2c2e31 55%, #232528); border: 1px solid #0d0d0d; border-radius: 8px; padding: 10px 12px 14px; color: #ddd;
+    box-shadow: inset 0 1px 0 #81858b, inset 0 -2px 3px rgba(0,0,0,.5), 0 4px 6px rgba(0,0,0,.5); position: relative; }
+  .breaker::before, .breaker::after { content: ""; position: absolute; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(#9a9da2, #4a4d51); box-shadow: inset 0 0 0 1px #111; }
+  .breaker::before { left: 8px; } .breaker::after { right: 8px; }
+  .nameplate { margin: 0 14px 10px; padding: 3px 6px; background: #cfcfcf; color: var(--text); border-radius: 3px; text-align: center; box-shadow: inset 0 0 0 1px #8a8a8a; }
+  .nameplate b { display: block; font-family: var(--stencil); font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; }
+  .nameplate small { font-family: var(--lcd); font-size: .68rem; color: #444; }
+
+  .flag { height: 58px; border-radius: 4px; border: 3px solid #0b0b0b; display: grid; place-items: center; margin-bottom: 12px;
+    font-family: var(--stencil); color: #fff; letter-spacing: .08em; box-shadow: inset 0 2px 6px rgba(0,0,0,.6); transition: background .25s; }
+  .flag .big { font-size: 1.6rem; line-height: 1; } .flag .sm { font-size: .72rem; letter-spacing: .18em; }
+  .flag.closed { background: linear-gradient(#e24b4b, var(--closed)); }
+  .flag.open { background: linear-gradient(#45b85c, var(--open)); }
+  .flag.blocked { filter: saturate(.55) brightness(.8); }
+
+  .well { position: relative; margin: 0 auto; width: 150px; height: 170px; border-radius: 6px; background: #0e0f10; box-shadow: inset 0 4px 10px #000, 0 1px 0 #5d6066; perspective: 420px; display: grid; place-items: center; }
+  .rocker { appearance: none; border: 0; padding: 0; width: 104px; height: 142px; border-radius: 8px; cursor: pointer; position: relative; font: inherit;
+    background: linear-gradient(#2a2c2f 0 49%, #060606 49% 51%, #2a2c2f 51%); box-shadow: 0 0 0 2px #17181a, 0 5px 8px rgba(0,0,0,.7);
+    transition: transform .18s cubic-bezier(.3,1.5,.5,1), filter .2s; transform-origin: 50% 50%; }
+  .rocker.on { transform: rotateX(16deg); background: linear-gradient(#34373b 0 49%, #060606 49% 51%, #1c1d1f 51%); }
+  .rocker.off { transform: rotateX(-16deg); background: linear-gradient(#1c1d1f 0 49%, #060606 49% 51%, #34373b 51%); }
+  .rocker .grip { position: absolute; left: 14px; right: 14px; height: 40px; border-radius: 4px; background: repeating-linear-gradient(0deg, #3d4044 0 3px, #26282b 3px 6px); opacity: .9; }
+  .rocker .grip.up { top: 16px; } .rocker .grip.down { bottom: 16px; }
+  .rocker .leg { position: absolute; left: 0; right: 0; text-align: center; font-family: var(--stencil); font-size: .78rem; letter-spacing: .12em; color: #6c7075; }
+  .rocker .leg.up { top: 3px; } .rocker .leg.down { bottom: 3px; }
+  .rocker.on .leg.up { color: #ff8f8f; text-shadow: 0 0 6px var(--closed); }
+  .rocker.off .leg.down { color: #8fe3a2; text-shadow: 0 0 6px var(--open); }
+  .rocker:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  .rocker:disabled { cursor: not-allowed; filter: grayscale(.8) brightness(.7); }
+
+  /* the flip cover: smoked plastic, hinged at the top, lifts towards the viewer */
+  .cover { position: absolute; inset: 0; border-radius: 6px; border: 2px solid rgba(255,255,255,.35); cursor: pointer; padding: 0;
+    background: linear-gradient(160deg, rgba(180,190,200,.38), rgba(60,64,70,.55)); transform-origin: 50% 0; transition: transform .3s ease, opacity .3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,.6); color: #eee; font-family: var(--stencil); font-size: .7rem; letter-spacing: .12em; }
+  .cover.down { transform: rotateX(0deg); }
+  .cover.up { transform: rotateX(-82deg); opacity: .5; pointer-events: none; }
+  .cover:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .strip { display: block; margin: 8px auto 0; font-family: var(--stencil); font-size: .68rem; letter-spacing: .12em; color: #f2c200; background: #17181a; border: 1px solid #555; border-radius: 3px; padding: 3px 10px; cursor: pointer; visibility: hidden; }
+  .strip.show { visibility: visible; }
+  .strip:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .lcd-msg { margin: 10px 0 0; min-height: 3.2em; padding: 6px 8px; background: var(--lcd-bg); color: var(--lcd-text); font-family: var(--lcd); font-size: .8rem; line-height: 1.3; border: 1px solid #808080; border-radius: 3px; }
+  .lcd-msg.refusal { color: #ff4d4d; }
+  .bus-lamp { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: .85rem; }
+  .lamp { width: 14px; height: 14px; border-radius: 50%; background: #5a2a2a; box-shadow: inset 0 0 0 2px #1b1b1b; }
+  .lamp.lit { background: #4cff6a; box-shadow: inset 0 0 0 2px #1b1b1b, 0 0 8px #4cff6a; }
+
+  /* --- compact version for the electrical overview (#171) --- */
+  .overview { background: #c9c9c3; color: var(--text); border-radius: 8px; padding: 12px; border: 2px solid var(--plate-edge); overflow-x: auto; }
+  .overview svg { display: block; min-width: 640px; width: 100%; height: auto; font-family: var(--label); }
+  .overview .busbar { stroke: #b08900; stroke-width: 6; }
+  .overview .wire { stroke: #b08900; stroke-width: 3; fill: none; }
+  .overview .wire.dead { stroke: #9a9a92; }
+  .overview .sym { cursor: pointer; }
+  .overview .sym:focus-visible rect.hit { outline: 3px solid var(--focus); }
+  .overview text { fill: var(--text); font-size: 13px; }
+  .overview text.mono { font-family: var(--lcd); font-size: 12px; }
+
+  table { border-collapse: collapse; margin-top: 8px; font-size: .88rem; }
+  th, td { border: 1px solid #55595e; padding: 5px 10px; text-align: left; vertical-align: top; }
+  th { background: #1f2124; }
+  ul.points { color: #b9bdc2; line-height: 1.5; font-size: .92rem; max-width: 75ch; }
+</style>
+</head>
+<body>
+<h1>Heavy breaker with rocker handle</h1>
+<p class="note">One rocker handle in a cast body, a big position flag, a nameplate and the existing flip cover in its hazard housing. Same props as <code>TurnSwitch</code> (<code>on</code>, <code>onToggle</code>, <code>disabled</code>, <code>title</code>, <code>guard</code>). Everything below is clickable: lift a cover, rock the handle, and change the demo conditions.</p>
+
+<div class="controls">
+  <label><input type="checkbox" id="inSync" checked> Turbine in the sync band (generator breaker may close)</label>
+  <label><input type="checkbox" id="dgRuns" checked> Diesel generator running (diesel breaker may close)</label>
+  <label><input type="checkbox" id="auxDead"> Grid supply refused (placeholder transfer rule)</label>
+</div>
+
+<h2>Full size: the four breakers on their pages</h2>
+<div class="plate">
+  <div class="row" id="row"></div>
+</div>
+
+<h2>Compact: single-line schematic of the electrical overview (#171)</h2>
+<p class="note">Read-only apart from the link to the page with the controls. The symbol is the single-line breaker: filled red square closed, hollow green square open. A dead bus and what hangs off it is drawn grey.</p>
+<div class="overview"><svg id="oneline" viewBox="0 0 700 250" role="img" aria-label="Single-line schematic"></svg></div>
+
+<h2>States</h2>
+<table>
+  <tr><th>State</th><th>Flag</th><th>Rocker</th><th>Cover</th></tr>
+  <tr><td>Open</td><td>green, <b>O OPEN</b></td><td>bottom half pressed, <b>O</b> lit green</td><td>down by default</td></tr>
+  <tr><td>Closed</td><td>red, <b>I CLOSED</b></td><td>top half pressed, <b>I</b> lit red</td><td>up while the operator works it</td></tr>
+  <tr><td>Refused (cannot close)</td><td>flag dimmed</td><td>disabled and greyed; the reason is the <code>title</code> and in the LCD line</td><td>still lifts</td></tr>
+  <tr><td>Cover down</td><td>unchanged</td><td>blocked; a click or Space lifts the cover</td><td>smoked, closed</td></tr>
+</table>
+
+<h2>Notes and open points</h2>
+<ul class="points">
+  <li>Red closed and green open follows switchgear convention, but the rest of the board uses red for an alarm. A closed breaker is not an alarm, so the flag uses a darker red than <code>--board-zone-alarm</code>; the lamp and LCD colours stay untouched.</li>
+  <li>The cover works as in ADR 0039: down, the handle is blocked and a click or Space lifts it; up, the handle works and the strip (or Escape) lowers it. It is UI state only.</li>
+  <li>The UPS breaker is the one control that works on a dead vital bus, so its handle and cover must not depend on vital power (#143, #144). Here it is shown with no refusal.</li>
+  <li>No spring-charged flag, tripped flag or draw-out position: the sim has no such states.</li>
+  <li>The full-size body is about 250 px wide; the generation page holds three groups, so check narrow screens in the real <code>board.css</code>.</li>
+</ul>
+
+<script>
+  // Four breakers; the refusal is a function of the demo conditions, like the refusal functions of #141 and #169
+  const $ = (id) => document.getElementById(id);
+  const breakers = [
+    { id: "gen",   title: "Generator breaker",  plate: "Generator",   rating: "10.5 kV  ·  CB-G1", on: false, cover: false,
+      refusal: () => (!$("inSync").checked ? "Breaker can only be closed when RPM is between 2990 and 3010. Current RPM: 2650" : undefined) },
+    { id: "grid",  title: "Grid supply breaker", plate: "Grid supply", rating: "6.0 kV  ·  CB-S1", on: true, cover: false,
+      refusal: () => ($("auxDead").checked ? "Transfer rule: refusal text from #141" : undefined) },
+    { id: "dg",    title: "Diesel breaker",     plate: "Diesel generator", rating: "6.0 kV  ·  CB-D1", on: false, cover: false,
+      refusal: () => (!$("dgRuns").checked ? "Diesel generator not running" : undefined) },
+    { id: "ups",   title: "UPS breaker",        plate: "UPS",         rating: "230 V  ·  CB-U1", on: false, cover: false,
+      refusal: () => undefined },
+  ];
+
+  function render() {
+    $("row").innerHTML = breakers.map((b) => {
+      const refusal = !b.on ? b.refusal() : undefined; // closing is refused; opening never is
+      b.blocked = refusal !== undefined;
+      b.reason = refusal;
+      const busLive = b.id === "grid" || b.id === "dg" ? breakers.some((x) => x.id !== "ups" && x.on) : null;
+      return `
+      <div class="group">
+        <h3 class="group-title">${b.plate} breaker</h3>
+        <div class="hazard"><div class="breaker">
+          <div class="nameplate"><b>${b.plate}</b><small>${b.rating}</small></div>
+          <div class="flag ${b.on ? "closed" : "open"} ${b.blocked ? "blocked" : ""}" aria-hidden="true">
+            <div class="big">${b.on ? "I" : "O"}</div><div class="sm">${b.on ? "CLOSED" : "OPEN"}</div>
+          </div>
+          <div class="well">
+            <button class="rocker ${b.on ? "on" : "off"}" role="switch" aria-checked="${b.on}" data-id="${b.id}" data-act="rock"
+              aria-label="${b.title}${b.cover ? ", cover up" : ", cover down"}" ${b.blocked || !b.cover ? "disabled" : ""}
+              title="${b.reason ?? ""}">
+              <span class="grip up"></span><span class="grip down"></span>
+              <span class="leg up">I</span><span class="leg down">O</span>
+            </button>
+            <button class="cover ${b.cover ? "up" : "down"}" data-id="${b.id}" data-act="cover" tabindex="${b.cover ? -1 : 0}"
+              aria-label="${b.title} cover, ${b.cover ? "up" : "down, lift it"}">${b.cover ? "" : "LIFT COVER"}</button>
+          </div>
+          <button class="strip ${b.cover ? "show" : ""}" data-id="${b.id}" data-act="cover">LOWER COVER</button>
+        </div></div>
+        ${busLive === null ? "" : `<div class="bus-lamp"><span class="lamp ${busLive ? "lit" : ""}"></span>Auxiliary bus live</div>`}
+        <p class="lcd-msg ${b.blocked ? "refusal" : ""}">${b.blocked ? b.reason : (b.on ? b.plate + " breaker closed." : b.plate + " breaker open.")}</p>
+      </div>`;
+    }).join("");
+    renderOneLine();
+  }
+
+  function renderOneLine() {
+    const g = Object.fromEntries(breakers.map((b) => [b.id, b]));
+    const aux = g.grid.on || g.gen.on || g.dg.on;
+    const vital = aux || g.ups.on;
+    const sym = (b, x, y, label) => `
+      <g class="sym" transform="translate(${x} ${y})" role="img" aria-label="${label} ${b.on ? "closed" : "open"}">
+        <rect class="hit" x="-18" y="-18" width="36" height="36" fill="transparent"/>
+        <rect x="-11" y="-11" width="22" height="22" fill="${b.on ? "var(--closed)" : "#c9c9c3"}" stroke="${b.on ? "#7d1414" : "var(--open)"}" stroke-width="3"/>
+        <text x="0" y="-24" text-anchor="middle">${label}</text></g>`;
+    const wire = (d, live) => `<path class="wire ${live ? "" : "dead"}" d="${d}"/>`;
+    $("oneline").innerHTML = `
+      ${wire("M60 40 H180", g.grid.on)} ${wire("M60 105 H180", g.gen.on)} ${wire("M60 170 H180", g.dg.on)}
+      ${wire("M180 40 H300 V105", g.grid.on)} ${wire("M180 105 H300", g.gen.on)} ${wire("M180 170 H300 V105", g.dg.on)}
+      <line class="busbar" x1="300" y1="30" x2="300" y2="180" style="stroke:${aux ? "#b08900" : "#9a9a92"}"/>
+      ${wire("M300 105 H460", aux)}
+      <text x="305" y="22" class="mono">AUX BUS ${aux ? "6.0 kV" : "0.0 kV"}</text>
+      <text x="8" y="44">GRID</text> <text x="8" y="109">GEN</text> <text x="8" y="174">DIESEL</text>
+      ${sym(g.grid, 120, 40, "grid supply")} ${sym(g.gen, 120, 105, "gen breaker")} ${sym(g.dg, 120, 170, "diesel")}
+      ${sym(g.ups, 600, 175, "UPS")}
+      ${wire("M460 105 H600 V175", vital)}
+      ${wire("M600 175 V240", g.ups.on)}
+      <rect x="460" y="85" width="140" height="40" rx="4" fill="#c9c9c3" stroke="${aux ? "#b08900" : "#9a9a92"}" stroke-width="3"/>
+      <text x="470" y="110" class="mono">consumers: ${aux ? "6.7 MW" : "0.0 MW"}</text>
+      <text x="610" y="205" class="mono">VITAL ${vital ? "230 V" : "0 V"}</text>`;
+  }
+
+  // Rules as in ADR 0039: the cover is UI state; a click on the rocker only works with the cover up
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const b = breakers.find((x) => x.id === el.dataset.id);
+    if (el.dataset.act === "cover") b.cover = !b.cover;
+    else if (b.cover && !(b.refusal() && !b.on)) b.on = !b.on;
+    render();
+    const again = document.querySelector(`[data-id="${b.id}"][data-act="${el.dataset.act === "cover" && b.cover ? "rock" : "cover"}"]`);
+    if (again && !again.disabled) again.focus();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    breakers.forEach((b) => { b.cover = false; });
+    render();
+  });
+  ["inSync", "dgRuns", "auxDead"].forEach((id) => $(id).addEventListener("change", render));
+  render();
+</script>
+</body>
+</html>
