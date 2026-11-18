@@ -6,7 +6,10 @@ describe("pressAction", () => {
     expect(pressAction(false, false)).toBe("toggle")
     expect(pressAction(true, false)).toBe("cover")
     expect(pressAction(false, true)).toBe("none")
-    expect(pressAction(true, true)).toBe("none")
+  })
+
+  it("still lifts a cover that is down over a refused switch", () => {
+    expect(pressAction(true, true)).toBe("cover")
   })
 })
 
@@ -15,6 +18,7 @@ describe("keyAction", () => {
     expect(keyAction(" ", false, false, false)).toBe("toggle")
     expect(keyAction("Enter", true, false, false)).toBe("cover")
     expect(keyAction("Enter", false, false, true)).toBe("none")
+    expect(keyAction("Enter", true, false, true)).toBe("cover")
   })
 
   it("drops a lifted cover on Escape and ignores Escape without one", () => {
@@ -30,7 +34,9 @@ describe("keyAction", () => {
 describe("switchName", () => {
   it("is the label alone without a cover, and says where the cover is with one", () => {
     expect(switchName("Vent", undefined)).toBe("Vent")
-    expect(switchName("Breaker", { lifted: false, onToggleCover: () => undefined })).toBe("Breaker, cover down")
+    expect(switchName("Breaker", { lifted: false, onToggleCover: () => undefined })).toBe(
+      "Breaker, cover down",
+    )
     expect(switchName("Breaker", { lifted: true, onToggleCover: () => undefined })).toBe("Breaker, cover up")
   })
 })

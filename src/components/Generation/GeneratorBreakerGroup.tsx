@@ -1,11 +1,11 @@
-/** Generator Breaker group: the breaker turn switch under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the turbine speed beside the breaker, so it can be closed with the speed in view. */
+/** Generator Breaker group: the breaker (a rocker `BreakerSwitch`) under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the turbine speed beside the breaker, so it can be closed with the speed in view. */
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { isAtSyncSpeed } from "../../utils/turbineCalculations"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
-import { TurnSwitch } from "../board/TurnSwitch"
+import { BreakerSwitch } from "../board/BreakerSwitch"
 import type { TurbineState } from "../Turbine/types"
 
 const {
@@ -29,11 +29,10 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
       <h3 className="board-group-title">Generator Breaker</h3>
       <div className="board-hazard">
         <div className="board-switch-in-housing">
-          <TurnSwitch
+          <BreakerSwitch
             label="Generator breaker"
-            offLabel="OPEN"
-            onLabel="CLOSED"
-            tone="breaker"
+            plate="Generator"
+            rating="10.5 kV · CB-G1"
             on={generatorBreaker}
             onToggle={onToggleBreaker}
             disabled={blocked}
