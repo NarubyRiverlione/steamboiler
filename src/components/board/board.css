@@ -1199,14 +1199,6 @@ path.board-zone {
   line-height: 1.35;
 }
 
-.board-hazard {
-  justify-self: stretch;
-  padding: 0.9rem;
-  border-radius: 6px;
-  background: repeating-linear-gradient(-45deg, #f2c200 0 12px, #141414 12px 24px);
-  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.45);
-}
-
 .board-condenser-top {
   display: grid;
   grid-template-columns: 1fr 1.6fr;
@@ -1496,14 +1488,6 @@ path.board-zone {
   font-size: 8px;
 }
 
-.board-switch-in-housing {
-  display: grid;
-  justify-items: center;
-  padding: 0.3rem 0;
-  border-radius: 4px;
-  background: var(--board-panel-bg);
-}
-
 .board-valve-knob-row {
   display: flex;
   align-items: center;
@@ -1515,6 +1499,7 @@ path.board-zone {
   position: relative;
   width: 250px;
   max-width: 100%;
+  margin: 0 auto;
   box-sizing: border-box;
   padding: 10px 12px 12px;
   border: 1px solid #0d0d0d;

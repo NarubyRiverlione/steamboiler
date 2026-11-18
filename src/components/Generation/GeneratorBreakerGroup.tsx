@@ -27,29 +27,25 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
   return (
     <div className="board-group">
       <h3 className="board-group-title">Generator Breaker</h3>
-      <div className="board-hazard">
-        <div className="board-switch-in-housing">
-          <BreakerSwitch
-            label="Generator breaker"
-            plate="Generator"
-            rating="10.5 kV · CB-G1"
-            on={generatorBreaker}
-            onToggle={onToggleBreaker}
-            disabled={blocked}
-            title={
-              blocked
-                ? `Breaker can only be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM`
-                : undefined
-            }
-            guard={{
-              lifted: coverLifted,
-              onToggleCover: () => {
-                setCoverLifted(!coverLifted)
-              },
-            }}
-          />
-        </div>
-      </div>
+      <BreakerSwitch
+        label="Generator breaker"
+        plate="Generator"
+        rating="10.5 kV · CB-G1"
+        on={generatorBreaker}
+        onToggle={onToggleBreaker}
+        disabled={blocked}
+        title={
+          blocked
+            ? `Breaker can only be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM`
+            : undefined
+        }
+        guard={{
+          lifted: coverLifted,
+          onToggleCover: () => {
+            setCoverLifted(!coverLifted)
+          },
+        }}
+      />
       <div className="board-readout">
         <span>Turbine speed</span>
         <Display label="Turbine speed" text={`${rpm.toFixed(0)} RPM`} widest="9999 RPM" />
