@@ -1,4 +1,5 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
+import { BusPumps, isBusLive, restorePumps, stopPumps } from "./AuxiliaryBus"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
 import { GlandSteamTick, glandSteamMass } from "./Turbine/GlandSteam"
@@ -15,7 +16,11 @@ import { getExhaustEnthalpy, getInletEnthalpy, getLiquidEnthalpy } from "../util
 import { shaftWorkFraction } from "../utils/turbineCalculations"
 import { calculateExtraction, drainEnthalpyOf, Extraction, heatFeedwater } from "../utils/extractionHeater"
 
-export default function PowerPlantTick(state: PowerPlantState): PowerPlantState {
+export default function PowerPlantTick(supplied: PowerPlantState): PowerPlantState {
+  // Dead bus (#141, ADR 0053): both breakers open, so every pump runs at flow 0 this tick; the operator's positions come back at the end
+  const deadBus = !isBusLive(supplied)
+  const state: PowerPlantState = deadBus ? { ...supplied, ...stopPumps(supplied) } : supplied
+
   // The relief valve vents to the atmosphere first, upstream of the main steam valve; that steam leaves the loop
   const ventedBoiler = BoilerVent(BoilerLevelHighTrip(BoilerBurnerTrip(state.Boiler)))
 
@@ -44,7 +49,7 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
   )
   // Turning gear (ADR 0051): holds the stopped rotor at gear speed, throws itself out above standstill speed, drops out on low oil
   // Gland seal steam (ADR 0047): shut off when the rotor stops turning
-  const turbineNewState: TurbineState = GlandSteamTick(TurningGearTick(turbineTicked, oilNewState))
+  const turbineNewState: TurbineState = GlandSteamTick(TurningGearTick(turbineTicked, oilNewState, !deadBus))
 
   // remove steam via turbine valve
   const drumResult = BoilerRemoveSteam(bypassResult.boilerState, bypassResult.turbineState, "TURBINE")
@@ -198,14 +203,14 @@ export default function PowerPlantTick(state: PowerPlantState): PowerPlantState 
     turbineSteamFlowOut: turbineResult.turbineState.turbineSteamFlowOut,
   }
   
+  const ticked: BusPumps = { Condenser: condenserNewState, Deaerator: deaeratorNewState, Oil: oilNewState }
+  const pumps: BusPumps = deadBus ? restorePumps(supplied, ticked, levelHighHigh, deaeratorHighHigh) : ticked
   const next: PowerPlantState = {
-    ...state,
+    ...supplied,
     Boiler: boilerNewState,
-    Condenser: condenserNewState,
-    Deaerator: deaeratorNewState,
     Heater: heaterNewState,
-    Oil: oilNewState,
     Turbine: updatedTurbineState,
+    ...pumps,
   }
   // Auxiliary load (#140): metering only, read from the new state so a trip this tick already stops the pump
   return { ...next, auxiliaryLoad: auxiliaryLoadOf(next) }

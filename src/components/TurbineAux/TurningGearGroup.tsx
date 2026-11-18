@@ -13,13 +13,14 @@ const GearReadoutRampRpmPerSecond = 1
 type TurningGearGroupProps = {
   readonly turbine: TurbineState
   readonly oil: OilState
+  readonly busLive: boolean // the auxiliary bus feeds the gear motor (#141)
   readonly onToggleTurningGear: () => void
 }
 
-export function TurningGearGroup({ turbine, oil, onToggleTurningGear }: TurningGearGroupProps) {
+export function TurningGearGroup({ turbine, oil, busLive, onToggleTurningGear }: TurningGearGroupProps) {
   const engaged: boolean = turbine.turningGearEngaged
   // Disengaging is always allowed; only an engage can be refused
-  const refusal: string | undefined = engaged ? undefined : turningGearRefusal(turbine, oil)
+  const refusal: string | undefined = engaged ? undefined : turningGearRefusal(turbine, oil, busLive)
   const ramped: number = useRampUp(turbine.rpm, GearReadoutRampRpmPerSecond)
   // Only the gear range is ramped; a steam roll shows the true speed
   const shownRpm: number = turbine.rpm > CstTurningGear.Rpm ? turbine.rpm : ramped

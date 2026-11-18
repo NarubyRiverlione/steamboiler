@@ -11,7 +11,8 @@ import { OilState, TurbineState } from "../PowerPlantState"
 export const rotorTurns = ({ turningGearEngaged, rpm }: TurbineState): boolean => turningGearEngaged || rpm > CstTurningGear.StandstillRpm
 
 // Why the gear cannot be engaged, or undefined when it can
-export function turningGearRefusal(turbine: TurbineState, oil: OilState): string | undefined {
+export function turningGearRefusal(turbine: TurbineState, oil: OilState, busLive = true): string | undefined {
+  if (!busLive) return "The auxiliary bus is dead"
   if (!isAtOilPermissive(oil)) return "Lube oil pressure is below the permissive"
   if (turbine.rpm > CstTurningGear.StandstillRpm) return "The turbine must be at standstill"
   return undefined
@@ -19,9 +20,10 @@ export function turningGearRefusal(turbine: TurbineState, oil: OilState): string
 
 // The engaged gear holds the rotor at gear speed (a floor: it never drives it faster), throws itself out when the steam has
 // the rotor above the standstill speed, and drops out below the oil permissive
-export function TurningGearTick(turbine: TurbineState, oil: OilState): TurbineState {
+// The motor needs the live auxiliary bus (#141): a dead bus drops the gear out like low oil
+export function TurningGearTick(turbine: TurbineState, oil: OilState, busLive = true): TurbineState {
   if (!turbine.turningGearEngaged) return turbine
   if (turbine.rpm > CstTurningGear.StandstillRpm) return { ...turbine, turningGearEngaged: false }
-  if (!isAtOilPermissive(oil)) return { ...turbine, turningGearEngaged: false, rpm: turbine.rpm <= CstTurningGear.Rpm ? 0 : turbine.rpm }
+  if (!busLive || !isAtOilPermissive(oil)) return { ...turbine, turningGearEngaged: false, rpm: turbine.rpm <= CstTurningGear.Rpm ? 0 : turbine.rpm }
   return { ...turbine, rpm: Math.max(turbine.rpm, CstTurningGear.Rpm) }
 }

@@ -22,6 +22,9 @@ type PowerPlantAction =
   | { type: "SELECT_RUN_UP_POINT"; payload: { runUpPoint: number } }
   | { type: "TOGGLE_GENERATOR_BREAKER" }
   | { type: "SET_LOAD_SETPOINT"; payload: { loadSetpoint: number } }
+  // Grid supply breaker Actions (#141, ADR 0053): closing is always allowed, opening needs the generator to carry the bus
+  | { type: "CLOSE_GRID_SUPPLY_BREAKER" }
+  | { type: "OPEN_GRID_SUPPLY_BREAKER" }
   // Lube oil Action (ADR 0050): the oil pump on or off
   | { type: "SET_OIL_PUMP"; payload: { pumpRunning: boolean } }
   // Turning gear Action (ADR 0051): engage or disengage by hand
