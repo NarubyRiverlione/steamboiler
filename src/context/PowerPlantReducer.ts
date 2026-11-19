@@ -12,6 +12,7 @@ import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
 import { gridSupplyOpenRefusal, isBusLive, loadSetpointFloorRefusal } from "./AuxiliaryBus"
+import { isSafetyBusLive, isVitalBusLive } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
 import { isOpeningRefused } from "./Turbine/ValveOpening"
 import { glandSteamRefusal } from "./Turbine/GlandSteam"
@@ -117,6 +118,10 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
   gridSupplyBreaker: true, // closed: the grid feeds the auxiliary bus (#141)
+  // The UPS breaker is closed here so every scenario and the app run as before (no board switch yet, #144); dark-start opens it
+  upsBreaker: true,
+  upsCharge: 100,
+  simulationEnded: false,
   auxiliaryLoad: 0, // MW: no pump runs
 })
 
@@ -155,7 +160,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   SIMULATE_TICKS: (state, { count }) => runTicks(state, count).state,
   LOAD_STATE: (_state, { payload: { state } }) => state,
   // The only thing that clears a latched trip, and only once its cause has gone (ADR 0043)
-  RESET_TRIP: (state, { payload: { trip } }) => resetTrip(state, trip),
+  RESET_TRIP: (state, { payload: { trip } }) => (isSafetyBusLive(state) ? resetTrip(state, trip) : state), // the reset coil needs the safety bus (#143)
 
   //#region Boiler
   // Sets the knob. Turning it up is refused (knob stays centred) while the burner is tripped or the water is below the
@@ -240,8 +245,14 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#endregion
 
   //#region Grid supply breaker (#141)
-  CLOSE_GRID_SUPPLY_BREAKER: (state) => ({ ...state, gridSupplyBreaker: true }),
-  OPEN_GRID_SUPPLY_BREAKER: (state) => (gridSupplyOpenRefusal(state) ? state : { ...state, gridSupplyBreaker: false }),
+  // Breaker control power is the safety bus: with it dead the command does nothing (#143, ADR 0053)
+  CLOSE_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? { ...state, gridSupplyBreaker: true } : state),
+  OPEN_GRID_SUPPLY_BREAKER: (state) => (!isSafetyBusLive(state) || gridSupplyOpenRefusal(state) ? state : { ...state, gridSupplyBreaker: false }),
+  //#endregion
+
+  //#region UPS breaker (#143): the one control that needs no power
+  CLOSE_UPS_BREAKER: (state) => ({ ...state, upsBreaker: true }),
+  OPEN_UPS_BREAKER: (state) => ({ ...state, upsBreaker: false }),
   //#endregion
 
   //#region Oil
@@ -279,7 +290,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     on && glandSteamRefusal(state.Turbine) ? state : withTurbine(state, { glandSteamOn: on }),
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
   SET_SPEED_MODE: (state, { payload: { speedMode } }) => {
-    if (speedModeRefusal(state.Turbine, speedMode)) return state
+    if (!isVitalBusLive(state) || speedModeRefusal(state.Turbine, speedMode)) return state
     const { rpm, runUpPoint } = state.Turbine
     if (speedMode === "free") return withTurbine(state, { speedMode })
     return withTurbine(state, {
@@ -291,7 +302,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // In Free a point only selects the target; in Ramp up or Hold a point above the speed (re)starts Ramp up toward it,
   // and a running ramp keeps its reference
   SELECT_RUN_UP_POINT: (state, { payload: { runUpPoint } }) => {
-    if (runUpPointRefusal(state.Turbine, runUpPoint)) return state
+    if (!isVitalBusLive(state) || runUpPointRefusal(state.Turbine, runUpPoint)) return state
     const { speedMode, rpm, speedReference, pidIntegralError } = state.Turbine
     if (speedMode === "free") return withTurbine(state, { runUpPoint })
     const ramping: boolean = speedMode === "rampUp"
@@ -306,6 +317,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // Whenever the breaker ends up open, the load and the load setpoint are 0 (ADR 0027)
   // Closing enters Synchronised (PID on 3000 rpm); opening, by hand, returns to Free (#135)
   TOGGLE_GENERATOR_BREAKER: (state) => {
+    if (!isSafetyBusLive(state)) return state
     const { rpm, generatorBreaker: wasClosed } = state.Turbine
     const generatorBreaker: boolean = !wasClosed && isAtSyncSpeed(rpm)
     if (generatorBreaker) {
@@ -315,7 +327,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   },
   // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
-    loadSetpointRefusal(state.Turbine) || loadSetpointFloorRefusal(state, loadSetpoint) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
+    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || loadSetpointFloorRefusal(state, loadSetpoint) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 

@@ -193,6 +193,14 @@ export const panels: Panel[] = [
       { label: "Net output", value: netOutputOf },
     ],
   },
+  {
+    group: "Turbine",
+    row: 2,
+    title: "UPS charge",
+    kind: "other",
+    unit: "%",
+    series: one("UPS charge", (s) => s.upsCharge),
+  },
   // Condenser. Flows in kg/s: steam intake is kg/s, and 1 L of condensate is taken as 1 kg.
   {
     group: "Condenser",
