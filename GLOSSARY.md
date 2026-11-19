@@ -77,7 +77,7 @@ The breaker between the generator and the plant's grid connection. Closed, the g
 _Avoid_: Main breaker, sync breaker
 
 **Grid supply breaker**:
-The breaker through which the grid feeds the auxiliary bus. Closed, the plant can draw its own power from the grid.
+The plant's tie to the grid: through it the grid feeds the auxiliary bus and the plant exports its net output. Open, the generator can only carry the auxiliary bus (house load operation).
 _Avoid_: Incomer, station service breaker
 
 **Auxiliary bus**:
@@ -86,11 +86,15 @@ _Avoid_: Station bus, house bus
 
 **Auxiliary load**:
 The electric power the plant's own pumps and turbine auxiliaries draw, in MW: the feed, condensation, recirculation and air extraction pumps, the lube oil pump and the turning gear motor. Burner fan, vents and lighting are not counted. Not the basic load on synchronising.
-_Avoid_: Station service, parasitic load, house load (reserved for island operation, ADR 0046)
+_Avoid_: Station service, parasitic load, house load (see house load operation)
 
 **Net output**:
 The electric output less the auxiliary load, in MW. Negative means the plant imports power, drawn from the grid supply.
 _Avoid_: Net demand, net load
+
+**House load operation**:
+The generator carries only the auxiliary bus, with the grid supply breaker open: the unit runs on its own load. Opening the tie at a high load is a load rejection that the unit may not survive.
+_Avoid_: Island mode, islanding
 
 **Diesel generator**:
 The onsite standby generator that can feed the auxiliary bus on its own, for a dark start. It is sized for the auxiliary load at start-up flows, so the plant cannot run at full output on it.
@@ -125,7 +129,7 @@ The speed mode that keeps the turbine at the selected run-up point by moving the
 _Avoid_: Autopilot, speed hold, cruise
 
 **Synchronised mode**:
-The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the breaker or a turbine trip ends it, back to free mode.
+The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the breaker or a turbine trip ends it, back to free mode. It holds during house load operation too.
 _Avoid_: Grid mode, sync hold
 
 **Run-up point**:
