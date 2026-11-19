@@ -120,6 +120,10 @@ _Avoid_: Control bus, DC bus (the model has no DC distribution)
 The electrical bus fed by the UPS through the UPS breaker that carries breaker control power and the trip reset. Dead when the UPS breaker is open or the UPS charge is 0%.
 _Avoid_: Emergency bus, DC bus
 
+**Control power**:
+The power from the safety bus that the breaker coils and the trip reset need. Without it, breaker commands do nothing.
+_Avoid_: DC supply, trip supply
+
 **UPS**:
 The battery that carries the Safety bus when the Auxiliary bus is dead. It runs about 30 minutes; at 0% charge the simulation ends.
 _Avoid_: Battery, backup power
