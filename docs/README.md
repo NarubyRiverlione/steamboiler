@@ -110,6 +110,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Nov 2026 | [Does a turbine trip lose the gland seal? (no source; UNVERIFIED)](research/2026-11-gland-seal-on-trip.md) |
 | Nov 2026 | [Turning gear: gear speed and the standstill threshold (UNVERIFIED)](research/2026-11-turning-gear.md) |
 | Nov 2026 | [Turbine lube oil: header pressure, permissive and trip limits (UNVERIFIED)](research/2026-11-lube-oil.md) |
+| Nov 2026 | [Breakers: interlocks, protections and what a real plant lets through (snippet-sourced)](research/2026-11-breaker-interlocks-and-protections.md) |
 
 ## Agent configuration
 
