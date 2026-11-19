@@ -15,6 +15,7 @@ function flatten(state: PowerPlantState): Record<string, number> {
       row[`${prefix}_${key}`] = toNumber(value)
     }
   }
+  row.upsCharge = state.upsCharge
   row.auxiliaryLoad = state.auxiliaryLoad
   row.netOutput = netOutputOf(state)
   return row
