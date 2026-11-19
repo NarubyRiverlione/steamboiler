@@ -1,6 +1,7 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
 import { BusPumps, isBusLive, restorePumps, stopPumps } from "./AuxiliaryBus"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
+import { upsChargeAfter } from "./SafetyBus"
 import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
 import { GlandSteamTick, glandSteamMass } from "./Turbine/GlandSteam"
 import { CondenserTick } from "./Condenser/CondenserTick"
@@ -17,6 +18,8 @@ import { shaftWorkFraction } from "../utils/turbineCalculations"
 import { calculateExtraction, drainEnthalpyOf, Extraction, heatFeedwater } from "../utils/extractionHeater"
 
 export default function PowerPlantTick(supplied: PowerPlantState): PowerPlantState {
+  // The simulation has ended (the UPS ran flat, #143): nothing advances
+  if (supplied.simulationEnded) return supplied
   // Dead bus (#141, ADR 0053): both breakers open, so every pump runs at flow 0 this tick; the operator's positions come back at the end
   const deadBus = !isBusLive(supplied)
   const state: PowerPlantState = deadBus ? { ...supplied, ...stopPumps(supplied) } : supplied
@@ -213,5 +216,7 @@ export default function PowerPlantTick(supplied: PowerPlantState): PowerPlantSta
     ...pumps,
   }
   // Auxiliary load (#140): metering only, read from the new state so a trip this tick already stops the pump
-  return { ...next, auxiliaryLoad: auxiliaryLoadOf(next) }
+  // UPS (#143): the charge follows the bus of the tick's start; flat with the breaker closed ends the simulation
+  const upsCharge: number = upsChargeAfter(supplied)
+  return { ...next, upsCharge, simulationEnded: supplied.upsBreaker && upsCharge <= 0, auxiliaryLoad: auxiliaryLoadOf(next) }
 }

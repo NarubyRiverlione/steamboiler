@@ -130,6 +130,12 @@ export const CstAuxiliary = {
   TurningGearMotor: 0.03, // MW while engaged (30 kW motor of a 110 MW turbine)
 }
 
+// UPS (#143, ADR 0055, docs/research/2026-11-ups-runtime.md): the charge is 0-100 %, simulated seconds; a deliberate reduction from real station batteries (hours)
+export const CstUps = {
+  NominalRuntime: 1800, // s the UPS carries the safety bus with the Auxiliary bus dead: 30 minutes (real: 8-10 h, reduced for playability)
+  RechargeTime: 28800, // s from empty to full while the Auxiliary bus is live: 8 h (sourced: 8-12 h, charger sized for 15 h at most)
+}
+
 // Gland seal steam (ADR 0047, figure in docs/plant/design-basis.md and docs/research/2026-11-gland-seal-steam.md); UNVERIFIED estimate
 export const CstGlandSteam = {
   Flow: 0.1, // kg/s taken from the boiler while the gland steam is on, returned to the hotwell (800 lb/h gland condenser of a vendor example)

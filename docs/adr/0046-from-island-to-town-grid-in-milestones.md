@@ -16,7 +16,7 @@ The plant runs as an island today: with the breaker closed, the load is a resist
   - **M5, operating for the town:** the load set from frequency and demand, by the operator or later automatically.
   - **M6, day-night cycle:** a 24-hour demand curve.
   - **M7, satisfaction and growth:** a satisfaction score from how well the town is served (the frequency kept in its band, all demand served with no load shedding); demand growing over time, so the plant's sizing becomes the operator's problem.
-  - **Side track, any time after M2:** vital bus and UPS (#143, #144).
+  - **Side track, any time after M2:** vital bus, safety bus and UPS (#143, [ADR 0055](0055-the-vital-bus-and-the-safety-bus.md), #144).
 - **Stiff grid before the moving frequency:** M1 holds the speed, so the load controller and the protections are built against a fixed frequency first.
 - **Auto-sync before manual sync:** manual sync only gets interesting with a moving frequency (M3).
 - **Reverse power trips:** a generator that motors with too little steam overheats the last turbine stages by windage; past a short delay it trips the turbine and opens the breaker. The delay and threshold come from a research note in M1. Real plants also use it the other way round (a sequential trip): after a turbine trip the breaker waits for reverse power before it opens, so the unloaded shaft cannot overspeed; the M1 ticket decides whether the sim follows that order.

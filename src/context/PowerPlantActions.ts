@@ -25,6 +25,9 @@ type PowerPlantAction =
   // Grid supply breaker Actions (#141, ADR 0053): closing is always allowed, opening needs the generator to carry the bus
   | { type: "CLOSE_GRID_SUPPLY_BREAKER" }
   | { type: "OPEN_GRID_SUPPLY_BREAKER" }
+  // UPS breaker Actions (#143): manual, always available, even on a dead safety bus
+  | { type: "CLOSE_UPS_BREAKER" }
+  | { type: "OPEN_UPS_BREAKER" }
   // Lube oil Action (ADR 0050): the oil pump on or off
   | { type: "SET_OIL_PUMP"; payload: { pumpRunning: boolean } }
   // Turning gear Action (ADR 0051): engage or disengage by hand
