@@ -92,8 +92,20 @@ _Avoid_: Station service, parasitic load, house load (reserved for island operat
 The electric output less the auxiliary load, in MW. Negative means the plant imports power, drawn from the grid supply.
 _Avoid_: Net demand, net load
 
+**Diesel generator**:
+The onsite standby generator that can feed the auxiliary bus on its own, for a dark start. It is sized for the auxiliary load at start-up flows, so the plant cannot run at full output on it.
+_Avoid_: Emergency generator, black-start unit, diesel set
+
+**Diesel breaker**:
+The breaker through which the diesel generator feeds the auxiliary bus.
+_Avoid_: Emergency breaker
+
+**Dark start**:
+Bringing the plant up from a dead bus with the diesel generator alone, until the generator carries the auxiliary bus and the diesel is stopped.
+_Avoid_: Black start, cold start
+
 **Dead bus**:
-Both the grid supply breaker and the generator breaker are open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
+The grid supply breaker, the generator breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
 _Avoid_: Blackout, loss of power
 
 **Vacuum limit**:
