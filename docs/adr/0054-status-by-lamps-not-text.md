@@ -1,6 +1,6 @@
 # Status by lamps, not text: permissive lamps instead of message lines
 
-**Status: accepted.** Owner discussion of 2026-11-18; tickets #177 to #181. Builds on the analog board of [ADR 0015](0015-ui-redo-analog-board-preferred.md) and the switch rules of [ADR 0039](0039-latching-controls-are-turn-switches.md). The refusals themselves are open in #174.
+**Status: accepted.** Owner discussion of 2026-11-18; tickets #177 to #181. Builds on the analog board of [ADR 0015](0015-ui-redo-analog-board-preferred.md) and the switch rules of [ADR 0039](0039-latching-controls-are-turn-switches.md). Which refusals stay was decided in #174 ([research note](../research/2026-11-breaker-interlocks-and-protections.md)).
 
 The board says **why a control can or cannot work with lamps, never with sentences**. Each condition a control waits for is a **permissive lamp** beside that control, lit (`ok` tone, green) while the condition is met; when all of a control's lamps are lit, the control works. A warning about an operator mistake is an amber lamp in the group it concerns. An event the operator must notice even on another page is an **annunciator tile**. A real board has no prose: the operator reads the lamps, and the explanation lives in training, here the help cards of [ADR 0052](0052-first-public-release-on-itch-io.md).
 
@@ -11,7 +11,7 @@ Rules:
 - **The label is the condition, worded as met:** `Aux bus live`, `Oil pressure OK`, `Rotor at standstill`, `Rotor turning`, `Main steam valve open`, `Breaker closed`. A warning lamp names the fault: `Vent closed, air in`.
 - **Tooltips stay.** The `title` on a lamp and on a disabled control keeps its text (the reason in words). It is hidden until hovered, so it does not change the look of the board; it stands in for the engraved label plate of a real panel.
 - **One mode.** There is no training or hardcore mode: with every condition on a lamp the board explains itself without text, so there is nothing to switch off.
-- **Disabled controls stay disabled** until #174 decides which refusals are interlocks and which become consequences. This ADR changes only how the reason is shown.
+- **Interlocks stay disabled controls; consequences are enabled** (#174). A control a real plant interlocks (generator breaker close outside the sync window, the load setpoint with the generator breaker open, the permissives of the turning gear, gland steam, speed mode and run-up point) is disabled with its lamp and a tooltip. A command a real plant lets through (opening the grid supply breaker) is enabled and the plant shows the consequence. This ADR changes only how the reason is shown.
 
 ## What changes on today's pages
 
