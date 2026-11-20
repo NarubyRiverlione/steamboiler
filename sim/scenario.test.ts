@@ -216,6 +216,9 @@ describe("scenario registry", () => {
       "deaerator-vent-closed",
       "deaerator-vent-open",
       "dark-start",
+      "house-load-hold",
+      "load-rejection",
+      "house-load-short",
     ])
     for (const [name, s] of Object.entries(scenarios)) expect(s.name).toBe(name)
   })
