@@ -3,7 +3,7 @@ import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { getBoilingPoint } from "../utils/steamTable"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, isAtSyncSpeed, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, generatorBreakerCloseRefusal, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -319,11 +319,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   TOGGLE_GENERATOR_BREAKER: (state) => {
     if (!isSafetyBusLive(state)) return state
     const { rpm, generatorBreaker: wasClosed } = state.Turbine
-    const generatorBreaker: boolean = !wasClosed && isAtSyncSpeed(rpm)
-    if (generatorBreaker) {
-      return withTurbine(state, { generatorBreaker, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
-    }
-    return withTurbine(state, { generatorBreaker, electricOutput: 0, loadSetpoint: 0, ...(wasClosed ? freeAt(rpm) : {}) })
+    if (wasClosed) return withTurbine(state, { generatorBreaker: false, electricOutput: 0, loadSetpoint: 0, ...freeAt(rpm) })
+    if (generatorBreakerCloseRefusal(state.Turbine)) return state
+    return withTurbine(state, { generatorBreaker: true, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
   },
   // Only with the breaker closed (loadSetpointRefusal) and not in house load operation (the setpoint is ignored there, #182); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>

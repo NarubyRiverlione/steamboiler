@@ -1,19 +1,12 @@
 /** Generator Breaker group: the breaker (a rocker `BreakerSwitch`) under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the turbine speed beside the breaker, so it can be closed with the speed in view. */
 
 import { useState } from "react"
-import { CstSimulation } from "../../context/const"
-import { isAtSyncSpeed } from "../../utils/turbineCalculations"
+import { generatorBreakerCloseRefusal, isAtSyncSpeed } from "../../utils/turbineCalculations"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { BreakerSwitch } from "../board/BreakerSwitch"
 import type { TurbineState } from "../Turbine/types"
 
-const {
-  CstTurbine: { SyncRPM, BreakerRPMMargin },
-} = CstSimulation
-
-const MIN_SYNC: number = SyncRPM - BreakerRPMMargin
-const MAX_SYNC: number = SyncRPM + BreakerRPMMargin
 type GeneratorBreakerGroupProps = {
   readonly turbine: TurbineState
   readonly onToggleBreaker: () => void
@@ -22,7 +15,7 @@ type GeneratorBreakerGroupProps = {
 export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBreakerGroupProps) {
   const { generatorBreaker, rpm } = turbine
   const inSync: boolean = isAtSyncSpeed(rpm)
-  const blocked: boolean = !generatorBreaker && !inSync
+  const refusal: string | undefined = generatorBreakerCloseRefusal(turbine)
   const [coverLifted, setCoverLifted] = useState<boolean>(false)
   return (
     <div className="board-group">
@@ -33,12 +26,8 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
         rating="10.5 kV · CB-G1"
         on={generatorBreaker}
         onToggle={onToggleBreaker}
-        disabled={blocked}
-        title={
-          blocked
-            ? `Breaker can only be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM`
-            : undefined
-        }
+        disabled={refusal !== undefined}
+        title={refusal}
         guard={{
           lifted: coverLifted,
           onToggleCover: () => {
@@ -55,14 +44,9 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
         lit={inSync}
         tone="ok"
         label="Ready to close"
-        title={`Breaker can be closed between ${MIN_SYNC.toFixed(0)} and ${MAX_SYNC.toFixed(0)} RPM`}
+        title="Lit when the speed is inside the synchronising window"
       />
-      {blocked && (
-        <p className="board-lcd-msg">
-          Breaker can only be closed when RPM is between {MIN_SYNC.toFixed(0)} and {MAX_SYNC.toFixed(0)}.
-          Current RPM: {rpm.toFixed(0)}
-        </p>
-      )}
+      {refusal && <p className="board-lcd-msg">{refusal}</p>}
     </div>
   )
 }

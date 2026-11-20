@@ -102,7 +102,7 @@ When boiler pressure at the start of a tick is at or below `MainSteamValveMinimu
 
 Done:
 
-- The breaker can only be closed at sync speed: 3000 RPM ±2 (`SyncRPM` ± `BreakerRPMMargin`, 50 Hz grid); toggling a closed breaker opens it (`TOGGLE_GENERATOR_BREAKER`)
+- The breaker can only be closed at sync speed: 3000 RPM ±2 (`SyncRPM` ± `BreakerRPMMargin`, 50 Hz grid); toggling a closed breaker opens it (`TOGGLE_GENERATOR_BREAKER`); a close outside the window is refused by `generatorBreakerCloseRefusal` ("Speed is outside the synchronising window") and the state is unchanged (#183)
 - The generator carries load only while the breaker is closed; opening it, by hand or automatically, drops the load and the load setpoint to 0 on that tick
 - If the steam cannot hold sync speed with the breaker closed (the speed leaves ±2 rpm), the breaker opens automatically
 - UI: `GeneratorBreakerControl.tsx`

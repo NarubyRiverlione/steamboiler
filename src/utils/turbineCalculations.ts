@@ -111,6 +111,12 @@ export function loadSetpointRefusal({ generatorBreaker }: TurbineState): string 
   return generatorBreaker ? undefined : "Close the generator breaker first"
 }
 
+// Why the generator breaker cannot close, or undefined when it can: only inside the synchronising window (SyncRPM ± BreakerRPMMargin).
+// Opening is never refused. The safety bus rule (control power, ADR 0053) is separate and shows no reason.
+export function generatorBreakerCloseRefusal({ generatorBreaker, rpm }: TurbineState): string | undefined {
+  return generatorBreaker || isAtSyncSpeed(rpm) ? undefined : "Speed is outside the synchronising window"
+}
+
 // Shaft inertia in kg·m²: J = 2·H·S / ω_s²
 const inertia: number = (2 * CstTurbine.InertiaConstant * ratedOutput) / syncSpeed ** 2
 

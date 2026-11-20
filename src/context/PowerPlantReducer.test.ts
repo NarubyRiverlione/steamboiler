@@ -494,6 +494,11 @@ describe("powerPlantReducer", () => {
         expect(toggle(atRpm(0)).generatorBreaker).toBe(false)
       })
 
+      test("a close outside the window leaves the state unchanged", () => {
+        const outside: PowerPlantState = atRpm(CstTurbine.SyncRPM + CstTurbine.BreakerRPMMargin + 1)
+        expect(reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, outside)).toBe(outside)
+      })
+
       test("opens when closed", () => {
         const closed = reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, atRpm(CstTurbine.SyncRPM))
         expect(toggle(closed).generatorBreaker).toBe(false)
