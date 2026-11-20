@@ -11,7 +11,7 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
-import { gridSupplyOpenRefusal, isBusLive, loadSetpointFloorRefusal } from "./AuxiliaryBus"
+import { isBusLive, isHouseLoad } from "./AuxiliaryBus"
 import { isSafetyBusLive, isVitalBusLive } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
 import { isOpeningRefused } from "./Turbine/ValveOpening"
@@ -247,7 +247,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#region Grid supply breaker (#141)
   // Breaker control power is the safety bus: with it dead the command does nothing (#143, ADR 0053)
   CLOSE_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? { ...state, gridSupplyBreaker: true } : state),
-  OPEN_GRID_SUPPLY_BREAKER: (state) => (!isSafetyBusLive(state) || gridSupplyOpenRefusal(state) ? state : { ...state, gridSupplyBreaker: false }),
+  OPEN_GRID_SUPPLY_BREAKER: (state) => (!isSafetyBusLive(state) ? state : { ...state, gridSupplyBreaker: false }),
   //#endregion
 
   //#region UPS breaker (#143): the one control that needs no power
@@ -323,9 +323,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     if (generatorBreakerCloseRefusal(state.Turbine)) return state
     return withTurbine(state, { generatorBreaker: true, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
   },
-  // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
+  // Only with the breaker closed (loadSetpointRefusal) and not in house load operation (the setpoint is ignored there, #182); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
-    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || loadSetpointFloorRefusal(state, loadSetpoint) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
+    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || isHouseLoad(state) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 

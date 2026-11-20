@@ -80,6 +80,16 @@ describe("TurbineTick", () => {
       expect(second.loadSetpoint).toBe(100)
     })
 
+    it("in house load operation the load steps to the auxiliary load at once and the setpoint is ignored but kept (#182)", () => {
+      const result: TurbineState = TurbineTick({ ...synced, electricOutput: 50, loadSetpoint: 50 }, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7)
+      expect(result.electricOutput).toBe(7)
+      expect(result.loadSetpoint).toBe(50)
+    })
+
+    it("in house load operation the load is the auxiliary load whatever the setpoint, so a setpoint of 0 does not unload the shaft", () => {
+      expect(TurbineTick({ ...synced, electricOutput: 0, loadSetpoint: 0 }, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7).electricOutput).toBe(7)
+    })
+
     it("lowers the load at the load rate when the setpoint drops, and stops at the setpoint", () => {
       const result: TurbineState = TurbineTick({ ...synced, electricOutput: 1, loadSetpoint: 0 }, 165, 100)
       expect(result.electricOutput).toBeCloseTo(loadAfter(1, 0), 9)
