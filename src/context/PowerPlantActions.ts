@@ -25,6 +25,9 @@ type PowerPlantAction =
   // Grid supply breaker Actions (#141, ADR 0053): closing is always allowed, opening needs the generator to carry the bus
   | { type: "CLOSE_GRID_SUPPLY_BREAKER" }
   | { type: "OPEN_GRID_SUPPLY_BREAKER" }
+  // Local mechanical trips (#184, ADR 0053): work with no safety bus, only open
+  | { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }
+  | { type: "LOCAL_TRIP_GENERATOR_BREAKER" }
   // UPS breaker Actions (#143): manual, always available, even on a dead safety bus
   | { type: "CLOSE_UPS_BREAKER" }
   | { type: "OPEN_UPS_BREAKER" }

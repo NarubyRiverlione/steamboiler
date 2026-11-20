@@ -90,6 +90,43 @@ describe("the vital bus and the safety bus (#143)", () => {
     })
   })
 
+  describe("local mechanical trip (#184)", () => {
+    const carrying: PowerPlantState = {
+      ...base,
+      upsBreaker: false,
+      gridSupplyBreaker: true,
+      Turbine: { ...base.Turbine, generatorBreaker: true, electricOutput: 30, loadSetpoint: 30, speedMode: "synchronised" },
+    }
+    test("opens the generator breaker on a dead safety bus; load and setpoint 0, speed mode Free", () => {
+      expect(powerPlantReducer(carrying, { type: "TOGGLE_GENERATOR_BREAKER" })).toBe(carrying)
+      const { Turbine } = powerPlantReducer(carrying, { type: "LOCAL_TRIP_GENERATOR_BREAKER" })
+      expect(Turbine.generatorBreaker).toBe(false)
+      expect(Turbine.electricOutput).toBe(0)
+      expect(Turbine.loadSetpoint).toBe(0)
+      expect(Turbine.speedMode).toBe("free")
+    })
+    test("opens the grid supply breaker on a dead safety bus, where the normal open does nothing", () => {
+      const supported: PowerPlantState = { ...carrying, auxiliaryLoad: 1 }
+      expect(powerPlantReducer(supported, { type: "OPEN_GRID_SUPPLY_BREAKER" })).toBe(supported)
+      expect(powerPlantReducer(supported, { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }).gridSupplyBreaker).toBe(false)
+    })
+    test("the grid trip opens with no interlock, even when the generator cannot carry the bus", () => {
+      const noGen: PowerPlantState = { ...carrying, Turbine: { ...carrying.Turbine, generatorBreaker: false, electricOutput: 0 } }
+      expect(powerPlantReducer(noGen, { type: "OPEN_GRID_SUPPLY_BREAKER" })).toBe(noGen)
+      expect(powerPlantReducer(noGen, { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }).gridSupplyBreaker).toBe(false)
+    })
+    test("with the safety bus live the trips open like the normal open", () => {
+      const live: PowerPlantState = { ...carrying, upsBreaker: true, auxiliaryLoad: 1 }
+      expect(powerPlantReducer(live, { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" })).toEqual(powerPlantReducer(live, { type: "OPEN_GRID_SUPPLY_BREAKER" }))
+      expect(powerPlantReducer(live, { type: "LOCAL_TRIP_GENERATOR_BREAKER" })).toEqual(powerPlantReducer(live, { type: "TOGGLE_GENERATOR_BREAKER" }))
+    })
+    test("a trip of an open breaker changes nothing", () => {
+      const open: PowerPlantState = { ...base, upsBreaker: false, gridSupplyBreaker: false, Turbine: { ...base.Turbine, generatorBreaker: false } }
+      expect(powerPlantReducer(open, { type: "LOCAL_TRIP_GENERATOR_BREAKER" })).toBe(open)
+      expect(powerPlantReducer(open, { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" })).toBe(open)
+    })
+  })
+
   describe("the controller controls need the vital bus", () => {
     const deadVital: PowerPlantState = { ...base, gridSupplyBreaker: false, Turbine: { ...base.Turbine, generatorBreaker: false, rpm: 1000 } }
     test("speed mode and run-up point freeze", () => {
