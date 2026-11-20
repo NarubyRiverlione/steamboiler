@@ -92,6 +92,16 @@ describe("the auxiliary bus (#141)", () => {
       expect(PowerPlantTick(closed).Turbine.electricOutput).toBeCloseTo(CstAuxiliary.LubeOilPump, 9)
     })
 
+    test("after the tie closes the load keeps rising at the load rate, one step per tick, and never overshoots the setpoint", () => {
+      let state: PowerPlantState = powerPlantReducer(PowerPlantTick(island(0.3, 0.3)), { type: "CLOSE_GRID_SUPPLY_BREAKER" })
+      for (let i = 0; i < 3; i++) {
+        const next: PowerPlantState = PowerPlantTick({ ...state, Turbine: { ...state.Turbine, rpm: HighInWindow } })
+        expect(next.Turbine.electricOutput).toBeCloseTo(loadAfter(state.Turbine.electricOutput, 0.3), 9)
+        expect(next.Turbine.electricOutput).toBeLessThanOrEqual(0.3)
+        state = next
+      }
+    })
+
     test("closing the grid supply breaker ramps the load from the auxiliary load toward the kept setpoint at the load rate", () => {
       const first: PowerPlantState = PowerPlantTick(island(60, 60))
       const regained: PowerPlantState = powerPlantReducer(first, { type: "CLOSE_GRID_SUPPLY_BREAKER" })

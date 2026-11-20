@@ -1,18 +1,18 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation } from "../../src/context/const"
 import { runChecked } from "../scenario-checks"
-import { loadRejection, LoadSetpoint, OpenAt } from "../scenarios/load-rejection"
+import { loadRejection, RejectionLoad, RejectionOpenAt } from "../scenarios/load-rejection"
 
 const { SyncRPM, BreakerRPMMargin, MaxRPM } = CstSimulation.CstTurbine
 
 describe("load-rejection", () => {
   const { samples } = runChecked(loadRejection)
-  const before = samples.filter((s) => s.time < OpenAt)
-  const after = samples.filter((s) => s.time >= OpenAt)
+  const before = samples.filter((s) => s.time < RejectionOpenAt)
+  const after = samples.filter((s) => s.time >= RejectionOpenAt)
   const opened = after.findIndex((s) => !s.state.Turbine.generatorBreaker)
 
   test("the plant carries the full load on the grid before the tie opens", () => {
-    expect(before[before.length - 1].state.Turbine.electricOutput).toBeCloseTo(LoadSetpoint, 6)
+    expect(before[before.length - 1].state.Turbine.electricOutput).toBeCloseTo(RejectionLoad, 6)
   })
 
   test("goal: the speed leaves the window upwards and the generator breaker opens", () => {

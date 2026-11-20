@@ -3,17 +3,17 @@ import { CstSimulation } from "../../src/context/const"
 import { netOutputOf } from "../../src/context/AuxiliaryLoad"
 import { isBusLive } from "../../src/context/AuxiliaryBus"
 import { runChecked } from "../scenario-checks"
-import { houseLoadHold, LoadSetpoint, OpenAt } from "../scenarios/house-load-hold"
+import { houseLoadHold, HouseLoadSetpoint, TieOpenAt } from "../scenarios/house-load-hold"
 
 const { SyncRPM, BreakerRPMMargin } = CstSimulation.CstTurbine
 
 describe("house-load-hold", () => {
   const { samples } = runChecked(houseLoadHold)
-  const before = samples.filter((s) => s.time < OpenAt)
-  const island = samples.filter((s) => s.time > OpenAt)
+  const before = samples.filter((s) => s.time < TieOpenAt)
+  const island = samples.filter((s) => s.time > TieOpenAt)
 
   test("the plant carries the setpoint on the grid before the tie opens", () => {
-    expect(before[before.length - 1].state.Turbine.electricOutput).toBeCloseTo(LoadSetpoint, 6)
+    expect(before[before.length - 1].state.Turbine.electricOutput).toBeCloseTo(HouseLoadSetpoint, 6)
     expect(before[before.length - 1].state.gridSupplyBreaker).toBe(true)
   })
 
@@ -30,8 +30,12 @@ describe("house-load-hold", () => {
       expect(isBusLive(state)).toBe(true)
       expect(state.Turbine.electricOutput).toBeCloseTo(state.auxiliaryLoad, 1)
       expect(Math.abs(netOutputOf(state))).toBeLessThan(0.05)
-      expect(state.Turbine.loadSetpoint).toBe(LoadSetpoint)
+      expect(state.Turbine.loadSetpoint).toBe(HouseLoadSetpoint)
     }
+  })
+
+  test("the synchronised speed mode stays in force, holding sync speed", () => {
+    for (const { state } of island) expect(state.Turbine.speedMode).toBe("synchronised")
   })
 
   test("goal: the pumps keep running", () => {

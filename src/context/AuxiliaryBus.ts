@@ -10,7 +10,7 @@ import PowerPlantState, { CondenserState, DeaeratorState, OilState } from "./Pow
 export const isBusLive = ({ gridSupplyBreaker, Turbine }: PowerPlantState): boolean => gridSupplyBreaker || Turbine.generatorBreaker
 
 // House load operation (#182, ADR 0053): the grid supply breaker open with the generator breaker closed. The generator carries the bus,
-// so the auxiliary load is the shaft load; the load setpoint stays in state but is ignored and its command is disabled.
+// so the auxiliary load is the shaft load; the load setpoint stays in state but is ignored (its command does nothing; the disabled control is #142).
 export const isHouseLoad = ({ gridSupplyBreaker, Turbine }: PowerPlantState): boolean => !gridSupplyBreaker && Turbine.generatorBreaker
 
 export type BusPumps = { Deaerator: DeaeratorState; Condenser: CondenserState; Oil: OilState }

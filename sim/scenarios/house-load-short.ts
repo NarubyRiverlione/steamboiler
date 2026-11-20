@@ -2,7 +2,7 @@ import { PressureHoldSettings } from "./pressure-hold"
 import { holdLoop } from "./loop-operator"
 import { Scenario } from "../scenario"
 import { loadSnapshot } from "../snapshot"
-import { LoadSetpoint, OpenAt } from "./house-load-hold"
+import { HouseLoadSetpoint, TieOpenAt } from "./house-load-hold"
 
 // Edge (#182, ADR 0053): house load operation with too little steam. As `house-load-hold`, but the main steam valve shuts as the
 // tie opens, so no steam reaches the turbine: the auxiliary load slows the rotor, the speed leaves the window downwards, the
@@ -14,9 +14,9 @@ export const houseLoadShort: Scenario = {
   sampleEvery: 0.1,
   initial: loadSnapshot("turbine-sync"),
   actions: [
-    { at: 0, action: { type: "SET_LOAD_SETPOINT", payload: { loadSetpoint: LoadSetpoint } } },
-    { at: OpenAt, action: { type: "OPEN_GRID_SUPPLY_BREAKER" } },
-    { at: OpenAt, action: { type: "TOGGLE_MAIN_STEAM_VALVE" } },
+    { at: 0, action: { type: "SET_LOAD_SETPOINT", payload: { loadSetpoint: HouseLoadSetpoint } } },
+    { at: TieOpenAt, action: { type: "OPEN_GRID_SUPPLY_BREAKER" } },
+    { at: TieOpenAt, action: { type: "TOGGLE_MAIN_STEAM_VALVE" } },
   ],
   operator: (state, time) => holdLoop(state, time, true, PressureHoldSettings.LoadGasCeiling),
 }
