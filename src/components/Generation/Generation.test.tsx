@@ -107,7 +107,7 @@ describe("Generation page", () => {
     expect(screen.getByRole("switch", { name: "Generator breaker, cover up" })).toBeTruthy()
     fireEvent.click(screen.getByRole("switch", { name: "Generator breaker, cover up" }))
     expect(fns.toggleGeneratorBreaker).toHaveBeenCalledTimes(1)
-    expect(screen.queryByText(/can only be closed/)).toBeNull()
+    expect(screen.queryByText(/outside the synchronising window/)).toBeNull()
   })
 
   it("blocks the breaker outside the band and says why", () => {
@@ -119,7 +119,7 @@ describe("Generation page", () => {
     expect(screen.getByRole("switch", { name: "Generator breaker, cover up" })).toBeTruthy() // the cover still lifts
     fireEvent.click(screen.getByRole("switch", { name: "Generator breaker, cover up" }))
     expect(fns.toggleGeneratorBreaker).not.toHaveBeenCalled() // only the handle refuses
-    expect(screen.getByText(/Current RPM/).textContent).toContain("between 2998 and 3002")
+    expect(screen.getByText("Speed is outside the synchronising window")).toBeTruthy()
   })
 
   it("can always open a closed breaker", () => {
