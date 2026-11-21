@@ -31,6 +31,9 @@ GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs 
 Work from `ROADMAP.md`: `P1`/`P2` tickets first, otherwise the next ready ticket of the theme the owner picks (no theme is active; the owner moves freely).
 New tickets get a theme label (`electrical`, `turbine-aux`, `plant-systems`, `alarms`, `scenario`, `ui`, `sim-core`; see `docs/agents/issue-tracker.md`), `P1`/`P2` only when broken or wrong, and blocked-by links. A new idea stays
 `needs-triage` until the owner promotes it. After creating one (not on closing: that gave merge conflicts), run `pnpm roadmap` and commit `ROADMAP.md`.
+Before starting a ticket, compare its brief with the ADR/doc commits and the tickets closed since the brief was written; list any conflict and ask the owner before coding.
+During a ticket, a deviation from the brief (a workaround, a dropped item, a rule read differently) means stop and ask; don't report it at close.
+When a ticket gets new decisions, rewrite its brief in place; don't add "addition to the brief" comments.
 Before closing, run `git grep "#<ticket>" docs/adr` and update every ADR the ticket makes out of date, then run the `crap-score-typescript` skill on the files the ticket changed (list them with
 `git diff --name-only dev...HEAD -- '*.ts' '*.tsx'`, pass them as file paths; never use `--changed`, it sees only uncommitted
 changes and the work is already committed; a full run takes ~150 s on slow hardware), report the scores (also in

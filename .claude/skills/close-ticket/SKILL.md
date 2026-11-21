@@ -33,6 +33,7 @@ Once the gate is green, run straight through: do not ask for confirmation. Stop 
 ## 4. Close
 
 - `gh issue close <n> --comment "<gate results, CRAP scores and flagged methods, merge commit>"`.
+- Stale briefs: list what the ticket changed (`git diff --name-only <merge>^1 <merge>`), in particular the ADRs in `docs/adr/`. For each open `ready-for-agent` ticket (`gh issue list --label ready-for-agent --state open`), check whether its brief names one of those ADRs or the same code area, and whether the brief still holds. Move each ticket whose brief is now out of date back to `needs-triage` (`gh issue edit <m> --remove-label ready-for-agent --add-label needs-triage`), and comment a one-line reason naming this ticket. Don't regenerate `ROADMAP.md`.
 
 ## 5. Clean up
 
@@ -41,4 +42,4 @@ Once the gate is green, run straight through: do not ask for confirmation. Stop 
 
 ## 6. Report
 
-One short summary: gate results, CRAP scores, merge commit, issue closed, what was removed.
+One short summary: gate results, CRAP scores, merge commit, issue closed, tickets moved back to `needs-triage` (with reasons), what was removed.
