@@ -251,7 +251,10 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#region Grid supply breaker (#141)
   // Breaker control power is the safety bus: with it dead the command does nothing (#143, ADR 0053)
   CLOSE_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? { ...state, gridSupplyBreaker: true } : state),
-  OPEN_GRID_SUPPLY_BREAKER: (state) => (!isSafetyBusLive(state) ? state : { ...state, gridSupplyBreaker: false }),
+  OPEN_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? openGridSupplyBreaker(state) : state),
+  // Local mechanical trips (#184, ADR 0053): need no bus, only open; same open as the normal one
+  LOCAL_TRIP_GRID_SUPPLY_BREAKER: (state) => openGridSupplyBreaker(state),
+  LOCAL_TRIP_GENERATOR_BREAKER: (state) => (state.Turbine.generatorBreaker ? openGeneratorBreaker(state) : state),
   //#endregion
 
   //#region Onsite diesel generator (#169): starting needs no plant bus; the breaker needs the safety bus, the local trip does not
@@ -332,8 +335,8 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // Closing enters Synchronised (PID on 3000 rpm); opening, by hand, returns to Free (#135)
   TOGGLE_GENERATOR_BREAKER: (state) => {
     if (!isSafetyBusLive(state)) return state
-    const { rpm, generatorBreaker: wasClosed } = state.Turbine
-    if (wasClosed) return withTurbine(state, { generatorBreaker: false, electricOutput: 0, loadSetpoint: 0, ...freeAt(rpm) })
+    const { generatorBreaker: wasClosed } = state.Turbine
+    if (wasClosed) return openGeneratorBreaker(state)
     if (generatorBreakerCloseRefusal(state.Turbine)) return state
     return withTurbine(state, { generatorBreaker: true, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
   },
@@ -349,6 +352,11 @@ const freeAt = (rpm: number): Pick<TurbineState, "speedMode" | "pidIntegralError
   pidIntegralError: 0,
   speedReference: rpm,
 })
+
+// The one way a breaker opens, shared by the normal open and the local trip
+const openGridSupplyBreaker = (state: PowerPlantState): PowerPlantState => (state.gridSupplyBreaker ? { ...state, gridSupplyBreaker: false } : state)
+const openGeneratorBreaker = (state: PowerPlantState): PowerPlantState =>
+  withTurbine(state, { generatorBreaker: false, electricOutput: 0, loadSetpoint: 0, ...freeAt(state.Turbine.rpm) })
 
 export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
   // TS cannot correlate action.type with its payload when indexing a mapped type, hence the widening
