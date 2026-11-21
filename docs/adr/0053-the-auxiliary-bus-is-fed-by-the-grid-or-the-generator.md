@@ -1,8 +1,8 @@
-# The auxiliary bus is fed by the grid or the generator
+# The auxiliary bus is fed by the grid, the generator or the diesel
 
 **Status: accepted.** Decided in #141, M2 of [ADR 0046](0046-from-island-to-town-grid-in-milestones.md); breaker refusals reworked after the research and grilling of #174 ([research note](../research/2026-11-breaker-interlocks-and-protections.md)). Builds on the auxiliary load of #140; amends nothing in [ADR 0027](0027-generator-load-is-a-resisting-torque.md), whose gross load and torque stay as they are.
 
-The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** (new, `gridSupplyBreaker` in `PowerPlantState`), by the **Generator breaker**, or both. The bus is **live** when either is closed; this is derived each tick (`isBusLive`), never stored. With both open it is a **Dead bus**.
+The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** (new, `gridSupplyBreaker` in `PowerPlantState`), by the **Generator breaker**, by the **Diesel breaker** (#169), or any together. The bus is **live** when any is closed; this is derived each tick (`isBusLive`), never stored. With all three open it is a **Dead bus**.
 
 ## Decisions
 
@@ -35,4 +35,4 @@ The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** 
 - House load operation is built (#182): `isHouseLoad` in `AuxiliaryBus.ts`, the auxiliary load passed to `TurbineTick` as the shaft load; `gridSupplyOpenRefusal` and `loadSetpointFloorRefusal` are gone. No new `PowerPlantState` field, snapshots unchanged. Edge scenarios `house-load-hold`, `load-rejection`, `house-load-short`.
 - The onsite diesel is built (#169): `Diesel` and `dieselBreaker` in `PowerPlantState` (snapshots regenerated for the fields), `src/context/Diesel.ts`; `dark-start` recovers with the diesel, edge scenario `diesel-overload`. The page is #175.
 - The app has no breaker switch yet (#142); until then the grid supply breaker stays closed in the app.
-- The onsite diesel generator was split off to #169, which adds it to this ADR (above); `dark-start` becomes the diesel scenario, the full dark start up to the generator is #187. Transformers and excitation stay in [real-plant-gaps.md](../plant/real-plant-gaps.md).
+- The full dark start up to the generator is #187. Transformers and excitation stay in [real-plant-gaps.md](../plant/real-plant-gaps.md).
