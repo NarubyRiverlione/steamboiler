@@ -28,6 +28,12 @@ type PowerPlantAction =
   // Local mechanical trips (#184, ADR 0053): work with no safety bus, only open
   | { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }
   | { type: "LOCAL_TRIP_GENERATOR_BREAKER" }
+  // Onsite diesel Actions (#169): start/stop; close is refused with a reason (dieselBreakerCloseRefusal), open is never refused;
+  // the local trip only opens and needs no control power
+  | { type: "SET_DIESEL_RUN"; payload: { run: boolean } }
+  | { type: "CLOSE_DIESEL_BREAKER" }
+  | { type: "OPEN_DIESEL_BREAKER" }
+  | { type: "LOCAL_TRIP_DIESEL_BREAKER" }
   // UPS breaker Actions (#143): manual, always available, even on a dead safety bus
   | { type: "CLOSE_UPS_BREAKER" }
   | { type: "OPEN_UPS_BREAKER" }

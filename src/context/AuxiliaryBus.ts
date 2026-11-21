@@ -1,13 +1,13 @@
 /**
  * Auxiliary bus (#141, ADR 0053): the bus that powers the pumps is fed by the grid supply breaker, by the generator
- * breaker, or both. With both open the bus is dead and every pump stops (flow 0), while the stored valve positions and
+ * breaker, by the diesel breaker (#169), or any together. With all three open the bus is dead and every pump stops (flow 0), while the stored valve positions and
  * switches stay as the operator set them, so the pumps resume when the bus is fed again, with no reset step. Opening the grid supply
  * breaker is never refused (#182): with the generator breaker closed the plant runs on house load.
  */
 import PowerPlantState, { CondenserState, DeaeratorState, OilState } from "./PowerPlantState"
 
-// Derived every tick, never stored: either breaker feeds the bus
-export const isBusLive = ({ gridSupplyBreaker, Turbine }: PowerPlantState): boolean => gridSupplyBreaker || Turbine.generatorBreaker
+// Derived every tick, never stored: any of the three breakers feeds the bus
+export const isBusLive = ({ gridSupplyBreaker, dieselBreaker, Turbine }: PowerPlantState): boolean => gridSupplyBreaker || Turbine.generatorBreaker || dieselBreaker
 
 // House load operation (#182, ADR 0053): the grid supply breaker open with the generator breaker closed. The generator carries the bus,
 // so the auxiliary load is the shaft load; the load setpoint stays in state but is ignored (its command does nothing; the disabled control is #142).

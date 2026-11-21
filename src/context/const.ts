@@ -130,6 +130,12 @@ export const CstAuxiliary = {
   TurningGearMotor: 0.03, // MW while engaged (30 kW motor of a 110 MW turbine)
 }
 
+// Onsite diesel generator (#169, ADR 0053): no shaft, it holds 50 Hz up to its rating
+export const CstDiesel = {
+  StartTime: 10, // s from RUN to running (UNVERIFIED: about 10 s for a standby set)
+  RatedPower: 2.5, // MW: the dark-start peak of 1.99 MW plus a 0.5 MW margin (docs/plant/design-basis.md)
+}
+
 // UPS (#143, ADR 0055, docs/research/2026-11-ups-runtime.md): the charge is 0-100 %, simulated seconds; a deliberate reduction from real station batteries (hours)
 export const CstUps = {
   NominalRuntime: 1800, // s the UPS carries the safety bus with the Auxiliary bus dead: 30 minutes (real: 8-10 h, reduced for playability)

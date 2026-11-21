@@ -111,6 +111,11 @@
     "pumpRunning": true,
     "headerPressure": 0.9999999999999972
   },
+  "Diesel": {
+    "status": "stopped",
+    "startElapsed": 0
+  },
+  "dieselBreaker": false,
   "gridSupplyBreaker": true,
   "upsBreaker": true,
   "upsCharge": 100,
