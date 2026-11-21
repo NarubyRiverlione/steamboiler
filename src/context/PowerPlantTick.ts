@@ -1,5 +1,6 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
 import { BusPumps, isBusLive, isHouseLoad, restorePumps, stopPumps } from "./AuxiliaryBus"
+import { DieselTick } from "./Diesel"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { upsChargeAfter } from "./SafetyBus"
 import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
@@ -17,9 +18,11 @@ import { getExhaustEnthalpy, getInletEnthalpy, getLiquidEnthalpy } from "../util
 import { shaftWorkFraction } from "../utils/turbineCalculations"
 import { calculateExtraction, drainEnthalpyOf, Extraction, heatFeedwater } from "../utils/extractionHeater"
 
-export default function PowerPlantTick(supplied: PowerPlantState): PowerPlantState {
+export default function PowerPlantTick(entry: PowerPlantState): PowerPlantState {
   // The simulation has ended (the UPS ran flat, #143): nothing advances
-  if (supplied.simulationEnded) return supplied
+  if (entry.simulationEnded) return entry
+  // The onsite diesel starts up, and its breaker opens on overload before anything is fed this tick (#169)
+  const supplied: PowerPlantState = DieselTick(entry)
   // Dead bus (#141, ADR 0053): both breakers open, so every pump runs at flow 0 this tick; the operator's positions come back at the end
   const deadBus = !isBusLive(supplied)
   const state: PowerPlantState = deadBus ? { ...supplied, ...stopPumps(supplied) } : supplied

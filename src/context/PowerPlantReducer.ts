@@ -12,6 +12,7 @@ import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
 import { isBusLive, isHouseLoad } from "./AuxiliaryBus"
+import { dieselBreakerCloseRefusal, openDieselBreaker } from "./Diesel"
 import { isSafetyBusLive, isVitalBusLive } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
 import { isOpeningRefused } from "./Turbine/ValveOpening"
@@ -117,6 +118,8 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     glandSteamOn: false, // the glands unsealed (ADR 0047)
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
+  Diesel: { status: "stopped", startElapsed: 0 },
+  dieselBreaker: false,
   gridSupplyBreaker: true, // closed: the grid feeds the auxiliary bus (#141)
   // The UPS breaker is closed here so every scenario and the app run as before (no board switch yet, #144); dark-start opens it
   upsBreaker: true,
@@ -248,6 +251,16 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // Breaker control power is the safety bus: with it dead the command does nothing (#143, ADR 0053)
   CLOSE_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? { ...state, gridSupplyBreaker: true } : state),
   OPEN_GRID_SUPPLY_BREAKER: (state) => (!isSafetyBusLive(state) ? state : { ...state, gridSupplyBreaker: false }),
+  //#endregion
+
+  //#region Onsite diesel generator (#169): starting needs no plant bus; the breaker needs the safety bus, the local trip does not
+  SET_DIESEL_RUN: (state, { payload: { run } }) => {
+    if (run) return state.Diesel.status === "stopped" ? { ...state, Diesel: { status: "starting", startElapsed: 0 } } : state
+    return { ...openDieselBreaker(state), Diesel: { status: "stopped", startElapsed: 0 } }
+  },
+  CLOSE_DIESEL_BREAKER: (state) => (!isSafetyBusLive(state) || dieselBreakerCloseRefusal(state) ? state : { ...state, dieselBreaker: true }),
+  OPEN_DIESEL_BREAKER: (state) => (isSafetyBusLive(state) ? openDieselBreaker(state) : state),
+  LOCAL_TRIP_DIESEL_BREAKER: (state) => openDieselBreaker(state),
   //#endregion
 
   //#region UPS breaker (#143): the one control that needs no power

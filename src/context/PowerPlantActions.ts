@@ -25,6 +25,12 @@ type PowerPlantAction =
   // Grid supply breaker Actions (#141, ADR 0053): both always allowed; opening with the generator breaker closed is house load operation (#182)
   | { type: "CLOSE_GRID_SUPPLY_BREAKER" }
   | { type: "OPEN_GRID_SUPPLY_BREAKER" }
+  // Onsite diesel Actions (#169): start/stop; close is refused with a reason (dieselBreakerCloseRefusal), open is never refused;
+  // the local trip only opens and needs no control power
+  | { type: "SET_DIESEL_RUN"; payload: { run: boolean } }
+  | { type: "CLOSE_DIESEL_BREAKER" }
+  | { type: "OPEN_DIESEL_BREAKER" }
+  | { type: "LOCAL_TRIP_DIESEL_BREAKER" }
   // UPS breaker Actions (#143): manual, always available, even on a dead safety bus
   | { type: "CLOSE_UPS_BREAKER" }
   | { type: "OPEN_UPS_BREAKER" }
