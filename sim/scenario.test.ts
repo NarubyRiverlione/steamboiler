@@ -216,6 +216,7 @@ describe("scenario registry", () => {
       "deaerator-vent-closed",
       "deaerator-vent-open",
       "dark-start",
+      "diesel-overload",
       "house-load-hold",
       "load-rejection",
       "house-load-short",
