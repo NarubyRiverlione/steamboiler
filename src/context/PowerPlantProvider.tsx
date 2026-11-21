@@ -80,6 +80,12 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleGeneratorBreaker = () => {
     dispatch({ type: "TOGGLE_GENERATOR_BREAKER" })
   }
+  const toggleGridSupplyBreaker = () => {
+    dispatch({ type: state.gridSupplyBreaker ? "OPEN_GRID_SUPPLY_BREAKER" : "CLOSE_GRID_SUPPLY_BREAKER" })
+  }
+  const toggleUpsBreaker = () => {
+    dispatch({ type: state.upsBreaker ? "OPEN_UPS_BREAKER" : "CLOSE_UPS_BREAKER" })
+  }
   const setLoadSetpoint = (loadSetpoint: number) => {
     dispatch({ type: "SET_LOAD_SETPOINT", payload: { loadSetpoint } })
   }
@@ -162,6 +168,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         selectRunUpPoint,
         setLoadSetpoint,
         toggleGeneratorBreaker,
+        toggleGridSupplyBreaker,
+        toggleUpsBreaker,
         // lube oil action
         toggleOilPump,
         // turning gear action

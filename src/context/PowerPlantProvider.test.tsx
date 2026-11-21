@@ -157,6 +157,11 @@ describe("simulation loop", () => {
 function flatten(state: PowerPlantState): Record<string, unknown> {
   const flat: Record<string, unknown> = {}
   for (const [slice, fields] of Object.entries(state)) {
+    // Top-level scalars (the bus breakers) are their own key
+    if (typeof fields !== "object") {
+      flat[slice] = fields
+      continue
+    }
     for (const [field, value] of Object.entries(fields as Record<string, unknown>)) flat[`${slice}.${field}`] = value
   }
   return flat
@@ -234,6 +239,8 @@ const rows: Row[] = [
       "Turbine.speedReference": s.Turbine.rpm,
     }),
   },
+  { name: "toggleGridSupplyBreaker", act: (c) => { c.toggleGridSupplyBreaker(); }, expected: () => ({ gridSupplyBreaker: false }) },
+  { name: "toggleUpsBreaker", act: (c) => { c.toggleUpsBreaker(); }, expected: (s) => ({ upsBreaker: !s.upsBreaker }) },
   { name: "toggleOilPump", act: (c) => { c.toggleOilPump(); }, expected: (s) => ({ "Oil.pumpRunning": !s.Oil.pumpRunning }) },
   {
     name: "toggleTurningGear (engage)",

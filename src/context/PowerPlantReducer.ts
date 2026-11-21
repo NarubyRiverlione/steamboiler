@@ -11,7 +11,7 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
-import { isBusLive, isHouseLoad } from "./AuxiliaryBus"
+import { houseLoadRefusal, isBusLive } from "./AuxiliaryBus"
 import { dieselBreakerCloseRefusal, openDieselBreaker } from "./Diesel"
 import { isSafetyBusLive, isVitalBusLive } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
@@ -121,7 +121,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
   Diesel: { status: "stopped", startElapsed: 0 },
   dieselBreaker: false,
   gridSupplyBreaker: true, // closed: the grid feeds the auxiliary bus (#141)
-  // The UPS breaker is closed here so every scenario and the app run as before (no board switch yet, #144); dark-start opens it
+  // The UPS breaker is closed here so every scenario runs as before; the app (makeUiStartState) and dark-start open it
   upsBreaker: true,
   upsCharge: 100,
   simulationEnded: false,
@@ -129,7 +129,8 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
 })
 
 // What the app starts from: the cold plant with the drum filled to 40% (ADR 0018)
-export const makeUiStartState = (): PowerPlantState => makeInitialState(CstBoiler.UiStartWaterVolume)
+// The UPS breaker starts open: the operator closes it from the Auxiliary bus page (ADR 0055); scenarios and snapshots keep makeInitialState
+export const makeUiStartState = (): PowerPlantState => ({ ...makeInitialState(CstBoiler.UiStartWaterVolume), upsBreaker: false })
 
 export const initialPowerPlantState: PowerPlantState = makeUiStartState()
 
@@ -338,7 +339,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   },
   // Only with the breaker closed (loadSetpointRefusal) and not in house load operation (the setpoint is ignored there, #182); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
-    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || isHouseLoad(state) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
+    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || houseLoadRefusal(state) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 

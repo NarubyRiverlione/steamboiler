@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstAuxiliary, CstOil, CstSimulation } from "./const"
-import { isBusLive } from "./AuxiliaryBus"
+import { houseLoadRefusal, isBusLive } from "./AuxiliaryBus"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -178,5 +178,13 @@ describe("the auxiliary bus (#141)", () => {
       expect(isBusLive(ticked)).toBe(false)
       expect(ticked.auxiliaryLoad).toBe(0)
     })
+  })
+})
+
+describe("houseLoadRefusal", () => {
+  test("gives the reason only in house load operation", () => {
+    expect(houseLoadRefusal(pumping(true, true))).toBeUndefined()
+    expect(houseLoadRefusal(pumping(false, false))).toBeUndefined()
+    expect(houseLoadRefusal(pumping(false, true))).toMatch(/House load operation/)
   })
 })

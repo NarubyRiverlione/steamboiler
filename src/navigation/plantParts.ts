@@ -3,9 +3,9 @@
 import type PowerPlantState from "../context/PowerPlantState"
 import { ALARMS } from "./alarms"
 
-export type PartId = "boiler" | "steam" | "deaerator" | "condenser" | "turbine" | "turbineAux" | "generation"
+export type PartId = "boiler" | "steam" | "deaerator" | "condenser" | "turbine" | "turbineAux" | "generation" | "auxiliaryBus"
 
-export const PART_IDS: readonly PartId[] = ["boiler", "steam", "deaerator", "condenser", "turbine", "turbineAux", "generation"]
+export const PART_IDS: readonly PartId[] = ["boiler", "steam", "deaerator", "condenser", "turbine", "turbineAux", "generation", "auxiliaryBus"]
 
 export const PARTS: Readonly<Record<PartId, { readonly path: string; readonly name: string }>> = {
   boiler: { path: "/boiler", name: "Boiler" },
@@ -15,12 +15,13 @@ export const PARTS: Readonly<Record<PartId, { readonly path: string; readonly na
   turbine: { path: "/turbine", name: "Turbine" },
   turbineAux: { path: "/turbine-aux", name: "Turbine aux" },
   generation: { path: "/generation", name: "Generation" },
+  auxiliaryBus: { path: "/auxiliary-bus", name: "Auxiliary bus" },
 }
 
 export const OVERVIEW_PATH = "/"
 
 export function partAlarms(state: PowerPlantState): Record<PartId, boolean> {
-  const lit: Record<PartId, boolean> = { boiler: false, steam: false, deaerator: false, condenser: false, turbine: false, turbineAux: false, generation: false }
+  const lit: Record<PartId, boolean> = { boiler: false, steam: false, deaerator: false, condenser: false, turbine: false, turbineAux: false, generation: false, auxiliaryBus: false }
   for (const alarm of ALARMS) lit[alarm.part] ||= alarm.active(state)
   return lit
 }

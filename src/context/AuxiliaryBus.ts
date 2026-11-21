@@ -13,6 +13,10 @@ export const isBusLive = ({ gridSupplyBreaker, dieselBreaker, Turbine }: PowerPl
 // so the auxiliary load is the shaft load; the load setpoint stays in state but is ignored (its command does nothing; the disabled control is #142).
 export const isHouseLoad = ({ gridSupplyBreaker, Turbine }: PowerPlantState): boolean => !gridSupplyBreaker && Turbine.generatorBreaker
 
+// Why the load setpoint does nothing, or undefined: in house load operation the generator follows the auxiliary load (#142 shows it as a lamp)
+export const houseLoadRefusal = (state: PowerPlantState): string | undefined =>
+  isHouseLoad(state) ? "House load operation: the grid supply breaker is open" : undefined
+
 export type BusPumps = { Deaerator: DeaeratorState; Condenser: CondenserState; Oil: OilState }
 
 // The plant as the tick sees it on a dead bus: every pump stopped
