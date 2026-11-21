@@ -22,7 +22,7 @@ type PowerPlantAction =
   | { type: "SELECT_RUN_UP_POINT"; payload: { runUpPoint: number } }
   | { type: "TOGGLE_GENERATOR_BREAKER" }
   | { type: "SET_LOAD_SETPOINT"; payload: { loadSetpoint: number } }
-  // Grid supply breaker Actions (#141, ADR 0053): closing is always allowed, opening needs the generator to carry the bus
+  // Grid supply breaker Actions (#141, ADR 0053): both always allowed; opening with the generator breaker closed is house load operation (#182)
   | { type: "CLOSE_GRID_SUPPLY_BREAKER" }
   | { type: "OPEN_GRID_SUPPLY_BREAKER" }
   // Local mechanical trips (#184, ADR 0053): work with no safety bus, only open

@@ -29,6 +29,7 @@ const SecondsPerMinute = 60
  * @param extractionFlow - The steam (kg/s) the heater took at the tap in the last tick, which no longer does work after the tap (ADR 0031).
  * @param steamTemperature - The steam temperature (°C) after the superheater (ADR 0044); saturated steam when left out.
  * @param rollPermissive - False below the lube oil permissive pressure (ADR 0050) or on a stopped rotor off the turning gear (ADR 0051): the Ramp up / Hold PID may not open the valve.
+ * @param houseLoad - The auxiliary load (MW) in house load operation (#182): the generator carries it at once and the load setpoint is ignored; undefined with the grid supply breaker closed.
  * @returns The updated turbine state.
  */
 function TurbineTick(
@@ -38,8 +39,9 @@ function TurbineTick(
   extractionFlow = 0,
   steamTemperature = 0,
   rollPermissive = true,
+  houseLoad?: number,
 ): TurbineState {
-  const { ticked, newRPM, generatorBreaker } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature)
+  const { ticked, newRPM, generatorBreaker } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature, houseLoad)
 
   // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) an open valve trips
   if (isTripCondition(newRPM, condenserPressure) && turbineState.turbineValvePosition > 0) return { ...ticked, ...turbineTrip }
@@ -55,13 +57,14 @@ type ShaftTick = { ticked: TurbineState; newRPM: number; generatorBreaker: boole
 
 // The shaft and the generator for one tick: the enthalpy drop (less what the extraction steam no longer does after the tap)
 // gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed only) and is a resisting
-// torque on the shaft, never derived from the steam flow (ADR 0027). The breaker auto-opens outside the sync margin and the load drops with it.
+// torque on the shaft, never derived from the steam flow (ADR 0027). In house load operation it is the auxiliary load, stepped at once (#182). The breaker auto-opens outside the sync margin and the load drops with it.
 function shaftTick(
   turbineState: TurbineState,
   boilerPressure: number,
   condenserPressure: number,
   extractionFlow: number,
   steamTemperature: number,
+  houseLoad?: number,
 ): ShaftTick {
   const enthalpyDrop: number = shaftDropWithExtraction(
     boilerPressure,
@@ -70,7 +73,7 @@ function shaftTick(
     extractionFlow,
     steamTemperature,
   )
-  const load: number = turbineState.generatorBreaker ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint) : 0
+  const load: number = turbineState.generatorBreaker ? (houseLoad ?? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint)) : 0
   const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
   const generatorBreaker: boolean = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
   const ticked: TurbineState = {

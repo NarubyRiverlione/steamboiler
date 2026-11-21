@@ -11,7 +11,7 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
-import { gridSupplyOpenRefusal, isBusLive, loadSetpointFloorRefusal } from "./AuxiliaryBus"
+import { isBusLive, isHouseLoad } from "./AuxiliaryBus"
 import { isSafetyBusLive, isVitalBusLive } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
 import { isOpeningRefused } from "./Turbine/ValveOpening"
@@ -248,8 +248,8 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   // Breaker control power is the safety bus: with it dead the command does nothing (#143, ADR 0053)
   CLOSE_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? { ...state, gridSupplyBreaker: true } : state),
   OPEN_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? openGridSupplyBreaker(state) : state),
-  // Local mechanical trips (#184, ADR 0053): need no bus, only open, no interlock; the generator trip shares the normal open
-  LOCAL_TRIP_GRID_SUPPLY_BREAKER: (state) => (state.gridSupplyBreaker ? { ...state, gridSupplyBreaker: false } : state), // the lever: no interlock
+  // Local mechanical trips (#184, ADR 0053): need no bus, only open; same open as the normal one
+  LOCAL_TRIP_GRID_SUPPLY_BREAKER: (state) => openGridSupplyBreaker(state),
   LOCAL_TRIP_GENERATOR_BREAKER: (state) => (state.Turbine.generatorBreaker ? openGeneratorBreaker(state) : state),
   //#endregion
 
@@ -326,9 +326,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     if (generatorBreakerCloseRefusal(state.Turbine)) return state
     return withTurbine(state, { generatorBreaker: true, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
   },
-  // Only with the breaker closed (loadSetpointRefusal); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
+  // Only with the breaker closed (loadSetpointRefusal) and not in house load operation (the setpoint is ignored there, #182); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
-    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || loadSetpointFloorRefusal(state, loadSetpoint) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
+    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || isHouseLoad(state) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 
@@ -339,8 +339,8 @@ const freeAt = (rpm: number): Pick<TurbineState, "speedMode" | "pidIntegralError
   speedReference: rpm,
 })
 
-// The normal open, with the grid interlock; the generator open is shared with its local trip
-const openGridSupplyBreaker = (state: PowerPlantState): PowerPlantState => (!state.gridSupplyBreaker || gridSupplyOpenRefusal(state) ? state : { ...state, gridSupplyBreaker: false })
+// The one way a breaker opens, shared by the normal open and the local trip
+const openGridSupplyBreaker = (state: PowerPlantState): PowerPlantState => (state.gridSupplyBreaker ? { ...state, gridSupplyBreaker: false } : state)
 const openGeneratorBreaker = (state: PowerPlantState): PowerPlantState =>
   withTurbine(state, { generatorBreaker: false, electricOutput: 0, loadSetpoint: 0, ...freeAt(state.Turbine.rpm) })
 
