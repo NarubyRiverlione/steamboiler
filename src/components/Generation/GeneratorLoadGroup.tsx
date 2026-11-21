@@ -29,7 +29,8 @@ type GeneratorLoadGroupProps = {
 
 export function GeneratorLoadGroup({ turbine, gridSupplyClosed, houseLoadReason, onSetLoadSetpoint }: GeneratorLoadGroupProps) {
   const [draft, setDraft] = useState<string>("")
-  const loadRefusal: string | undefined = loadSetpointRefusal(turbine) ?? houseLoadReason
+  const breakerRefusal: string | undefined = loadSetpointRefusal(turbine)
+  const loadRefusal: string | undefined = breakerRefusal ?? houseLoadReason
 
   // The field shows the setpoint while it is not being typed in
   const applyLoad = (): void => {
@@ -91,7 +92,7 @@ export function GeneratorLoadGroup({ turbine, gridSupplyClosed, houseLoadReason,
       />
       <span className="board-readout-label">Permissive</span>
       <Lamp lit={gridSupplyClosed} tone="ok" label="Grid supply closed" title={houseLoadReason ?? "Lit while the grid supply breaker is closed"} />
-      {loadRefusal !== undefined && <p className="board-lcd-msg">{loadRefusal}</p>}
+      {breakerRefusal !== undefined && <p className="board-lcd-msg">{breakerRefusal}</p>}
     </div>
   )
 }

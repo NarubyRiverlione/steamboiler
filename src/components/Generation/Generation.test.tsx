@@ -179,6 +179,7 @@ describe("Generation page", () => {
     const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
     expect(field.disabled).toBe(true)
     expect(field.title).toBe("House load operation: the grid supply breaker is open")
+    expect(screen.queryByText("House load operation: the grid supply breaker is open")).toBeNull() // a tooltip only, no message line
     fireEvent.keyDown(screen.getByRole("meter", { name: "Load setpoint knob" }), { key: "ArrowUp" })
     expect(fns.setLoadSetpoint).not.toHaveBeenCalled()
   })

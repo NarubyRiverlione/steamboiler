@@ -14,7 +14,7 @@ function AuxiliaryBus() {
   const [coverLifted, setCoverLifted] = useState<boolean>(false)
   return (
     <PanelFrame title="Auxiliary bus">
-      <div className="board-generation-main">
+      <div className="board-page-groups">
         <div className="board-group">
           <h3 className="board-group-title">Grid Supply Breaker</h3>
           <BreakerSwitch

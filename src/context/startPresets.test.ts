@@ -27,6 +27,10 @@ describe("start presets", () => {
     expect(makeInitialState().upsBreaker).toBe(true)
   })
 
+  test("the Cold & dark preset starts with the UPS breaker open", () => {
+    expect(presetState(find("cold")).upsBreaker).toBe(false)
+  })
+
   test("Hot standby is the bypass-loop snapshot, At pressure the turbine-runup snapshot", () => {
     expect(presetState(find("hot-standby"))).toEqual(loadSnapshot("bypass-loop"))
     expect(presetState(find("at-pressure"))).toEqual(loadSnapshot("turbine-runup"))
