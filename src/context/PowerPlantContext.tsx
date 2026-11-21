@@ -20,6 +20,8 @@ type PowerPlantContextType = {
   setSpeedMode: (speedMode: SpeedMode) => void
   selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
+  toggleGridSupplyBreaker: () => void // never refused; with no control power the reducer ignores it
+  toggleUpsBreaker: () => void
   setLoadSetpoint: (loadSetpoint: number) => void
   // Lube oil (ADR 0050)
   toggleOilPump: () => void

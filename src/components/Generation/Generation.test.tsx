@@ -8,8 +8,8 @@ import Generation from "./Generation"
 
 type Ctx = ContextType<typeof PowerPlantContext>
 
-function renderGeneration(patch: Partial<PowerPlantState["Turbine"]> = {}) {
-  const state: PowerPlantState = makeInitialState()
+function renderGeneration(patch: Partial<PowerPlantState["Turbine"]> = {}, top: Partial<PowerPlantState> = {}) {
+  const state: PowerPlantState = { ...makeInitialState(), ...top }
   state.Turbine = { ...state.Turbine, ...patch }
   const fns = { toggleGeneratorBreaker: vi.fn(), setLoadSetpoint: vi.fn() }
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
@@ -155,5 +155,31 @@ describe("Generation page", () => {
     const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
     expect(field.disabled).toBe(true)
     expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
+  })
+
+  it("shows the net output, negative by its minus sign only", () => {
+    renderGeneration({ electricOutput: 0, generatorBreaker: false }, { auxiliaryLoad: 4.2 })
+    expect(screen.getByLabelText("Net output").textContent).toBe("-4.2 MW")
+  })
+
+  it("shows the net output as generator load minus auxiliary load", () => {
+    renderGeneration({ electricOutput: 50, generatorBreaker: true }, { auxiliaryLoad: 4.5 })
+    expect(screen.getByLabelText("Net output").textContent).toBe("45.5 MW")
+  })
+
+  it("lights Grid supply closed and leaves the setpoint enabled with the grid supply closed", () => {
+    renderGeneration({ generatorBreaker: true }, { gridSupplyBreaker: true })
+    expect(screen.getByRole("img", { name: "Grid supply closed: on" })).toBeTruthy()
+    expect(screen.getByLabelText<HTMLInputElement>("Load setpoint (MW)").disabled).toBe(false)
+  })
+
+  it("in house load operation unlights the lamp and disables the setpoint controls with the sim's reason", () => {
+    const fns = renderGeneration({ generatorBreaker: true }, { gridSupplyBreaker: false })
+    expect(screen.getByRole("img", { name: "Grid supply closed: off" })).toBeTruthy()
+    const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
+    expect(field.disabled).toBe(true)
+    expect(field.title).toBe("House load operation: the grid supply breaker is open")
+    fireEvent.keyDown(screen.getByRole("meter", { name: "Load setpoint knob" }), { key: "ArrowUp" })
+    expect(fns.setLoadSetpoint).not.toHaveBeenCalled()
   })
 })

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom"
 import Layout from "./Layout"
+import AuxiliaryBus from "../components/AuxiliaryBus/AuxiliaryBus"
 import Boiler from "../components/Boiler/Boiler"
 import Condenser from "../components/Condenser/Condenser"
 import Deaerator from "../components/Deaerator/Deaerator"
@@ -21,6 +22,7 @@ function AppRoutes() {
         <Route path="turbine" element={<Turbine />} />
         <Route path="turbine-aux" element={<TurbineAux />} />
         <Route path="generation" element={<Generation />} />
+        <Route path="auxiliary-bus" element={<AuxiliaryBus />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

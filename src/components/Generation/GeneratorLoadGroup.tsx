@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { loadSetpointRefusal, ratedOutputMW } from "../../utils/turbineCalculations"
+import { Lamp } from "../board/Lamp"
 import { Knob } from "../board/Knob"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import type { TurbineState } from "../Turbine/types"
@@ -21,12 +22,14 @@ const LOAD_ZONES: readonly GaugeZone[] = [
 
 type GeneratorLoadGroupProps = {
   readonly turbine: TurbineState
+  readonly gridSupplyClosed: boolean // the permissive lamp: unlit in house load operation
+  readonly houseLoadReason?: string // from the sim (houseLoadRefusal), the lamp's tooltip and the disabled controls' reason
   readonly onSetLoadSetpoint: (value: number) => void
 }
 
-export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoadGroupProps) {
+export function GeneratorLoadGroup({ turbine, gridSupplyClosed, houseLoadReason, onSetLoadSetpoint }: GeneratorLoadGroupProps) {
   const [draft, setDraft] = useState<string>("")
-  const loadRefusal: string | undefined = loadSetpointRefusal(turbine)
+  const loadRefusal: string | undefined = loadSetpointRefusal(turbine) ?? houseLoadReason
 
   // The field shows the setpoint while it is not being typed in
   const applyLoad = (): void => {
@@ -86,6 +89,8 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
           if (event.key === "Enter") applyLoad()
         }}
       />
+      <span className="board-readout-label">Permissive</span>
+      <Lamp lit={gridSupplyClosed} tone="ok" label="Grid supply closed" title={houseLoadReason ?? "Lit while the grid supply breaker is closed"} />
       {loadRefusal !== undefined && <p className="board-lcd-msg">{loadRefusal}</p>}
     </div>
   )
