@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { CstOil } from "../../src/context/const"
 import { runChecked } from "../scenario-checks"
-import { CloseAt, darkStart, PumpsAskedAt } from "../scenarios/dark-start"
+import { CloseAt, darkStart, EarlyCloseAt, PumpsAskedAt, RunAt } from "../scenarios/dark-start"
 
 describe("dark-start", () => {
   const { samples } = runChecked(darkStart)
@@ -10,7 +10,14 @@ describe("dark-start", () => {
 
   test("the pumps are asked for at the start, with the breaker open", () => {
     expect(samples[0].state.gridSupplyBreaker).toBe(false)
+    expect(samples[0].state.dieselBreaker).toBe(false)
     expect(samples.find((s) => s.time > PumpsAskedAt)?.state.Condenser.condensationPumpValvePosition).toBe(0.1)
+  })
+
+  test("the close during the start is refused, the diesel runs after its start time", () => {
+    expect(samples.find((s) => s.time > EarlyCloseAt)?.state.dieselBreaker).toBe(false)
+    expect(samples.find((s) => s.time > RunAt)?.state.Diesel.status).toBe("starting")
+    expect(samples.find((s) => s.time >= CloseAt)?.state.Diesel.status).toBe("running")
   })
 
   test("invariant: no pump flows and no oil builds while the bus is dead", () => {
@@ -21,9 +28,10 @@ describe("dark-start", () => {
     }
   })
 
-  test("goal: the pumps deliver flow after the breaker closes, at the positions the operator set", () => {
+  test("goal: the pumps deliver flow after the diesel breaker closes, at the positions the operator set", () => {
     const last = fed[fed.length - 1].state
-    expect(last.gridSupplyBreaker).toBe(true)
+    expect(last.dieselBreaker).toBe(true)
+    expect(last.gridSupplyBreaker).toBe(false)
     expect(last.Condenser.condensationPumpValvePosition).toBe(0.1)
     expect(fed.some((s) => s.state.Condenser.returnRate > 0)).toBe(true)
     expect(last.Oil.headerPressure).toBeGreaterThan(CstOil.PermissivePressure)

@@ -1,8 +1,8 @@
-# The auxiliary bus is fed by the grid or the generator
+# The auxiliary bus is fed by the grid, the generator or the diesel
 
 **Status: accepted.** Decided in #141, M2 of [ADR 0046](0046-from-island-to-town-grid-in-milestones.md); breaker refusals reworked after the research and grilling of #174 ([research note](../research/2026-11-breaker-interlocks-and-protections.md)). Builds on the auxiliary load of #140; amends nothing in [ADR 0027](0027-generator-load-is-a-resisting-torque.md), whose gross load and torque stay as they are.
 
-The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** (new, `gridSupplyBreaker` in `PowerPlantState`), by the **Generator breaker**, or both. The bus is **live** when either is closed; this is derived each tick (`isBusLive`), never stored. With both open it is a **Dead bus**.
+The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** (new, `gridSupplyBreaker` in `PowerPlantState`), by the **Generator breaker**, by the **Diesel breaker** (#169), or any together. The bus is **live** when any is closed; this is derived each tick (`isBusLive`), never stored. With all three open it is a **Dead bus**.
 
 ## Decisions
 
@@ -20,7 +20,7 @@ The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** 
   - **The stiffer source carries the bus:** grid over generator over diesel; a paralleled diesel runs unloaded. No droop sharing until the moving frequency of ADR 0046 M3.
   - **Overload is a consequence:** when the auxiliary load passes the rating, the diesel breaker opens on that tick and the diesel keeps running. Not a latched trip, no reset; closing again with the load still too high opens it again. This replaces the speed fall of #174 until #185.
   - **STOP with the breaker closed** opens the breaker on that tick; no refusal.
-  - **Rating:** the largest auxiliary load at start-up flows in the `dark-start` scenario, measured with the headless runner, plus a stated margin, both in [design-basis.md](../plant/design-basis.md). Fuel is #186. The breaker follows the safety bus rules of #184 like the others.
+  - **Rating:** the largest auxiliary load at start-up flows in the `dark-start` scenario, measured with the headless runner (1.99 MW), plus a stated margin (0.5 MW, 2.5 MW in all), both in [design-basis.md](../plant/design-basis.md). Fuel is #186. The breaker follows the safety bus rules of #184 like the others; until #184 is in, the diesel has its own local mechanical trip (`LOCAL_TRIP_DIESEL_BREAKER`: only opens, no bus, the same open path).
 - **Resume without a reset:** when the bus is fed again the pumps run at their operator-set positions, and the lube oil pump runs if it is switched on. A lost supply is not a protective trip, unlike [ADR 0043](0043-trip-reset.md); latched trips still need their reset.
 
 ## Considered options
@@ -33,5 +33,6 @@ The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** 
 
 - `PowerPlantState` gains `gridSupplyBreaker`; snapshots were regenerated for the field. `auxiliaryLoadOf` returns 0 on a dead bus.
 - House load operation is built (#182): `isHouseLoad` in `AuxiliaryBus.ts`, the auxiliary load passed to `TurbineTick` as the shaft load; `gridSupplyOpenRefusal` and `loadSetpointFloorRefusal` are gone. No new `PowerPlantState` field, snapshots unchanged. Edge scenarios `house-load-hold`, `load-rejection`, `house-load-short`.
+- The onsite diesel is built (#169): `Diesel` and `dieselBreaker` in `PowerPlantState` (snapshots regenerated for the fields), `src/context/Diesel.ts`; `dark-start` recovers with the diesel, edge scenario `diesel-overload`. The page is #175.
 - The app has no breaker switch yet (#142); until then the grid supply breaker stays closed in the app.
-- The onsite diesel generator was split off to #169, which adds it to this ADR (above); `dark-start` becomes the diesel scenario, the full dark start up to the generator is #187. Transformers and excitation stay in [real-plant-gaps.md](../plant/real-plant-gaps.md).
+- The full dark start up to the generator is #187. Transformers and excitation stay in [real-plant-gaps.md](../plant/real-plant-gaps.md).
