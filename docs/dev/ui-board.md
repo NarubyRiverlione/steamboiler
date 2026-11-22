@@ -93,6 +93,7 @@ The Boiler status panel uses three fixed columns (`.board-readouts-cols` > `.boa
 - **Vital bus:** fed from the Auxiliary bus, no loads drawn. **Safety bus:** fed by the UPS through the UPS breaker, with the UPS charge in percent; dimmed with the breaker open or the charge at 0. Only the busbars: the safety bus loads are not drawn.
 - **Dummy voltages** (UI constants, not modelled, ADR 0046): Grid 110 kV always, Auxiliary bus 6.0 kV, Vital bus 230 V, Safety bus 110 V DC when live, 0 when dead.
 - **Links:** the grid supply breaker, the UPS and the UPS breaker open the Auxiliary bus page; the generator breaker opens Generation; the diesel and its breaker open the Diesel generator page.
+- **Colours:** each source, the UPS and each bus has its own colour (`--board-electrical-*` tokens, a `board-electrical-<id>` class on the group; lines, boxes, closed breakers and bus names draw in `currentColor`): Grid blue, Generator the power-medium yellow, Diesel generator orange, UPS violet (also its line down to the Safety bus), Auxiliary bus green (also the consumers), Vital bus teal (also its feed from the Auxiliary bus), Safety bus magenta. No red: that is the error colour.
 - **Values toggle** hides the value labels (as on the plant overview). On the emergency board the `Display`s are blank and the mimic stays readable (#144).
 
 ## Board states

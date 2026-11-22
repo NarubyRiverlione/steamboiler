@@ -147,6 +147,24 @@ describe("electrical overview", () => {
     expect(screen.queryByRole("link", { name: /^Grid, opens/ })).toBeNull()
   })
 
+  it("draws each source, the UPS and each bus in its own colour", () => {
+    renderBare(livePlant())
+    const colourOf = (element: Element | null): string | undefined =>
+      Array.from(element?.classList ?? []).find(
+        (name: string) => name.startsWith("board-electrical-") && name !== "board-electrical-dim",
+      )
+    expect(colourOf(source("grid"))).toBe("board-electrical-grid")
+    expect(colourOf(source("generator"))).toBe("board-electrical-generator")
+    expect(colourOf(source("diesel"))).toBe("board-electrical-diesel")
+    expect(colourOf(document.querySelector("[data-ups]"))).toBe("board-electrical-ups")
+    expect(colourOf(document.querySelector('[data-feed="safety"]'))).toBe("board-electrical-ups")
+    expect(colourOf(bus("aux"))).toBe("board-electrical-aux")
+    expect(colourOf(document.querySelector("[data-consumers]"))).toBe("board-electrical-aux")
+    expect(colourOf(bus("vital"))).toBe("board-electrical-vital")
+    expect(colourOf(document.querySelector('[data-feed="vital"]'))).toBe("board-electrical-vital")
+    expect(colourOf(bus("safety"))).toBe("board-electrical-safety")
+  })
+
   it("hides every value label with the Values toggle", () => {
     renderBoard(livePlant())
     fireEvent.click(screen.getByRole("button", { name: "Values" }))

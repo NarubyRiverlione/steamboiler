@@ -43,6 +43,9 @@ export const BUSES: readonly Busbar[] = [
   { id: "safety", name: "Safety bus", y: 610, x1: 620, x2: 1040 },
 ]
 
+// Each source, the UPS and each bus has its own colour (board-electrical-<id> in board.css)
+export type ElectricalColour = SourceId | "ups" | Busbar["id"]
+
 // Dummy nominal voltages: shown when the bus is live, zero when dead
 export const VOLTAGES = {
   grid: { live: "110 kV", dead: "0 kV" },

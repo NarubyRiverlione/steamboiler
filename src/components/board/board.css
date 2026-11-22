@@ -80,6 +80,13 @@
   --board-mimic-power: #b08900;
   --board-mimic-vacuum: #6c757d;
   --board-mimic-oil: #2b8a3e;
+  --board-electrical-grid: #1864ab;
+  --board-electrical-generator: var(--board-mimic-power);
+  --board-electrical-diesel: #d9480f;
+  --board-electrical-ups: #6741d9;
+  --board-electrical-aux: #2b8a3e;
+  --board-electrical-vital: #0c8599;
+  --board-electrical-safety: #c2255c;
   --board-lens-bezel: #1b1b1b;
   --board-lens-bezel-light: #4a4a4a;
   --board-lens-bg: rgba(70, 70, 70, 0.4);
@@ -1793,11 +1800,39 @@ path.board-zone {
 }
 
 .board-bus-name {
+  fill: currentColor;
   font-size: 15px;
 }
 
 .board-breaker-closed {
-  fill: var(--board-mimic-power);
+  fill: currentColor;
+}
+
+/* One colour per source, the UPS and each bus; the generator keeps the power medium yellow */
+.board-electrical-line {
+  stroke: currentColor;
+}
+
+.board-electrical-grid {
+  color: var(--board-electrical-grid);
+}
+.board-electrical-generator {
+  color: var(--board-electrical-generator);
+}
+.board-electrical-diesel {
+  color: var(--board-electrical-diesel);
+}
+.board-electrical-ups {
+  color: var(--board-electrical-ups);
+}
+.board-electrical-aux {
+  color: var(--board-electrical-aux);
+}
+.board-electrical-vital {
+  color: var(--board-electrical-vital);
+}
+.board-electrical-safety {
+  color: var(--board-electrical-safety);
 }
 
 .board-header-lenses {
