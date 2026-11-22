@@ -75,6 +75,7 @@ export type TurbineState = {
   turbineTripped: boolean // set by a turbine trip, cleared only by a trip reset
   turningGearEngaged: boolean // the turning gear holds the stopped rotor at a few rpm; the valve cannot open on a stopped rotor off the gear (ADR 0051)
   glandSteamOn: boolean // gland seal steam, an operator switch: the glands are sealed while it is on (ADR 0047)
+  glandSteamShutOff: boolean // set when the plant shut the steam off because the rotor stopped, cleared when the steam is admitted again; an operator switch-off does not set it (ADR 0047)
 }
 
 export type HeaterState = {

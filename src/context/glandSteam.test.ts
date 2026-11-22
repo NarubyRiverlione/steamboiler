@@ -14,6 +14,7 @@ const switchTo = (state: PowerPlantState, on: boolean): PowerPlantState => power
 describe("gland seal steam (ADR 0047)", () => {
   test("the cold state starts with the gland steam off", () => {
     expect(makeInitialState().Turbine.glandSteamOn).toBe(false)
+    expect(makeInitialState().Turbine.glandSteamShutOff).toBe(false)
   })
 
   describe("the switch", () => {
@@ -33,6 +34,20 @@ describe("gland seal steam (ADR 0047)", () => {
     test("shuts off at any time", () => {
       expect(switchTo(plant({ glandSteamOn: true }), false).Turbine.glandSteamOn).toBe(false)
     })
+
+    test("an operator switch-off does not set the shut-off flag", () => {
+      expect(switchTo(plant({ glandSteamOn: true }), false).Turbine.glandSteamShutOff).toBe(false)
+    })
+
+    test("admitting the steam clears the shut-off flag", () => {
+      const admitted: PowerPlantState = switchTo(plant({ glandSteamShutOff: true, rpm: CstTurningGear.StandstillRpm + 1 }), true)
+      expect(admitted.Turbine.glandSteamOn).toBe(true)
+      expect(admitted.Turbine.glandSteamShutOff).toBe(false)
+    })
+
+    test("a refused admission keeps the shut-off flag", () => {
+      expect(switchTo(plant({ glandSteamShutOff: true }), true).Turbine.glandSteamShutOff).toBe(true)
+    })
   })
 
   describe("losing the rotor", () => {
@@ -44,6 +59,15 @@ describe("gland seal steam (ADR 0047)", () => {
     test("keeps the steam while the gear or the speed turns the rotor", () => {
       expect(GlandSteamTick(plant({ glandSteamOn: true, turningGearEngaged: true }).Turbine).glandSteamOn).toBe(true)
       expect(GlandSteamTick(plant({ glandSteamOn: true, rpm: 500 }).Turbine).glandSteamOn).toBe(true)
+    })
+
+    test("the automatic shut-off sets the flag", () => {
+      expect(GlandSteamTick(plant({ glandSteamOn: true }).Turbine).glandSteamShutOff).toBe(true)
+    })
+
+    test("the flag stays set while the steam is off, and the tick does not set it with the steam already off", () => {
+      expect(GlandSteamTick(plant({ glandSteamShutOff: true }).Turbine).glandSteamShutOff).toBe(true)
+      expect(GlandSteamTick(plant().Turbine).glandSteamShutOff).toBe(false)
     })
 
     test("the plant tick shuts it off and unseals the glands", () => {

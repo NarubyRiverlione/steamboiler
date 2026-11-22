@@ -105,7 +105,8 @@
     "pidIntegralError": 0.0011771721050080357,
     "turbineTripped": false,
     "turningGearEngaged": false,
-    "glandSteamOn": true
+    "glandSteamOn": true,
+    "glandSteamShutOff": false
   },
   "Oil": {
     "pumpRunning": true,

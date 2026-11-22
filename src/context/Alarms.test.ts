@@ -249,3 +249,18 @@ describe("lube oil pressure low alarm (#160, ADR 0050)", () => {
     expect(activeAlarms(withOil(pressure)).includes("lubeOilPressureLow")).toBe(on)
   })
 })
+
+describe("gland steam shut off alarm (#177, ADR 0047)", () => {
+  const withFlag = (glandSteamShutOff: boolean): PowerPlantState => {
+    const state: PowerPlantState = makeInitialState()
+    return { ...state, Turbine: { ...state.Turbine, glandSteamShutOff } }
+  }
+
+  test("is lit by the flag only, a warning owned by the Turbine aux part", () => {
+    expect(activeAlarms(withFlag(true))).toContain("glandSteamShutOff")
+    expect(activeAlarms(withFlag(false))).not.toContain("glandSteamShutOff")
+    const alarm = ALARMS.find((a) => a.id === "glandSteamShutOff")
+    expect(alarm?.part).toBe("turbineAux")
+    expect(alarm?.severity).toBe("warning")
+  })
+})

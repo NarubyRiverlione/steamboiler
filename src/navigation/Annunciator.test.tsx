@@ -309,7 +309,7 @@ describe("Annunciator", () => {
     expect(within(group("Deaerator")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Deaerator level low", "Deaerator level high", "Deaerator level high-high trip", "Feed pump trip"])
     expect(within(group("Condenser")).getAllByRole("button")).toHaveLength(6)
     expect(within(group("Turbine")).getAllByRole("button")).toHaveLength(1)
-    expect(within(group("Turbine aux")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Lube oil pressure low"])
+    expect(within(group("Turbine aux")).getAllByRole("button").map((b: HTMLElement) => b.textContent)).toEqual(["Lube oil pressure low", "Gland steam shut off"])
   })
 
   it("lights the lube oil warning below the permissive pressure, cold plant included, and opens the Turbine aux page (#160)", () => {
