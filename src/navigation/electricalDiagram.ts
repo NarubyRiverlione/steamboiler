@@ -24,7 +24,7 @@ export const BREAKER_HALF = 15
 
 export const SOURCES: readonly ElectricalSource[] = [
   { id: "grid", name: "Grid", x: 160, part: "auxiliaryBus" },
-  { id: "generator", name: "Generator", x: 400, part: "generation" },
+  { id: "generator", name: "Generator", x: 400, part: "generation", nodeLinks: true },
   { id: "diesel", name: "Diesel generator", x: 640, part: "diesel", nodeLinks: true },
 ]
 
@@ -43,6 +43,9 @@ export const BUSES: readonly Busbar[] = [
   { id: "safety", name: "Safety bus", y: 610, x1: 620, x2: 1040 },
 ]
 
+// Each source, the UPS and each bus has its own colour (board-electrical-<id> in board.css)
+export type ElectricalColour = SourceId | "ups" | Busbar["id"]
+
 // Dummy nominal voltages: shown when the bus is live, zero when dead
 export const VOLTAGES = {
   grid: { live: "110 kV", dead: "0 kV" },
@@ -51,14 +54,20 @@ export const VOLTAGES = {
   safety: { live: "110 V DC", dead: "0 V DC" },
 } as const
 
-// The six consumers in the order of consumerDraws (largest rated first); rows stand below the Auxiliary bus on a stem
-export const CONSUMERS: readonly string[] = [
-  "Boiler feed pump",
-  "Recirculation pump",
-  "Condensation pump",
-  "Air extraction pump",
-  "Lube oil pump",
-  "Turning gear motor",
+// The six consumers in the order of consumerDraws (largest rated first), each linking to its page; rows stand below the Auxiliary bus on a stem
+export type Consumer = {
+  readonly name: string
+  // The page that holds the consumer's controls
+  readonly part: PartId
+}
+
+export const CONSUMERS: readonly Consumer[] = [
+  { name: "Boiler feed pump", part: "deaerator" },
+  { name: "Recirculation pump", part: "condenser" },
+  { name: "Condensation pump", part: "condenser" },
+  { name: "Air extraction pump", part: "condenser" },
+  { name: "Lube oil pump", part: "turbineAux" },
+  { name: "Turning gear motor", part: "turbineAux" },
 ]
 
 export const CONSUMER_STEM_X = 120

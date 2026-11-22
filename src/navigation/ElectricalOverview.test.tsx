@@ -77,13 +77,28 @@ describe("electrical overview", () => {
     expect(screen.getByLabelText("UPS breaker: closed")).toBeTruthy()
   })
 
-  it("lights a source only while its breaker is closed", () => {
+  it("lights a source line only while its breaker is closed", () => {
     const state: PowerPlantState = livePlant()
     state.Turbine.generatorBreaker = false
     renderBoard(state)
-    expect(dimmed(source("grid"))).toBe(false)
-    expect(dimmed(source("generator"))).toBe(true)
-    expect(dimmed(source("diesel"))).toBe(true)
+    const sourceLine = (id: string): Element | null => source(id)?.querySelector(".board-pipe") ?? null
+    expect(dimmed(sourceLine("grid"))).toBe(false)
+    expect(dimmed(sourceLine("generator"))).toBe(true)
+    expect(dimmed(sourceLine("diesel"))).toBe(true)
+  })
+
+  it("never dims a clickable box or breaker; the grid box, without a link, dims while open", () => {
+    const state: PowerPlantState = livePlant()
+    state.gridSupplyBreaker = false
+    state.Turbine.generatorBreaker = false
+    state.upsCharge = 0
+    renderBare(state)
+    const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box"))
+    expect(boxes.length).toBe(13)
+    expect(boxes.filter(dimmed)).toEqual([])
+    expect(
+      dimmed(source("grid")?.querySelector(".board-node-box:not(.board-node .board-node-box)") ?? null),
+    ).toBe(true)
   })
 
   it("shows the live values: voltages, consumer draws, total, diesel output and UPS charge", () => {
@@ -113,7 +128,7 @@ describe("electrical overview", () => {
     state.Turbine.generatorBreaker = false
     renderBare(state)
     expect(dimmed(bus("aux"))).toBe(true)
-    expect(dimmed(document.querySelector("[data-consumers]"))).toBe(true)
+    expect(dimmed(document.querySelector("[data-consumers] > .board-pipe"))).toBe(true)
     expect(dimmed(bus("vital"))).toBe(true)
     expect(dimmed(bus("safety"))).toBe(false)
     expect(text("Auxiliary bus voltage")).toBe("0.0 kV")
@@ -141,10 +156,35 @@ describe("electrical overview", () => {
     expect(hrefOf("Grid supply breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("UPS breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("UPS, opens Auxiliary bus")).toBe("/auxiliary-bus")
+    expect(hrefOf("Generator, opens Generation")).toBe("/generation")
     expect(hrefOf("Generator breaker, opens Generation")).toBe("/generation")
     expect(hrefOf("Diesel generator, opens Diesel generator")).toBe("/diesel")
     expect(hrefOf("Diesel generator breaker, opens Diesel generator")).toBe("/diesel")
+    expect(hrefOf("Boiler feed pump, opens Deaerator")).toBe("/deaerator")
+    expect(hrefOf("Recirculation pump, opens Condenser")).toBe("/condenser")
+    expect(hrefOf("Condensation pump, opens Condenser")).toBe("/condenser")
+    expect(hrefOf("Air extraction pump, opens Condenser")).toBe("/condenser")
+    expect(hrefOf("Lube oil pump, opens Turbine aux")).toBe("/turbine-aux")
+    expect(hrefOf("Turning gear motor, opens Turbine aux")).toBe("/turbine-aux")
     expect(screen.queryByRole("link", { name: /^Grid, opens/ })).toBeNull()
+  })
+
+  it("draws each source, the UPS and each bus in its own colour", () => {
+    renderBare(livePlant())
+    const colourOf = (element: Element | null): string | undefined =>
+      Array.from(element?.classList ?? []).find(
+        (name: string) => name.startsWith("board-electrical-") && name !== "board-electrical-dim",
+      )
+    expect(colourOf(source("grid"))).toBe("board-electrical-grid")
+    expect(colourOf(source("generator"))).toBe("board-electrical-generator")
+    expect(colourOf(source("diesel"))).toBe("board-electrical-diesel")
+    expect(colourOf(document.querySelector("[data-ups]"))).toBe("board-electrical-ups")
+    expect(colourOf(document.querySelector('[data-feed="safety"]'))).toBe("board-electrical-ups")
+    expect(colourOf(bus("aux"))).toBe("board-electrical-aux")
+    expect(colourOf(document.querySelector("[data-consumers]"))).toBe("board-electrical-aux")
+    expect(colourOf(bus("vital"))).toBe("board-electrical-vital")
+    expect(colourOf(document.querySelector('[data-feed="vital"]'))).toBe("board-electrical-vital")
+    expect(colourOf(bus("safety"))).toBe("board-electrical-safety")
   })
 
   it("hides every value label with the Values toggle", () => {

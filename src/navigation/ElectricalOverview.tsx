@@ -30,6 +30,8 @@ import {
   VOLTAGES,
   consumerY,
   type Busbar,
+  type Consumer,
+  type ElectricalColour,
   type ElectricalSource,
   type SourceId,
 } from "./electricalDiagram"
@@ -91,8 +93,8 @@ function BreakerSymbol({
       <rect
         className={
           closed
-            ? "board-node-box board-medium-power board-breaker-closed"
-            : "board-node-box board-medium-power"
+            ? "board-node-box board-electrical-line board-breaker-closed"
+            : "board-node-box board-electrical-line"
         }
         x={-BREAKER_HALF}
         y={-BREAKER_HALF}
@@ -102,7 +104,7 @@ function BreakerSymbol({
       />
       {!closed && (
         <path
-          className="board-medium-line-power"
+          className="board-electrical-line"
           d={line(-BREAKER_HALF + 4, BREAKER_HALF - 4, BREAKER_HALF - 4, -BREAKER_HALF + 4)}
         />
       )}
@@ -139,6 +141,9 @@ function ValueLabel({
 
 const dim = (lit: boolean): string => (lit ? "" : " board-electrical-dim")
 
+// The colour class of a source, the UPS or a bus; its lines, boxes and closed breakers draw in currentColor
+const colour = (id: ElectricalColour): string => "board-electrical-" + id
+
 // Whether each source feeds the Auxiliary bus: its breaker is closed
 const sourceClosed = (state: PowerPlantState): Record<SourceId, boolean> => ({
   grid: state.gridSupplyBreaker,
@@ -160,13 +165,15 @@ function SourceColumn({
   const { x } = source
   const breakerName: string = source.id === "grid" ? "Grid supply breaker" : source.name + " breaker"
   const auxY: number = BUSES[0].y
+  // A box or breaker that links keeps its full raised look; only the line (and a box without a link) dims while open
+  const links: boolean = source.nodeLinks === true
   return (
-    <g className={dim(closed).trim()} data-source={source.id} data-lit={closed}>
+    <g className={colour(source.id)} data-source={source.id} data-lit={closed}>
       <path
-        className="board-pipe board-medium-line-power"
+        className={"board-pipe board-electrical-line" + dim(closed)}
         d={line(x, SOURCE_BOX.y + SOURCE_BOX.h, x, auxY)}
       />
-      <Node part={source.nodeLinks === true ? source.part : undefined} name={source.name}>
+      <Node part={links ? source.part : undefined} name={source.name}>
         <rect
           className="board-node-hit"
           x={x - SOURCE_BOX.w / 2}
@@ -175,7 +182,7 @@ function SourceColumn({
           height={SOURCE_BOX.h}
         />
         <rect
-          className="board-node-box board-medium-power"
+          className={"board-node-box board-electrical-line" + (links ? "" : dim(closed))}
           x={x - SOURCE_BOX.w / 2}
           y={SOURCE_BOX.y}
           width={SOURCE_BOX.w}
@@ -225,8 +232,8 @@ function BusLine({
   readonly voltage: string
 }) {
   return (
-    <g className={dim(live).trim()} data-bus={bus.id} data-live={live}>
-      <path className="board-bus board-medium-line-power" d={line(bus.x1, bus.y, bus.x2, bus.y)} />
+    <g className={colour(bus.id) + dim(live)} data-bus={bus.id} data-live={live}>
+      <path className="board-bus board-electrical-line" d={line(bus.x1, bus.y, bus.x2, bus.y)} />
       <text
         className="board-node-name board-bus-name"
         x={bus.x1}
@@ -260,38 +267,47 @@ function Consumers({
 }) {
   const lastY: number = consumerY(CONSUMERS.length - 1)
   return (
-    <g className={dim(live).trim()} data-consumers>
+    <g className={colour("aux")} data-consumers data-live={live}>
       <path
-        className="board-pipe board-medium-line-power"
+        className={"board-pipe board-electrical-line" + dim(live)}
         d={line(CONSUMER_STEM_X, BUSES[0].y, CONSUMER_STEM_X, lastY)}
       />
-      {CONSUMERS.map((name: string, index: number) => {
+      {CONSUMERS.map(({ name, part }: Consumer, index: number) => {
         const y: number = consumerY(index)
         return (
           <g key={name}>
             <path
-              className="board-pipe board-medium-line-power"
+              className={"board-pipe board-electrical-line" + dim(live)}
               d={line(CONSUMER_STEM_X, y, CONSUMER_BOX.x, y)}
             />
-            <rect
-              className="board-node-box board-medium-power"
-              x={CONSUMER_BOX.x}
-              y={y - CONSUMER_BOX.h / 2}
-              width={CONSUMER_BOX.w}
-              height={CONSUMER_BOX.h}
-              rx={4}
-            />
-            <g transform={"translate(" + String(CONSUMER_BOX.x + 22) + " " + String(y) + ")"}>
-              <Led lit={draws[index] > 0} tone="ok" label={name} />
-            </g>
-            <text
-              className="board-node-name"
-              x={CONSUMER_BOX.x + 46}
-              y={y + 5}
-              style={{ textAnchor: "start" }}
-            >
-              {name}
-            </text>
+            <Node part={part} name={name}>
+              <rect
+                className="board-node-hit"
+                x={CONSUMER_BOX.x}
+                y={y - CONSUMER_BOX.h / 2}
+                width={CONSUMER_BOX.w}
+                height={CONSUMER_BOX.h}
+              />
+              <rect
+                className="board-node-box board-electrical-line"
+                x={CONSUMER_BOX.x}
+                y={y - CONSUMER_BOX.h / 2}
+                width={CONSUMER_BOX.w}
+                height={CONSUMER_BOX.h}
+                rx={4}
+              />
+              <g transform={"translate(" + String(CONSUMER_BOX.x + 22) + " " + String(y) + ")"}>
+                <Led lit={draws[index] > 0} tone="ok" label={name} />
+              </g>
+              <text
+                className="board-node-name"
+                x={CONSUMER_BOX.x + 46}
+                y={y + 5}
+                style={{ textAnchor: "start" }}
+              >
+                {name}
+              </text>
+            </Node>
             {showValues && (
               <ValueLabel
                 label={name + " draw"}
@@ -305,7 +321,12 @@ function Consumers({
           </g>
         )
       })}
-      <text className="board-node-name" x={CONSUMER_BOX.x} y={TOTAL_Y + 18} style={{ textAnchor: "start" }}>
+      <text
+        className={"board-node-name" + dim(live)}
+        x={CONSUMER_BOX.x}
+        y={TOTAL_Y + 18}
+        style={{ textAnchor: "start" }}
+      >
         Auxiliary load
       </text>
       {showValues && (
@@ -371,9 +392,9 @@ function ElectricalOverview() {
         ))}
         <BusLine bus={aux} live={auxLive} showValues={showValues} voltage={voltage(auxLive, VOLTAGES.aux)} />
         <Consumers draws={draws} live={auxLive} showValues={showValues} />
-        <g className={dim(vitalLive).trim()} data-feed="vital">
+        <g className={colour("vital") + dim(vitalLive)} data-feed="vital">
           <path
-            className="board-pipe board-medium-line-power"
+            className="board-pipe board-electrical-line"
             d={line(VITAL_FEED_X, aux.y, VITAL_FEED_X, vital.y)}
           />
         </g>
@@ -383,33 +404,35 @@ function ElectricalOverview() {
           showValues={showValues}
           voltage={voltage(vitalLive, VOLTAGES.vital)}
         />
-        <g className={dim(safetyLive).trim()} data-feed="safety">
+        <g className={colour("ups") + dim(safetyLive)} data-feed="safety">
           <path
-            className="board-pipe board-medium-line-power"
+            className="board-pipe board-electrical-line"
             d={line(UPS.x, UPS_BREAKER_Y, UPS.x, safety.y)}
           />
         </g>
-        <Node part={upsLink} name="UPS">
-          <rect className="board-node-hit" x={UPS.x - UPS.w / 2} y={UPS.y} width={UPS.w} height={UPS.h} />
-          <rect
-            className={"board-node-box board-medium-power" + dim(state.upsCharge > 0)}
-            x={UPS.x - UPS.w / 2}
-            y={UPS.y}
-            width={UPS.w}
-            height={UPS.h}
-            rx={4}
+        <g className={colour("ups")} data-ups>
+          <Node part={upsLink} name="UPS">
+            <rect className="board-node-hit" x={UPS.x - UPS.w / 2} y={UPS.y} width={UPS.w} height={UPS.h} />
+            <rect
+              className="board-node-box board-electrical-line"
+              x={UPS.x - UPS.w / 2}
+              y={UPS.y}
+              width={UPS.w}
+              height={UPS.h}
+              rx={4}
+            />
+            <text className="board-node-name" x={UPS.x} y={UPS.y + UPS.h / 2 + 6}>
+              UPS
+            </text>
+          </Node>
+          <path
+            className="board-pipe board-electrical-line"
+            d={line(UPS.x, UPS.y + UPS.h, UPS.x, UPS_BREAKER_Y)}
           />
-          <text className="board-node-name" x={UPS.x} y={UPS.y + UPS.h / 2 + 6}>
-            UPS
-          </text>
-        </Node>
-        <path
-          className="board-pipe board-medium-line-power"
-          d={line(UPS.x, UPS.y + UPS.h, UPS.x, UPS_BREAKER_Y)}
-        />
-        <Node part={upsLink} name="UPS breaker">
-          <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={state.upsBreaker} name="UPS breaker" />
-        </Node>
+          <Node part={upsLink} name="UPS breaker">
+            <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={state.upsBreaker} name="UPS breaker" />
+          </Node>
+        </g>
         {showValues && (
           <ValueLabel
             label="UPS charge"
