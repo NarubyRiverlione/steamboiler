@@ -11,10 +11,10 @@ export function glandSteamRefusal(turbine: TurbineState): string | undefined {
   return rotorTurns(turbine) ? undefined : "The rotor must be turning: engage the turning gear first"
 }
 
-// The steam is shut off when the rotor stops turning: the gear out and the speed at or below the standstill threshold
+// The steam is shut off when the rotor stops turning (the gear out and the speed at or below the standstill threshold); the flag keeps the shut-off until the steam is admitted again
 export function GlandSteamTick(turbine: TurbineState): TurbineState {
   if (!turbine.glandSteamOn || rotorTurns(turbine)) return turbine
-  return { ...turbine, glandSteamOn: false }
+  return { ...turbine, glandSteamOn: false, glandSteamShutOff: true }
 }
 
 // kg of boiler steam the glands take in one tick: a small fixed flow, returned to the hotwell by the gland condenser

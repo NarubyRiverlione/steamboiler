@@ -116,6 +116,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     turbineTripped: false,
     turningGearEngaged: false,
     glandSteamOn: false, // the glands unsealed (ADR 0047)
+    glandSteamShutOff: false,
   },
   Oil: { pumpRunning: false, headerPressure: 0 }, // bar g: the pump stopped, the header empty (ADR 0050)
   Diesel: { status: "stopped", startElapsed: 0 },
@@ -304,7 +305,7 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   },
   // Admitting is refused while the rotor is not turning (steam on a stationary rotor bows it); shutting off is always allowed (ADR 0047)
   SET_GLAND_STEAM: (state, { payload: { on } }) =>
-    on && glandSteamRefusal(state.Turbine) ? state : withTurbine(state, { glandSteamOn: on }),
+    on && glandSteamRefusal(state.Turbine) ? state : withTurbine(state, on ? { glandSteamOn: true, glandSteamShutOff: false } : { glandSteamOn: false }),
   // Refusals are in speedModeRefusal and runUpPointRefusal: a refused change leaves the state as it is (ADR 0021)
   SET_SPEED_MODE: (state, { payload: { speedMode } }) => {
     if (!isVitalBusLive(state) || speedModeRefusal(state.Turbine, speedMode)) return state
