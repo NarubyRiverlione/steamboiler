@@ -18,9 +18,8 @@ export function AnnunciatorProvider({ children }: { readonly children: ReactNode
 
   // A new trip flashes; a flashing tile whose flag clears goes dark; a steady one stays latched (adjusted while rendering, not in an effect)
   const next: Partial<Record<AlarmId, LatchState>> = {}
-  for (const a of ALARMS) {
+  for (const a of powered ? ALARMS : []) {
     const current: LatchState | undefined = latches[a.id]
-    if (!powered) continue
     if (current === "steady") next[a.id] = "steady"
     else if (active.includes(a.id)) next[a.id] = "flashing"
   }
