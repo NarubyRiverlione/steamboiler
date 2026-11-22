@@ -11,13 +11,13 @@ Next: the first ready ticket with nothing under Waiting on, in the theme you pic
 
 ## Electrical: auxiliary load, grid supply, vital bus, UPS
 
-Next: nothing ready (every ticket is waiting or needs triage).
+Next: [#189](https://github.com/NarubyRiverlione/steamboiler/issues/189) Unit aux breaker: the generator breaker connects to the grid, a second breaker feeds the aux bus
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
 | 1 | [#185](https://github.com/NarubyRiverlione/steamboiler/issues/185) Diesel generator shaft model: inertia, governor, overload as a speed fall | needs-triage |  |  |
 | 2 | [#186](https://github.com/NarubyRiverlione/steamboiler/issues/186) Diesel generator fuel: a day tank and run time | needs-triage |  |  |
-| 3 | [#189](https://github.com/NarubyRiverlione/steamboiler/issues/189) Unit aux breaker: the generator breaker connects to the grid, a second breaker feeds the aux bus | needs-triage |  |  |
+| 3 | [#189](https://github.com/NarubyRiverlione/steamboiler/issues/189) Unit aux breaker: the generator breaker connects to the grid, a second breaker feeds the aux bus | ready-for-agent |  |  |
 
 ## Turbine auxiliaries: lube oil, turning gear, gland steam
 

@@ -30,7 +30,7 @@ The owner wants the generator breaker to connect the generator to the grid, and 
 
 ## Owner's answers
 
-1. **Seamless transfer, not a plain interlock** (revised the same day): the unit aux and grid supply breakers are never closed together for longer than a tick, but moving the bus between them must not stall the pumps. With the grid supply closed and the turbine at speed, closing the unit aux breaker opens the grid supply breaker on the same tick, with no dead bus. The owner accepts this is not fully realistic (a real plant uses a fast or make-before-break transfer); it stands in until frequency and sync are modelled.
+1. **Seamless transfer, not a plain interlock** (revised the same day): the unit aux and grid supply breakers are never closed together for longer than a tick, but moving the bus between them must not stall the pumps. With the grid supply closed and the turbine at speed, closing the unit aux breaker opens the grid supply breaker on the same tick, with no dead bus. The owner accepts this is not fully realistic (a real plant uses a fast or make-before-break transfer); it stands in until frequency and sync are modelled. The transfer back mirrors it: closing the grid supply breaker while the unit aux breaker is closed opens the unit aux breaker on the same tick (confirmed by the owner).
 2. **Unit aux auto-open and closing:** the unit aux breaker closes only with the turbine inside the ±2 rpm window and auto-opens when the speed leaves it, like the generator breaker, until frequency and sync are modelled (later: on loss of sync).
 3. **Net output:** gross minus the auxiliary load.
 4. **Start state:** the grid is always up for now, so the grid supply breaker starts closed and the unit aux breaker open, in every scenario and a new game, until grid-loss scenarios come.
@@ -46,7 +46,6 @@ The owner wants the generator breaker to connect the generator to the grid, and 
 - **Moving the bus between supplies** never passes through a dead bus: the closing incomer opens the other on the same tick, so the pumps keep running and the turning gear stays in.
 - **Start state** matches today's normal running (aux from the grid), so the goldens should not move except the house-load and load-rejection edge runs; the snapshots gain the field.
 
-## Open points for the triage
+## Still to do in the ticket
 
-- **Transfer back:** closing the grid supply breaker while the unit aux breaker is closed opens the unit aux breaker on the same tick (the transfer mirrored). Assumed, to confirm.
 - **Edge scenarios** `house-load-hold`, `load-rejection` and `house-load-short` are rewritten for the new path; `dark-start` keeps the grid supply open. A new edge run for the transfer: the pumps never stop.
