@@ -33,6 +33,6 @@ The pumps need power. The **Auxiliary bus** is fed by a **Grid supply breaker** 
 
 - `PowerPlantState` gains `gridSupplyBreaker`; snapshots were regenerated for the field. `auxiliaryLoadOf` returns 0 on a dead bus.
 - House load operation is built (#182): `isHouseLoad` in `AuxiliaryBus.ts`, the auxiliary load passed to `TurbineTick` as the shaft load; `gridSupplyOpenRefusal` and `loadSetpointFloorRefusal` are gone. No new `PowerPlantState` field, snapshots unchanged. Edge scenarios `house-load-hold`, `load-rejection`, `house-load-short`.
-- The onsite diesel is built (#169): `Diesel` and `dieselBreaker` in `PowerPlantState` (snapshots regenerated for the fields), `src/context/Diesel.ts`; `dark-start` recovers with the diesel, edge scenario `diesel-overload`. The page is #175.
+- The onsite diesel is built (#169): `Diesel` and `dieselBreaker` in `PowerPlantState` (snapshots regenerated for the fields), `src/context/Diesel.ts`; `dark-start` recovers with the diesel, edge scenario `diesel-overload`. The page is built (#175): `src/components/Diesel/`, see `docs/dev/ui-board.md`.
 - The grid supply breaker switch is on the Auxiliary bus page (#142); the app starts with it closed.
 - The full dark start up to the generator is #187. Transformers and excitation stay in [real-plant-gaps.md](../plant/real-plant-gaps.md).

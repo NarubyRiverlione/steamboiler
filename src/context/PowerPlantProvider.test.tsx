@@ -240,6 +240,24 @@ const rows: Row[] = [
     }),
   },
   { name: "toggleGridSupplyBreaker", act: (c) => { c.toggleGridSupplyBreaker(); }, expected: () => ({ gridSupplyBreaker: false }) },
+  { name: "setDieselRun", act: (c) => { c.setDieselRun(true); }, expected: () => ({ "Diesel.status": "starting" }) },
+  {
+    name: "toggleDieselBreaker (close)",
+    prepare: (s) => {
+      s.gridSupplyBreaker = false
+      s.Diesel.status = "running"
+    },
+    act: (c) => { c.toggleDieselBreaker(); },
+    expected: () => ({ dieselBreaker: true }),
+  },
+  {
+    name: "toggleDieselBreaker (open)",
+    prepare: (s) => {
+      s.dieselBreaker = true
+    },
+    act: (c) => { c.toggleDieselBreaker(); },
+    expected: () => ({ dieselBreaker: false }),
+  },
   { name: "toggleUpsBreaker", act: (c) => { c.toggleUpsBreaker(); }, expected: (s) => ({ upsBreaker: !s.upsBreaker }) },
   { name: "toggleOilPump", act: (c) => { c.toggleOilPump(); }, expected: (s) => ({ "Oil.pumpRunning": !s.Oil.pumpRunning }) },
   {
