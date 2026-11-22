@@ -1,6 +1,7 @@
-/** Header on every page, a plate like the part pages: title, the Plant overview button, the breadcrumb and the Presets button. The annunciator and the headline plant values (boiler pressure, output) sit in their slots; the clock and the playback speed selector sit in their slots. */
+/** Header on every page, a plate like the part pages: title, the Plant overview button, the breadcrumb and the Presets button. The annunciator (absent on the emergency board) and the headline plant values (boiler pressure, output) sit in their slots; the clock and the playback speed selector sit in their slots. */
 
 import { Link, useLocation } from "react-router-dom"
+import { useBoardState } from "../components/board/boardStateContext"
 import { Screws } from "../components/board/Screws"
 import "../components/board/board.css"
 import Annunciator from "./Annunciator"
@@ -12,6 +13,8 @@ import { OVERVIEW_PATH, PART_IDS, PARTS, type PartId } from "./plantParts"
 function Header() {
   const { pathname } = useLocation()
   const part: PartId | undefined = PART_IDS.find((id: PartId) => PARTS[id].path === pathname)
+  // The annunciator is on the vital bus: absent on the emergency board
+  const annunciatorShown: boolean = useBoardState() === "normal"
   const onOverview: boolean = pathname === OVERVIEW_PATH
 
   return (
@@ -31,9 +34,11 @@ function Header() {
           <div className="board-header-slot" data-slot="values">
             <PlantValues />
           </div>
-          <div className="board-header-slot" data-slot="annunciator">
-            <Annunciator />
-          </div>
+          {annunciatorShown && (
+            <div className="board-header-slot" data-slot="annunciator">
+              <Annunciator />
+            </div>
+          )}
         </div>
         <div className="board-header-nav">
           <Link

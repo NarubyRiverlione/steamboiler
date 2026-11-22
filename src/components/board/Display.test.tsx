@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { Display } from "./Display"
+import { BoardStateContext } from "./boardStateContext"
 
 describe("Display", () => {
   it("shows its text under its label", () => {
@@ -32,5 +33,30 @@ describe("Display", () => {
   it("sizes to its text when no widest text is given", () => {
     render(<Display label="Position" text="0 % Open" />)
     expect(screen.getByLabelText("Position").classList.contains("board-display-fixed")).toBe(false)
+  })
+})
+
+describe("Display on the emergency board (#144)", () => {
+  it("blanks its readout while the vital bus is dead", () => {
+    render(
+      <BoardStateContext.Provider value="emergency">
+        <Display label="Boiler pressure" text="12.3 bar" />
+      </BoardStateContext.Provider>,
+    )
+    expect(screen.getByLabelText("Boiler pressure").textContent).toBe("")
+  })
+
+  it("keeps the clock readable (exempt)", () => {
+    render(
+      <BoardStateContext.Provider value="emergency">
+        <Display label="Simulated clock" text="00:01:00" exempt />
+      </BoardStateContext.Provider>,
+    )
+    expect(screen.getByLabelText("Simulated clock").textContent).toBe("00:01:00")
+  })
+
+  it("shows the text on the normal board", () => {
+    render(<Display label="Boiler pressure" text="12.3 bar" />)
+    expect(screen.getByLabelText("Boiler pressure").textContent).toBe("12.3 bar")
   })
 })

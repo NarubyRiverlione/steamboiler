@@ -405,4 +405,34 @@ describe("Annunciator", () => {
   it("throws a clear error outside the provider", () => {
     expect(() => render(<MemoryRouter><Annunciator /></MemoryRouter>)).toThrow(/AnnunciatorProvider/)
   })
+
+  describe("across a vital bus outage (#144)", () => {
+    const dead = (flags: Parameters<typeof stateWith>[0]): PowerPlantState => ({ ...stateWith(flags), gridSupplyBreaker: false })
+    const live = (flags: Parameters<typeof stateWith>[0]): PowerPlantState => ({ ...stateWith(flags), gridSupplyBreaker: true })
+
+    it("raises no tile while the vital bus is dead", () => {
+      render(tree(dead({ turbine: true })))
+      expect(lit("Turbine trip")).toBe(false)
+      expect(master("error")).toBe("off")
+    })
+
+    it("shows a condition active at restore as a new, unacknowledged tile", () => {
+      const { rerender } = render(tree(live({ turbine: true })))
+      ack()
+      expect(flashing("Turbine trip")).toBe(false)
+      rerender(tree(dead({ turbine: true })))
+      expect(lit("Turbine trip")).toBe(false)
+      rerender(tree(live({ turbine: true })))
+      expect(lit("Turbine trip")).toBe(true)
+      expect(flashing("Turbine trip")).toBe(true)
+    })
+
+    it("does not bring back a condition that came and went during the outage", () => {
+      const { rerender } = render(tree(live({ turbine: true })))
+      rerender(tree(dead({ turbine: true })))
+      rerender(tree(dead({})))
+      rerender(tree(live({})))
+      expect(lit("Turbine trip")).toBe(false)
+    })
+  })
 })
