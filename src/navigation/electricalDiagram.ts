@@ -24,7 +24,7 @@ export const BREAKER_HALF = 15
 
 export const SOURCES: readonly ElectricalSource[] = [
   { id: "grid", name: "Grid", x: 160, part: "auxiliaryBus" },
-  { id: "generator", name: "Generator", x: 400, part: "generation" },
+  { id: "generator", name: "Generator", x: 400, part: "generation", nodeLinks: true },
   { id: "diesel", name: "Diesel generator", x: 640, part: "diesel", nodeLinks: true },
 ]
 

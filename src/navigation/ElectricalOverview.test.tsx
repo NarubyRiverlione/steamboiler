@@ -156,6 +156,7 @@ describe("electrical overview", () => {
     expect(hrefOf("Grid supply breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("UPS breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("UPS, opens Auxiliary bus")).toBe("/auxiliary-bus")
+    expect(hrefOf("Generator, opens Generation")).toBe("/generation")
     expect(hrefOf("Generator breaker, opens Generation")).toBe("/generation")
     expect(hrefOf("Diesel generator, opens Diesel generator")).toBe("/diesel")
     expect(hrefOf("Diesel generator breaker, opens Diesel generator")).toBe("/diesel")
