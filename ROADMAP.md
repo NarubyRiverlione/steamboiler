@@ -57,7 +57,7 @@ Next: [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) Board: 
 | - | ------ | ------ | ---------- | -------- |
 | 13 | [#144](https://github.com/NarubyRiverlione/steamboiler/issues/144) Board: emergency, dark and ended states on a dead vital or safety bus, UPS group on every page | ready-for-agent |  | [#188](https://github.com/NarubyRiverlione/steamboiler/issues/188) |
 | 14 | [#167](https://github.com/NarubyRiverlione/steamboiler/issues/167) Board: knob and switch rims take the overview colour of their component | ready-for-agent |  |  |
-| 15 | [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) Board: Diesel generator page, start, run-up and diesel breaker | needs-triage |  | [#171](https://github.com/NarubyRiverlione/steamboiler/issues/171) |
+| 15 | [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) Board: Diesel generator page, start, run-up and diesel breaker | ready-for-agent |  | [#171](https://github.com/NarubyRiverlione/steamboiler/issues/171) |
 | 16 | [#171](https://github.com/NarubyRiverlione/steamboiler/issues/171) Board: electrical overview page, single-line schematic of breakers, buses and consumers | needs-triage | [#175](https://github.com/NarubyRiverlione/steamboiler/issues/175) |  |
 | 17 | [#176](https://github.com/NarubyRiverlione/steamboiler/issues/176) Board: review Page Up/Down navigation, maybe navigate only via the overview pages | needs-triage |  |  |
 | 18 | [#178](https://github.com/NarubyRiverlione/steamboiler/issues/178) Turbine aux page: permissive lamps instead of message lines | ready-for-agent | [#177](https://github.com/NarubyRiverlione/steamboiler/issues/177) |  |
