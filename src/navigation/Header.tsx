@@ -8,7 +8,7 @@ import Annunciator from "./Annunciator"
 import PlantValues from "./PlantValues"
 import PresetsButton from "./PresetsButton"
 import { Clock, SpeedSelector } from "./TimeControl"
-import { OVERVIEW_PATH, PART_IDS, PARTS, type PartId } from "./plantParts"
+import { ELECTRICAL_PATH, OVERVIEW_PATH, PART_IDS, PARTS, type PartId } from "./plantParts"
 
 function Header() {
   const { pathname } = useLocation()
@@ -16,6 +16,7 @@ function Header() {
   // The annunciator is on the vital bus: absent on the emergency board
   const annunciatorShown: boolean = useBoardState() === "normal"
   const onOverview: boolean = pathname === OVERVIEW_PATH
+  const onElectrical: boolean = pathname === ELECTRICAL_PATH
 
   return (
     <header className="board-plate board-header">
@@ -41,18 +42,32 @@ function Header() {
           )}
         </div>
         <div className="board-header-nav">
-          <Link
-            to={OVERVIEW_PATH}
-            className={onOverview ? "board-lens board-lens-lit" : "board-lens"}
-            aria-current={onOverview ? "page" : undefined}
-          >
-            Plant overview
-          </Link>
+          <div className="board-header-lenses">
+            <Link
+              to={OVERVIEW_PATH}
+              className={onOverview ? "board-lens board-lens-lit" : "board-lens"}
+              aria-current={onOverview ? "page" : undefined}
+            >
+              Plant overview
+            </Link>
+            <Link
+              to={ELECTRICAL_PATH}
+              className={onElectrical ? "board-lens board-lens-lit" : "board-lens"}
+              aria-current={onElectrical ? "page" : undefined}
+            >
+              Electrical overview
+            </Link>
+          </div>
           <nav aria-label="Breadcrumb">
             <ol className="board-breadcrumb">
               {onOverview && (
                 <li>
                   <span aria-current="page">Plant overview</span>
+                </li>
+              )}
+              {onElectrical && (
+                <li>
+                  <span aria-current="page">Electrical overview</span>
                 </li>
               )}
               {part !== undefined && (

@@ -1780,3 +1780,28 @@ path.board-zone {
   margin: 0;
   font-size: 1.25rem;
 }
+
+/* Electrical overview (#171): a dead bus, an open source and everything downstream are dimmed; a closed breaker is filled */
+.board-electrical-dim {
+  opacity: 0.35;
+}
+
+.board-bus {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.board-bus-name {
+  font-size: 15px;
+}
+
+.board-breaker-closed {
+  fill: var(--board-mimic-power);
+}
+
+.board-header-lenses {
+  display: flex;
+  gap: 0.5rem;
+  justify-self: start;
+}
