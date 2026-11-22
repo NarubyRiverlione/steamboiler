@@ -4,6 +4,7 @@ import AuxiliaryBus from "../components/AuxiliaryBus/AuxiliaryBus"
 import Boiler from "../components/Boiler/Boiler"
 import Condenser from "../components/Condenser/Condenser"
 import Deaerator from "../components/Deaerator/Deaerator"
+import Diesel from "../components/Diesel/Diesel"
 import Generation from "../components/Generation/Generation"
 import Steam from "../components/Steam/Steam"
 import Turbine from "../components/Turbine/Turbine"
@@ -23,6 +24,7 @@ function AppRoutes() {
         <Route path="turbine-aux" element={<TurbineAux />} />
         <Route path="generation" element={<Generation />} />
         <Route path="auxiliary-bus" element={<AuxiliaryBus />} />
+        <Route path="diesel" element={<Diesel />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

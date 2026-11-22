@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest"
 import { CstAuxiliary, CstDiesel, CstSimulation } from "./const"
 import { isBusLive } from "./AuxiliaryBus"
-import { dieselBreakerCloseRefusal } from "./Diesel"
+import { auxiliaryLoadOf } from "./AuxiliaryLoad"
+import { dieselBreakerCloseRefusal, dieselOutput } from "./Diesel"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -92,5 +93,20 @@ describe("the onsite diesel (#169)", () => {
     const asked: PowerPlantState = { ...dead, Condenser: { ...dead.Condenser, recirculationPumpValvePosition: 1 } }
     expect(PowerPlantTick(asked).auxiliaryLoad).toBe(0)
     expect(PowerPlantTick(act(asked, { type: "CLOSE_GRID_SUPPLY_BREAKER" })).auxiliaryLoad).toBeGreaterThan(0)
+  })
+})
+
+describe("dieselOutput (#175)", () => {
+  const loaded: PowerPlantState = { ...running, dieselBreaker: true, Oil: { ...running.Oil, pumpRunning: true } }
+
+  test("is the auxiliary load while the diesel is the sole supply", () => {
+    expect(dieselOutput(loaded)).toBe(auxiliaryLoadOf(loaded))
+    expect(dieselOutput(loaded)).toBeGreaterThan(0)
+  })
+
+  test("is 0 with the breaker open, the grid closed or the generator closed", () => {
+    expect(dieselOutput({ ...loaded, dieselBreaker: false })).toBe(0)
+    expect(dieselOutput({ ...loaded, gridSupplyBreaker: true })).toBe(0)
+    expect(dieselOutput({ ...loaded, Turbine: { ...loaded.Turbine, generatorBreaker: true } })).toBe(0)
   })
 })
