@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstAuxiliary, CstOil } from "./const"
-import { auxiliaryLoadOf, netOutputOf } from "./AuxiliaryLoad"
+import { auxiliaryLoadOf, consumerDraws, netOutputOf } from "./AuxiliaryLoad"
 import { makeInitialState } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -70,5 +70,34 @@ describe("auxiliary load (#140)", () => {
   test("the tick writes the load of the new state, after a trip", () => {
     const ticked: PowerPlantState = PowerPlantTick({ ...idle, Oil: { ...idle.Oil, pumpRunning: true } })
     expect(ticked.auxiliaryLoad).toBeCloseTo(CstAuxiliary.LubeOilPump)
+  })
+})
+
+describe("consumer draws (#171)", () => {
+  const busy: PowerPlantState = {
+    ...idle,
+    Deaerator: { ...idle.Deaerator, feedPumpValvePosition: 0.5 },
+    Condenser: { ...idle.Condenser, condensationPumpValvePosition: 1, recirculationPumpValvePosition: 0.4, isAirExtractionPumpEnabled: true },
+    Oil: { ...idle.Oil, pumpRunning: true },
+    Turbine: { ...idle.Turbine, turningGearEngaged: true },
+  }
+
+  test("lists the six consumers largest rated first", () => {
+    expect(consumerDraws(busy)).toEqual([
+      CstAuxiliary.FeedPump * 0.5,
+      CstAuxiliary.RecirculationPump * 0.4,
+      CstAuxiliary.CondensationPump,
+      CstAuxiliary.AirExtractionPump,
+      CstAuxiliary.LubeOilPump,
+      CstAuxiliary.TurningGearMotor,
+    ])
+  })
+
+  test("their sum is the auxiliary load", () => {
+    expect(consumerDraws(busy).reduce((a: number, b: number) => a + b, 0)).toBeCloseTo(auxiliaryLoadOf(busy))
+  })
+
+  test("all draw 0 on a dead bus", () => {
+    expect(consumerDraws({ ...busy, gridSupplyBreaker: false, dieselBreaker: false, Turbine: { ...busy.Turbine, generatorBreaker: false } })).toEqual([0, 0, 0, 0, 0, 0])
   })
 })

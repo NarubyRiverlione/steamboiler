@@ -20,6 +20,8 @@ export const PARTS: Readonly<Record<PartId, { readonly path: string; readonly na
 }
 
 export const OVERVIEW_PATH = "/"
+// Not a part: out of PARTS and the Page Up/Down cycle (#171)
+export const ELECTRICAL_PATH = "/electrical"
 
 export function partAlarms(state: PowerPlantState): Record<PartId, boolean> {
   const lit: Record<PartId, boolean> = { boiler: false, steam: false, deaerator: false, condenser: false, turbine: false, turbineAux: false, generation: false, auxiliaryBus: false, diesel: false }

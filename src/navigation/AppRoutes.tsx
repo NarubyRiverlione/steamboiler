@@ -9,6 +9,7 @@ import Generation from "../components/Generation/Generation"
 import Steam from "../components/Steam/Steam"
 import Turbine from "../components/Turbine/Turbine"
 import TurbineAux from "../components/TurbineAux/TurbineAux"
+import ElectricalOverview from "./ElectricalOverview"
 import PlantOverview from "./PlantOverview"
 
 function AppRoutes() {
@@ -16,6 +17,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<PlantOverview />} />
+        <Route path="electrical" element={<ElectricalOverview />} />
         <Route path="boiler" element={<Boiler />} />
         <Route path="steam" element={<Steam />} />
         <Route path="deaerator" element={<Deaerator />} />
