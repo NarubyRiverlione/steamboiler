@@ -54,14 +54,20 @@ export const VOLTAGES = {
   safety: { live: "110 V DC", dead: "0 V DC" },
 } as const
 
-// The six consumers in the order of consumerDraws (largest rated first); rows stand below the Auxiliary bus on a stem
-export const CONSUMERS: readonly string[] = [
-  "Boiler feed pump",
-  "Recirculation pump",
-  "Condensation pump",
-  "Air extraction pump",
-  "Lube oil pump",
-  "Turning gear motor",
+// The six consumers in the order of consumerDraws (largest rated first), each linking to its page; rows stand below the Auxiliary bus on a stem
+export type Consumer = {
+  readonly name: string
+  // The page that holds the consumer's controls
+  readonly part: PartId
+}
+
+export const CONSUMERS: readonly Consumer[] = [
+  { name: "Boiler feed pump", part: "deaerator" },
+  { name: "Recirculation pump", part: "condenser" },
+  { name: "Condensation pump", part: "condenser" },
+  { name: "Air extraction pump", part: "condenser" },
+  { name: "Lube oil pump", part: "turbineAux" },
+  { name: "Turning gear motor", part: "turbineAux" },
 ]
 
 export const CONSUMER_STEM_X = 120

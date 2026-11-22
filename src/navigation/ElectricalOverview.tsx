@@ -30,6 +30,7 @@ import {
   VOLTAGES,
   consumerY,
   type Busbar,
+  type Consumer,
   type ElectricalColour,
   type ElectricalSource,
   type SourceId,
@@ -266,38 +267,47 @@ function Consumers({
 }) {
   const lastY: number = consumerY(CONSUMERS.length - 1)
   return (
-    <g className={colour("aux") + dim(live)} data-consumers>
+    <g className={colour("aux")} data-consumers data-live={live}>
       <path
-        className="board-pipe board-electrical-line"
+        className={"board-pipe board-electrical-line" + dim(live)}
         d={line(CONSUMER_STEM_X, BUSES[0].y, CONSUMER_STEM_X, lastY)}
       />
-      {CONSUMERS.map((name: string, index: number) => {
+      {CONSUMERS.map(({ name, part }: Consumer, index: number) => {
         const y: number = consumerY(index)
         return (
           <g key={name}>
             <path
-              className="board-pipe board-electrical-line"
+              className={"board-pipe board-electrical-line" + dim(live)}
               d={line(CONSUMER_STEM_X, y, CONSUMER_BOX.x, y)}
             />
-            <rect
-              className="board-node-box board-electrical-line"
-              x={CONSUMER_BOX.x}
-              y={y - CONSUMER_BOX.h / 2}
-              width={CONSUMER_BOX.w}
-              height={CONSUMER_BOX.h}
-              rx={4}
-            />
-            <g transform={"translate(" + String(CONSUMER_BOX.x + 22) + " " + String(y) + ")"}>
-              <Led lit={draws[index] > 0} tone="ok" label={name} />
-            </g>
-            <text
-              className="board-node-name"
-              x={CONSUMER_BOX.x + 46}
-              y={y + 5}
-              style={{ textAnchor: "start" }}
-            >
-              {name}
-            </text>
+            <Node part={part} name={name}>
+              <rect
+                className="board-node-hit"
+                x={CONSUMER_BOX.x}
+                y={y - CONSUMER_BOX.h / 2}
+                width={CONSUMER_BOX.w}
+                height={CONSUMER_BOX.h}
+              />
+              <rect
+                className="board-node-box board-electrical-line"
+                x={CONSUMER_BOX.x}
+                y={y - CONSUMER_BOX.h / 2}
+                width={CONSUMER_BOX.w}
+                height={CONSUMER_BOX.h}
+                rx={4}
+              />
+              <g transform={"translate(" + String(CONSUMER_BOX.x + 22) + " " + String(y) + ")"}>
+                <Led lit={draws[index] > 0} tone="ok" label={name} />
+              </g>
+              <text
+                className="board-node-name"
+                x={CONSUMER_BOX.x + 46}
+                y={y + 5}
+                style={{ textAnchor: "start" }}
+              >
+                {name}
+              </text>
+            </Node>
             {showValues && (
               <ValueLabel
                 label={name + " draw"}
@@ -311,7 +321,12 @@ function Consumers({
           </g>
         )
       })}
-      <text className="board-node-name" x={CONSUMER_BOX.x} y={TOTAL_Y + 18} style={{ textAnchor: "start" }}>
+      <text
+        className={"board-node-name" + dim(live)}
+        x={CONSUMER_BOX.x}
+        y={TOTAL_Y + 18}
+        style={{ textAnchor: "start" }}
+      >
         Auxiliary load
       </text>
       {showValues && (
