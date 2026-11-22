@@ -10,7 +10,7 @@ import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { TurnSwitch } from "../board/TurnSwitch"
 
-const SCALE_MAX = 3 // MW, just above the rating so the red zone shows
+const SCALE_MAX: number = Math.ceil(CstDiesel.RatedPower) // MW, the next whole MW above the rating so the red zone shows
 const ZONES: readonly GaugeZone[] = [
   { from: 0, to: CstDiesel.RatedPower, tone: "ok" },
   { from: CstDiesel.RatedPower, to: SCALE_MAX, tone: "alarm" },
@@ -20,7 +20,8 @@ function Diesel() {
   const { state, setDieselRun, toggleDieselBreaker } = usePowerPlant()
   const [coverLifted, setCoverLifted] = useState<boolean>(false)
   const refusal: string | undefined = dieselBreakerCloseRefusal(state)
-  const ready: boolean = !state.dieselBreaker && refusal === undefined
+  const closeRefused: boolean = !state.dieselBreaker && refusal !== undefined
+  const ready: boolean = !state.dieselBreaker && !closeRefused
   return (
     <PanelFrame title="Diesel generator">
       <div className="board-page-groups">
@@ -48,7 +49,7 @@ function Diesel() {
             rating="6.0 kV · CB-D1"
             on={state.dieselBreaker}
             onToggle={toggleDieselBreaker}
-            disabled={!state.dieselBreaker && refusal !== undefined}
+            disabled={closeRefused}
             title={refusal}
             guard={{
               lifted: coverLifted,
