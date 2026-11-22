@@ -164,10 +164,15 @@ function SourceColumn({
   const { x } = source
   const breakerName: string = source.id === "grid" ? "Grid supply breaker" : source.name + " breaker"
   const auxY: number = BUSES[0].y
+  // A box or breaker that links keeps its full raised look; only the line (and a box without a link) dims while open
+  const links: boolean = source.nodeLinks === true
   return (
-    <g className={colour(source.id) + dim(closed)} data-source={source.id} data-lit={closed}>
-      <path className="board-pipe board-electrical-line" d={line(x, SOURCE_BOX.y + SOURCE_BOX.h, x, auxY)} />
-      <Node part={source.nodeLinks === true ? source.part : undefined} name={source.name}>
+    <g className={colour(source.id)} data-source={source.id} data-lit={closed}>
+      <path
+        className={"board-pipe board-electrical-line" + dim(closed)}
+        d={line(x, SOURCE_BOX.y + SOURCE_BOX.h, x, auxY)}
+      />
+      <Node part={links ? source.part : undefined} name={source.name}>
         <rect
           className="board-node-hit"
           x={x - SOURCE_BOX.w / 2}
@@ -176,7 +181,7 @@ function SourceColumn({
           height={SOURCE_BOX.h}
         />
         <rect
-          className="board-node-box board-electrical-line"
+          className={"board-node-box board-electrical-line" + (links ? "" : dim(closed))}
           x={x - SOURCE_BOX.w / 2}
           y={SOURCE_BOX.y}
           width={SOURCE_BOX.w}
@@ -394,7 +399,7 @@ function ElectricalOverview() {
           <Node part={upsLink} name="UPS">
             <rect className="board-node-hit" x={UPS.x - UPS.w / 2} y={UPS.y} width={UPS.w} height={UPS.h} />
             <rect
-              className={"board-node-box board-electrical-line" + dim(state.upsCharge > 0)}
+              className="board-node-box board-electrical-line"
               x={UPS.x - UPS.w / 2}
               y={UPS.y}
               width={UPS.w}

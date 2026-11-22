@@ -1788,7 +1788,7 @@ path.board-zone {
   font-size: 1.25rem;
 }
 
-/* Electrical overview (#171): a dead bus, an open source and everything downstream are dimmed; a closed breaker is filled */
+/* Electrical overview (#171): a dead bus, the line of an open source and everything downstream are dimmed; a clickable box or breaker is never dimmed; a closed breaker is filled, also inside a link */
 .board-electrical-dim {
   opacity: 0.35;
 }
@@ -1804,7 +1804,8 @@ path.board-zone {
   font-size: 15px;
 }
 
-.board-breaker-closed {
+.board-breaker-closed,
+.board-node .board-breaker-closed {
   fill: currentColor;
 }
 

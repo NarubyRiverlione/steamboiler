@@ -77,13 +77,28 @@ describe("electrical overview", () => {
     expect(screen.getByLabelText("UPS breaker: closed")).toBeTruthy()
   })
 
-  it("lights a source only while its breaker is closed", () => {
+  it("lights a source line only while its breaker is closed", () => {
     const state: PowerPlantState = livePlant()
     state.Turbine.generatorBreaker = false
     renderBoard(state)
-    expect(dimmed(source("grid"))).toBe(false)
-    expect(dimmed(source("generator"))).toBe(true)
-    expect(dimmed(source("diesel"))).toBe(true)
+    const sourceLine = (id: string): Element | null => source(id)?.querySelector(".board-pipe") ?? null
+    expect(dimmed(sourceLine("grid"))).toBe(false)
+    expect(dimmed(sourceLine("generator"))).toBe(true)
+    expect(dimmed(sourceLine("diesel"))).toBe(true)
+  })
+
+  it("never dims a clickable box or breaker; the grid box, without a link, dims while open", () => {
+    const state: PowerPlantState = livePlant()
+    state.gridSupplyBreaker = false
+    state.Turbine.generatorBreaker = false
+    state.upsCharge = 0
+    renderBare(state)
+    const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box"))
+    expect(boxes.length).toBeGreaterThanOrEqual(5)
+    expect(boxes.filter(dimmed)).toEqual([])
+    expect(
+      dimmed(source("grid")?.querySelector(".board-node-box:not(.board-node .board-node-box)") ?? null),
+    ).toBe(true)
   })
 
   it("shows the live values: voltages, consumer draws, total, diesel output and UPS charge", () => {
