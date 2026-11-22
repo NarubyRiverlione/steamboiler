@@ -8,6 +8,7 @@ import type PowerPlantState from "../context/PowerPlantState"
 import { CstSuperheater } from "../context/const"
 import Layout from "./Layout"
 import { Route, Routes } from "react-router-dom"
+import ElectricalOverview from "./ElectricalOverview"
 import PlantOverview from "./PlantOverview"
 import AppRoutes from "./AppRoutes"
 import PowerPlantProvider from "../context/PowerPlantProvider"
@@ -33,6 +34,7 @@ function renderAt(path: string, state: PowerPlantState = makeInitialState(), ext
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<PlantOverview />} />
+            <Route path="electrical" element={<ElectricalOverview />} />
             <Route path="boiler" element={<p>boiler page</p>} />
             <Route path="steam" element={<p>steam page</p>} />
             <Route path="deaerator" element={<p>deaerator page</p>} />
@@ -157,6 +159,22 @@ describe("header", () => {
     fireEvent.keyDown(window, { key: "PageDown" })
     const links: HTMLElement[] = screen.getAllByRole("link", { name: "Plant overview" })
     expect(links.some((link: HTMLElement) => link.getAttribute("aria-current") === "page")).toBe(false)
+  })
+
+  it("lights the Electrical overview button on /electrical only, and the breadcrumb names the page", () => {
+    renderAt("/electrical")
+    expect(screen.getByRole("link", { name: "Electrical overview" }).getAttribute("aria-current")).toBe("page")
+    expect(screen.getByRole("link", { name: "Plant overview" }).getAttribute("aria-current")).toBeNull()
+    expect(screen.getByRole("navigation", { name: "Breadcrumb" }).textContent).toContain("Electrical overview")
+    cleanup()
+    renderAt("/")
+    expect(screen.getByRole("link", { name: "Electrical overview" }).getAttribute("aria-current")).toBeNull()
+  })
+
+  it("keeps /electrical out of the Page Up/Down cycle", () => {
+    renderAt("/electrical")
+    fireEvent.keyDown(window, { key: "PageDown" })
+    expect(where()).toBe("/boiler")
   })
 
   it("shows Turbine aux in the breadcrumb on a deep link", () => {

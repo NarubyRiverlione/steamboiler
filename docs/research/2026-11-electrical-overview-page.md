@@ -1,6 +1,6 @@
 # Electrical overview page: single-line schematic (design sketch)
 
-Design sketch written before any ticket exists. Companion of [2026-11-generation-board-electrical.md](2026-11-generation-board-electrical.md) (#142: the controls and breakers stay on the Generation page; this page only shows the state). Not a ticket and not a decision: a new idea stays `needs-triage` until the owner promotes it.
+Design sketch written before any ticket exists. **Built as #171**: see `docs/dev/ui-board.md` (Electrical overview). The build differs from this sketch: a Vital bus fed from the Auxiliary bus and a separate Safety bus fed by the UPS through the UPS breaker (#143), no generator terminal voltage, and the UPS links to the Auxiliary bus page. Companion of [2026-11-generation-board-electrical.md](2026-11-generation-board-electrical.md) (#142: the controls and breakers stay on the Generation page; this page only shows the state). Not a ticket and not a decision: a new idea stays `needs-triage` until the owner promotes it.
 
 Built from the milestone plan in [ADR 0046](../adr/0046-from-island-to-town-grid-in-milestones.md), the tickets #140 (consumers), #141 (grid supply breaker, auxiliary bus), #143 (vital bus, UPS), #144 (red emergency board, UPS panel) and #169 (onsite diesel generator), and the style of `src/navigation/PlantOverview.tsx` and `plantDiagram.ts`. #141, #143 and #169 were not built when this was written, so every state field name below is a placeholder.
 
