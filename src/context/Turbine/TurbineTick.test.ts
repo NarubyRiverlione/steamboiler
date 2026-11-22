@@ -24,6 +24,7 @@ describe("TurbineTick", () => {
     turbineTripped: false,
     turningGearEngaged: false,
     glandSteamOn: false,
+    glandSteamShutOff: false,
   }
   
   const valvePositions = [0, 0.25, 0.5, 0.75, 1]

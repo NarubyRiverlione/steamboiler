@@ -8,7 +8,7 @@ import { hotwellLevel } from "../utils/condenserCalculation"
 import { isSealWaterWarning } from "../utils/sealWaterCalculation"
 import type { PartId } from "./plantParts"
 
-export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "airPumpSealWaterHigh" | "airPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh" | "lubeOilPressureLow"
+export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "airPumpSealWaterHigh" | "airPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh" | "lubeOilPressureLow" | "glandSteamShutOff"
 
 // error = red tile backlight, warning = yellow; every alarm must declare one
 export type AlarmSeverity = "error" | "warning"
@@ -43,5 +43,7 @@ export const ALARMS: readonly Alarm[] = [
   { id: "steamTemperatureHigh", label: "Steam temperature high", severity: "warning", part: "steam", active: (s: PowerPlantState) => s.Boiler.steamTemperature >= CstSuperheater.AlarmTemperature },
   // Derived (ADR 0050): the header below the permissive pressure, so the cold plant with the pump off starts lit, as the real plant does
   { id: "lubeOilPressureLow", label: "Lube oil pressure low", severity: "warning", part: "turbineAux", active: (s: PowerPlantState) => s.Oil.headerPressure < CstOil.PermissivePressure },
+  // The plant flag of the automatic shut-off (ADR 0047): the rotor stopped while the steam was on; the tile opens the Turbine aux page
+  { id: "glandSteamShutOff", label: "Gland steam shut off", severity: "warning", part: "turbineAux", active: (s: PowerPlantState) => s.Turbine.glandSteamShutOff },
   { id: "feedPumpTripped", label: "Feed pump trip", severity: "error", part: "deaerator", active: (s: PowerPlantState) => s.Deaerator.feedPumpTripped },
 ]
