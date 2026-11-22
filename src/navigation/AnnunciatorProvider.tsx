@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import usePowerPlant from "../context/PowerPlantContext"
+import { isVitalBusLive } from "../context/SafetyBus"
 import { ALARMS, type Alarm, type AlarmId } from "./alarms"
 import { AnnunciatorContext, type AnnunciatorValue } from "./useAnnunciator"
 
@@ -11,12 +12,15 @@ type Latches = Readonly<Partial<Record<AlarmId, LatchState>>>
 export function AnnunciatorProvider({ children }: { readonly children: ReactNode }) {
   const { state } = usePowerPlant()
   const [latches, setLatches] = useState<Latches>({})
-  const active: readonly AlarmId[] = ALARMS.filter((a: Alarm) => a.active(state)).map((a: Alarm) => a.id)
+  // The annunciator is on the vital bus (#144): dead, it raises nothing and forgets its latches, so at power-up every active condition is new
+  const powered: boolean = isVitalBusLive(state)
+  const active: readonly AlarmId[] = ALARMS.filter((a: Alarm) => powered && a.active(state)).map((a: Alarm) => a.id)
 
   // A new trip flashes; a flashing tile whose flag clears goes dark; a steady one stays latched (adjusted while rendering, not in an effect)
   const next: Partial<Record<AlarmId, LatchState>> = {}
   for (const a of ALARMS) {
     const current: LatchState | undefined = latches[a.id]
+    if (!powered) continue
     if (current === "steady") next[a.id] = "steady"
     else if (active.includes(a.id)) next[a.id] = "flashing"
   }

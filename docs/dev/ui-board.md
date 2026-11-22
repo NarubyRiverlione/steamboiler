@@ -79,3 +79,16 @@ The Boiler status panel uses three fixed columns (`.board-readouts-cols` > `.boa
 ## Auxiliary bus page
 
 `src/components/AuxiliaryBus/AuxiliaryBus.tsx`, one `PanelFrame` titled "Auxiliary bus" at `/auxiliary-bus` (#142, ADR 0053, ADR 0054, ADR 0055), right after Generation in the Page Down/Up cycle; no node on the overview (the electrical overview, #171, links to it later). **Grid Supply Breaker group:** a `BreakerSwitch` (plate `Grid supply`, rating `6.0 kV · CB-A1`, a dummy label) under a flip cover (UI state); open and close are never disabled or refused, and with no control power the reducer ignores the click, with no message, as the sim does (`toggleGridSupplyBreaker` dispatches `OPEN_`/`CLOSE_GRID_SUPPLY_BREAKER`). An "Auxiliary bus live" `Lamp` (`isBusLive`) and an "Auxiliary load" `Display` (MW, the total). **`UpsGroup`** (own component, so #144 can mount it on the red board): the UPS `BreakerSwitch` (`toggleUpsBreaker`; manual, works with no power), the UPS charge as an analog `RoundGauge` (0 to 100%, red below 10%, a UX choice; analog because the LCDs sit on the vital bus, ADR 0055) and the "Control power" `Lamp` (`isSafetyBusLive`). It takes the plant state and the one callback. **App start state:** `makeUiStartState` starts with the UPS breaker open (the Cold & dark preset follows it); `makeInitialState`, the scenarios and the snapshots keep it closed, so the operator closes it first to get control power.
+
+## Board states
+
+The board has four states (#144, ADR 0055), derived by `deriveBoardState` (`src/navigation/boardState.ts`, a pure function of the plant state) and chosen once in `Layout`, which puts it in `BoardStateContext` (`src/components/board/boardStateContext.ts`). No part page knows about the buses; `Display` reads the context.
+
+| Board state | When | What the board shows |
+|---|---|---|
+| **Normal** | vital bus live | the board as today |
+| **Emergency** (red lens) | vital bus dead, safety bus live | red emergency light (`board-emergency`); every page and the overview reachable; analog gauges and lamps only: every `Display` is blank except the clock (`exempt`) and so are the header plant values; no annunciator; the `UpsGroup` in a strip under the header on every page (on the Auxiliary bus page its own group serves) |
+| **Dark** | vital bus dead, safety bus dead (UPS breaker open, or charge 0%) | dark except the UPS breaker switch (`UpsGroup breakerOnly`), the clock and the time controls |
+| **Ended** | `simulationEnded` (UPS discharged to 0%) | the board frozen dark with one end plate (the app speaking, so ADR 0054's no-text rule does not apply) and the Presets (new game) button |
+
+Order: `simulationEnded` → ended; vital bus live → normal; safety bus live → emergency; otherwise dark. **Annunciator across an outage:** `AnnunciatorProvider` treats a dead vital bus as no active alarms and drops its latches, so nothing is raised while it is dead, and at restore every active condition shows as a new, unacknowledged tile; a condition that cleared during the outage does not return. The code has no horn, so there is none to silence.

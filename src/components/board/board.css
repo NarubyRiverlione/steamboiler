@@ -1746,3 +1746,37 @@ path.board-zone {
     animation: none;
   }
 }
+
+/* Board states (#144, ADR 0055) */
+.board-emergency {
+  background: color-mix(in srgb, var(--board-page-bg) 70%, #7a0f0f);
+  box-shadow: inset 0 0 6rem 1rem rgba(200, 20, 20, 0.45);
+}
+
+.board-ups-strip {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.25rem 0;
+}
+
+.board-dark,
+.board-ended {
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: #000;
+}
+
+.board-end-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.board-end-text {
+  margin: 0;
+  font-size: 1.25rem;
+}
