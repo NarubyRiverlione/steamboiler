@@ -71,8 +71,9 @@ function Node({
   )
 }
 
-// A breaker symbol: filled while closed, hollow with a gap while open
 // IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a cross on the upper contact. Closed: the blade lies on the line; open: it swings off. Always black. The blade tip and cross are in diagram units inside the breaker footprint.
+// The symbol is drawn in the 30 unit footprint and scaled up by 150%
+const BREAKER_SCALE = 1.5
 const BLADE_TIP = 9
 const CROSS = 4
 
@@ -92,7 +93,7 @@ function BreakerSymbol({
       role="img"
       aria-label={name + ": " + (closed ? "closed" : "open")}
       data-closed={closed}
-      transform={"translate(" + String(x) + " " + String(y) + ")"}
+      transform={"translate(" + String(x) + " " + String(y) + ") scale(" + String(BREAKER_SCALE) + ")"}
     >
       <rect
         className="board-node-hit"
