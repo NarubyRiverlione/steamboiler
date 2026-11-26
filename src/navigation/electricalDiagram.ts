@@ -40,7 +40,7 @@ export type Busbar = {
 export const BUSES: readonly Busbar[] = [
   { id: "aux", name: "Auxiliary bus", y: 210, x1: 80, x2: 760 },
   { id: "vital", name: "Vital bus", y: 340, x1: 620, x2: 1040 },
-  { id: "safety", name: "Safety bus", y: 610, x1: 620, x2: 1040 },
+  { id: "safety", name: "Safety bus", y: 610, x1: 600, x2: 1040 },
 ]
 
 // Each source, the UPS and each bus has its own colour (board-electrical-<id> in board.css)
@@ -81,3 +81,6 @@ export const VITAL_FEED_X = 700
 // UPS box, its breaker and the line down to the Safety bus
 export const UPS = { x: 970, y: 450, w: 140, h: 44 } as const
 export const UPS_BREAKER_Y = 550
+
+// The rectifier feed: a line from the Auxiliary bus down to the Safety bus, left of the Vital bus
+export const SAFETY_FEED_X = 600

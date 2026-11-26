@@ -34,7 +34,7 @@ type PowerPlantAction =
   | { type: "CLOSE_DIESEL_BREAKER" }
   | { type: "OPEN_DIESEL_BREAKER" }
   | { type: "LOCAL_TRIP_DIESEL_BREAKER" }
-  // UPS breaker Actions (#143): manual, always available, even on a dead safety bus
+  // Battery (UPS) breaker Actions (#143): manual, always available, even on a dead safety bus
   | { type: "CLOSE_UPS_BREAKER" }
   | { type: "OPEN_UPS_BREAKER" }
   // Lube oil Action (ADR 0050): the oil pump on or off

@@ -1,4 +1,4 @@
-/** The board shell. The board state (#144, ADR 0055) is derived here once: normal, emergency (red lens, UPS strip), dark (UPS breaker, clock and time controls only) or ended (end plate and Presets). No part page knows about the buses. */
+/** The board shell. The board state (#144, ADR 0055) is derived here once: normal, emergency (red lens, UPS strip), dark (battery breaker, clock and time controls only) or ended (end plate and Presets). No part page knows about the buses. */
 
 import { Outlet, useLocation } from "react-router-dom"
 import { UpsGroup } from "../components/AuxiliaryBus/UpsGroup"

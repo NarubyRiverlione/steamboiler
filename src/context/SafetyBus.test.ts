@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { CstSimulation, CstUps } from "./const"
 import { isSafetyBusLive, isVitalBusLive, upsChargeAfter } from "./SafetyBus"
+import { isBusLive } from "./AuxiliaryBus"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -16,10 +17,16 @@ describe("the vital bus and the safety bus (#143)", () => {
     expect(isVitalBusLive(dark())).toBe(false)
   })
 
-  test("the safety bus is live only with the UPS breaker closed and charge above 0", () => {
+  test("the safety bus is live with the Auxiliary bus, whatever the battery breaker and charge (#190)", () => {
     expect(isSafetyBusLive(base)).toBe(true)
-    expect(isSafetyBusLive({ ...base, upsBreaker: false })).toBe(false)
-    expect(isSafetyBusLive({ ...base, upsCharge: 0 })).toBe(false)
+    expect(isSafetyBusLive({ ...base, upsBreaker: false })).toBe(true)
+    expect(isSafetyBusLive({ ...base, upsBreaker: false, upsCharge: 0 })).toBe(true)
+  })
+
+  test("on a dead Auxiliary bus the safety bus needs the battery breaker closed and charge above 0", () => {
+    expect(isSafetyBusLive(dark())).toBe(true)
+    expect(isSafetyBusLive(dark({ upsBreaker: false }))).toBe(false)
+    expect(isSafetyBusLive(dark({ upsCharge: 0 }))).toBe(false)
   })
 
   test("the default state has the UPS full and the simulation running", () => {
@@ -72,16 +79,23 @@ describe("the vital bus and the safety bus (#143)", () => {
 
   describe("breaker commands on a dead safety bus do nothing", () => {
     const noPower: PowerPlantState = { ...base, upsBreaker: false, gridSupplyBreaker: false }
-    test("grid supply close and open", () => {
+    test("grid supply close", () => {
       expect(powerPlantReducer(noPower, { type: "CLOSE_GRID_SUPPLY_BREAKER" })).toBe(noPower)
-      const closed: PowerPlantState = { ...noPower, gridSupplyBreaker: true }
-      expect(powerPlantReducer(closed, { type: "OPEN_GRID_SUPPLY_BREAKER" })).toBe(closed)
+    })
+    test("with the battery breaker open and the Auxiliary bus live, the breakers still work (#190)", () => {
+      const fed: PowerPlantState = { ...base, upsBreaker: false }
+      expect(powerPlantReducer(fed, { type: "OPEN_GRID_SUPPLY_BREAKER" }).gridSupplyBreaker).toBe(false)
     })
     test("generator breaker toggle", () => {
       const syncing: PowerPlantState = { ...noPower, Turbine: { ...noPower.Turbine, rpm: CstSimulation.CstTurbine.SyncRPM } }
       expect(powerPlantReducer(syncing, { type: "TOGGLE_GENERATOR_BREAKER" })).toBe(syncing)
       const live: PowerPlantState = { ...syncing, upsBreaker: true }
       expect(powerPlantReducer(live, { type: "TOGGLE_GENERATOR_BREAKER" }).Turbine.generatorBreaker).toBe(true)
+    })
+    test("generator breaker closes inside the sync window with the battery breaker open and the Auxiliary bus live (#190)", () => {
+      const fed: PowerPlantState = { ...base, upsBreaker: false, Turbine: { ...base.Turbine, generatorBreaker: false, rpm: CstSimulation.CstTurbine.SyncRPM + 1 } }
+      expect(isBusLive(fed)).toBe(true)
+      expect(powerPlantReducer(fed, { type: "TOGGLE_GENERATOR_BREAKER" }).Turbine.generatorBreaker).toBe(true)
     })
     test("trip reset", () => {
       const tripped: PowerPlantState = { ...noPower, Boiler: { ...noPower.Boiler, burnerTripped: true } }
@@ -97,18 +111,15 @@ describe("the vital bus and the safety bus (#143)", () => {
       gridSupplyBreaker: true,
       Turbine: { ...base.Turbine, generatorBreaker: true, electricOutput: 30, loadSetpoint: 30, speedMode: "synchronised" },
     }
-    test("opens the generator breaker on a dead safety bus; load and setpoint 0, speed mode Free", () => {
-      expect(powerPlantReducer(carrying, { type: "TOGGLE_GENERATOR_BREAKER" })).toBe(carrying)
+    test("opens the generator breaker; load and setpoint 0, speed mode Free", () => {
       const { Turbine } = powerPlantReducer(carrying, { type: "LOCAL_TRIP_GENERATOR_BREAKER" })
       expect(Turbine.generatorBreaker).toBe(false)
       expect(Turbine.electricOutput).toBe(0)
       expect(Turbine.loadSetpoint).toBe(0)
       expect(Turbine.speedMode).toBe("free")
     })
-    test("opens the grid supply breaker on a dead safety bus, where the normal open does nothing", () => {
-      const supported: PowerPlantState = carrying
-      expect(powerPlantReducer(supported, { type: "OPEN_GRID_SUPPLY_BREAKER" })).toBe(supported)
-      expect(powerPlantReducer(supported, { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }).gridSupplyBreaker).toBe(false)
+    test("opens the grid supply breaker", () => {
+      expect(powerPlantReducer(carrying, { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }).gridSupplyBreaker).toBe(false)
     })
     test("with the safety bus live the trips open like the normal open", () => {
       const live: PowerPlantState = { ...carrying, upsBreaker: true }
