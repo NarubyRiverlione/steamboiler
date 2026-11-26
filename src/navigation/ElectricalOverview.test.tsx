@@ -151,6 +151,20 @@ describe("electrical overview", () => {
     expect(screen.getByLabelText("Boiler feed pump: off")).toBeTruthy()
   })
 
+  it("shows Instrumentation on the vital bus and Emergency equipment on the safety bus, lit with their bus", () => {
+    renderBoard(livePlant())
+    expect(screen.getByLabelText("Instrumentation: on")).toBeTruthy()
+    expect(screen.getByLabelText("Emergency equipment: on")).toBeTruthy()
+    cleanup()
+    const dead: PowerPlantState = livePlant()
+    dead.gridSupplyBreaker = false
+    dead.Turbine.generatorBreaker = false
+    renderBare(dead)
+    expect(screen.getByLabelText("Instrumentation: off")).toBeTruthy()
+    expect(dimmed(document.querySelector('[data-bus-load="vital"]'))).toBe(true)
+    expect(screen.getByLabelText("Emergency equipment: on")).toBeTruthy()
+  })
+
   it("keeps the safety bus lit from the Auxiliary bus with the battery breaker open (#190)", () => {
     const open: PowerPlantState = livePlant()
     open.upsBreaker = false

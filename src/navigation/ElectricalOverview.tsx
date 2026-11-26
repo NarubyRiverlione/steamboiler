@@ -14,6 +14,8 @@ import { isBatteryFeeding, isSafetyBusLive, isVitalBusLive } from "../context/Sa
 import {
   BREAKER_HALF,
   BUSES,
+  BUS_LOADS,
+  BUS_LOAD_BOX,
   CONSUMERS,
   CONSUMER_BOX,
   CONSUMER_STEM_X,
@@ -36,6 +38,7 @@ import {
   VOLTAGES,
   consumerY,
   type Busbar,
+  type BusLoad,
   type Consumer,
   type ElectricalColour,
 } from "./electricalDiagram"
@@ -392,6 +395,38 @@ function Consumers({
   )
 }
 
+function BusLoads({ vitalLive, safetyLive }: { readonly vitalLive: boolean; readonly safetyLive: boolean }) {
+  return (
+    <>
+      {BUS_LOADS.map(({ bus, name, stemX, y }: BusLoad) => {
+        const live: boolean = bus === "vital" ? vitalLive : safetyLive
+        const busY: number = BUSES.find((b: Busbar) => b.id === bus)?.y ?? y
+        const x: number = stemX + BUS_LOAD_BOX.gap
+        return (
+          <g key={name} className={colour(bus) + dim(live)} data-bus-load={bus}>
+            <path className="board-pipe board-electrical-line" d={line(stemX, busY, stemX, y)} />
+            <path className="board-pipe board-electrical-line" d={line(stemX, y, x, y)} />
+            <rect
+              className="board-node-box board-electrical-line"
+              x={x}
+              y={y - BUS_LOAD_BOX.h / 2}
+              width={BUS_LOAD_BOX.w}
+              height={BUS_LOAD_BOX.h}
+              rx={4}
+            />
+            <g transform={"translate(" + String(x + 22) + " " + String(y) + ")"}>
+              <Led lit={live} tone="ok" label={name} />
+            </g>
+            <text className="board-node-name" x={x + 46} y={y + 5} style={{ textAnchor: "start" }}>
+              {name}
+            </text>
+          </g>
+        )
+      })}
+    </>
+  )
+}
+
 function ElectricalOverview() {
   const { state } = usePowerPlant()
   const [showValues, setShowValues] = useState<boolean>(true)
@@ -447,6 +482,7 @@ function ElectricalOverview() {
           showValues={showValues}
           voltage={voltage(vitalLive, VOLTAGES.vital)}
         />
+        <BusLoads vitalLive={vitalLive} safetyLive={safetyLive} />
         <g className={colour("aux") + dim(auxLive)} data-feed="safety-ac">
           <path
             className="board-pipe board-electrical-line"

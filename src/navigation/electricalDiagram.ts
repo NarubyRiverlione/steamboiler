@@ -76,3 +76,18 @@ export const UPS_BREAKER_Y = 670
 
 // The rectifier feed: a line from the Auxiliary bus down to the Safety bus, left of the Vital bus
 export const SAFETY_FEED_X = 600
+
+// One load per bus below the Auxiliary bus: Instrumentation on the Vital bus, Emergency equipment on the Safety bus. Plain boxes, no link: each stands for several pages.
+export type BusLoad = {
+  readonly bus: "vital" | "safety"
+  readonly name: string
+  readonly stemX: number
+  readonly y: number
+}
+
+export const BUS_LOAD_BOX = { w: 230, h: 36, gap: 30 } as const
+
+export const BUS_LOADS: readonly BusLoad[] = [
+  { bus: "vital", name: "Instrumentation", stemX: 640, y: 510 },
+  { bus: "safety", name: "Emergency equipment", stemX: 640, y: 780 },
+]
