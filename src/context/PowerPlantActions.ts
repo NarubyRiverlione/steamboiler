@@ -22,6 +22,30 @@ type PowerPlantAction =
   | { type: "SELECT_RUN_UP_POINT"; payload: { runUpPoint: number } }
   | { type: "TOGGLE_GENERATOR_BREAKER" }
   | { type: "SET_LOAD_SETPOINT"; payload: { loadSetpoint: number } }
+  // Grid supply breaker Actions (#141, ADR 0053): both always allowed; closing it opens the unit aux breaker (#189)
+  | { type: "CLOSE_GRID_SUPPLY_BREAKER" }
+  | { type: "OPEN_GRID_SUPPLY_BREAKER" }
+  // Local mechanical trips (#184, ADR 0053): work with no safety bus, only open
+  | { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }
+  // Unit aux breaker Actions (#189, ADR 0053): close is refused outside the ±2 rpm window and, with the grid supply closed, opens it on the same tick; open is never refused
+  | { type: "CLOSE_UNIT_AUX_BREAKER" }
+  | { type: "OPEN_UNIT_AUX_BREAKER" }
+  | { type: "LOCAL_TRIP_GENERATOR_BREAKER" }
+  // Onsite diesel Actions (#169): start/stop; close is refused with a reason (dieselBreakerCloseRefusal), open is never refused;
+  // the local trip only opens and needs no control power
+  | { type: "SET_DIESEL_RUN"; payload: { run: boolean } }
+  | { type: "CLOSE_DIESEL_BREAKER" }
+  | { type: "OPEN_DIESEL_BREAKER" }
+  | { type: "LOCAL_TRIP_DIESEL_BREAKER" }
+  // Battery (UPS) breaker Actions (#143): manual, always available, even on a dead safety bus
+  | { type: "CLOSE_UPS_BREAKER" }
+  | { type: "OPEN_UPS_BREAKER" }
+  // Lube oil Action (ADR 0050): the oil pump on or off
+  | { type: "SET_OIL_PUMP"; payload: { pumpRunning: boolean } }
+  // Turning gear Action (ADR 0051): engage or disengage by hand
+  | { type: "SET_TURNING_GEAR"; payload: { engaged: boolean } }
+  // Gland seal steam Action (ADR 0047): on or off; on is refused while the rotor is not turning
+  | { type: "SET_GLAND_STEAM"; payload: { on: boolean } }
   // Deaerator Actions
   | { type: "TOGGLE_DEAERATOR_VENT" } // the manual start-up vent, open or closed
   | { type: "SET_FEED_PUMP_VALVE_POSITION"; payload: { feedPumpValvePosition: number } } // the boiler feed pump (#112)

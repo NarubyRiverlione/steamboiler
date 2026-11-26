@@ -5,12 +5,12 @@ Two long-lived branches and one short-lived branch per ticket. Why: [ADR 0012](.
 | Branch | Holds | Who commits |
 |---|---|---|
 | `<slug>-<ticket>` (e.g. `hotwell-volume-53`) | One ticket's work, branched from `dev` (a branch or a worktree) | Everyone, agents included |
-| `dev` | Integration: merged tickets only | Nobody directly, except a regenerated `ROADMAP.md`; ticket branches are merged in locally |
+| `dev` | Integration: merged tickets only | Nobody directly, except a regenerated `ROADMAP.md` and documentation-only commits; ticket branches are merged in locally |
 | `main` | Milestone releases only, via pull request; every merge publishes the app | Only on the owner's explicit say-so |
 
 ## Rules
 
-- **One ticket, one branch.** Start every ticket on its own branch or worktree from `dev`; commit there, never on `dev` itself (the one exception: a regenerated `ROADMAP.md`, committed straight on `dev` and pushed; it is generated, carries no logic and needs no gate). Run the gate below locally, then merge back into `dev` locally (no pull request: too much overhead for a sole developer) and push `dev`.
+- **One ticket, one branch.** Start every ticket on its own branch or worktree from `dev`; commit there, never on `dev` itself. Two exceptions, committed straight on `dev` and pushed, with no gate: a regenerated `ROADMAP.md` (generated, no logic), and a documentation-only commit (`docs/`, `GLOSSARY.md`, `README.md`: an ADR, a research note, a doc fix; no code, tests, scenarios or snapshots). A doc that describes a code change still travels with that change on its ticket branch. Run the gate below locally, then merge back into `dev` locally (no pull request: too much overhead for a sole developer) and push `dev`.
 - **Never commit, merge or push to `main`** unless the owner explicitly says so for that release. Approval for one release does not carry over to the next.
 - **Release:** open a pull request from `dev` into `main` (`gh pr create --base main --head dev`) and merge it once its gate is green. `main` accepts no direct pushes.
 - **Fixes go through a ticket branch and `dev`** as well; a fix reaches `main` with the next release.
@@ -27,7 +27,7 @@ Each gate includes everything of the one above it. Test layers ([testing.md](tes
 
 The `dev` gate is run locally before the merge; GitHub cannot block a merge into `dev`. CI on every push to `dev` runs the layers again, edge included (reported, not required), so a regression shows near the commit that caused it. The `main` gate is the required check on the pull request.
 
-Not enforced yet: the hooks and the CI jobs per layer come with #61, which is parked. Until then, run `pnpm lint` and `pnpm test` before every merge.
+Not enforced yet: the hooks and the CI jobs per layer are parked ([parked.md](../parked.md)). Until then, run `pnpm lint` and `pnpm test` before every merge.
 
 ## GitHub settings on `main`
 

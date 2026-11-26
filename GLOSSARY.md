@@ -72,6 +72,72 @@ _Avoid_: Net demand, demand, target load
 The rate at which the load moves toward the load setpoint: 3% of the rated output per minute, up and down. When the breaker opens the load is lost at once, whatever the load rate.
 _Avoid_: Ramp rate (that is the run-up rate), load ramp
 
+**Generator breaker**:
+The breaker between the generator and the plant's grid connection. Closed, the generator can carry load; open, the electric output is 0 MW.
+_Avoid_: Main breaker, sync breaker
+
+**Grid supply breaker**:
+The station supply: through it the grid feeds the auxiliary bus. It carries no export. Closing it while the unit aux breaker is closed opens the unit aux breaker on the same tick.
+
+**Unit aux breaker**:
+Lets the generator feed the auxiliary bus. It closes only inside the ±2 rpm window and auto-opens when the speed leaves it. Closing it while the grid supply breaker is closed opens the grid supply breaker on the same tick (the seamless transfer: the bus is never dead).
+_Avoid_: Incomer, station service breaker
+
+**Auxiliary bus**:
+The electrical bus that powers the plant's own pumps and turbine auxiliaries.
+_Avoid_: Station bus, house bus
+
+**Auxiliary load**:
+The electric power the plant's own pumps and turbine auxiliaries draw, in MW: the feed, condensation, recirculation and air extraction pumps, the lube oil pump and the turning gear motor. Burner fan, vents and lighting are not counted. Not the basic load on synchronising.
+_Avoid_: Station service, parasitic load, house load (see house load operation)
+
+**Net output**:
+The electric output less the auxiliary load, in MW. Negative means the plant imports power, drawn from the grid supply.
+_Avoid_: Net demand, net load
+
+**House load operation**:
+The generator carries only the auxiliary bus, with the unit aux breaker closed and the generator breaker open: the unit runs on its own load (the island). Opening the generator breaker at a high load is a load rejection that the unit may not survive.
+_Avoid_: Island mode, islanding
+
+**Diesel generator**:
+The onsite standby generator that can feed the auxiliary bus on its own, for a dark start. It is sized for the auxiliary load at start-up flows, so the plant cannot run at full output on it.
+_Avoid_: Emergency generator, black-start unit, diesel set
+
+**Diesel breaker**:
+The breaker through which the diesel generator feeds the auxiliary bus.
+_Avoid_: Emergency breaker
+
+**Dark start**:
+Bringing the plant up from a dead bus with the diesel generator alone, until the generator carries the auxiliary bus and the diesel is stopped.
+_Avoid_: Black start, cold start
+
+**Dead bus**:
+The grid supply breaker, the unit aux breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
+_Avoid_: Blackout, loss of power
+
+**Vital bus**:
+The electrical bus fed by the Auxiliary bus that carries the controller controls, the board's LCD readouts and the annunciator. It has no battery: a dead Auxiliary bus kills it.
+_Avoid_: Control bus, DC bus (the model has no DC distribution)
+
+**Safety bus**:
+The electrical bus that carries breaker control power and the trip reset. Fed by the Auxiliary bus, or on a dead Auxiliary bus by the UPS through the battery breaker. Dead when the Auxiliary bus is dead and the battery breaker is open or the UPS charge is 0%.
+_Avoid_: Emergency bus, DC bus
+
+**Control power**:
+The power from the safety bus that the breaker coils and the trip reset need. Without it, breaker commands do nothing.
+_Avoid_: DC supply, trip supply
+
+**UPS**:
+The battery that carries the Safety bus when the Auxiliary bus is dead. It runs about 30 minutes; at 0% charge the simulation ends.
+_Avoid_: Battery, backup power
+
+**UPS charge**:
+The UPS's stored energy in percent, 0 to 100. Drains at a constant rate while the battery breaker is closed and the Auxiliary bus is dead; recharges at one fixed rate while the Auxiliary bus is live.
+
+**Battery breaker**:
+The manual breaker that connects the UPS battery to the Safety bus (`upsBreaker` in the code). It only matters on a dead Auxiliary bus, never closes by itself and needs no power.
+_Avoid_: Battery switch, UPS breaker
+
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
 _Avoid_: Bell curve, optimal pressure, vacuum permissive
@@ -89,7 +155,7 @@ The speed mode that keeps the turbine at the selected run-up point by moving the
 _Avoid_: Autopilot, speed hold, cruise
 
 **Synchronised mode**:
-The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the breaker or a turbine trip ends it, back to free mode.
+The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the last closed breaker (generator or unit aux) or a turbine trip ends it, back to free mode. It holds during house load operation too.
 _Avoid_: Grid mode, sync hold
 
 **Run-up point**:
@@ -184,8 +250,32 @@ The pressure of the air in the condenser shell, from the air inventory.
 _Avoid_: Vacuum offset, air partial vacuum
 
 **Air in-leakage**:
-Air that leaks into the shell from outside, in kg/s. With the vacuum system stopped it is the only reason the vacuum is lost.
+Air that leaks into the shell from outside, in kg/s. With the vacuum system stopped it is the only reason the vacuum is lost. It is small while the gland seal holds and large while it does not.
 _Avoid_: Leak (the Vent is steam leaving the boiler), vacuum decay
+
+**Gland seal steam**:
+Steam admitted to the shaft glands, where the shaft leaves the casing, to keep air out of the casing. The operator switches it on, and only while the rotor turns.
+_Avoid_: Gland leak, seal air
+
+**Gland seal**:
+The sealed or unsealed state of the glands, set by whether gland seal steam is on.
+_Avoid_: Gland pressure
+
+**Lube oil header**:
+The oil line that feeds the turbine bearings. One oil pump builds its pressure; the turbine cannot be rolled below the permissive pressure, and a running turbine trips below the trip pressure.
+_Avoid_: Trip oil (the hydraulic oil of the trip system)
+
+**Roll-off**:
+The moment the steam takes the rotor off the turning gear: the turbine valve opens with the gear still engaged, and the gear throws itself out once the rotor passes the standstill speed. Nobody disengages the gear to roll.
+_Avoid_: Disengage to roll
+
+**Turning gear**:
+The gear that turns the stopped rotor at a few rpm. The operator engages it by hand (it needs lube oil pressure). The turbine valve cannot be opened on a stopped rotor off the gear, so the roll starts on the gear: the steam takes the rotor above the standstill speed and the gear throws itself out.
+_Avoid_: Barring gear (use one name)
+
+**Vacuum breaker**:
+A valve that lets outside air into the condenser shell. The operator opens it in an emergency stop; a trip never opens it. While it is open the vacuum cannot be held.
+_Avoid_: Breaker (the generator breaker closes the circuit), hood relief
 
 **Vacuum system**:
 The air extraction pump and the SJAE together: the machines that remove air from the shell.

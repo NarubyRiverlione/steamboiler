@@ -14,7 +14,7 @@ import { Scenario } from "../scenario"
 import { holdHeatUpLevel, holdLoop } from "./loop-operator"
 import { atWorkingPressure } from "./pressure-hold"
 import { steerHeatingRate } from "./heat-up"
-import { airPumpOn, openMainSteamActions, startUpVent } from "./steps"
+import { airPumpOn, glandSteamUp, oilPumpOn, openMainSteamActions, startUpVent } from "./steps"
 
 const { RunUpPoints } = CstSimulation.CstTurbine
 
@@ -61,6 +61,6 @@ export const turbineRunup: Scenario = {
   duration: StartupSettings.Duration,
   sampleEvery: 10,
   initial: makeInitialState(),
-  actions: [airPumpOn],
+  actions: [airPumpOn, oilPumpOn, ...glandSteamUp],
   operator: startupOperator,
 }

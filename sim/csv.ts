@@ -1,4 +1,5 @@
 import PowerPlantState, { SpeedMode } from "../src/context/PowerPlantState"
+import { netOutputOf } from "../src/context/AuxiliaryLoad"
 import { Sample } from "./scenario"
 
 // The speed mode as a number in the CSV: 0 Free, 1 Ramp up, 2 Hold
@@ -14,6 +15,9 @@ function flatten(state: PowerPlantState): Record<string, number> {
       row[`${prefix}_${key}`] = toNumber(value)
     }
   }
+  row.upsCharge = state.upsCharge
+  row.auxiliaryLoad = state.auxiliaryLoad
+  row.netOutput = netOutputOf(state)
   return row
 }
 

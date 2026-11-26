@@ -72,13 +72,13 @@ describe("bypass-loop assertions", () => {
   test("condensation pump never returns more than the hotwell holds", () => {
     const empty = makeInitialState().Condenser
     const pumping = { ...empty, hotwellWaterMass: 0, hotwellWaterVolume: 0, condensationPumpValvePosition: 1 }
-    const next = CondenserTick(pumping, 1, { flow: 0, enthalpy: 0 }, { flow: 0, enthalpy: 0 }, CstBoiler.TotalVolume)
+    const next = CondenserTick(pumping, 1, { flow: 0, enthalpy: 0 }, { flow: 0, enthalpy: 0 }, CstBoiler.TotalVolume, { sealed: true, returnMass: 0 })
     expect(next.returnRate).toBe(0)
   })
 
   test("condensation pump returns nothing into a full boiler, the water stays in the hotwell", () => {
     const pumping = { ...makeInitialState().Condenser, condensationPumpValvePosition: 1 }
-    const next = CondenserTick(pumping, 1, { flow: 0, enthalpy: 0 }, { flow: 0, enthalpy: 0 }, 0)
+    const next = CondenserTick(pumping, 1, { flow: 0, enthalpy: 0 }, { flow: 0, enthalpy: 0 }, 0, { sealed: true, returnMass: 0 })
     expect(next.returnRate).toBe(0)
     expect(next.hotwellWaterMass).toBe(pumping.hotwellWaterMass)
   })

@@ -1,11 +1,11 @@
-/** Two-position turn switch for a control that holds a state (valve, pump, breaker). The label never changes: the legends name the two positions, and the selected one is lit like a lit lens button. An optional flip cover (the generator breaker) blocks the switch until it is lifted. Designed in the prototype of #124. */
+/** Two-position turn switch for a control that holds a state (valve, pump). The label never changes: the legends name the two positions, and the selected one is lit like a lit lens button. An optional flip cover blocks the switch until it is lifted. Designed in the prototype of #124. */
 
 import "./board.css"
 import { switchName, type SwitchGuard } from "./switchInput"
 import { CoverLayer, Lever, Plate, PLATE_CENTRE_X, Ticks } from "./TurnSwitchParts"
 import { useSwitchInput } from "./useSwitchInput"
 
-type SwitchTone = "valve" | "machine" | "breaker"
+type SwitchTone = "valve" | "machine"
 
 type TurnSwitchProps = {
   readonly label: string
@@ -13,7 +13,7 @@ type TurnSwitchProps = {
   readonly onLabel: string
   readonly on: boolean
   readonly onToggle: () => void
-  readonly tone?: SwitchTone // the rim: brass for a valve, blue for a machine, red for the breaker
+  readonly tone?: SwitchTone // the rim: brass for a valve, blue for a machine
   readonly disabled?: boolean
   readonly title?: string // the reason a disabled switch refuses
   readonly guard?: SwitchGuard // a flip cover over the switch

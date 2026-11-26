@@ -7,16 +7,22 @@ export type SwitchGuard = {
   readonly onToggleCover: () => void
 }
 
-// A disabled switch refuses everything; under a cover that is down a press lifts the cover instead of turning the switch
+// Under a cover that is down a press lifts the cover instead of turning the switch, even when the switch refuses (as on a real panel);
+// with the cover up or no cover, a disabled switch refuses the press
 export function pressAction(covered: boolean, disabled: boolean): SwitchAction {
-  if (disabled) return "none"
-  return covered ? "cover" : "toggle"
+  if (covered) return "cover"
+  return disabled ? "none" : "toggle"
 }
 
 const ACTIVATION_KEYS: readonly string[] = [" ", "Enter"]
 
 // "ignore" is a key the switch does not use (the arrows still change the page); "none" is a key it uses but refuses
-export function keyAction(key: string, covered: boolean, lifted: boolean, disabled: boolean): SwitchAction | "ignore" {
+export function keyAction(
+  key: string,
+  covered: boolean,
+  lifted: boolean,
+  disabled: boolean,
+): SwitchAction | "ignore" {
   if (ACTIVATION_KEYS.includes(key)) return pressAction(covered, disabled)
   return key === "Escape" && lifted ? "cover" : "ignore"
 }

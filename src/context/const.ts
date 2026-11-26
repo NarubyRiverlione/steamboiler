@@ -37,8 +37,15 @@ export const CstSimulation = {
     OptimalPressureBellWidth: 20, // mBar, half width of the band on the vacuum readout
     VacuumLimit: 327, // mbar absolute, turbine trip above it (-0.7 kg/cm² gauge, see design-basis.md)
     ShellVolume: 450, // m³ steam space of the shell with the exhaust neck and casing (UNVERIFIED, ADR 0035)
-    AirLeakRate: 0.0022, // kg/s of air in-leakage, 3.75 SCFM (ASME PTC 12.2 Table 10-1, ADR 0035)
-    CAR_Capacity: 26, // m³/s of air: over-dimensioned utility, pulls 1 bar to the design vacuum in about 60 s (design-basis.md)
+    AirLeakRate: 0.0022, // kg/s of air in-leakage with the glands sealed, 3.75 SCFM (ASME PTC 12.2 Table 10-1, ADR 0035)
+    OpenGlandAirLeakRate: 0.14, // kg/s of air in-leakage with the glands unsealed: Stodola labyrinth estimate for two LP glands with assumed geometry, UNVERIFIED (ADR 0047, research 2026-11-gland-seal-steam)
+    CAR_Capacity: 0.3, // m³/s of air: a real hogger for this unit, pulls 1 bar to the 327 mbar vacuum limit in about 28 min (HEI Table 8, design-basis.md)
+    CAR_SealWaterMass: 500, // kg of seal water in the ring, separator and cooler (UNVERIFIED, design-basis.md)
+    CAR_ShaftPower: 55, // kW: nearly all of it ends up as heat in the seal water; a liquid ring pump of this size (UNVERIFIED, design-basis.md)
+    CAR_CondensationFactor: 0.5, // share of the vapour drawn in that condenses in the ring (a tested pump was credited 0.5, EPRI via the condenser air system note)
+    CAR_SealCoolerUA: 6, // kW/K seal water cooler: with the 10 °C cooling water the seal water settles at about 20 °C running (pump 5 to 14 K above the supply, Nash; UNVERIFIED, design-basis.md)
+    CAR_SealWaterWarning: 40, // °C: high seal water temperature warning; the floor (74 mbar) is then twice the design vacuum (our own number, design-basis.md)
+    CAR_SealWaterTrip: 55, // °C: cavitation trip; a liquid ring pump at 55 °C and above has a problem (Nash "Hot Pump Operating"), floor 157 mbar
     SJAE_Capacity: 0.96, // m³/s at the full valve (HEI holding example, ADR 0035)
     SJAE_SuctionLimit: 170, // mbar absolute: above it the ejector breaks and removes nothing (EPRI §8.3.8)
     HoodReliefPressure: 1353, // mbar absolute: the atmospheric relief diaphragm, the ceiling of the condenser pressure
@@ -101,6 +108,49 @@ export const CstSimulation = {
     LoadRate: 0.03, // share of rated output per minute, up and down (sourced from coal units, docs/research/2026-11-generator-load-rate.md)
     LoadSetpointLimit: 200, // MW: top of the 180-200 MWe class the utilities are sized for, so the steam limits the load, not the setpoint (design-basis.md)
   },
+}
+
+// Turbine lube oil (ADR 0050, figures in docs/plant/design-basis.md and docs/research/2026-11-lube-oil.md); all UNVERIFIED estimates
+export const CstOil = {
+  NominalPressure: 1.0, // bar g, the header pressure with the pump running
+  PermissivePressure: 0.7, // bar g: the turbine valve cannot be opened below it
+  TripPressure: 0.4, // bar g: a running turbine trips below it, and the trip cannot be reset below it
+  BuildTimeConstant: 5, // s, first-order lag of the header toward nominal with the pump running
+  DecayTimeConstant: 20, // s, first-order lag toward 0 with the pump stopped: slower than the build, the header drains through the bearings
+  RunningRPM: 100, // rpm: above it the turbine counts as running (with the valve open, ADR 0050)
+}
+
+// Auxiliary load (#140, docs/research/2026-11-auxiliary-power.md): rated electric power of each consumer, MW; UNVERIFIED estimates except the turning gear
+export const CstAuxiliary = {
+  FeedPump: 4.5, // MW at full flow, drawn in proportion to the valve position
+  RecirculationPump: 1.75, // MW at full flow (cooling water, 7400 l/s)
+  CondensationPump: 0.4, // MW at full flow
+  AirExtractionPump: 0.1, // MW while enabled (liquid ring pump, 55 kW shaft power plus motor margin)
+  LubeOilPump: 0.1, // MW while running
+  TurningGearMotor: 0.03, // MW while engaged (30 kW motor of a 110 MW turbine)
+}
+
+// Onsite diesel generator (#169, ADR 0053): no shaft, it holds 50 Hz up to its rating
+export const CstDiesel = {
+  StartTime: 10, // s from RUN to running (UNVERIFIED: about 10 s for a standby set)
+  RatedPower: 2.5, // MW: the dark-start peak of 1.99 MW plus a 0.5 MW margin (docs/plant/design-basis.md)
+}
+
+// UPS (#143, ADR 0055, docs/research/2026-11-ups-runtime.md): the charge is 0-100 %, simulated seconds; a deliberate reduction from real station batteries (hours)
+export const CstUps = {
+  NominalRuntime: 1800, // s the UPS carries the safety bus with the Auxiliary bus dead: 30 minutes (real: 8-10 h, reduced for playability)
+  RechargeTime: 28800, // s from empty to full while the Auxiliary bus is live: 8 h (sourced: 8-12 h, charger sized for 15 h at most)
+}
+
+// Gland seal steam (ADR 0047, figure in docs/plant/design-basis.md and docs/research/2026-11-gland-seal-steam.md); UNVERIFIED estimate
+export const CstGlandSteam = {
+  Flow: 0.1, // kg/s taken from the boiler while the gland steam is on, returned to the hotwell (800 lb/h gland condenser of a vendor example)
+}
+
+// Turning gear (ADR 0051, figure in docs/plant/design-basis.md); UNVERIFIED estimate
+export const CstTurningGear = {
+  Rpm: 3, // rpm the engaged gear holds the stopped rotor at
+  StandstillRpm: 20, // rpm: the gear can be engaged at or below it (one plant's interlock, UNVERIFIED)
 }
 
 // Extraction heater (ADR 0031, figures in docs/plant/design-basis.md and docs/research/2026-11-extraction-heaters.md)

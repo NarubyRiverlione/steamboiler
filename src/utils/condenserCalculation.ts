@@ -1,6 +1,7 @@
 import { CondenserState } from "../context/PowerPlantState"
 import { CstPhysics, CstSimulation } from "../context/const"
 import { waterMassOf } from "./boilerCalculations"
+import { capacityFraction } from "./sealWaterCalculation"
 import { getBoilingPoint, getSaturationEnthalpies } from "./steamTable"
 
 const PaPerMbar = 100
@@ -19,7 +20,7 @@ export function airPressureOf(airMass: number, temperature: number): number {
 }
 
 /**
- * The air inventory after one tick (ADR 0035). In: the constant in-leakage. Out: the vacuum system removes volume,
+ * The air inventory after one tick (ADR 0035). In: the in-leakage, at the sealed rate while the gland steam is on and the open-gland rate otherwise (ADR 0047). Out: the vacuum system removes volume,
  * S·ρ_air(P_air, T) = S·m/V kg/s, so the removal is proportional to the air there is. Taken implicitly, so a pump much
  * larger than the shell stays stable. The air extraction pump always removes; the SJAE only with enough motive steam
  * and while the shell is under its suction limit (it breaks above), and scales with its valve.
@@ -28,25 +29,31 @@ export function airPressureOf(airMass: number, temperature: number): number {
 export function calculateAirInventory(
   condenserState: CondenserState,
   boilerPressure: number,
-): { airMass: number; newIsSjaeEnabled: boolean } {
+  glandSealed: boolean,
+): { airMass: number; newIsSjaeEnabled: boolean; pumpFlow: number } {
   const {
     DeltaTime,
     CstTurbine: { MainSteamValveMinimumPressure },
-    CstCondenser: { ShellVolume, AirLeakRate, CAR_Capacity, SJAE_Capacity, SJAE_SuctionLimit },
+    CstCondenser: { ShellVolume, AirLeakRate, OpenGlandAirLeakRate, CAR_Capacity, SJAE_Capacity, SJAE_SuctionLimit },
   } = CstSimulation
 
   const newIsSjaeEnabled: boolean =
     condenserState.isSjaeEnabled &&
     boilerPressure > MainSteamValveMinimumPressure &&
     condenserState.pressure < SJAE_SuctionLimit
-  const pump: number = condenserState.isAirExtractionPumpEnabled ? CAR_Capacity : 0
+  // The pump's capacity falls toward the vapour pressure of its seal water (#166); a tripped pump moves nothing
+  const pump: number =
+    condenserState.isAirExtractionPumpEnabled && !condenserState.airPumpTripped
+      ? CAR_Capacity * capacityFraction(condenserState.sealWaterTemperature, condenserState.pressure)
+      : 0
   const ejector: number = newIsSjaeEnabled ? SJAE_Capacity * condenserState.sjaeValvePosition : 0
 
   const removalRate: number = (pump + ejector) / ShellVolume // 1/s
   // Air only leaks in while the shell is under atmospheric pressure
-  const leak: number = condenserState.pressure < CstPhysics.AtmosphericPressure_mBar ? AirLeakRate : 0
+  const leak: number =
+    condenserState.pressure < CstPhysics.AtmosphericPressure_mBar ? (glandSealed ? AirLeakRate : OpenGlandAirLeakRate) : 0
   const airMass: number = (condenserState.airMass + leak * DeltaTime) / (1 + removalRate * DeltaTime)
-  return { airMass, newIsSjaeEnabled }
+  return { airMass, newIsSjaeEnabled, pumpFlow: pump }
 }
 
 // Saturation temperature (°C) at the condenser pressure (mbar absolute)

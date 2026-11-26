@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { activeAlarms, newAlarms } from "./Alarms"
-import { CstDeaerator, CstPhysics, CstSimulation, CstSuperheater } from "./const"
+import { CstDeaerator, CstOil, CstPhysics, CstSimulation, CstSuperheater } from "./const"
 import { makeHotDeaerator } from "./Deaerator/DeaeratorTick"
 import PowerPlantState from "./PowerPlantState"
 import { ALARMS } from "../navigation/alarms"
@@ -8,11 +8,14 @@ import { makeInitialState } from "./PowerPlantReducer"
 import { SimulationState, makeInitialSimulation, simulationReducer } from "./SimulationReducer"
 import { waterMassOf } from "../utils/boilerCalculations"
 
+// The cold plant with healthy lube oil, so a test sees only the alarm it sets (the cold oil itself is tested below)
+const coldPlant = (): PowerPlantState => ({ ...makeInitialState(), Oil: { pumpRunning: true, headerPressure: 1 } })
+
 const { TotalVolume, HotwellLow, HotwellHigh, HotwellHighHigh } = CstSimulation.CstCondenser
 
 // A plant whose hotwell sits at the given fraction of its volume
 const atLevel = (level: number, rejectValvePosition = 0): PowerPlantState => {
-  const base: PowerPlantState = makeInitialState()
+  const base: PowerPlantState = coldPlant()
   return {
     ...base,
     Condenser: {
@@ -54,6 +57,16 @@ describe("hotwell level alarms", () => {
     expect(activeAlarms(atLevel(level)).includes("hotwellLevelHighHigh")).toBe(on)
   })
 
+  test("the air pump seal water warning is on from its warning temperature, the trip alarm with the latch (#166)", () => {
+    const base: PowerPlantState = makeInitialState()
+    const withSeal = (sealWaterTemperature: number, airPumpTripped = false): PowerPlantState => ({ ...base, Condenser: { ...base.Condenser, sealWaterTemperature, airPumpTripped } })
+    const { CAR_SealWaterWarning } = CstSimulation.CstCondenser
+    expect(activeAlarms(withSeal(CAR_SealWaterWarning - 0.1))).not.toContain("airPumpSealWaterHigh")
+    expect(activeAlarms(withSeal(CAR_SealWaterWarning))).toContain("airPumpSealWaterHigh")
+    expect(activeAlarms(withSeal(20))).not.toContain("airPumpTripped")
+    expect(activeAlarms(withSeal(20, true))).toContain("airPumpTripped")
+  })
+
   test("none is active in the working band", () => {
     expect(activeAlarms(atLevel(0.7))).toEqual([])
   })
@@ -76,7 +89,7 @@ describe("hotwell level alarms", () => {
 describe("boiler level high alarm (#62)", () => {
   const { TotalVolume, HighLevel, HighHighLevel } = CstSimulation.CstBoiler
   const boilerAt = (level: number): PowerPlantState => {
-    const base: PowerPlantState = makeInitialState()
+    const base: PowerPlantState = coldPlant()
     return { ...base, Boiler: { ...base.Boiler, waterVolume: level * TotalVolume, waterMass: waterMassOf(level * TotalVolume, CstPhysics.AmbientTemperature) } }
   }
 
@@ -116,11 +129,11 @@ describe("boiler level high alarm (#62)", () => {
 describe("boiler and deaerator level alarms (#137)", () => {
   const boiler = CstSimulation.CstBoiler
   const boilerAt = (level: number): PowerPlantState => {
-    const base: PowerPlantState = makeInitialState()
+    const base: PowerPlantState = coldPlant()
     return { ...base, Boiler: { ...base.Boiler, waterVolume: level * boiler.TotalVolume } }
   }
   const deaeratorAt = (level: number, feedPumpTripped = false): PowerPlantState => {
-    const base: PowerPlantState = makeInitialState()
+    const base: PowerPlantState = coldPlant()
     return { ...base, Deaerator: { ...base.Deaerator, waterVolume: level * CstDeaerator.TotalVolume, feedPumpTripped } }
   }
 
@@ -166,9 +179,9 @@ describe("boiler and deaerator level alarms (#137)", () => {
     expect(newAlarms(deaeratorAt(0.5, true), deaeratorAt(0.5, true))).toEqual([])
   })
 
-  test("the cold start raises no alarm (the 35% cold fill is not below the 35% limit)", () => {
-    const fresh: PowerPlantState = makeInitialState()
-    expect(activeAlarms(fresh)).toEqual([])
+  test("the cold start raises no level alarm (the 35% cold fill is not below the 35% limit), only the cold lube oil", () => {
+    expect(activeAlarms(coldPlant())).toEqual([])
+    expect(activeAlarms(makeInitialState())).toEqual(["lubeOilPressureLow"])
   })
 
   test("a newly raised boiler low alarm drops the playback from a higher speed to 1x, a pause stays a pause", () => {
@@ -186,7 +199,7 @@ describe("boiler and deaerator level alarms (#137)", () => {
   test("a newly raised deaerator low alarm drops the playback from a higher speed to 1x, a pause stays a pause", () => {
     // Just above 25% on a hot deaerator with the feed pump open: the level crosses within a few ticks
     const start = (speed: SimulationState["speed"]): SimulationState => {
-      const plant: PowerPlantState = makeInitialState()
+      const plant: PowerPlantState = coldPlant()
       const deaerator = { ...makeHotDeaerator((CstDeaerator.LowLevel + 0.0005) * CstDeaerator.TotalVolume), feedPumpValvePosition: 1 }
       return { ...makeInitialSimulation({ ...plant, Deaerator: deaerator }), speed }
     }
@@ -200,7 +213,7 @@ describe("boiler and deaerator level alarms (#137)", () => {
 describe("steam temperature alarm (ADR 0044)", () => {
   const { AlarmTemperature, SteamTemperature } = CstSuperheater
   const at = (steamTemperature: number): PowerPlantState => {
-    const base: PowerPlantState = makeInitialState()
+    const base: PowerPlantState = coldPlant()
     return { ...base, Boiler: { ...base.Boiler, steamTemperature } }
   }
 
@@ -218,5 +231,36 @@ describe("steam temperature alarm (ADR 0044)", () => {
 
   test("the held steam does not raise it", () => {
     expect(activeAlarms(at(SteamTemperature))).toEqual([])
+  })
+})
+
+describe("lube oil pressure low alarm (#160, ADR 0050)", () => {
+  const withOil = (headerPressure: number): PowerPlantState => ({ ...makeInitialState(), Oil: { pumpRunning: false, headerPressure } })
+
+  test("is lit on the cold plant, with the pump off and no turbine running", () => {
+    expect(activeAlarms(makeInitialState())).toContain("lubeOilPressureLow")
+  })
+
+  test.each([
+    [CstOil.PermissivePressure - 0.01, true],
+    [CstOil.PermissivePressure, false],
+    [CstOil.NominalPressure, false],
+  ])("at %f bar g it is active: %s (below the permissive pressure)", (pressure: number, on: boolean) => {
+    expect(activeAlarms(withOil(pressure)).includes("lubeOilPressureLow")).toBe(on)
+  })
+})
+
+describe("gland steam shut off alarm (#177, ADR 0047)", () => {
+  const withFlag = (glandSteamShutOff: boolean): PowerPlantState => {
+    const state: PowerPlantState = makeInitialState()
+    return { ...state, Turbine: { ...state.Turbine, glandSteamShutOff } }
+  }
+
+  test("is lit by the flag only, a warning owned by the Turbine aux part", () => {
+    expect(activeAlarms(withFlag(true))).toContain("glandSteamShutOff")
+    expect(activeAlarms(withFlag(false))).not.toContain("glandSteamShutOff")
+    const alarm = ALARMS.find((a) => a.id === "glandSteamShutOff")
+    expect(alarm?.part).toBe("turbineAux")
+    expect(alarm?.severity).toBe("warning")
   })
 })

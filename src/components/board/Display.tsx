@@ -2,6 +2,8 @@
 
 import type { CSSProperties } from "react"
 import "./board.css"
+import type { BoardState } from "../../navigation/boardState"
+import { useBoardState } from "./boardStateContext"
 
 type DisplayProps = {
   readonly label: string
@@ -11,9 +13,14 @@ type DisplayProps = {
   readonly flashing?: boolean
   // The widest text this readout can show; the box keeps that width so it does not resize as the text changes
   readonly widest?: string
+  // On the safety bus: stays readable on the emergency board (the simulated clock)
+  readonly exempt?: boolean
 }
 
-export function Display({ label, text, alarm = false, flashing = false, widest }: DisplayProps) {
+export function Display({ label, text, alarm = false, flashing = false, widest, exempt = false }: DisplayProps) {
+  // The LCDs are on the vital bus: blank while it is dead (#144)
+  const boardState: BoardState = useBoardState()
+  const blank: boolean = !exempt && boardState !== "normal"
   const classes: string = [
     "board-display",
     alarm ? "board-display-alarm" : "",
@@ -26,7 +33,7 @@ export function Display({ label, text, alarm = false, flashing = false, widest }
     widest === undefined ? undefined : ({ "--board-display-chars": widest.length } as CSSProperties)
   return (
     <output className={classes} aria-label={label} style={style}>
-      {text}
+      {blank ? "" : text}
     </output>
   )
 }

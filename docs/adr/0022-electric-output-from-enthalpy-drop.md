@@ -12,5 +12,5 @@ The old value ignored the real steam flow and steam conditions and was dimension
 
 - **Second steam table, keyed by pressure** (`steamEntropyData.ts`, IAPWS-IF97, 0.01–220 bar, rows 12% apart, interpolated in ln(pressure)). The existing table starts at 80 °C (0.474 bar), above any condenser pressure, and has no entropy; extending it would have changed the steam density of #46 (the finer table, [ADR 0025](0025-finer-steam-table-for-density-slope.md)) and every snapshot.
 - **`TurbineTick` no longer takes the valve position**: the output uses the flow in the turbine state.
-- **Snapshots may chain**: `turbine-sync` becomes a snapshot source (from `turbine-runup`) so `turbine-load` starts from the turbine-sync end state, as #14 requires. `pnpm sim:snapshots` writes the sources in order.
+- **Snapshots may chain**: `turbine-sync` becomes a snapshot source (from `turbine-runup`) so `turbine-load` starts from the turbine-sync end state, as #14 requires. `pnpm sim:snapshots` writes the sources in order and loads each one only after the previous snapshot is saved, so one run leaves the chain fresh (#83).
 - Superheat: added in #113 with a separate superheated table ([ADR 0044](0044-superheater-with-spray-attemperator.md)). Not modelled: net demand in MW (the operator's load setpoint of #71 replaces it).

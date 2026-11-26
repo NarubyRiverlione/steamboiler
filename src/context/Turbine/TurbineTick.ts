@@ -11,7 +11,8 @@ import {
   maxTurbineValvePosition,
 } from "../../utils/turbineCalculations"
 import { shaftDropWithExtraction } from "../../utils/extractionHeater"
-import { SpeedMode, TurbineState } from "../PowerPlantState"
+import { OilState, SpeedMode, TurbineState } from "../PowerPlantState"
+import { isBelowOilTripLimit, isTurbineRunning } from "../Oil/OilTick"
 
 const { CstTurbine } = CstSimulation
 
@@ -27,6 +28,8 @@ const SecondsPerMinute = 60
  * @param condenserPressure - The current condenser pressure (mbar absolute), checked against the vacuum limit.
  * @param extractionFlow - The steam (kg/s) the heater took at the tap in the last tick, which no longer does work after the tap (ADR 0031).
  * @param steamTemperature - The steam temperature (°C) after the superheater (ADR 0044); saturated steam when left out.
+ * @param rollPermissive - False below the lube oil permissive pressure (ADR 0050) or on a stopped rotor off the turning gear (ADR 0051): the Ramp up / Hold PID may not open the valve.
+ * @param houseLoad - The auxiliary load (MW) in house load operation (#182): the generator carries it at once and the load setpoint is ignored; undefined with the grid supply breaker closed.
  * @returns The updated turbine state.
  */
 function TurbineTick(
@@ -35,30 +38,46 @@ function TurbineTick(
   condenserPressure: number,
   extractionFlow = 0,
   steamTemperature = 0,
+  rollPermissive = true,
+  auxiliaryLoad = 0,
 ): TurbineState {
-  const { ticked, newRPM, generatorBreaker } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature)
+  const { ticked, newRPM, connected } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature, auxiliaryLoad)
 
   // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) an open valve trips
   if (isTripCondition(newRPM, condenserPressure) && turbineState.turbineValvePosition > 0) return { ...ticked, ...turbineTrip }
 
-  return { ...ticked, ...speedControlTick(turbineState, newRPM, generatorBreaker, condenserPressure) }
+  return { ...ticked, ...speedControlTick(turbineState, newRPM, connected, condenserPressure, rollPermissive) }
 }
 
 // True above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040)
 const isTripCondition = (rpm: number, condenserPressure: number): boolean =>
   isAboveVacuumLimit(condenserPressure) || isAtOverspeed(rpm)
 
-type ShaftTick = { ticked: TurbineState; newRPM: number; generatorBreaker: boolean }
+// The load on the shaft this tick: the setpoint ramp with the generator breaker closed, the auxiliary load in the island, else none
+function shaftLoad(turbine: TurbineState, auxiliaryLoad: number): number {
+  if (turbine.generatorBreaker) return loadAfter(turbine.electricOutput, turbine.loadSetpoint)
+  return turbine.unitAuxBreaker ? auxiliaryLoad : 0
+}
+
+// Both breakers auto-open when the new speed leaves the sync window (ADR 0027, #189)
+const breakersAfter = (turbine: TurbineState, rpm: number): Pick<TurbineState, "generatorBreaker" | "unitAuxBreaker"> => ({
+  generatorBreaker: turbine.generatorBreaker && isAtSyncSpeed(rpm),
+  unitAuxBreaker: turbine.unitAuxBreaker && isAtSyncSpeed(rpm),
+})
+
+type ShaftTick = { ticked: TurbineState; newRPM: number; connected: boolean }
 
 // The shaft and the generator for one tick: the enthalpy drop (less what the extraction steam no longer does after the tap)
 // gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed only) and is a resisting
-// torque on the shaft, never derived from the steam flow (ADR 0027). The breaker auto-opens outside the sync margin and the load drops with it.
+// torque on the shaft, never derived from the steam flow (ADR 0027). With the generator breaker open and the unit aux breaker closed (house load operation, the island) it is the auxiliary load,
+// stepped at once (#182, #189). Both breakers auto-open outside the sync margin and the load drops with it.
 function shaftTick(
   turbineState: TurbineState,
   boilerPressure: number,
   condenserPressure: number,
   extractionFlow: number,
   steamTemperature: number,
+  auxiliaryLoad: number,
 ): ShaftTick {
   const enthalpyDrop: number = shaftDropWithExtraction(
     boilerPressure,
@@ -67,17 +86,19 @@ function shaftTick(
     extractionFlow,
     steamTemperature,
   )
-  const load: number = turbineState.generatorBreaker ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint) : 0
+  const load: number = shaftLoad(turbineState, auxiliaryLoad)
   const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
-  const generatorBreaker: boolean = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
+  const { generatorBreaker, unitAuxBreaker } = breakersAfter(turbineState, newRPM)
+  const connected: boolean = generatorBreaker || unitAuxBreaker
   const ticked: TurbineState = {
     ...turbineState,
-    electricOutput: generatorBreaker ? load : 0,
+    electricOutput: connected ? load : 0,
     loadSetpoint: generatorBreaker ? turbineState.loadSetpoint : 0,
     rpm: newRPM,
     generatorBreaker,
+    unitAuxBreaker,
   }
-  return { ticked, newRPM, generatorBreaker }
+  return { ticked, newRPM, connected }
 }
 
 // The Ramp up / Hold PID may move the valve, never past the cap; while tripped it may not open (only a trip reset clears the flag, ADR 0043).
@@ -85,13 +106,14 @@ function shaftTick(
 function speedControlTick(
   turbineState: TurbineState,
   newRPM: number,
-  generatorBreaker: boolean,
+  connected: boolean,
   condenserPressure: number,
+  rollPermissive: boolean,
 ): Pick<TurbineState, "runUpPoint"> & SpeedControl {
   const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
-  const lostSync: boolean = turbineState.speedMode === "synchronised" && !generatorBreaker
+  const lostSync: boolean = turbineState.speedMode === "synchronised" && !connected
   const control: TurbineState = lostSync ? { ...turbineState, speedMode: "hold", runUpPoint: CstTurbine.SyncRPM } : turbineState
-  const pid = updateTurbineValve(control, newRPM, turbineTripped ? currentPosition : maxTurbineValvePosition(currentPosition, condenserPressure))
+  const pid = updateTurbineValve(control, newRPM, turbineTripped || !rollPermissive ? currentPosition : maxTurbineValvePosition(currentPosition, condenserPressure))
   return { runUpPoint: control.runUpPoint, ...pid }
 }
 
@@ -109,6 +131,11 @@ const turbineTrip: Pick<TurbineState, keyof SpeedControl | "turbineTripped"> = {
 // Turbine trip from outside the turbine (boiler high-high level, ADR 0041): an open valve trips, a shut one is left alone
 export function TurbineTripWhenOpen(turbineState: TurbineState): TurbineState {
   return turbineState.turbineValvePosition > 0 ? { ...turbineState, ...turbineTrip } : turbineState
+}
+
+// Turbine trip on low lube oil header pressure (ADR 0050): a running turbine (rpm above the running speed or the valve open) trips, a stopped one does not
+export function TurbineTripOnLowOil(turbineState: TurbineState, oil: OilState): TurbineState {
+  return isBelowOilTripLimit(oil) && isTurbineRunning(turbineState) ? { ...turbineState, ...turbineTrip } : turbineState
 }
 
 // Low-pressure closure: at or below the minimum pressure at the start of the tick the main steam valve closes, before

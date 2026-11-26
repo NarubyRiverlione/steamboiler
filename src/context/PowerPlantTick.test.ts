@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstDeaerator, CstHeater, CstPhysics, CstSimulation } from "./const"
+import { CstDeaerator, CstOil, CstHeater, CstPhysics, CstSimulation } from "./const"
 import { getWaterSpecificVolume } from "../utils/steamTable"
 import { calculateSteamInventory } from "../utils/boilerCalculations"
 import PowerPlantState from "./PowerPlantState"
@@ -8,7 +8,8 @@ import { makeInitialState } from "./PowerPlantReducer"
 import { makeHotDeaerator } from "./Deaerator/DeaeratorTick"
 
 const { CstBoiler } = CstSimulation
-const cold = makeInitialState()
+// The lube oil pump runs: the turbine valve may open (ADR 0050)
+const cold: PowerPlantState = { ...makeInitialState(), Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure } }
 const { AmbientTemperature } = CstPhysics
 const litresPerKg: number = getWaterSpecificVolume(AmbientTemperature)
 

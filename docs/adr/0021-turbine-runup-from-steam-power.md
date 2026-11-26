@@ -1,6 +1,6 @@
 # The turbine runs up on steam power, in Ramp up mode between fixed run-up points
 
-**Status: accepted; implemented: the speed model (#69), the speed modes and the run-up rate (#70).** Split from #66.
+**Status: accepted; implemented: the speed model (#69), the speed modes and the run-up rate (#70).** Split from #66. [ADR 0048](0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) M3 amends it with a steam-to-metal mismatch permissive on the roll and a heat soak at 2500 rpm.
 
 The turbine's speed follows from the **shaft power** the steam delivers (flow × enthalpy drop × efficiency), minus losses that rise steeply with speed, on a shaft line with a real inertia. The turbine has three **speed modes**: Free (the operator moves the valve), Ramp up (the PID takes the turbine to a fixed run-up point at the run-up rate) and Hold (the PID keeps it there). Every start is meant to go through Ramp up. The fixed turbine valve opening that has to land on an asymptote is no longer used.
 
@@ -40,7 +40,7 @@ So the steam flow is about right, but the model turns it into speed far too slow
 | **Free** | the operator | none | always |
 | **Ramp up** | the PID | the speed reference, moving up at the run-up rate | main steam valve open and the selected point above the current speed |
 | **Hold** | the PID | the selected run-up point, no ramp | within ±5 rpm of the selected point |
-| **Synchronised** | the PID (as Hold) | 3000 rpm | closing the generator breaker; never selected (#135) |
+| **Synchronised** | the PID (as Hold) | 3000 rpm | closing the generator breaker, or the unit aux breaker with the generator breaker open (#189); never selected (#135) |
 
 - **Run-up points:** the operator picks 500, 1500, 2500 or 3000 rpm. There is no free setpoint, so a setpoint step can never reach Hold.
 - **Arrival:** when the speed reference reaches the selected point and the speed is within ±5 rpm of it, Ramp up engages Hold at that point. The turbine stays there until the operator picks a higher point, which starts Ramp up again, or switches to Free.

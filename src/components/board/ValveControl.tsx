@@ -22,6 +22,7 @@ type ValveControlProps = {
   readonly Step: number // percent per arrow key press or wheel notch
   readonly Pump?: boolean // a pump knob has its own cap tint
   readonly Caption?: string // visible heading of the knob, when it differs from Label
+  readonly Notice?: string // a reason shown without locking the valve, as an opening the plant refuses while closing stays allowed
   readonly Disabled?: string // the reason the operator cannot move the valve (the plant moves it): the knob turns display-only, the buttons disabled, the reason shown
 }
 
@@ -86,6 +87,7 @@ export function ValveControl({
   Step,
   Caption,
   Disabled,
+  Notice,
   Pump = false,
 }: ValveControlProps) {
   const { commanded, command } = useValveRamp(ValveId)
@@ -134,7 +136,7 @@ export function ValveControl({
           onNudge={nudge}
         />
       </div>
-      <ValveReason reason={Disabled} />
+      <ValveReason reason={Disabled ?? Notice} />
       <ValveValues label={Label} value={Value} widest={ValueWidest} percent={percent} />
     </div>
   )

@@ -6,6 +6,7 @@ import {
   calculateRPM,
   generatorFrequency,
   isAboveVacuumLimit,
+  generatorBreakerCloseRefusal,
   isAtSyncSpeed,
   isAtOverspeed,
   loadAfter,
@@ -112,6 +113,25 @@ describe("loadSetpointRefusal", () => {
   test("allowed with the breaker closed, in any speed mode", () => {
     for (const speedMode of ["free", "rampUp", "hold"] as const)
       expect(loadSetpointRefusal({ ...turbine, generatorBreaker: true, speedMode })).toBeUndefined()
+  })
+})
+
+describe("generatorBreakerCloseRefusal", () => {
+  const open = { ...makeInitialState().Turbine, generatorBreaker: false }
+  const margin = CstTurbine.BreakerRPMMargin
+
+  test("refused below and above the window, with a reason", () => {
+    expect(generatorBreakerCloseRefusal({ ...open, rpm: CstTurbine.SyncRPM - margin - 1 })).toBeTypeOf("string")
+    expect(generatorBreakerCloseRefusal({ ...open, rpm: CstTurbine.SyncRPM + margin + 1 })).toBeTypeOf("string")
+  })
+
+  test("allowed at the window edges and inside", () => {
+    for (const rpm of [CstTurbine.SyncRPM - margin, CstTurbine.SyncRPM, CstTurbine.SyncRPM + margin])
+      expect(generatorBreakerCloseRefusal({ ...open, rpm })).toBeUndefined()
+  })
+
+  test("opening is never refused", () => {
+    expect(generatorBreakerCloseRefusal({ ...open, generatorBreaker: true, rpm: 0 })).toBeUndefined()
   })
 })
 

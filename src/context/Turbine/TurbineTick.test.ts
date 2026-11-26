@@ -7,7 +7,7 @@ import { loadAfter, ratedOutputMW } from "../../utils/turbineCalculations"
 import { getInletIsentropicDrop } from "../../utils/steamTable"
 
 describe("TurbineTick", () => {
-  const initialState: TurbineState = { 
+  const initialState: TurbineState = { unitAuxBreaker: false,
     electricOutput: 0,
     loadSetpoint: 0,
     bypassValvePosition: 0,
@@ -22,6 +22,9 @@ describe("TurbineTick", () => {
     generatorBreaker: false,
     pidIntegralError: 0,
     turbineTripped: false,
+    turningGearEngaged: false,
+    glandSteamOn: false,
+    glandSteamShutOff: false,
   }
   
   const valvePositions = [0, 0.25, 0.5, 0.75, 1]
@@ -76,6 +79,16 @@ describe("TurbineTick", () => {
       const second: TurbineState = TurbineTick(first, 165, 100)
       expect(second.electricOutput).toBeCloseTo(loadAfter(first.electricOutput, 100), 9)
       expect(second.loadSetpoint).toBe(100)
+    })
+
+    it("in house load operation (unit aux breaker closed, generator breaker open) the load steps to the auxiliary load at once (#182, #189)", () => {
+      const island: TurbineState = { ...synced, generatorBreaker: false, unitAuxBreaker: true, electricOutput: 50, loadSetpoint: 0 }
+      expect(TurbineTick(island, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7).electricOutput).toBe(7)
+    })
+
+    it("with both breakers closed the load follows the setpoint, not the auxiliary load", () => {
+      const tied: TurbineState = { ...synced, unitAuxBreaker: true, electricOutput: 50, loadSetpoint: 50, turbineSteamFlowOut: flowFor(50, 165, 31) }
+      expect(TurbineTick(tied, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7).electricOutput).toBe(50)
     })
 
     it("lowers the load at the load rate when the setpoint drops, and stops at the setpoint", () => {

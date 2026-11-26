@@ -122,7 +122,19 @@ describe("Deaerator page", () => {
 
   it("shows the warning text of the flag that is set", () => {
     renderDeaerator({ warnVentClosedWithAir: true })
-    expect(screen.getByRole("status", { name: "Deaerator warning" }).textContent).toMatch(/closed with air/)
+    const line: HTMLElement = screen.getByRole("status", { name: "Deaerator warning" })
+    expect(line.textContent).toMatch(/closed with air/)
+    expect(line.className).toBe("board-lcd-msg")
+  })
+
+  it("shows the open-with-no-air warning in the LCD line", () => {
+    renderDeaerator({ warnVentClosedWithAir: false, warnVentOpenNoAir: true })
+    expect(screen.getByRole("status", { name: "Deaerator warning" }).textContent).toMatch(/no air left/)
+  })
+
+  it("shows no warning line without a flag", () => {
+    renderDeaerator({ warnVentClosedWithAir: false, warnVentOpenNoAir: false })
+    expect(screen.queryByRole("status", { name: "Deaerator warning" })).toBeNull()
   })
 })
 

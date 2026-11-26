@@ -14,7 +14,7 @@ export function runTicks(state: PowerPlantState, count: number): BatchResult {
     ticksRun++
     const raised: boolean = newAlarms(current, next).length > 0
     current = next
-    if (raised) break
+    if (raised || next.simulationEnded) break
   }
   return { state: current, ticksRun }
 }

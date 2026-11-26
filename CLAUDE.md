@@ -7,7 +7,9 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 ## Rules
 
 - **Branches**: every ticket on its own branch or worktree from `dev`, merged back locally (no pull request) once its
-  gate passes; never commit on `dev` directly, except a regenerated `ROADMAP.md` (`pnpm roadmap`). Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
+  gate passes; never commit on `dev` directly, except a regenerated `ROADMAP.md` (`pnpm roadmap`)
+  and a documentation-only commit (`docs/`, `GLOSSARY.md`, `README.md`; no code, tests, scenarios or snapshots; a doc that
+  goes with a code change stays on its ticket branch). Into `main` only by pull request. Never commit, merge or push to `main` unless the owner explicitly says so
   (`main` = milestone releases, auto-deployed to GitHub Pages). Gates per merge: `docs/dev/branching.md`.
 - **Realism**: never add a magic number to speed up a process; playability comes from sizing utilities.
   Record every over-dimensioned utility or deliberate reduction in `docs/plant/design-basis.md`.
@@ -28,7 +30,10 @@ Simulation core is pure functions in `src/context/` (`PowerPlantTick`, `BoilerTi
 GitHub Issues (`NarubyRiverlione/steamboiler`) via `gh`; labels and domain docs in `docs/agents/`.
 Work from `ROADMAP.md`: `P1`/`P2` tickets first, otherwise the next ready ticket of the theme the owner picks (no theme is active; the owner moves freely).
 New tickets get a theme label (`electrical`, `turbine-aux`, `plant-systems`, `alarms`, `scenario`, `ui`, `sim-core`; see `docs/agents/issue-tracker.md`), `P1`/`P2` only when broken or wrong, and blocked-by links. A new idea stays
-`needs-triage` until the owner promotes it. After creating or closing one, run `pnpm roadmap` and commit `ROADMAP.md`.
+`needs-triage` until the owner promotes it. After creating one (not on closing: that gave merge conflicts), run `pnpm roadmap` and commit `ROADMAP.md`.
+Before starting a ticket, compare its brief with the ADR/doc commits and the tickets closed since the brief was written; list any conflict and ask the owner before coding.
+During a ticket, a deviation from the brief (a workaround, a dropped item, a rule read differently) means stop and ask; don't report it at close.
+When a ticket gets new decisions, rewrite its brief in place; don't add "addition to the brief" comments.
 Before closing, run `git grep "#<ticket>" docs/adr` and update every ADR the ticket makes out of date, then run the `crap-score-typescript` skill on the files the ticket changed (list them with
 `git diff --name-only dev...HEAD -- '*.ts' '*.tsx'`, pass them as file paths; never use `--changed`, it sees only uncommitted
 changes and the work is already committed; a full run takes ~150 s on slow hardware), report the scores (also in

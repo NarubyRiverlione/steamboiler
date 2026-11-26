@@ -12,6 +12,27 @@ export const airPumpOn: ScenarioAction = {
   action: { type: "SET_AIR_EXTRACTION_PUMP_ENABLED", payload: { isAirExtractionPumpEnabled: true } },
 }
 
+// t=0: lube oil pump on, the first step of the start-up order (ADR 0050). The turbine valve cannot be opened without the header pressure.
+export const oilPumpOn: ScenarioAction = { at: 0, action: { type: "SET_OIL_PUMP", payload: { pumpRunning: true } } }
+
+// The start-up order after the oil (ADR 0047, ADR 0051): once the header has built, the turning gear takes the stopped rotor and the
+// gland steam goes on. A scenario that starts from cold and runs hot or running uses these, so its glands are sealed as before.
+export const GearEngageAt = 20 // s, after the oil header has built past the permissive (about 6 s)
+export const glandSteamUp: ScenarioAction[] = [
+  { at: GearEngageAt, action: { type: "SET_TURNING_GEAR", payload: { engaged: true } } },
+  { at: GearEngageAt + 1, action: { type: "SET_GLAND_STEAM", payload: { on: true } } },
+]
+
+// The settled bypass-loop standby has the lube oil, the turning gear and the gland steam on. A scenario that needs the stopped rotor
+// off the gear and the oil to build from empty starts from this state instead.
+export function withStoppedRotor(state: PowerPlantState): PowerPlantState {
+  return {
+    ...state,
+    Oil: { pumpRunning: false, headerPressure: 0 },
+    Turbine: { ...state.Turbine, turningGearEngaged: false, glandSteamOn: false, rpm: 0 },
+  }
+}
+
 // At pressure: open the main steam valve and hold the vacuum (SJAE on and open, recirculation pump
 // open so the exhaust condenses, condensation pump and feed pump open so the condensate returns to the boiler),
 // then crack the bypass valve to build pressure (the turbine valve stays shut: a cracked turbine valve would spin the

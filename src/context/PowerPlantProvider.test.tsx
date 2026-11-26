@@ -157,6 +157,11 @@ describe("simulation loop", () => {
 function flatten(state: PowerPlantState): Record<string, unknown> {
   const flat: Record<string, unknown> = {}
   for (const [slice, fields] of Object.entries(state)) {
+    // Top-level scalars (the bus breakers) are their own key
+    if (typeof fields !== "object") {
+      flat[slice] = fields
+      continue
+    }
     for (const [field, value] of Object.entries(fields as Record<string, unknown>)) flat[`${slice}.${field}`] = value
   }
   return flat
@@ -233,6 +238,64 @@ const rows: Row[] = [
       "Turbine.pidIntegralError": 0,
       "Turbine.speedReference": s.Turbine.rpm,
     }),
+  },
+  { name: "toggleGridSupplyBreaker", act: (c) => { c.toggleGridSupplyBreaker(); }, expected: () => ({ gridSupplyBreaker: false }) },
+  { name: "toggleUnitAuxBreaker", act: (c) => { c.toggleUnitAuxBreaker(); }, expected: () => ({ "Turbine.unitAuxBreaker": true, gridSupplyBreaker: false }) },
+  { name: "setDieselRun", act: (c) => { c.setDieselRun(true); }, expected: () => ({ "Diesel.status": "starting" }) },
+  {
+    name: "toggleDieselBreaker (close)",
+    prepare: (s) => {
+      s.gridSupplyBreaker = false
+      s.Diesel.status = "running"
+    },
+    act: (c) => { c.toggleDieselBreaker(); },
+    expected: () => ({ dieselBreaker: true }),
+  },
+  {
+    name: "toggleDieselBreaker (open)",
+    prepare: (s) => {
+      s.dieselBreaker = true
+    },
+    act: (c) => { c.toggleDieselBreaker(); },
+    expected: () => ({ dieselBreaker: false }),
+  },
+  { name: "toggleUpsBreaker", act: (c) => { c.toggleUpsBreaker(); }, expected: (s) => ({ upsBreaker: !s.upsBreaker }) },
+  { name: "toggleOilPump", act: (c) => { c.toggleOilPump(); }, expected: (s) => ({ "Oil.pumpRunning": !s.Oil.pumpRunning }) },
+  {
+    name: "toggleTurningGear (engage)",
+    prepare: (s) => {
+      s.Oil.pumpRunning = true
+      s.Oil.headerPressure = 1
+      s.Turbine.rpm = 0
+    },
+    act: (c) => { c.toggleTurningGear(); },
+    expected: () => ({ "Turbine.turningGearEngaged": true }),
+  },
+  {
+    name: "toggleTurningGear (disengage)",
+    prepare: (s) => {
+      s.Turbine.turningGearEngaged = true
+    },
+    act: (c) => { c.toggleTurningGear(); },
+    expected: () => ({ "Turbine.turningGearEngaged": false }),
+  },
+  {
+    name: "toggleGlandSteam (admit)",
+    prepare: (s) => {
+      s.Turbine.glandSteamOn = false
+      s.Turbine.turningGearEngaged = true
+    },
+    act: (c) => { c.toggleGlandSteam(); },
+    expected: () => ({ "Turbine.glandSteamOn": true }),
+  },
+  {
+    name: "toggleGlandSteam (shut off)",
+    prepare: (s) => {
+      s.Turbine.glandSteamOn = true
+      s.Turbine.turningGearEngaged = true
+    },
+    act: (c) => { c.toggleGlandSteam(); },
+    expected: () => ({ "Turbine.glandSteamOn": false }),
   },
   { name: "setLoadSetpoint", act: (c) => { c.setLoadSetpoint(50); }, expected: () => ({ "Turbine.loadSetpoint": 50 }) },
   { name: "toggleDeaeratorVent", act: (c) => { c.toggleDeaeratorVent(); }, expected: () => ({ "Deaerator.startUpVentOpen": true }) },

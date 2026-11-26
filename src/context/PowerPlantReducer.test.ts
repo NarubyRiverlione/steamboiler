@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CstDeaerator, CstSimulation, CstSuperheater } from "./const"
+import { CstDeaerator, CstOil, CstSimulation, CstSuperheater } from "./const"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { SpeedMode } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -7,7 +7,8 @@ import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import { ratedOutputMW } from "../utils/turbineCalculations"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const base = makeInitialState()
+// The lube oil pump runs: the turbine valve may open (ADR 0050)
+const base: PowerPlantState = { ...makeInitialState(), Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure } }
 const reduce = (action: PowerPlantAction, state: PowerPlantState = base) => powerPlantReducer(state, action)
 
 describe("powerPlantReducer", () => {
@@ -125,6 +126,13 @@ describe("powerPlantReducer", () => {
       expect(reduce({ type: "SET_SJAE_ENABLED", payload: { isSjaeEnabled: true } }).Condenser.isSjaeEnabled).toBe(
         true,
       )
+    })
+
+    test("a tripped air pump cannot be started but can be stopped (#166)", () => {
+      const cold: PowerPlantState = makeInitialState()
+      const tripped: PowerPlantState = { ...cold, Condenser: { ...cold.Condenser, airPumpTripped: true } }
+      const start = reduce({ type: "SET_AIR_EXTRACTION_PUMP_ENABLED", payload: { isAirExtractionPumpEnabled: true } }, tripped)
+      expect(start.Condenser.isAirExtractionPumpEnabled).toBe(false)
     })
 
     const valves = [
@@ -297,8 +305,8 @@ describe("powerPlantReducer", () => {
         type === "ADJUST_STEAM_BYPASS_VALVE"
           ? { type, payload: { bypassValvePosition: delta } }
           : { type, payload: { turbineValvePosition: delta } }
-      // under vacuum, so the turbine valve may open
-      const vacuum = { ...base, Condenser: { ...base.Condenser, pressure: CstCondenser.VacuumLimit } }
+      // under vacuum and with the rotor on the turning gear, so the turbine valve may open
+      const vacuum = { ...base, Condenser: { ...base.Condenser, pressure: CstCondenser.VacuumLimit }, Turbine: { ...base.Turbine, turningGearEngaged: true } }
       const opened = reduce(act(0.3), vacuum)
       expect(opened.Turbine[field]).toBe(0.3)
       expect(reduce(act(5), vacuum).Turbine[field]).toBe(1)
@@ -343,7 +351,7 @@ describe("powerPlantReducer", () => {
       const atCondenser = (pressure: number, turbineValvePosition = 0): PowerPlantState => ({
         ...base,
         Condenser: { ...base.Condenser, pressure },
-        Turbine: { ...base.Turbine, turbineValvePosition },
+        Turbine: { ...base.Turbine, turbineValvePosition, turningGearEngaged: true }, // the rotor turns, so only the vacuum can refuse
       })
       const turbineValve = (delta: number, state: PowerPlantState) =>
         reduce({ type: "ADJUST_STEAM_TURBINE_VALVE", payload: { turbineValvePosition: delta } }, state).Turbine
@@ -484,6 +492,11 @@ describe("powerPlantReducer", () => {
         expect(toggle(atRpm(CstTurbine.SyncRPM + margin + 1)).generatorBreaker).toBe(false)
         expect(toggle(atRpm(CstTurbine.MaxRPM)).generatorBreaker).toBe(false)
         expect(toggle(atRpm(0)).generatorBreaker).toBe(false)
+      })
+
+      test("a close outside the window leaves the state unchanged", () => {
+        const outside: PowerPlantState = atRpm(CstTurbine.SyncRPM + CstTurbine.BreakerRPMMargin + 1)
+        expect(reduce({ type: "TOGGLE_GENERATOR_BREAKER" }, outside)).toBe(outside)
       })
 
       test("opens when closed", () => {

@@ -1,8 +1,6 @@
-import { finalState } from "./scenario"
-import { saveSnapshot, withNeutralGas } from "./snapshot"
+import { saveSnapshot } from "./snapshot"
 import { snapshotSources } from "./snapshot-sources"
+import { writeSnapshots } from "./snapshot-writer"
 
 // usage: pnpm sim:snapshots — regenerate every committed snapshot from its source scenario
-for (const [name, scenario] of Object.entries(snapshotSources)) {
-  console.log(`${name} <- ${scenario.name}: ${saveSnapshot(name, withNeutralGas(finalState(scenario)))}`)
-}
+await writeSnapshots(snapshotSources, saveSnapshot, console.log)

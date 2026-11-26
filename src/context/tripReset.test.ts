@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { CstDeaerator, CstSimulation } from "./const"
+import { CstDeaerator, CstOil, CstSimulation } from "./const"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import { isTripped, tripResetRefusal, type TripId } from "./tripReset"
 
 const { CstBoiler, CstCondenser, CstTurbine } = CstSimulation
-const base: PowerPlantState = makeInitialState()
+// The lube oil pump runs: its trip cause has gone (ADR 0050)
+const base: PowerPlantState = { ...makeInitialState(), Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure } }
 const reset = (state: PowerPlantState, trip: TripId): PowerPlantState => powerPlantReducer(state, { type: "RESET_TRIP", payload: { trip } })
 
 const boilerAt = (level: number, extra: Partial<PowerPlantState["Boiler"]> = {}): PowerPlantState => ({
@@ -75,6 +76,19 @@ describe("trip reset (ADR 0043)", () => {
     })
   })
 
+  describe("air pump", () => {
+    const tripped = (sealWaterTemperature: number): PowerPlantState => ({
+      ...base,
+      Condenser: { ...base.Condenser, sealWaterTemperature, airPumpTripped: true },
+    })
+
+    test("refused while the seal water is above the warning temperature, allowed under it", () => {
+      const hot: PowerPlantState = tripped(CstCondenser.CAR_SealWaterWarning)
+      expect(reset(hot, "airPump")).toBe(hot)
+      expect(reset(tripped(CstCondenser.CAR_SealWaterWarning - 1), "airPump").Condenser.airPumpTripped).toBe(false)
+    })
+  })
+
   describe("turbine", () => {
     const tripped = (condenserPressure: number, rpm: number, boilerLevel = 0.5): PowerPlantState => ({
       ...base,
@@ -112,7 +126,7 @@ describe("trip reset (ADR 0043)", () => {
   })
 
   test("isTripped reads each flag", () => {
-    const ids: TripId[] = ["burner", "boilerHighHigh", "feedPump", "condensationPump", "turbine"]
-    expect(ids.map((id: TripId) => isTripped(base, id))).toEqual([false, false, false, false, false])
+    const ids: TripId[] = ["burner", "boilerHighHigh", "feedPump", "condensationPump", "airPump", "turbine"]
+    expect(ids.map((id: TripId) => isTripped(base, id))).toEqual([false, false, false, false, false, false])
   })
 })

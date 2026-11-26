@@ -22,6 +22,15 @@ describe("start presets", () => {
     expect(presetState(find("cold")).Boiler.waterVolume).toBe(CstSimulation.CstBoiler.UiStartWaterVolume)
   })
 
+  test("the app starts with the UPS breaker open; the scenario start state keeps it closed", () => {
+    expect(makeUiStartState().upsBreaker).toBe(false)
+    expect(makeInitialState().upsBreaker).toBe(true)
+  })
+
+  test("the Cold & dark preset starts with the UPS breaker open", () => {
+    expect(presetState(find("cold")).upsBreaker).toBe(false)
+  })
+
   test("Hot standby is the bypass-loop snapshot, At pressure the turbine-runup snapshot", () => {
     expect(presetState(find("hot-standby"))).toEqual(loadSnapshot("bypass-loop"))
     expect(presetState(find("at-pressure"))).toEqual(loadSnapshot("turbine-runup"))

@@ -20,9 +20,9 @@ describe("sjae-closed-load", () => {
     expect(samples.some((s) => s.state.Turbine.turbineTripped)).toBe(false)
   })
 
-  test("the pump alone holds the air at a trace and the vacuum at the design vacuum", () => {
+  test("the pump alone holds the air at a few kg and the vacuum at the design vacuum", () => {
     for (const { state } of last) {
-      expect(state.Condenser.airMass).toBeLessThan(0.1)
+      expect(state.Condenser.airMass).toBeLessThan(12) // above L·V/S = 3.3 kg: the pump nears the floor of its seal water (#166)
       expect(state.Condenser.pressure).toBeLessThan(VacuumLimit)
       expect(Math.abs(state.Condenser.pressure - OptimalPressure)).toBeLessThan(20)
     }

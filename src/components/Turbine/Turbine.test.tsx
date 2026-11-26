@@ -13,6 +13,7 @@ type Ctx = ContextType<typeof PowerPlantContext>
 function renderTurbine(patch: Partial<PowerPlantState["Turbine"]> = {}, boilerPressure?: number, condenserPressure?: number) {
   const state: PowerPlantState = makeInitialState()
   state.Turbine = { ...state.Turbine, ...patch }
+  state.Oil = { pumpRunning: true, headerPressure: 1 } // the lube oil is up: its trip cause has gone (ADR 0050)
   if (boilerPressure !== undefined) state.Boiler = { ...state.Boiler, pressure: boilerPressure }
   if (condenserPressure !== undefined) state.Condenser = { ...state.Condenser, pressure: condenserPressure }
   const fns = {
@@ -185,5 +186,25 @@ describe("Turbine page", () => {
     expect(screen.queryByLabelText("Breaker")).toBeNull()
     expect(screen.getByLabelText("Steam flow")).toBeTruthy()
     expect(screen.getByRole("img", { name: "Turbine trip: on" })).toBeTruthy()
+  })
+
+  it("says why the turbine valve will not open on a stopped rotor off the turning gear", () => {
+    renderTurbine({ rpm: 0, turningGearEngaged: false })
+    expect(screen.getByText("Rotor stopped: engage the turning gear to open")).toBeTruthy()
+  })
+
+  it("leaves the turbine valve knob usable, as closing is always allowed", () => {
+    renderTurbine({ rpm: 0, turningGearEngaged: false })
+    expect(screen.getByRole("slider", { name: "Turbine valve knob" }).getAttribute("aria-disabled")).not.toBe("true")
+  })
+
+  it("shows no such reason with the rotor on the gear or rolling", () => {
+    renderTurbine({ rpm: 3, turningGearEngaged: true })
+    expect(screen.queryByText(/engage the turning gear/)).toBeNull()
+  })
+
+  it("shows no such reason with the rotor rolling off the gear", () => {
+    renderTurbine({ rpm: 500, turningGearEngaged: false })
+    expect(screen.queryByText(/engage the turning gear/)).toBeNull()
   })
 })

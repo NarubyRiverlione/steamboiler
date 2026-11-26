@@ -1,13 +1,14 @@
 /** The alarm flags of the plant: the annunciator has one tile per entry, and a part's LED lights from the flags it owns. */
 
-import { CstDeaerator, CstSimulation, CstSuperheater } from "../context/const"
+import { CstDeaerator, CstOil, CstSimulation, CstSuperheater } from "../context/const"
 import { deaeratorLevel } from "../context/Deaerator/DeaeratorTick"
 import type PowerPlantState from "../context/PowerPlantState"
 import { boilerLevel } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
+import { isSealWaterWarning } from "../utils/sealWaterCalculation"
 import type { PartId } from "./plantParts"
 
-export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh"
+export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "airPumpSealWaterHigh" | "airPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh" | "lubeOilPressureLow" | "glandSteamShutOff"
 
 // error = red tile backlight, warning = yellow; every alarm must declare one
 export type AlarmSeverity = "error" | "warning"
@@ -30,6 +31,8 @@ export const ALARMS: readonly Alarm[] = [
   { id: "boilerLevelHigh", label: "Boiler level high", severity: "warning", part: "boiler", active: (s: PowerPlantState) => boilerLevel(s.Boiler.waterVolume) >= HighLevel },
   { id: "boilerLevelHighTripped", label: "Boiler level high-high trip", severity: "error", part: "boiler", active: (s: PowerPlantState) => s.Boiler.boilerLevelHighTripped },
   { id: "condensationPumpTripped", label: "Condensation pump trip", severity: "error", part: "condenser", active: (s: PowerPlantState) => s.Condenser.condensationPumpTripped },
+  { id: "airPumpSealWaterHigh", label: "Air pump seal water hot", severity: "warning", part: "condenser", active: (s: PowerPlantState) => isSealWaterWarning(s.Condenser.sealWaterTemperature) },
+  { id: "airPumpTripped", label: "Air pump trip", severity: "error", part: "condenser", active: (s: PowerPlantState) => s.Condenser.airPumpTripped },
   { id: "turbineTripped", label: "Turbine trip", severity: "error", part: "turbine", active: (s: PowerPlantState) => s.Turbine.turbineTripped },
   { id: "hotwellLevelLow", label: "Hotwell level low", severity: "warning", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) < HotwellLow },
   { id: "hotwellLevelHigh", label: "Hotwell level high", severity: "warning", part: "condenser", active: (s: PowerPlantState) => hotwellLevel(s.Condenser.hotwellWaterVolume) >= HotwellHigh },
@@ -38,5 +41,9 @@ export const ALARMS: readonly Alarm[] = [
   { id: "deaeratorLevelHigh", label: "Deaerator level high", severity: "warning", part: "deaerator", active: (s: PowerPlantState) => deaeratorLevel(s.Deaerator.waterVolume) >= CstDeaerator.HighLevel },
   { id: "deaeratorHighHighTripped", label: "Deaerator level high-high trip", severity: "error", part: "deaerator", active: (s: PowerPlantState) => s.Deaerator.deaeratorHighHighTripped },
   { id: "steamTemperatureHigh", label: "Steam temperature high", severity: "warning", part: "steam", active: (s: PowerPlantState) => s.Boiler.steamTemperature >= CstSuperheater.AlarmTemperature },
+  // Derived (ADR 0050): the header below the permissive pressure, so the cold plant with the pump off starts lit, as the real plant does
+  { id: "lubeOilPressureLow", label: "Lube oil pressure low", severity: "warning", part: "turbineAux", active: (s: PowerPlantState) => s.Oil.headerPressure < CstOil.PermissivePressure },
+  // The plant flag of the automatic shut-off (ADR 0047): the rotor stopped while the steam was on; the tile opens the Turbine aux page
+  { id: "glandSteamShutOff", label: "Gland steam shut off", severity: "warning", part: "turbineAux", active: (s: PowerPlantState) => s.Turbine.glandSteamShutOff },
   { id: "feedPumpTripped", label: "Feed pump trip", severity: "error", part: "deaerator", active: (s: PowerPlantState) => s.Deaerator.feedPumpTripped },
 ]

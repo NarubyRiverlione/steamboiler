@@ -137,9 +137,11 @@ export const invariants: Invariant[] = [
     // Per part: Boiler and Condenser share field names such as pressure
     check: everySample((state) => {
       const bad = Object.entries(state)
-        .flatMap(([part, fields]) => Object.entries(fields).map(([field, value]) => [`${part}.${field}`, value]))
+        .flatMap(([part, fields]): [string, unknown][] =>
+          typeof fields === "object" ? Object.entries(fields as Record<string, unknown>).map(([field, value]): [string, unknown] => [`${part}.${field}`, value]) : [[part, fields]],
+        )
         .find(([, value]) => typeof value === "number" && !Number.isFinite(value))
-      return bad && `${String(bad[0])} is ${String(bad[1])}`
+      return bad && `${bad[0]} is ${String(bad[1])}`
     }),
   },
   {

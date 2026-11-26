@@ -80,8 +80,32 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleGeneratorBreaker = () => {
     dispatch({ type: "TOGGLE_GENERATOR_BREAKER" })
   }
+  const toggleGridSupplyBreaker = () => {
+    dispatch({ type: state.gridSupplyBreaker ? "OPEN_GRID_SUPPLY_BREAKER" : "CLOSE_GRID_SUPPLY_BREAKER" })
+  }
+  const toggleUnitAuxBreaker = () => {
+    dispatch({ type: state.Turbine.unitAuxBreaker ? "OPEN_UNIT_AUX_BREAKER" : "CLOSE_UNIT_AUX_BREAKER" })
+  }
+  const toggleUpsBreaker = () => {
+    dispatch({ type: state.upsBreaker ? "OPEN_UPS_BREAKER" : "CLOSE_UPS_BREAKER" })
+  }
+  const setDieselRun = (run: boolean) => {
+    dispatch({ type: "SET_DIESEL_RUN", payload: { run } })
+  }
+  const toggleDieselBreaker = () => {
+    dispatch({ type: state.dieselBreaker ? "OPEN_DIESEL_BREAKER" : "CLOSE_DIESEL_BREAKER" })
+  }
   const setLoadSetpoint = (loadSetpoint: number) => {
     dispatch({ type: "SET_LOAD_SETPOINT", payload: { loadSetpoint } })
+  }
+  const toggleOilPump = () => {
+    dispatch({ type: "SET_OIL_PUMP", payload: { pumpRunning: !state.Oil.pumpRunning } })
+  }
+  const toggleTurningGear = () => {
+    dispatch({ type: "SET_TURNING_GEAR", payload: { engaged: !state.Turbine.turningGearEngaged } })
+  }
+  const toggleGlandSteam = () => {
+    dispatch({ type: "SET_GLAND_STEAM", payload: { on: !state.Turbine.glandSteamOn } })
   }
   //#endregion
 
@@ -153,6 +177,17 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         selectRunUpPoint,
         setLoadSetpoint,
         toggleGeneratorBreaker,
+        toggleGridSupplyBreaker,
+        toggleUnitAuxBreaker,
+        setDieselRun,
+        toggleDieselBreaker,
+        toggleUpsBreaker,
+        // lube oil action
+        toggleOilPump,
+        // turning gear action
+        toggleTurningGear,
+        // gland steam action
+        toggleGlandSteam,
         // deaerator actions
         toggleDeaeratorVent,
         adjustFeedPumpValvePosition,

@@ -5,7 +5,7 @@ import type { PartId } from "./plantParts"
 
 export type NodeSymbol = "valve" | "pump"
 
-export type Medium = "heat" | "steam" | "water" | "cooling" | "power" | "vacuum"
+export type Medium = "heat" | "steam" | "water" | "cooling" | "power" | "vacuum" | "oil"
 
 export type DiagramNode = {
   readonly id: string
@@ -145,6 +145,7 @@ export const NODES: readonly DiagramNode[] = [
     part: "turbine",
     led: true,
   },
+  { id: "lubeoil", name: ["Turbine aux"], x: 1190, y: 58, w: 120, h: 44, medium: "oil", part: "turbineAux", led: true },
   { id: "generator", name: ["Generator"], x: 1370, y: 146, w: 120, h: 54, medium: "power", part: "generation" },
   { id: "load", name: ["Load"], x: 1550, y: 150, w: 80, h: 46, medium: "power", round: true },
   {
@@ -343,7 +344,7 @@ export const LABELS: readonly DiagramLabel[] = [
   { x: 640, y: 672, text: "Dashed: the reheater, parked in #150." },
 ]
 
-export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "power", "vacuum"]
+export const MEDIA: readonly Medium[] = ["heat", "steam", "water", "cooling", "power", "vacuum", "oil"]
 
 export const DIAGRAM_VALUES: readonly DiagramValue[] = [
   { id: "boilerPressure", node: "boiler", label: "Boiler pressure", widest: "999.9 bar", x: 548, y: 294, anchor: "start" },

@@ -12,7 +12,11 @@ import {
   hotwellLevel,
 } from "../../utils/condenserCalculation"
 import { roomInKg, waterVolumeOf } from "../../utils/boilerCalculations"
+import { isSealWaterTrip, sealWaterTemperatureAfter } from "../../utils/sealWaterCalculation"
 import { CstSimulation } from "../const"
+
+// What the gland seal steam does to the condenser this tick (ADR 0047)
+export type GlandSteamFlow = { sealed: boolean; returnMass: number }
 
 /**
  * One condenser tick: the air inventory, the shell vapour pressure from the heat balance, the condensation and the hotwell (ADR 0035)
@@ -22,6 +26,7 @@ import { CstSimulation } from "../const"
  * @param steamFromBypass Bypass steam flow (kg/s) and its enthalpy (kJ/kg)
  * @param steamFromTurbine Turbine exhaust flow (kg/s) and its enthalpy (kJ/kg), what the shaft left in it
  * @param deaeratorRoom kg of liquid the deaerator can still take, limits the return
+ * @param gland the gland seal steam (ADR 0047): whether it seals the glands, so the air in-leakage takes the sealed rate, and the kg of gland steam the gland condenser returns to the hotwell this tick
  * @param deaeratorHighHigh the deaerator is at its high-high level or its trip is latched (ADR 0045): the pump is shut
  * @returns Action to update the condenser state
  */
@@ -31,12 +36,13 @@ export function CondenserTick(
   steamFromBypass: { flow: number; enthalpy: number },
   steamFromTurbine: { flow: number; enthalpy: number },
   deaeratorRoom: number,
+  gland: GlandSteamFlow,
   deaeratorHighHigh = false,
 ): CondenserState {
   const { DeltaTime, CstCondenser } = CstSimulation
 
   // Air first (ADR 0035): in-leakage, the air extraction pump and the SJAE
-  const { airMass, newIsSjaeEnabled } = calculateAirInventory(condenserState, boilerPressure)
+  const { airMass, newIsSjaeEnabled, pumpFlow } = calculateAirInventory(condenserState, boilerPressure, gland.sealed)
 
   // All turbine exhaust and bypass steam enters the condenser; vacuum does not scale the mass flow
   const totalIntakeRate = steamFromTurbine.flow + steamFromBypass.flow
@@ -57,6 +63,17 @@ export function CondenserTick(
     vapourPressure + airPressureOf(airMass, shellTemperature),
   )
 
+  // Seal water of the air pump (#166): the pump trips on cavitation when it is too hot, from the temperature alone
+  const sealWaterTemperature: number = sealWaterTemperatureAfter(
+    condenserState.sealWaterTemperature,
+    condenserState.isAirExtractionPumpEnabled && !condenserState.airPumpTripped,
+    pumpFlow,
+    vapourPressure,
+    shellTemperature,
+    condenserState.sealWaterCoolerOn,
+  )
+  const airPumpTripped: boolean = condenserState.airPumpTripped || isSealWaterTrip(sealWaterTemperature)
+
   // Room (kg) left in the hotwell; condensation and makeup stop there. Sized at the hotter of the hotwell and the
   // condensate, which takes more volume per kg, so the mix stays within the hotwell volume
   const hotwellRoom = roomInKg(
@@ -71,15 +88,17 @@ export function CondenserTick(
     streams,
     condenserState.recirculationPumpValvePosition,
     vapourPressure,
-    hotwellRoom,
+    Math.max(0, hotwellRoom - gland.returnMass), // the gland condensate takes its room in the hotwell first
   )
-  const waterMassAfterCondensation: number = condenserState.hotwellWaterMass + condensed
+  // The gland steam comes back as condensate at the outlet temperature, on top of the condensed exhaust
+  const condensedWithGland: number = condensed + gland.returnMass
+  const waterMassAfterCondensation: number = condenserState.hotwellWaterMass + condensedWithGland
 
   // Condensate enters the hotwell at the outlet temperature
   const condensateTemperature = mixTemperature(
     condenserState.hotwellWaterMass,
     condenserState.hotwellTemperature,
-    condensed,
+    condensedWithGland,
     newOutletTemperature,
   )
 
@@ -94,7 +113,7 @@ export function CondenserTick(
     condensateTemperature,
     condenserState.makeupValvePosition,
     rejectValvePosition,
-    Math.max(0, hotwellRoom - condensed),
+    Math.max(0, hotwellRoom - condensedWithGland),
   )
 
   // Low-low: the pump may not run dry, so it trips (valve shut, flag set) and returns nothing this tick
@@ -114,6 +133,9 @@ export function CondenserTick(
     ...condenserState,
     pressure: newPressure,
     isSjaeEnabled: newIsSjaeEnabled,
+    sealWaterTemperature,
+    airPumpTripped,
+    isAirExtractionPumpEnabled: condenserState.isAirExtractionPumpEnabled && !airPumpTripped,
     condensationPumpValvePosition: pumpValvePosition,
     condensationPumpTripped: pumpTripped,
     intakeFlowRate: totalIntakeRate,

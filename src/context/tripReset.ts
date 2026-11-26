@@ -7,13 +7,15 @@
 import { CstDeaerator, CstSimulation } from "./const"
 import { deaeratorLevel } from "./Deaerator/DeaeratorTick"
 import { hotwellLevel } from "../utils/condenserCalculation"
+import { isSealWaterWarning } from "../utils/sealWaterCalculation"
 import { isAtOverspeed, isAboveVacuumLimit } from "../utils/turbineCalculations"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow } from "./Boiler/BoilerTick"
+import { isBelowOilTripLimit } from "./Oil/OilTick"
 import PowerPlantState from "./PowerPlantState"
 
 const { CstCondenser } = CstSimulation
 
-export type TripId = "burner" | "boilerHighHigh" | "feedPump" | "condensationPump" | "deaeratorHighHigh" | "turbine"
+export type TripId = "burner" | "boilerHighHigh" | "feedPump" | "condensationPump" | "airPump" | "deaeratorHighHigh" | "turbine"
 
 type TripRule = {
   readonly tripped: (state: PowerPlantState) => boolean
@@ -43,6 +45,12 @@ const rules: Record<TripId, TripRule> = {
     refusal: ({ Condenser }) => (hotwellLevel(Condenser.hotwellWaterVolume) < CstCondenser.HotwellLowLow ? "Hotwell level is still below low-low" : undefined),
     clear: (state) => ({ ...state, Condenser: { ...state.Condenser, condensationPumpTripped: false } }),
   },
+  // The seal water must be back under the warning temperature: the cause of the cavitation trip has gone (#166)
+  airPump: {
+    tripped: ({ Condenser }) => Condenser.airPumpTripped,
+    refusal: ({ Condenser }) => (isSealWaterWarning(Condenser.sealWaterTemperature) ? "Seal water is still above the warning temperature" : undefined),
+    clear: (state) => ({ ...state, Condenser: { ...state.Condenser, airPumpTripped: false } }),
+  },
   deaeratorHighHigh: {
     tripped: ({ Deaerator }) => Deaerator.deaeratorHighHighTripped,
     refusal: ({ Deaerator }) => (deaeratorLevel(Deaerator.waterVolume) >= CstDeaerator.HighHighLevel ? "Deaerator level is still at the high-high level" : undefined),
@@ -51,9 +59,10 @@ const rules: Record<TripId, TripRule> = {
   // Evaluated live; the low-pressure closure of the main steam valve has no persistent condition and never blocks
   turbine: {
     tripped: ({ Turbine }) => Turbine.turbineTripped,
-    refusal: ({ Boiler, Condenser, Turbine }) => {
+    refusal: ({ Boiler, Condenser, Oil, Turbine }) => {
       if (isAboveVacuumLimit(Condenser.pressure)) return "Condenser pressure is still above the vacuum limit"
       if (isAtOverspeed(Turbine.rpm)) return "Turbine is still at overspeed"
+      if (isBelowOilTripLimit(Oil)) return "Lube oil header pressure is still below the trip limit"
       return isAtBoilerHighHigh(Boiler) ? "Boiler level is still at the high-high level" : undefined
     },
     clear: (state) => ({ ...state, Turbine: { ...state.Turbine, turbineTripped: false } }),

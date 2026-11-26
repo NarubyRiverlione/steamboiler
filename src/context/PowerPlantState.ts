@@ -43,6 +43,9 @@ export type CondenserState = {
   coolingRate: number
   coolingWaterOutletTemperature: number // Celsius, the cooling water after the condenser (the intake temperature with no flow)
   isAirExtractionPumpEnabled: boolean
+  airPumpTripped: boolean // set by the seal water cavitation trip (#166), cleared only by a trip reset; the pump stops and cannot start
+  sealWaterTemperature: number // Celsius of the air pump's seal water: its vapour pressure is the pump's lowest pressure (ADR 0035)
+  sealWaterCoolerOn: boolean // the seal water cooler works; a scenario takes it away, no operator action yet (#166)
   isSjaeEnabled: boolean
   sjaeValvePosition: number // 0-1 (0-100%) open
   recirculationPumpValvePosition: number // 0-1 (0-100%) open
@@ -67,9 +70,13 @@ export type TurbineState = {
   runUpPoint: number // Selected run-up point (rpm): the target of Ramp up and Hold
   speedMode: SpeedMode // Free, Ramp up, Hold or Synchronised
   speedReference: number // rpm the PID aims at in Ramp up; follows the speed while the PID is inactive
-  generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
+  generatorBreaker: boolean // Whether the generator breaker is closed: the generator's tie to the grid, the export goes through it (Phase 4, #189)
+  unitAuxBreaker: boolean // Whether the unit aux breaker is closed: the generator feeds the auxiliary bus; open in every scenario and a new game (#189, ADR 0053)
   pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
-  turbineTripped: boolean // set by a turbine trip, cleared by the next opening of the turbine valve
+  turbineTripped: boolean // set by a turbine trip, cleared only by a trip reset
+  turningGearEngaged: boolean // the turning gear holds the stopped rotor at a few rpm; the valve cannot open on a stopped rotor off the gear (ADR 0051)
+  glandSteamOn: boolean // gland seal steam, an operator switch: the glands are sealed while it is on (ADR 0047)
+  glandSteamShutOff: boolean // set when the plant shut the steam off because the rotor stopped, cleared when the steam is admitted again; an operator switch-off does not set it (ADR 0047)
 }
 
 export type HeaterState = {
@@ -105,11 +112,31 @@ export type DeaeratorState = {
   deaeratorHighHighTripped: boolean // set by the high-high trip of the condensation pump (#129, ADR 0045), cleared only by a trip reset
 }
 
+export type OilState = {
+  pumpRunning: boolean // the lube oil pump, an operator action (ADR 0050)
+  headerPressure: number // bar g, the lube oil header: builds toward nominal with the pump running, decays without it
+}
+
+export type DieselStatus = "stopped" | "starting" | "running"
+
+export type DieselState = {
+  status: DieselStatus // the start/stop switch: RUN is starting for CstDiesel.StartTime, then running (#169)
+  startElapsed: number // s since RUN while starting, 0 otherwise
+}
+
 type PowerPlantState = {
   Boiler: BoilerState
   Deaerator: DeaeratorState
   Heater: HeaterState
   Condenser: CondenserState
   Turbine: TurbineState
+  Oil: OilState
+  gridSupplyBreaker: boolean // the grid feeds the auxiliary bus while closed; closed in every scenario and a new game (#141, ADR 0053)
+  Diesel: DieselState
+  dieselBreaker: boolean // the onsite diesel feeds the auxiliary bus while closed; open in every scenario and a new game (#169, ADR 0053)
+  upsBreaker: boolean // the battery breaker: the UPS battery feeds the safety bus on a dead Auxiliary bus while closed; manual, needs no power (#143)
+  upsCharge: number // percent 0-100; drains with the UPS breaker closed and the Auxiliary bus dead, recharges while it is live
+  simulationEnded: boolean // latched when the UPS charge reaches 0%: the tick no longer advances the plant (#143)
+  auxiliaryLoad: number // MW, what the pumps and turbine auxiliaries draw (#140); net output = electric output - this
 }
 export default PowerPlantState

@@ -1,6 +1,7 @@
 /** Steam Flow group of the Turbine page: the main steam valve with its lamp, and the bypass and turbine valves. */
 
 import { CstSimulation } from "../../context/const"
+import { rotorTurns } from "../../context/Turbine/TurningGear"
 import { isAboveMainSteamValveMinimum } from "../../utils/turbineCalculations"
 import { Lamp } from "../board/Lamp"
 import { TurnSwitch } from "../board/TurnSwitch"
@@ -56,6 +57,7 @@ export function SteamFlowGroup({
           ValueWidest="999.9 kg/s"
           Position={turbine.turbineValvePosition}
           Step={TurbineValveStep}
+          Notice={rotorTurns(turbine) ? undefined : "Rotor stopped: engage the turning gear to open"}
         />
       </div>
     </div>

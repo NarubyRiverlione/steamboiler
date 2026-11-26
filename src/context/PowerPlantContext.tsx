@@ -20,7 +20,19 @@ type PowerPlantContextType = {
   setSpeedMode: (speedMode: SpeedMode) => void
   selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
+  toggleGridSupplyBreaker: () => void // never refused; with no control power the reducer ignores it; closing it opens the unit aux breaker (#189)
+  toggleUnitAuxBreaker: () => void // closes only inside the ±2 rpm window and opens the grid supply breaker with it (#189); with no control power the reducer ignores it
+  toggleUpsBreaker: () => void
+  // Onsite diesel (#175, ADR 0053)
+  setDieselRun: (run: boolean) => void
+  toggleDieselBreaker: () => void // never refused here; the reducer ignores a refused close
   setLoadSetpoint: (loadSetpoint: number) => void
+  // Lube oil (ADR 0050)
+  toggleOilPump: () => void
+  // Turning gear (ADR 0051)
+  toggleTurningGear: () => void
+  // Gland seal steam (ADR 0047)
+  toggleGlandSteam: () => void
   // Superheater attemperator
   setAttemperatorAuto: (auto: boolean) => void
   adjustSprayValve: (amount: number) => void
