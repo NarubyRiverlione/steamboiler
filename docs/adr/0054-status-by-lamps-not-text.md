@@ -11,7 +11,7 @@ Rules:
 - **The label is the condition, worded as met:** `Aux bus live`, `Oil pressure OK`, `Rotor at standstill`, `Rotor turning`, `Main steam valve open`, `Breaker closed`. A warning lamp names the fault: `Vent closed, air in`.
 - **Tooltips stay.** The `title` on a lamp and on a disabled control keeps its text (the reason in words). It is hidden until hovered, so it does not change the look of the board; it stands in for the engraved label plate of a real panel.
 - **One mode.** There is no training or hardcore mode: with every condition on a lamp the board explains itself without text, so there is nothing to switch off.
-- **Interlocks stay disabled controls; consequences are enabled** (#174). A control a real plant interlocks (generator breaker close outside the sync window, the load setpoint with the generator breaker open, the permissives of the turning gear, gland steam, speed mode and run-up point) is disabled with its lamp and a tooltip. A command a real plant lets through (opening the grid supply breaker) is enabled and the plant shows the consequence. This ADR changes only how the reason is shown.
+- **Interlocks stay disabled controls; consequences are enabled** (#174). A control a real plant interlocks (generator and unit aux breaker close outside the sync window, the load setpoint with the generator breaker open, the permissives of the turning gear, gland steam, speed mode and run-up point) is disabled with its lamp and a tooltip. A command a real plant lets through (opening the generator breaker under load) is enabled and the plant shows the consequence. This ADR changes only how the reason is shown.
 
 ## What changes on today's pages
 

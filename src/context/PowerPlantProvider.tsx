@@ -83,6 +83,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleGridSupplyBreaker = () => {
     dispatch({ type: state.gridSupplyBreaker ? "OPEN_GRID_SUPPLY_BREAKER" : "CLOSE_GRID_SUPPLY_BREAKER" })
   }
+  const toggleUnitAuxBreaker = () => {
+    dispatch({ type: state.Turbine.unitAuxBreaker ? "OPEN_UNIT_AUX_BREAKER" : "CLOSE_UNIT_AUX_BREAKER" })
+  }
   const toggleUpsBreaker = () => {
     dispatch({ type: state.upsBreaker ? "OPEN_UPS_BREAKER" : "CLOSE_UPS_BREAKER" })
   }
@@ -175,6 +178,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         setLoadSetpoint,
         toggleGeneratorBreaker,
         toggleGridSupplyBreaker,
+        toggleUnitAuxBreaker,
         setDieselRun,
         toggleDieselBreaker,
         toggleUpsBreaker,

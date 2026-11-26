@@ -7,7 +7,7 @@ import { loadAfter, ratedOutputMW } from "../../utils/turbineCalculations"
 import { getInletIsentropicDrop } from "../../utils/steamTable"
 
 describe("TurbineTick", () => {
-  const initialState: TurbineState = { 
+  const initialState: TurbineState = { unitAuxBreaker: false,
     electricOutput: 0,
     loadSetpoint: 0,
     bypassValvePosition: 0,
@@ -81,14 +81,14 @@ describe("TurbineTick", () => {
       expect(second.loadSetpoint).toBe(100)
     })
 
-    it("in house load operation the load steps to the auxiliary load at once and the setpoint is ignored but kept (#182)", () => {
-      const result: TurbineState = TurbineTick({ ...synced, electricOutput: 50, loadSetpoint: 50 }, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7)
-      expect(result.electricOutput).toBe(7)
-      expect(result.loadSetpoint).toBe(50)
+    it("in house load operation (unit aux breaker closed, generator breaker open) the load steps to the auxiliary load at once (#182, #189)", () => {
+      const island: TurbineState = { ...synced, generatorBreaker: false, unitAuxBreaker: true, electricOutput: 50, loadSetpoint: 0 }
+      expect(TurbineTick(island, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7).electricOutput).toBe(7)
     })
 
-    it("in house load operation the load is the auxiliary load whatever the setpoint, so a setpoint of 0 does not unload the shaft", () => {
-      expect(TurbineTick({ ...synced, electricOutput: 0, loadSetpoint: 0 }, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7).electricOutput).toBe(7)
+    it("with both breakers closed the load follows the setpoint, not the auxiliary load", () => {
+      const tied: TurbineState = { ...synced, unitAuxBreaker: true, electricOutput: 50, loadSetpoint: 50, turbineSteamFlowOut: flowFor(50, 165, 31) }
+      expect(TurbineTick(tied, 165, 31, 0, CstSimulation.CstTurbine.RatedSteamTemperature, true, 7).electricOutput).toBe(50)
     })
 
     it("lowers the load at the load rate when the setpoint drops, and stops at the setpoint", () => {

@@ -10,7 +10,6 @@ import { isBusLive } from "../context/AuxiliaryBus"
 import { consumerDraws } from "../context/AuxiliaryLoad"
 import { dieselOutput } from "../context/Diesel"
 import usePowerPlant from "../context/PowerPlantContext"
-import type PowerPlantState from "../context/PowerPlantState"
 import { isBatteryFeeding, isSafetyBusLive, isVitalBusLive } from "../context/SafetyBus"
 import {
   BREAKER_HALF,
@@ -20,9 +19,15 @@ import {
   CONSUMER_STEM_X,
   ELECTRICAL_HEIGHT,
   ELECTRICAL_WIDTH,
-  SOURCES,
+  DIESEL_X,
+  GENERATOR_BOX_Y,
+  GENERATOR_X,
+  GRID_SUPPLY_X,
+  GRID_TIE_Y,
+  GRID_X,
   SOURCE_BOX,
   SOURCE_BREAKER_Y,
+  UNIT_AUX_BREAKER_Y,
   TOTAL_Y,
   UPS,
   SAFETY_FEED_X,
@@ -33,8 +38,6 @@ import {
   type Busbar,
   type Consumer,
   type ElectricalColour,
-  type ElectricalSource,
-  type SourceId,
 } from "./electricalDiagram"
 import { PARTS, type PartId } from "./plantParts"
 
@@ -145,73 +148,118 @@ const dim = (lit: boolean): string => (lit ? "" : " board-electrical-dim")
 // The colour class of a source, the UPS or a bus; its lines, boxes and closed breakers draw in currentColor
 const colour = (id: ElectricalColour): string => "board-electrical-" + id
 
-// Whether each source feeds the Auxiliary bus: its breaker is closed
-const sourceClosed = (state: PowerPlantState): Record<SourceId, boolean> => ({
-  grid: state.gridSupplyBreaker,
-  generator: state.Turbine.generatorBreaker,
-  diesel: state.dieselBreaker,
-})
-
-function SourceColumn({
-  source,
-  closed,
-  showValues,
-  diesel,
+// A source box: it links to the page that holds its controls when it has a link; without one it dims while its supply is off
+function SourceBox({
+  x,
+  y,
+  name,
+  part,
+  lit,
 }: {
-  readonly source: ElectricalSource
-  readonly closed: boolean
-  readonly showValues: boolean
-  readonly diesel: number
+  readonly x: number
+  readonly y: number
+  readonly name: string
+  readonly part?: PartId
+  readonly lit: boolean
 }) {
-  const { x } = source
-  const breakerName: string = source.id === "grid" ? "Grid supply breaker" : source.name + " breaker"
-  const auxY: number = BUSES[0].y
-  // A box or breaker that links keeps its full raised look; only the line (and a box without a link) dims while open
-  const links: boolean = source.nodeLinks === true
   return (
-    <g className={colour(source.id)} data-source={source.id} data-lit={closed}>
-      <path
-        className={"board-pipe board-electrical-line" + dim(closed)}
-        d={line(x, SOURCE_BOX.y + SOURCE_BOX.h, x, auxY)}
+    <Node part={part} name={name}>
+      <rect className="board-node-hit" x={x - SOURCE_BOX.w / 2} y={y} width={SOURCE_BOX.w} height={SOURCE_BOX.h} />
+      <rect
+        className={"board-node-box board-electrical-line" + (part === undefined ? dim(lit) : "")}
+        x={x - SOURCE_BOX.w / 2}
+        y={y}
+        width={SOURCE_BOX.w}
+        height={SOURCE_BOX.h}
+        rx={4}
       />
-      <Node part={links ? source.part : undefined} name={source.name}>
-        <rect
-          className="board-node-hit"
-          x={x - SOURCE_BOX.w / 2}
-          y={SOURCE_BOX.y}
-          width={SOURCE_BOX.w}
-          height={SOURCE_BOX.h}
-        />
-        <rect
-          className={"board-node-box board-electrical-line" + (links ? "" : dim(closed))}
-          x={x - SOURCE_BOX.w / 2}
-          y={SOURCE_BOX.y}
-          width={SOURCE_BOX.w}
-          height={SOURCE_BOX.h}
-          rx={4}
-        />
-        <text className="board-node-name" x={x} y={SOURCE_BOX.y + SOURCE_BOX.h / 2 + 6}>
-          {source.name}
-        </text>
-      </Node>
-      <Node part={source.part} name={breakerName}>
-        <BreakerSymbol x={x} y={SOURCE_BREAKER_Y} closed={closed} name={breakerName} />
-      </Node>
-      {showValues && source.id === "grid" && (
+      <text className="board-node-name" x={x} y={y + SOURCE_BOX.h / 2 + 6}>
+        {name}
+      </text>
+    </Node>
+  )
+}
+
+// The grid box on top with the tie rail the grid supply and the generator breaker hang on: the grid is always up for now (#189)
+function GridSource({ showValues }: { readonly showValues: boolean }) {
+  return (
+    <g className={colour("grid")} data-grid>
+      <path className="board-pipe board-electrical-line" d={line(GRID_X, SOURCE_BOX.y + SOURCE_BOX.h, GRID_X, GRID_TIE_Y)} />
+      <path className="board-pipe board-electrical-line" d={line(GRID_SUPPLY_X, GRID_TIE_Y, GENERATOR_X, GRID_TIE_Y)} />
+      <SourceBox x={GRID_X} y={SOURCE_BOX.y} name="Grid" lit />
+      {showValues && (
         <ValueLabel
           label="Grid voltage"
           text={VOLTAGES.grid.live}
-          x={x + 20}
-          y={SOURCE_BREAKER_Y - VALUE_BOX_HEIGHT / 2}
+          x={GRID_X + SOURCE_BOX.w / 2 + 12}
+          y={SOURCE_BOX.y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
           anchor="start"
           widest="110 kV"
         />
       )}
-      {showValues && source.id === "diesel" && (
+    </g>
+  )
+}
+
+// The grid supply breaker: the station supply, from the tie rail to the Auxiliary bus; no export (ADR 0053)
+function GridSupplyColumn({ closed }: { readonly closed: boolean }) {
+  return (
+    <g className={colour("grid")} data-source="grid" data-lit={closed}>
+      <path
+        className={"board-pipe board-electrical-line" + dim(closed)}
+        d={line(GRID_SUPPLY_X, GRID_TIE_Y, GRID_SUPPLY_X, BUSES[0].y)}
+      />
+      <Node part="auxiliaryBus" name="Grid supply breaker">
+        <BreakerSymbol x={GRID_SUPPLY_X} y={SOURCE_BREAKER_Y} closed={closed} name="Grid supply breaker" />
+      </Node>
+    </g>
+  )
+}
+
+// The generator column: the generator breaker ties the Generator to the grid (the export), the unit aux breaker lets it feed the Auxiliary bus (#189)
+function GeneratorColumn({ generatorClosed, unitAuxClosed }: { readonly generatorClosed: boolean; readonly unitAuxClosed: boolean }) {
+  const boxBottom: number = GENERATOR_BOX_Y + SOURCE_BOX.h
+  return (
+    <>
+      <g className={colour("generator")} data-source="generator-tie" data-lit={generatorClosed}>
+        <path
+          className={"board-pipe board-electrical-line" + dim(generatorClosed)}
+          d={line(GENERATOR_X, GRID_TIE_Y, GENERATOR_X, GENERATOR_BOX_Y)}
+        />
+        <Node part="generation" name="Generator breaker">
+          <BreakerSymbol x={GENERATOR_X} y={SOURCE_BREAKER_Y} closed={generatorClosed} name="Generator breaker" />
+        </Node>
+      </g>
+      <g className={colour("generator")} data-source="generator" data-lit={unitAuxClosed}>
+        <path
+          className={"board-pipe board-electrical-line" + dim(unitAuxClosed)}
+          d={line(GENERATOR_X, boxBottom, GENERATOR_X, BUSES[0].y)}
+        />
+        <SourceBox x={GENERATOR_X} y={GENERATOR_BOX_Y} name="Generator" part="generation" lit />
+        <Node part="auxiliaryBus" name="Unit aux breaker">
+          <BreakerSymbol x={GENERATOR_X} y={UNIT_AUX_BREAKER_Y} closed={unitAuxClosed} name="Unit aux breaker" />
+        </Node>
+      </g>
+    </>
+  )
+}
+
+function DieselColumn({ closed, showValues, output }: { readonly closed: boolean; readonly showValues: boolean; readonly output: number }) {
+  return (
+    <g className={colour("diesel")} data-source="diesel" data-lit={closed}>
+      <path
+        className={"board-pipe board-electrical-line" + dim(closed)}
+        d={line(DIESEL_X, SOURCE_BOX.y + SOURCE_BOX.h, DIESEL_X, BUSES[0].y)}
+      />
+      <SourceBox x={DIESEL_X} y={SOURCE_BOX.y} name="Diesel generator" part="diesel" lit />
+      <Node part="diesel" name="Diesel generator breaker">
+        <BreakerSymbol x={DIESEL_X} y={SOURCE_BREAKER_Y} closed={closed} name="Diesel generator breaker" />
+      </Node>
+      {showValues && (
         <ValueLabel
           label="Diesel output"
-          text={mw(diesel)}
-          x={x + 20}
+          text={mw(output)}
+          x={DIESEL_X + 20}
           y={SOURCE_BREAKER_Y - VALUE_BOX_HEIGHT / 2}
           anchor="start"
           widest="0.00 MW"
@@ -347,7 +395,6 @@ function Consumers({
 function ElectricalOverview() {
   const { state } = usePowerPlant()
   const [showValues, setShowValues] = useState<boolean>(true)
-  const closed: Record<SourceId, boolean> = sourceClosed(state)
   const auxLive: boolean = isBusLive(state)
   const vitalLive: boolean = isVitalBusLive(state)
   const safetyLive: boolean = isSafetyBusLive(state)
@@ -382,15 +429,10 @@ function ElectricalOverview() {
             </LensButton>
           </div>
         </foreignObject>
-        {SOURCES.map((source: ElectricalSource) => (
-          <SourceColumn
-            key={source.id}
-            source={source}
-            closed={closed[source.id]}
-            showValues={showValues}
-            diesel={dieselOutput(state)}
-          />
-        ))}
+        <GridSource showValues={showValues} />
+        <GridSupplyColumn closed={state.gridSupplyBreaker} />
+        <GeneratorColumn generatorClosed={state.Turbine.generatorBreaker} unitAuxClosed={state.Turbine.unitAuxBreaker} />
+        <DieselColumn closed={state.dieselBreaker} showValues={showValues} output={dieselOutput(state)} />
         <BusLine bus={aux} live={auxLive} showValues={showValues} voltage={voltage(auxLive, VOLTAGES.aux)} />
         <Consumers draws={draws} live={auxLive} showValues={showValues} />
         <g className={colour("vital") + dim(vitalLive)} data-feed="vital">

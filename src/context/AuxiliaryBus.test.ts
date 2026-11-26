@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstAuxiliary, CstOil, CstSimulation } from "./const"
-import { houseLoadRefusal, isBusLive } from "./AuxiliaryBus"
+import { isBusLive } from "./AuxiliaryBus"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -13,13 +13,13 @@ const cold: PowerPlantState = makeInitialState()
 const HighInWindow: number = CstSimulation.CstTurbine.SyncRPM + 1.5
 
 // Every pump asked for, the oil header built and the gear in, with the supply as given
-const pumping = (gridSupplyBreaker: boolean, generatorBreaker = false): PowerPlantState => ({
+const pumping = (gridSupplyBreaker: boolean, generatorBreaker = false, unitAuxBreaker = false): PowerPlantState => ({
   ...cold,
   gridSupplyBreaker,
   Deaerator: { ...cold.Deaerator, feedPumpValvePosition: 0.5 },
   Condenser: { ...cold.Condenser, condensationPumpValvePosition: 0.5, recirculationPumpValvePosition: 0.5, isAirExtractionPumpEnabled: true },
   Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure },
-  Turbine: { ...cold.Turbine, generatorBreaker, turningGearEngaged: true, rpm: 3 },
+  Turbine: { ...cold.Turbine, generatorBreaker, unitAuxBreaker, turningGearEngaged: true, rpm: 3 },
 })
 
 const loaded = (electricOutput: number, auxiliaryLoad: number, gridSupplyBreaker = true): PowerPlantState => ({
@@ -34,9 +34,10 @@ describe("the auxiliary bus (#141)", () => {
     expect(cold.gridSupplyBreaker).toBe(true)
   })
 
-  test("the bus is live with either breaker closed, dead with both open", () => {
+  test("the bus is live with the grid supply or the unit aux breaker closed; the generator breaker feeds no bus (#189)", () => {
     expect(isBusLive({ ...cold, gridSupplyBreaker: true })).toBe(true)
-    expect(isBusLive({ ...pumping(false, true) })).toBe(true)
+    expect(isBusLive(pumping(false, false, true))).toBe(true)
+    expect(isBusLive(pumping(false, true))).toBe(false)
     expect(isBusLive(pumping(false, false))).toBe(false)
   })
 
@@ -59,56 +60,53 @@ describe("the auxiliary bus (#141)", () => {
   })
 
   describe("the load setpoint in house load operation", () => {
-    test("a command with the grid supply breaker open leaves the setpoint as the operator left it, whatever the value", () => {
-      const state: PowerPlantState = loaded(20, 7, false)
+    test("a command in the island (generator breaker open, unit aux closed) does nothing, whatever the value", () => {
+      const tied: PowerPlantState = loaded(20, 7, false)
+      const state: PowerPlantState = { ...tied, Turbine: { ...tied.Turbine, generatorBreaker: false, unitAuxBreaker: true } }
       expect(powerPlantReducer(state, { type: "SET_LOAD_SETPOINT", payload: { loadSetpoint: 5 } })).toBe(state)
       expect(powerPlantReducer(state, { type: "SET_LOAD_SETPOINT", payload: { loadSetpoint: 50 } })).toBe(state)
     })
 
-    test("with the grid supply breaker closed any setpoint is accepted", () => {
+    test("with the generator breaker closed any setpoint is accepted, whichever breaker feeds the bus", () => {
       const state: PowerPlantState = loaded(20, 7, true)
       expect(powerPlantReducer(state, { type: "SET_LOAD_SETPOINT", payload: { loadSetpoint: 0 } }).Turbine.loadSetpoint).toBe(0)
     })
   })
 
   describe("the shaft load in house load operation", () => {
-    const island = (electricOutput: number, loadSetpoint: number, gridSupplyBreaker = false): PowerPlantState => {
-      const base: PowerPlantState = loaded(electricOutput, 0, gridSupplyBreaker)
-      return { ...base, Turbine: { ...base.Turbine, loadSetpoint, turningGearEngaged: false }, Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure } }
+    // The generator ties to the grid and feeds the bus through the unit aux breaker, at a load
+    const tied = (electricOutput: number): PowerPlantState => {
+      const base: PowerPlantState = loaded(electricOutput, 0, false)
+      return {
+        ...base,
+        Turbine: { ...base.Turbine, unitAuxBreaker: true, turningGearEngaged: false },
+        Oil: { pumpRunning: true, headerPressure: CstOil.NominalPressure },
+      }
     }
 
-    test("the load steps to the auxiliary load on the first tick, net output is 0, the setpoint is kept", () => {
-      const ticked: PowerPlantState = PowerPlantTick(island(60, 60))
+    test("opening the generator breaker under load steps to the auxiliary load on the first tick, net output is 0, the setpoint is 0", () => {
+      const opened: PowerPlantState = powerPlantReducer(tied(60), { type: "TOGGLE_GENERATOR_BREAKER" })
+      const ticked: PowerPlantState = PowerPlantTick(opened)
       expect(ticked.Turbine.electricOutput).toBeCloseTo(CstAuxiliary.LubeOilPump, 9)
       expect(ticked.Turbine.electricOutput).toBeCloseTo(ticked.auxiliaryLoad, 9)
       expect(netOutputOf(ticked)).toBeCloseTo(0, 9)
-      expect(ticked.Turbine.loadSetpoint).toBe(60)
+      expect(ticked.Turbine.loadSetpoint).toBe(0)
     })
 
-    test("closing the generator breaker with the tie open puts the auxiliary load on the shaft on the next tick", () => {
-      const dark: PowerPlantState = { ...island(0, 0), Turbine: { ...island(0, 0).Turbine, generatorBreaker: false } }
-      const closed: PowerPlantState = powerPlantReducer(dark, { type: "TOGGLE_GENERATOR_BREAKER" })
+    test("closing the generator breaker in the island ties it to the grid: the load then moves toward the setpoint at the load rate", () => {
+      const opened: PowerPlantState = PowerPlantTick(powerPlantReducer(tied(60), { type: "TOGGLE_GENERATOR_BREAKER" }))
+      const closed: PowerPlantState = powerPlantReducer({ ...opened, Turbine: { ...opened.Turbine, rpm: HighInWindow } }, { type: "TOGGLE_GENERATOR_BREAKER" })
       expect(closed.Turbine.generatorBreaker).toBe(true)
-      expect(PowerPlantTick(closed).Turbine.electricOutput).toBeCloseTo(CstAuxiliary.LubeOilPump, 9)
+      const next: PowerPlantState = PowerPlantTick(closed)
+      expect(next.Turbine.electricOutput).toBeCloseTo(loadAfter(opened.Turbine.electricOutput, 0), 9)
     })
 
-    test("after the tie closes the load keeps rising at the load rate, one step per tick, and never overshoots the setpoint", () => {
-      let state: PowerPlantState = powerPlantReducer(PowerPlantTick(island(0.3, 0.3)), { type: "CLOSE_GRID_SUPPLY_BREAKER" })
-      for (let i = 0; i < 3; i++) {
-        const next: PowerPlantState = PowerPlantTick({ ...state, Turbine: { ...state.Turbine, rpm: HighInWindow } })
-        expect(next.Turbine.electricOutput).toBeCloseTo(loadAfter(state.Turbine.electricOutput, 0.3), 9)
-        expect(next.Turbine.electricOutput).toBeLessThanOrEqual(0.3)
-        state = next
-      }
-    })
-
-    test("closing the grid supply breaker ramps the load from the auxiliary load toward the kept setpoint at the load rate", () => {
-      const first: PowerPlantState = PowerPlantTick(island(60, 60))
-      const regained: PowerPlantState = powerPlantReducer(first, { type: "CLOSE_GRID_SUPPLY_BREAKER" })
-      const next: PowerPlantState = PowerPlantTick(regained)
-      expect(next.Turbine.electricOutput).toBeCloseTo(loadAfter(first.Turbine.electricOutput, 60), 9)
-      expect(next.Turbine.electricOutput).toBeGreaterThan(first.Turbine.electricOutput)
-      expect(next.Turbine.electricOutput).toBeLessThan(60)
+    test("closing the grid supply breaker in the island opens the unit aux breaker and unloads the generator", () => {
+      const opened: PowerPlantState = PowerPlantTick(powerPlantReducer(tied(60), { type: "TOGGLE_GENERATOR_BREAKER" }))
+      const back: PowerPlantState = PowerPlantTick(powerPlantReducer(opened, { type: "CLOSE_GRID_SUPPLY_BREAKER" }))
+      expect(back.Turbine.unitAuxBreaker).toBe(false)
+      expect(back.Turbine.electricOutput).toBe(0)
+      expect(isBusLive(back)).toBe(true)
     })
   })
 
@@ -124,8 +122,8 @@ describe("the auxiliary bus (#141)", () => {
       expect(dead.Condenser.coolingWaterOutletTemperature).toBe(cold.Condenser.coolingWaterOutletTemperature)
     })
 
-    test("the generator alone carries the bus: the pumps run with the grid supply breaker open", () => {
-      const onGenerator: PowerPlantState = pumping(false, true)
+    test("the generator alone carries the bus through the unit aux breaker: the pumps run with the grid supply breaker open", () => {
+      const onGenerator: PowerPlantState = pumping(false, false, true)
       const generated: PowerPlantState = PowerPlantTick({ ...onGenerator, Turbine: { ...onGenerator.Turbine, rpm: HighInWindow, turningGearEngaged: false } })
       expect(generated.Deaerator.outflowMass).toBeGreaterThan(0)
       expect(generated.auxiliaryLoad).toBeGreaterThan(0)
@@ -171,20 +169,12 @@ describe("the auxiliary bus (#141)", () => {
       expect(fed.Turbine.turningGearEngaged).toBe(false)
     })
 
-    test("the generator breaker auto-opening on speed with the grid open leaves a dead bus", () => {
-      const overspeed: PowerPlantState = { ...pumping(false, true), Turbine: { ...pumping(false, true).Turbine, rpm: 3100, electricOutput: 10, loadSetpoint: 10 } }
+    test("the unit aux breaker auto-opening on speed with the grid open leaves a dead bus", () => {
+      const overspeed: PowerPlantState = { ...pumping(false, false, true), Turbine: { ...pumping(false, false, true).Turbine, rpm: 3100, electricOutput: 10 } }
       const ticked: PowerPlantState = PowerPlantTick(overspeed)
-      expect(ticked.Turbine.generatorBreaker).toBe(false)
+      expect(ticked.Turbine.unitAuxBreaker).toBe(false)
       expect(isBusLive(ticked)).toBe(false)
       expect(ticked.auxiliaryLoad).toBe(0)
     })
-  })
-})
-
-describe("houseLoadRefusal", () => {
-  test("gives the reason only in house load operation", () => {
-    expect(houseLoadRefusal(pumping(true, true))).toBeUndefined()
-    expect(houseLoadRefusal(pumping(false, false))).toBeUndefined()
-    expect(houseLoadRefusal(pumping(false, true))).toMatch(/House load operation/)
   })
 })

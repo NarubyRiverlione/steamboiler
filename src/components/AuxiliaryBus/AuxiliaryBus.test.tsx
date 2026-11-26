@@ -9,10 +9,10 @@ import { UpsGroup } from "./UpsGroup"
 
 type Ctx = ContextType<typeof PowerPlantContext>
 
-function renderPage(patch: Partial<PowerPlantState> = {}, generatorBreaker = false) {
+function renderPage(patch: Partial<PowerPlantState> = {}, unitAuxBreaker = false, rpm = 3000) {
   const state: PowerPlantState = { ...makeInitialState(), ...patch }
-  state.Turbine = { ...state.Turbine, generatorBreaker }
-  const fns = { toggleGridSupplyBreaker: vi.fn(), toggleUpsBreaker: vi.fn() }
+  state.Turbine = { ...state.Turbine, unitAuxBreaker, rpm }
+  const fns = { toggleGridSupplyBreaker: vi.fn(), toggleUnitAuxBreaker: vi.fn(), toggleUpsBreaker: vi.fn() }
   render(
     <PowerPlantContext.Provider value={{ state, dispatch: vi.fn(), ...fns } as unknown as Ctx}>
       <AuxiliaryBus />
@@ -48,9 +48,26 @@ describe("Auxiliary bus page", () => {
     expect(screen.getByRole("img", { name: "Auxiliary bus live: off" })).toBeTruthy()
   })
 
-  it("keeps the bus live on the generator breaker alone", () => {
+  it("keeps the bus live on the unit aux breaker alone", () => {
     renderPage({ gridSupplyBreaker: false }, true)
     expect(screen.getByRole("img", { name: "Auxiliary bus live: on" })).toBeTruthy()
+  })
+
+  it("toggles the unit aux breaker through its cover inside the sync window", () => {
+    const fns = renderPage()
+    const breaker: HTMLElement = liftCover("Unit aux breaker")
+    expect(breaker.getAttribute("aria-disabled")).toBeNull()
+    expect(breaker.getAttribute("aria-checked")).toBe("false")
+    fireEvent.click(breaker)
+    expect(fns.toggleUnitAuxBreaker).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole("img", { name: "Ready to close: on" })).toBeTruthy()
+  })
+
+  it("blocks closing the unit aux breaker outside the sync window, with the reason", () => {
+    renderPage({}, false, 1500)
+    expect(liftCover("Unit aux breaker").getAttribute("aria-disabled")).toBe("true")
+    expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
+    expect(screen.getByText("Speed is outside the synchronising window")).toBeTruthy()
   })
 
   it("shows the auxiliary load in MW", () => {

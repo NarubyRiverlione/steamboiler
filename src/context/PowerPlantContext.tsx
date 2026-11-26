@@ -20,7 +20,8 @@ type PowerPlantContextType = {
   setSpeedMode: (speedMode: SpeedMode) => void
   selectRunUpPoint: (runUpPoint: number) => void
   toggleGeneratorBreaker: () => void
-  toggleGridSupplyBreaker: () => void // never refused; with no control power the reducer ignores it
+  toggleGridSupplyBreaker: () => void // never refused; with no control power the reducer ignores it; closing it opens the unit aux breaker (#189)
+  toggleUnitAuxBreaker: () => void // closes only inside the ±2 rpm window and opens the grid supply breaker with it (#189); with no control power the reducer ignores it
   toggleUpsBreaker: () => void
   // Onsite diesel (#175, ADR 0053)
   setDieselRun: (run: boolean) => void

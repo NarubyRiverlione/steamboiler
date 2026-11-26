@@ -39,11 +39,11 @@ describe("the onsite diesel (#169)", () => {
       expect(isBusLive(act(running, { type: "CLOSE_DIESEL_BREAKER" }))).toBe(true)
     })
 
-    test("onto a bus fed by the generator alone needs the ±2 rpm window; onto a grid-fed bus it is free", () => {
+    test("onto a bus fed by the unit aux breaker alone needs the ±2 rpm window; onto a grid-fed bus it is free", () => {
       const gen = (rpm: number, gridSupplyBreaker: boolean): PowerPlantState => ({
         ...running,
         gridSupplyBreaker,
-        Turbine: { ...running.Turbine, generatorBreaker: true, rpm },
+        Turbine: { ...running.Turbine, unitAuxBreaker: true, rpm },
       })
       expect(dieselBreakerCloseRefusal(gen(SyncRPM + 3, false))).toBeTypeOf("string")
       expect(dieselBreakerCloseRefusal(gen(SyncRPM + 1, false))).toBeUndefined()
@@ -104,9 +104,9 @@ describe("dieselOutput (#175)", () => {
     expect(dieselOutput(loaded)).toBeGreaterThan(0)
   })
 
-  test("is 0 with the breaker open, the grid closed or the generator closed", () => {
+  test("is 0 with the breaker open, the grid closed or the unit aux breaker closed", () => {
     expect(dieselOutput({ ...loaded, dieselBreaker: false })).toBe(0)
     expect(dieselOutput({ ...loaded, gridSupplyBreaker: true })).toBe(0)
-    expect(dieselOutput({ ...loaded, Turbine: { ...loaded.Turbine, generatorBreaker: true } })).toBe(0)
+    expect(dieselOutput({ ...loaded, Turbine: { ...loaded.Turbine, unitAuxBreaker: true } })).toBe(0)
   })
 })

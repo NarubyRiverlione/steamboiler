@@ -83,22 +83,36 @@ describe("electrical overview", () => {
     renderBoard(state)
     const sourceLine = (id: string): Element | null => source(id)?.querySelector(".board-pipe") ?? null
     expect(dimmed(sourceLine("grid"))).toBe(false)
+    expect(dimmed(sourceLine("generator-tie"))).toBe(true)
     expect(dimmed(sourceLine("generator"))).toBe(true)
     expect(dimmed(sourceLine("diesel"))).toBe(true)
   })
 
-  it("never dims a clickable box or breaker; the grid box, without a link, dims while open", () => {
+  it("draws the generator column: the generator breaker to the grid, the unit aux breaker to the Auxiliary bus (#189)", () => {
+    const state: PowerPlantState = livePlant()
+    state.gridSupplyBreaker = false
+    state.Turbine.unitAuxBreaker = true
+    renderBoard(state)
+    expect(screen.getByLabelText("Unit aux breaker: closed")).toBeTruthy()
+    expect(screen.getByLabelText("Grid supply breaker: open")).toBeTruthy()
+    const sourceLine = (id: string): Element | null => source(id)?.querySelector(".board-pipe") ?? null
+    expect(dimmed(sourceLine("generator"))).toBe(false)
+    expect(dimmed(sourceLine("generator-tie"))).toBe(false)
+    expect(dimmed(sourceLine("grid"))).toBe(true)
+  })
+
+  it("never dims a clickable box or breaker; the grid box, without a link, stays lit: the grid is always up", () => {
     const state: PowerPlantState = livePlant()
     state.gridSupplyBreaker = false
     state.Turbine.generatorBreaker = false
     state.upsCharge = 0
     renderBare(state)
     const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box"))
-    expect(boxes.length).toBe(13)
+    expect(boxes.length).toBe(14)
     expect(boxes.filter(dimmed)).toEqual([])
     expect(
-      dimmed(source("grid")?.querySelector(".board-node-box:not(.board-node .board-node-box)") ?? null),
-    ).toBe(true)
+      dimmed(document.querySelector("[data-grid] .board-node-box:not(.board-node .board-node-box)")),
+    ).toBe(false)
   })
 
   it("shows the live values: voltages, consumer draws, total, diesel output and UPS charge", () => {
@@ -180,6 +194,7 @@ describe("electrical overview", () => {
     expect(hrefOf("UPS, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("Generator, opens Generation")).toBe("/generation")
     expect(hrefOf("Generator breaker, opens Generation")).toBe("/generation")
+    expect(hrefOf("Unit aux breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("Diesel generator, opens Diesel generator")).toBe("/diesel")
     expect(hrefOf("Diesel generator breaker, opens Diesel generator")).toBe("/diesel")
     expect(hrefOf("Boiler feed pump, opens Deaerator")).toBe("/deaerator")
@@ -199,6 +214,7 @@ describe("electrical overview", () => {
       )
     expect(colourOf(source("grid"))).toBe("board-electrical-grid")
     expect(colourOf(source("generator"))).toBe("board-electrical-generator")
+    expect(colourOf(source("generator-tie"))).toBe("board-electrical-generator")
     expect(colourOf(source("diesel"))).toBe("board-electrical-diesel")
     expect(colourOf(document.querySelector("[data-ups]"))).toBe("board-electrical-ups")
     expect(colourOf(document.querySelector('[data-feed="safety"]'))).toBe("board-electrical-ups")
