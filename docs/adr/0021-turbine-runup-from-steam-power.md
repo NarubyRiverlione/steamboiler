@@ -40,7 +40,7 @@ So the steam flow is about right, but the model turns it into speed far too slow
 | **Free** | the operator | none | always |
 | **Ramp up** | the PID | the speed reference, moving up at the run-up rate | main steam valve open and the selected point above the current speed |
 | **Hold** | the PID | the selected run-up point, no ramp | within ±5 rpm of the selected point |
-| **Synchronised** | the PID (as Hold) | 3000 rpm | closing the generator breaker; never selected (#135) |
+| **Synchronised** | the PID (as Hold) | 3000 rpm | closing the generator breaker, or the unit aux breaker with the generator breaker open (#189); never selected (#135) |
 
 - **Run-up points:** the operator picks 500, 1500, 2500 or 3000 rpm. There is no free setpoint, so a setpoint step can never reach Hold.
 - **Arrival:** when the speed reference reaches the selected point and the speed is within ±5 rpm of it, Ramp up engages Hold at that point. The turbine stays there until the operator picks a higher point, which starts Ramp up again, or switches to Free.
