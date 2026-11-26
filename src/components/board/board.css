@@ -1817,9 +1817,14 @@ path.board-zone {
   font-size: 15px;
 }
 
-.board-breaker-closed,
-.board-node .board-breaker-closed {
-  fill: currentColor;
+/* IEC 60617 breaker symbol of the Electrical overview: strokes only, no fill */
+.board-breaker-symbol {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.board-breaker-symbol path {
+  stroke: currentColor;
 }
 
 /* One colour per source, the UPS and each bus; the generator keeps the power medium yellow */

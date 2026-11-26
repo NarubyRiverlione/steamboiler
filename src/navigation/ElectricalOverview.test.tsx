@@ -107,7 +107,7 @@ describe("electrical overview", () => {
     state.Turbine.generatorBreaker = false
     state.upsCharge = 0
     renderBare(state)
-    const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box"))
+    const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box, .board-node .board-breaker-symbol"))
     expect(boxes.length).toBe(14)
     expect(boxes.filter(dimmed)).toEqual([])
     expect(
