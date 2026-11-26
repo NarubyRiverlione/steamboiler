@@ -230,7 +230,17 @@ function GridSupplyColumn({ closed }: { readonly closed: boolean }) {
 }
 
 // The generator column: the generator breaker ties the Generator to the grid (the export), the unit aux breaker lets it feed the Auxiliary bus (#189)
-function GeneratorColumn({ generatorClosed, unitAuxClosed }: { readonly generatorClosed: boolean; readonly unitAuxClosed: boolean }) {
+function GeneratorColumn({
+  generatorClosed,
+  unitAuxClosed,
+  output,
+  showValues,
+}: {
+  readonly generatorClosed: boolean
+  readonly unitAuxClosed: boolean
+  readonly output: number
+  readonly showValues: boolean
+}) {
   const boxBottom: number = GENERATOR_BOX_Y + SOURCE_BOX.h
   return (
     <>
@@ -249,6 +259,16 @@ function GeneratorColumn({ generatorClosed, unitAuxClosed }: { readonly generato
           d={line(GENERATOR_X, boxBottom, GENERATOR_X, BUSES[0].y)}
         />
         <SourceBox x={GENERATOR_X} y={GENERATOR_BOX_Y} name="Generator" part="generation" lit />
+        {showValues && (
+          <ValueLabel
+            label="Generator output"
+            text={mw(output)}
+            x={GENERATOR_X + SOURCE_BOX.w / 2 + 12}
+            y={GENERATOR_BOX_Y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
+            anchor="start"
+            widest="000.00 MW"
+          />
+        )}
         <Node part="auxiliaryBus" name="Unit aux breaker">
           <BreakerSymbol x={GENERATOR_X} y={UNIT_AUX_BREAKER_Y} closed={unitAuxClosed} name="Unit aux breaker" />
         </Node>
@@ -476,7 +496,12 @@ function ElectricalOverview() {
         </foreignObject>
         <GridSource showValues={showValues} loadSetpoint={state.Turbine.loadSetpoint} />
         <GridSupplyColumn closed={state.gridSupplyBreaker} />
-        <GeneratorColumn generatorClosed={state.Turbine.generatorBreaker} unitAuxClosed={state.Turbine.unitAuxBreaker} />
+        <GeneratorColumn
+          generatorClosed={state.Turbine.generatorBreaker}
+          unitAuxClosed={state.Turbine.unitAuxBreaker}
+          output={state.Turbine.electricOutput}
+          showValues={showValues}
+        />
         <DieselColumn closed={state.dieselBreaker} showValues={showValues} output={dieselOutput(state)} />
         <BusLine bus={aux} live={auxLive} showValues={showValues} voltage={voltage(auxLive, VOLTAGES.aux)} />
         <Consumers draws={draws} live={auxLive} showValues={showValues} />
