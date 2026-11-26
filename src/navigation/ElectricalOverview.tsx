@@ -72,7 +72,7 @@ function Node({
 }
 
 // A breaker symbol: filled while closed, hollow with a gap while open
-// IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a cross on the upper contact. Closed: the blade lies on the line, on a solid black body, in white; open: it swings off, in black. The blade tip and cross are in diagram units inside the breaker footprint.
+// IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a cross on the upper contact. Closed: the blade lies on the line; open: it swings off. Always black. The blade tip and cross are in diagram units inside the breaker footprint.
 const BLADE_TIP = 9
 const CROSS = 4
 
@@ -108,17 +108,7 @@ function BreakerSymbol({
         width={2 * BREAKER_HALF}
         height={2 * BREAKER_HALF}
       />
-      {closed && (
-        <rect
-          className="board-breaker-body"
-          x={-BREAKER_HALF + 3}
-          y={-BREAKER_HALF + 3}
-          width={2 * BREAKER_HALF - 6}
-          height={2 * BREAKER_HALF - 6}
-          rx={2}
-        />
-      )}
-      <g className={closed ? "board-breaker-symbol board-breaker-symbol-closed" : "board-breaker-symbol"}>
+      <g className="board-breaker-symbol">
         <path d={line(0, -BREAKER_HALF, 0, -BLADE_TIP)} />
         <path d={line(0, BLADE_TIP, 0, BREAKER_HALF)} />
         <path d={closed ? line(0, BLADE_TIP, 0, -BLADE_TIP) : line(0, BLADE_TIP, -BLADE_TIP, -BLADE_TIP + 2)} />
