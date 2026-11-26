@@ -39,32 +39,33 @@ function TurbineTick(
   extractionFlow = 0,
   steamTemperature = 0,
   rollPermissive = true,
-  houseLoad?: number,
+  auxiliaryLoad = 0,
 ): TurbineState {
-  const { ticked, newRPM, generatorBreaker } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature, houseLoad)
+  const { ticked, newRPM, connected } = shaftTick(turbineState, boilerPressure, condenserPressure, extractionFlow, steamTemperature, auxiliaryLoad)
 
   // Above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040) an open valve trips
   if (isTripCondition(newRPM, condenserPressure) && turbineState.turbineValvePosition > 0) return { ...ticked, ...turbineTrip }
 
-  return { ...ticked, ...speedControlTick(turbineState, newRPM, generatorBreaker, condenserPressure, rollPermissive) }
+  return { ...ticked, ...speedControlTick(turbineState, newRPM, connected, condenserPressure, rollPermissive) }
 }
 
 // True above the vacuum limit (ADR 0003) or at the overspeed limit (ADR 0040)
 const isTripCondition = (rpm: number, condenserPressure: number): boolean =>
   isAboveVacuumLimit(condenserPressure) || isAtOverspeed(rpm)
 
-type ShaftTick = { ticked: TurbineState; newRPM: number; generatorBreaker: boolean }
+type ShaftTick = { ticked: TurbineState; newRPM: number; connected: boolean }
 
 // The shaft and the generator for one tick: the enthalpy drop (less what the extraction steam no longer does after the tap)
 // gives the shaft power; the load the generator carries moves toward the setpoint (breaker closed only) and is a resisting
-// torque on the shaft, never derived from the steam flow (ADR 0027). In house load operation it is the auxiliary load, stepped at once (#182). The breaker auto-opens outside the sync margin and the load drops with it.
+// torque on the shaft, never derived from the steam flow (ADR 0027). With the generator breaker open and the unit aux breaker closed (house load operation, the island) it is the auxiliary load,
+// stepped at once (#182, #189). Both breakers auto-open outside the sync margin and the load drops with it.
 function shaftTick(
   turbineState: TurbineState,
   boilerPressure: number,
   condenserPressure: number,
   extractionFlow: number,
   steamTemperature: number,
-  houseLoad?: number,
+  auxiliaryLoad: number,
 ): ShaftTick {
   const enthalpyDrop: number = shaftDropWithExtraction(
     boilerPressure,
@@ -73,17 +74,25 @@ function shaftTick(
     extractionFlow,
     steamTemperature,
   )
-  const load: number = turbineState.generatorBreaker ? (houseLoad ?? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint)) : 0
+  const load: number = turbineState.generatorBreaker
+    ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint)
+    : turbineState.unitAuxBreaker
+      ? auxiliaryLoad
+      : 0
   const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
-  const generatorBreaker: boolean = turbineState.generatorBreaker && isAtSyncSpeed(newRPM)
+  const inWindow: boolean = isAtSyncSpeed(newRPM)
+  const generatorBreaker: boolean = turbineState.generatorBreaker && inWindow
+  const unitAuxBreaker: boolean = turbineState.unitAuxBreaker && inWindow
+  const connected: boolean = generatorBreaker || unitAuxBreaker
   const ticked: TurbineState = {
     ...turbineState,
-    electricOutput: generatorBreaker ? load : 0,
+    electricOutput: connected ? load : 0,
     loadSetpoint: generatorBreaker ? turbineState.loadSetpoint : 0,
     rpm: newRPM,
     generatorBreaker,
+    unitAuxBreaker,
   }
-  return { ticked, newRPM, generatorBreaker }
+  return { ticked, newRPM, connected }
 }
 
 // The Ramp up / Hold PID may move the valve, never past the cap; while tripped it may not open (only a trip reset clears the flag, ADR 0043).
@@ -91,12 +100,12 @@ function shaftTick(
 function speedControlTick(
   turbineState: TurbineState,
   newRPM: number,
-  generatorBreaker: boolean,
+  connected: boolean,
   condenserPressure: number,
   rollPermissive: boolean,
 ): Pick<TurbineState, "runUpPoint"> & SpeedControl {
   const { turbineValvePosition: currentPosition, turbineTripped } = turbineState
-  const lostSync: boolean = turbineState.speedMode === "synchronised" && !generatorBreaker
+  const lostSync: boolean = turbineState.speedMode === "synchronised" && !connected
   const control: TurbineState = lostSync ? { ...turbineState, speedMode: "hold", runUpPoint: CstTurbine.SyncRPM } : turbineState
   const pid = updateTurbineValve(control, newRPM, turbineTripped || !rollPermissive ? currentPosition : maxTurbineValvePosition(currentPosition, condenserPressure))
   return { runUpPoint: control.runUpPoint, ...pid }

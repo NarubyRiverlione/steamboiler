@@ -22,11 +22,14 @@ type PowerPlantAction =
   | { type: "SELECT_RUN_UP_POINT"; payload: { runUpPoint: number } }
   | { type: "TOGGLE_GENERATOR_BREAKER" }
   | { type: "SET_LOAD_SETPOINT"; payload: { loadSetpoint: number } }
-  // Grid supply breaker Actions (#141, ADR 0053): both always allowed; opening with the generator breaker closed is house load operation (#182)
+  // Grid supply breaker Actions (#141, ADR 0053): both always allowed; closing it opens the unit aux breaker (#189)
   | { type: "CLOSE_GRID_SUPPLY_BREAKER" }
   | { type: "OPEN_GRID_SUPPLY_BREAKER" }
   // Local mechanical trips (#184, ADR 0053): work with no safety bus, only open
   | { type: "LOCAL_TRIP_GRID_SUPPLY_BREAKER" }
+  // Unit aux breaker Actions (#189, ADR 0053): close is refused outside the ±2 rpm window and, with the grid supply closed, opens it on the same tick; open is never refused
+  | { type: "CLOSE_UNIT_AUX_BREAKER" }
+  | { type: "OPEN_UNIT_AUX_BREAKER" }
   | { type: "LOCAL_TRIP_GENERATOR_BREAKER" }
   // Onsite diesel Actions (#169): start/stop; close is refused with a reason (dieselBreakerCloseRefusal), open is never refused;
   // the local trip only opens and needs no control power

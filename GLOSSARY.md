@@ -77,7 +77,10 @@ The breaker between the generator and the plant's grid connection. Closed, the g
 _Avoid_: Main breaker, sync breaker
 
 **Grid supply breaker**:
-The plant's tie to the grid: through it the grid feeds the auxiliary bus and the plant exports its net output. Open, the generator can only carry the auxiliary bus (house load operation).
+The station supply: through it the grid feeds the auxiliary bus. It carries no export. Closing it while the unit aux breaker is closed opens the unit aux breaker on the same tick.
+
+**Unit aux breaker**:
+Lets the generator feed the auxiliary bus. It closes only inside the ±2 rpm window and auto-opens when the speed leaves it. Closing it while the grid supply breaker is closed opens the grid supply breaker on the same tick (the seamless transfer: the bus is never dead).
 _Avoid_: Incomer, station service breaker
 
 **Auxiliary bus**:
@@ -93,7 +96,7 @@ The electric output less the auxiliary load, in MW. Negative means the plant imp
 _Avoid_: Net demand, net load
 
 **House load operation**:
-The generator carries only the auxiliary bus, with the grid supply breaker open: the unit runs on its own load. Opening the tie at a high load is a load rejection that the unit may not survive.
+The generator carries only the auxiliary bus, with the unit aux breaker closed and the generator breaker open: the unit runs on its own load (the island). Opening the generator breaker at a high load is a load rejection that the unit may not survive.
 _Avoid_: Island mode, islanding
 
 **Diesel generator**:
@@ -109,7 +112,7 @@ Bringing the plant up from a dead bus with the diesel generator alone, until the
 _Avoid_: Black start, cold start
 
 **Dead bus**:
-The grid supply breaker, the generator breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
+The grid supply breaker, the unit aux breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
 _Avoid_: Blackout, loss of power
 
 **Vital bus**:
@@ -152,7 +155,7 @@ The speed mode that keeps the turbine at the selected run-up point by moving the
 _Avoid_: Autopilot, speed hold, cruise
 
 **Synchronised mode**:
-The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the breaker or a turbine trip ends it, back to free mode. It holds during house load operation too.
+The speed mode the turbine is in while the generator breaker is closed. It keeps the turbine at sync speed like hold mode at 3000 rpm, and the operator cannot choose another speed mode or run-up point while it lasts. Closing the breaker enters it; opening the last closed breaker (generator or unit aux) or a turbine trip ends it, back to free mode. It holds during house load operation too.
 _Avoid_: Grid mode, sync hold
 
 **Run-up point**:

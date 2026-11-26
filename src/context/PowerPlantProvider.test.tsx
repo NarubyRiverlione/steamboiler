@@ -240,6 +240,7 @@ const rows: Row[] = [
     }),
   },
   { name: "toggleGridSupplyBreaker", act: (c) => { c.toggleGridSupplyBreaker(); }, expected: () => ({ gridSupplyBreaker: false }) },
+  { name: "toggleUnitAuxBreaker", act: (c) => { c.toggleUnitAuxBreaker(); }, expected: () => ({ "Turbine.unitAuxBreaker": true, gridSupplyBreaker: false }) },
   { name: "setDieselRun", act: (c) => { c.setDieselRun(true); }, expected: () => ({ "Diesel.status": "starting" }) },
   {
     name: "toggleDieselBreaker (close)",

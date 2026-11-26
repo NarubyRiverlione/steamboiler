@@ -9,9 +9,9 @@ import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { CstDiesel, CstSimulation } from "./const"
 import PowerPlantState, { DieselState } from "./PowerPlantState"
 
-// The diesel is the sole supply: the grid supply breaker and the generator breaker are open
+// The diesel is the sole supply: the grid supply breaker and the unit aux breaker are open
 export const isDieselSole = ({ gridSupplyBreaker, dieselBreaker, Turbine }: PowerPlantState): boolean =>
-  dieselBreaker && !gridSupplyBreaker && !Turbine.generatorBreaker
+  dieselBreaker && !gridSupplyBreaker && !Turbine.unitAuxBreaker
 
 // The diesel's output in MW: the auxiliary load while it is the sole supply, otherwise it runs unloaded
 export const dieselOutput = (state: PowerPlantState): number => (isDieselSole(state) ? auxiliaryLoadOf(state) : 0)
@@ -21,8 +21,8 @@ export const dieselOutput = (state: PowerPlantState): number => (isDieselSole(st
 export function dieselBreakerCloseRefusal(state: PowerPlantState): string | undefined {
   if (state.dieselBreaker) return undefined
   if (state.Diesel.status !== "running") return state.Diesel.status === "starting" ? "The diesel is still starting" : "The diesel is not running"
-  const generatorAlone: boolean = state.Turbine.generatorBreaker && !state.gridSupplyBreaker
-  return generatorAlone && !isAtSyncSpeed(state.Turbine.rpm) ? "Speed is outside the synchronising window" : undefined
+  const unitAuxAlone: boolean = state.Turbine.unitAuxBreaker && !state.gridSupplyBreaker
+  return unitAuxAlone && !isAtSyncSpeed(state.Turbine.rpm) ? "Speed is outside the synchronising window" : undefined
 }
 
 // The one open path: the normal open, the STOP and the local trip all use it

@@ -1,5 +1,5 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
-import { BusPumps, isBusLive, isHouseLoad, restorePumps, stopPumps } from "./AuxiliaryBus"
+import { BusPumps, isBusLive, restorePumps, stopPumps } from "./AuxiliaryBus"
 import { DieselTick } from "./Diesel"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { upsChargeAfter } from "./SafetyBus"
@@ -52,7 +52,7 @@ export default function PowerPlantTick(entry: PowerPlantState): PowerPlantState 
     state.Heater.extractionFlow + state.Deaerator.extractionFlow,
     state.Boiler.steamTemperature,
     isAtOilPermissive(oilNewState) && rotorTurns(bypassResult.turbineState),
-    isHouseLoad(state) ? auxiliaryLoadOf(state) : undefined,
+    auxiliaryLoadOf(state),
   )
   // Turning gear (ADR 0051): holds the stopped rotor at gear speed, throws itself out above standstill speed, drops out on low oil
   // Gland seal steam (ADR 0047): shut off when the rotor stops turning

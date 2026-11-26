@@ -70,7 +70,8 @@ export type TurbineState = {
   runUpPoint: number // Selected run-up point (rpm): the target of Ramp up and Hold
   speedMode: SpeedMode // Free, Ramp up, Hold or Synchronised
   speedReference: number // rpm the PID aims at in Ramp up; follows the speed while the PID is inactive
-  generatorBreaker: boolean // Whether the generator breaker is closed (Phase 4)
+  generatorBreaker: boolean // Whether the generator breaker is closed: the generator's tie to the grid, the export goes through it (Phase 4, #189)
+  unitAuxBreaker: boolean // Whether the unit aux breaker is closed: the generator feeds the auxiliary bus; open in every scenario and a new game (#189, ADR 0053)
   pidIntegralError: number // Ramp up / Hold PID accumulated rpm error (rpm·s, clamped to ±1)
   turbineTripped: boolean // set by a turbine trip, cleared only by a trip reset
   turningGearEngaged: boolean // the turning gear holds the stopped rotor at a few rpm; the valve cannot open on a stopped rotor off the gear (ADR 0051)

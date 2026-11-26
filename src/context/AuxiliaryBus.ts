@@ -1,21 +1,18 @@
 /**
- * Auxiliary bus (#141, ADR 0053): the bus that powers the pumps is fed by the grid supply breaker, by the generator
- * breaker, by the diesel breaker (#169), or any together. With all three open the bus is dead and every pump stops (flow 0), while the stored valve positions and
- * switches stay as the operator set them, so the pumps resume when the bus is fed again, with no reset step. Opening the grid supply
- * breaker is never refused (#182): with the generator breaker closed the plant runs on house load.
+ * Auxiliary bus (#141, ADR 0053): the bus that powers the pumps is fed by the grid supply breaker, by the unit aux breaker (#189),
+ * by the diesel breaker (#169), or any together. The generator breaker is the generator's tie to the grid and feeds no bus. With all three
+ * open the bus is dead and every pump stops (flow 0), while the stored valve positions and switches stay as the operator set them, so the
+ * pumps resume when the bus is fed again, with no reset step. Opening the generator breaker is never refused (#182): with the unit aux
+ * breaker closed the plant runs on house load.
  */
 import PowerPlantState, { CondenserState, DeaeratorState, OilState } from "./PowerPlantState"
 
 // Derived every tick, never stored: any of the three breakers feeds the bus
-export const isBusLive = ({ gridSupplyBreaker, dieselBreaker, Turbine }: PowerPlantState): boolean => gridSupplyBreaker || Turbine.generatorBreaker || dieselBreaker
+export const isBusLive = ({ gridSupplyBreaker, dieselBreaker, Turbine }: PowerPlantState): boolean => gridSupplyBreaker || Turbine.unitAuxBreaker || dieselBreaker
 
-// House load operation (#182, ADR 0053): the grid supply breaker open with the generator breaker closed. The generator carries the bus,
-// so the auxiliary load is the shaft load; the load setpoint stays in state but is ignored (its command does nothing; the disabled control is #142).
-export const isHouseLoad = ({ gridSupplyBreaker, Turbine }: PowerPlantState): boolean => !gridSupplyBreaker && Turbine.generatorBreaker
-
-// Why the load setpoint does nothing, or undefined: in house load operation the generator follows the auxiliary load (#142 shows it as a lamp)
-export const houseLoadRefusal = (state: PowerPlantState): string | undefined =>
-  isHouseLoad(state) ? "House load operation: the grid supply breaker is open" : undefined
+// House load operation, the island (#182, #189, ADR 0053): the unit aux breaker closed with the generator breaker open. The generator carries
+// the bus alone, so the auxiliary load is the shaft load. The load setpoint needs the generator breaker, so it does nothing here.
+export const isHouseLoad = ({ Turbine }: PowerPlantState): boolean => Turbine.unitAuxBreaker && !Turbine.generatorBreaker
 
 export type BusPumps = { Deaerator: DeaeratorState; Condenser: CondenserState; Oil: OilState }
 

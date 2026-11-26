@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { ContextType } from "react"
 import { PowerPlantContext } from "../../context/PowerPlantContext"
@@ -167,19 +167,19 @@ describe("Generation page", () => {
     expect(screen.getByLabelText("Net output").textContent).toBe("45.5 MW")
   })
 
-  it("lights Grid supply closed and leaves the setpoint enabled with the grid supply closed", () => {
+  it("leaves the setpoint enabled with the generator breaker closed, whichever breaker feeds the bus (#189)", () => {
     renderGeneration({ generatorBreaker: true }, { gridSupplyBreaker: true })
-    expect(screen.getByRole("img", { name: "Grid supply closed: on" })).toBeTruthy()
+    expect(screen.getByLabelText<HTMLInputElement>("Load setpoint (MW)").disabled).toBe(false)
+    cleanup()
+    renderGeneration({ generatorBreaker: true, unitAuxBreaker: true }, { gridSupplyBreaker: false })
     expect(screen.getByLabelText<HTMLInputElement>("Load setpoint (MW)").disabled).toBe(false)
   })
 
-  it("in house load operation unlights the lamp and disables the setpoint controls with the sim's reason", () => {
-    const fns = renderGeneration({ generatorBreaker: true }, { gridSupplyBreaker: false })
-    expect(screen.getByRole("img", { name: "Grid supply closed: off" })).toBeTruthy()
+  it("in house load operation (generator breaker open, unit aux closed) disables the setpoint controls: close the generator breaker first", () => {
+    const fns = renderGeneration({ generatorBreaker: false, unitAuxBreaker: true }, { gridSupplyBreaker: false })
     const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
     expect(field.disabled).toBe(true)
-    expect(field.title).toBe("House load operation: the grid supply breaker is open")
-    expect(screen.queryByText("House load operation: the grid supply breaker is open")).toBeNull() // a tooltip only, no message line
+    expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
     fireEvent.keyDown(screen.getByRole("meter", { name: "Load setpoint knob" }), { key: "ArrowUp" })
     expect(fns.setLoadSetpoint).not.toHaveBeenCalled()
   })

@@ -102,6 +102,7 @@
     "speedMode": "free",
     "speedReference": 2.9999987420114453,
     "generatorBreaker": false,
+    "unitAuxBreaker": false,
     "pidIntegralError": 0,
     "turbineTripped": false,
     "turningGearEngaged": true,

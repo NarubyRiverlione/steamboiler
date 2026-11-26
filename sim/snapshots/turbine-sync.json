@@ -102,6 +102,7 @@
     "speedMode": "synchronised",
     "speedReference": 3000,
     "generatorBreaker": true,
+    "unitAuxBreaker": false,
     "pidIntegralError": -0.0015045004883631966,
     "turbineTripped": false,
     "turningGearEngaged": false,

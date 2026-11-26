@@ -3,7 +3,7 @@ import { deaeratorLevel, makeColdDeaerator } from "./Deaerator/DeaeratorTick"
 import { calculateBoilerPressure, calculateHeatingEnergy, calculateSteamInventory, waterMassOf } from "../utils/boilerCalculations"
 import { getBoilingPoint } from "../utils/steamTable"
 import { airMassOf, hotwellLevel, vapourPressureAt } from "../utils/condenserCalculation"
-import { isAboveMainSteamValveMinimum, generatorBreakerCloseRefusal, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
+import { isAboveMainSteamValveMinimum, generatorBreakerCloseRefusal, unitAuxBreakerCloseRefusal, loadSetpointRefusal, maxTurbineValvePosition, runUpPointRefusal, speedModeRefusal } from "../utils/turbineCalculations"
 import PowerPlantAction from "./PowerPlantActions"
 import PowerPlantState, { BoilerState, CondenserState, DeaeratorState, TurbineState } from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
@@ -11,7 +11,7 @@ import { runTicks } from "./PowerPlantBatch"
 import { integralFor } from "./Boiler/Attemperator"
 import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler/BoilerTick"
 import { resetTrip } from "./tripReset"
-import { houseLoadRefusal, isBusLive } from "./AuxiliaryBus"
+import { isBusLive } from "./AuxiliaryBus"
 import { dieselBreakerCloseRefusal, openDieselBreaker } from "./Diesel"
 import { isSafetyBusLive, isVitalBusLive } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
@@ -112,6 +112,7 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
     speedMode: "free",
     speedReference: 0,
     generatorBreaker: false, // Phase 4: Initially open
+    unitAuxBreaker: false, // #189: the grid supply feeds the bus at the start
     pidIntegralError: 0,
     turbineTripped: false,
     turningGearEngaged: false,
@@ -251,11 +252,22 @@ const handlers: { [T in ActionType]: Handler<T> } = {
 
   //#region Grid supply breaker (#141)
   // Breaker control power is the safety bus: with it dead the command does nothing (#143, ADR 0053)
-  CLOSE_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? { ...state, gridSupplyBreaker: true } : state),
+  // Closing it while the unit aux breaker is closed opens that breaker on the same tick: the transfer back, no dead bus (#189)
+  CLOSE_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? openUnitAuxBreaker({ ...state, gridSupplyBreaker: true }) : state),
   OPEN_GRID_SUPPLY_BREAKER: (state) => (isSafetyBusLive(state) ? openGridSupplyBreaker(state) : state),
   // Local mechanical trips (#184, ADR 0053): need no bus, only open; same open as the normal one
   LOCAL_TRIP_GRID_SUPPLY_BREAKER: (state) => openGridSupplyBreaker(state),
   LOCAL_TRIP_GENERATOR_BREAKER: (state) => (state.Turbine.generatorBreaker ? openGeneratorBreaker(state) : state),
+  //#endregion
+
+  //#region Unit aux breaker (#189): closes inside the ±2 rpm window; with the grid supply closed it opens that breaker on the same tick (seamless transfer)
+  CLOSE_UNIT_AUX_BREAKER: (state) => {
+    if (!isSafetyBusLive(state) || state.Turbine.unitAuxBreaker || unitAuxBreakerCloseRefusal(state.Turbine)) return state
+    const fed: PowerPlantState = { ...state, gridSupplyBreaker: false }
+    if (state.Turbine.generatorBreaker) return withTurbine(fed, { unitAuxBreaker: true })
+    return withTurbine(fed, { unitAuxBreaker: true, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
+  },
+  OPEN_UNIT_AUX_BREAKER: (state) => (isSafetyBusLive(state) ? openUnitAuxBreaker(state) : state),
   //#endregion
 
   //#region Onsite diesel generator (#169): starting needs no plant bus; the breaker needs the safety bus, the local trip does not
@@ -341,9 +353,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
     if (generatorBreakerCloseRefusal(state.Turbine)) return state
     return withTurbine(state, { generatorBreaker: true, speedMode: "synchronised", runUpPoint: CstTurbine.SyncRPM, speedReference: CstTurbine.SyncRPM, pidIntegralError: 0 })
   },
-  // Only with the breaker closed (loadSetpointRefusal) and not in house load operation (the setpoint is ignored there, #182); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
+  // Only with the generator breaker closed (loadSetpointRefusal; in house load operation it is open, #189); limited to 0 up to LoadSetpointLimit. The load follows at the load rate.
   SET_LOAD_SETPOINT: (state, { payload: { loadSetpoint } }) =>
-    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) || houseLoadRefusal(state) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
+    !isVitalBusLive(state) || loadSetpointRefusal(state.Turbine) ? state : withTurbine(state, { loadSetpoint: clamp(loadSetpoint, 0, CstTurbine.LoadSetpointLimit) }),
   //#endregion
 }
 
@@ -356,8 +368,17 @@ const freeAt = (rpm: number): Pick<TurbineState, "speedMode" | "pidIntegralError
 
 // The one way a breaker opens, shared by the normal open and the local trip
 const openGridSupplyBreaker = (state: PowerPlantState): PowerPlantState => (state.gridSupplyBreaker ? { ...state, gridSupplyBreaker: false } : state)
+// With the unit aux breaker closed the generator goes on to carry the bus alone (house load operation): the governor stays in force and the tick sets the load
 const openGeneratorBreaker = (state: PowerPlantState): PowerPlantState =>
-  withTurbine(state, { generatorBreaker: false, electricOutput: 0, loadSetpoint: 0, ...freeAt(state.Turbine.rpm) })
+  state.Turbine.unitAuxBreaker
+    ? withTurbine(state, { generatorBreaker: false, loadSetpoint: 0 })
+    : withTurbine(state, { generatorBreaker: false, electricOutput: 0, loadSetpoint: 0, ...freeAt(state.Turbine.rpm) })
+// With the generator breaker open the generator is unloaded when this opens: back to Free, like any breaker opened by hand (#135)
+const openUnitAuxBreaker = (state: PowerPlantState): PowerPlantState => {
+  if (!state.Turbine.unitAuxBreaker) return state
+  if (state.Turbine.generatorBreaker) return withTurbine(state, { unitAuxBreaker: false })
+  return withTurbine(state, { unitAuxBreaker: false, electricOutput: 0, ...freeAt(state.Turbine.rpm) })
+}
 
 export function powerPlantReducer(state: PowerPlantState, action: PowerPlantAction): PowerPlantState {
   // TS cannot correlate action.type with its payload when indexing a mapped type, hence the widening
