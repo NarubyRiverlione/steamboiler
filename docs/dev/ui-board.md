@@ -103,7 +103,7 @@ The board has four states (#144, ADR 0055), derived by `deriveBoardState` (`src/
 | Board state | When | What the board shows |
 |---|---|---|
 | **Normal** | vital bus live | the board as today |
-| **Emergency** (red lens) | vital bus dead, safety bus live | red emergency light (`board-emergency`); every page and the overview reachable; analog gauges and lamps only: every `Display` is blank except the clock (`exempt`) and so are the header plant values; no annunciator; the `UpsGroup` in a strip under the header on every page (on the Auxiliary bus page its own group serves) |
+| **Emergency** (red lens) | vital bus dead, safety bus live | red emergency light (`board-emergency`); every page and the overview reachable; analog gauges and lamps only: every `Display` is blank except the clock (`exempt`) and so are the header plant values; no annunciator; the `UpsGroup` in a column (`board-ups-strip`) beside the page, in `board-body` with `main`, on every page (on the Auxiliary bus page its own group serves) |
 | **Dark** | vital bus dead, safety bus dead (UPS breaker open, or charge 0%) | dark except the UPS breaker switch (`UpsGroup breakerOnly`), the clock and the time controls |
 | **Ended** | `simulationEnded` (UPS discharged to 0%) | the board frozen dark with one end plate (the app speaking, so ADR 0054's no-text rule does not apply) and the Presets (new game) button |
 

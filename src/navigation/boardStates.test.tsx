@@ -78,6 +78,15 @@ describe("emergency board", () => {
     expect(screen.getByLabelText("UPS charge")).toBeTruthy()
   })
 
+  it("puts the UPS group in a column beside the page, not above it, so the page keeps its height", () => {
+    renderBoard(stateOf(false, true), "/")
+    const group: HTMLElement = screen.getByLabelText("UPS charge")
+    const strip: Element | null = group.closest(".board-ups-strip")
+    const main: Element | null = document.querySelector("main.board-main")
+    expect(strip?.parentElement).toBe(main?.parentElement)
+    expect(main?.parentElement?.classList.contains("board-body")).toBe(true)
+  })
+
   it("shows one UPS group on the Auxiliary bus page", () => {
     renderBoard(stateOf(false, true), "/auxiliary-bus")
     expect(screen.getAllByLabelText("UPS charge")).toHaveLength(1)
