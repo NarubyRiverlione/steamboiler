@@ -1760,10 +1760,23 @@ path.board-zone {
   box-shadow: inset 0 0 6rem 1rem rgba(200, 20, 20, 0.45);
 }
 
+/* Body: the page and, in the emergency state, the UPS column beside it, so the page keeps its full height */
+.board-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0.5rem;
+}
+
+.board-body > .board-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .board-ups-strip {
   flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
+  min-height: 0;
+  overflow-y: auto;
   padding: 0.25rem 0;
 }
 

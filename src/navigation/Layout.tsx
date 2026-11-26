@@ -56,14 +56,16 @@ function Layout() {
         <PlantValveRamp>
           <div className={boardState === "emergency" ? "board-shell board-emergency" : "board-shell"}>
             <Header />
-            {upsStrip && (
-              <div className="board-ups-strip">
-                <UpsGroup state={state} onToggleUpsBreaker={toggleUpsBreaker} />
-              </div>
-            )}
-            <main className="board-main">
-              <Outlet />
-            </main>
+            <div className="board-body">
+              <main className="board-main">
+                <Outlet />
+              </main>
+              {upsStrip && (
+                <aside className="board-ups-strip" aria-label="UPS">
+                  <UpsGroup state={state} onToggleUpsBreaker={toggleUpsBreaker} />
+                </aside>
+              )}
+            </div>
           </div>
         </PlantValveRamp>
       </BoardStateContext.Provider>
