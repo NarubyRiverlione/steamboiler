@@ -184,21 +184,31 @@ function SourceBox({
 }
 
 // The grid box on top with the tie rail the grid supply and the generator breaker hang on: the grid is always up for now (#189)
-function GridSource({ showValues }: { readonly showValues: boolean }) {
+function GridSource({ showValues, loadSetpoint }: { readonly showValues: boolean; readonly loadSetpoint: number }) {
   return (
     <g className={colour("grid")} data-grid>
       <path className="board-pipe board-electrical-line" d={line(GRID_X, SOURCE_BOX.y + SOURCE_BOX.h, GRID_X, GRID_TIE_Y)} />
       <path className="board-pipe board-electrical-line" d={line(GRID_SUPPLY_X, GRID_TIE_Y, GENERATOR_X, GRID_TIE_Y)} />
       <SourceBox x={GRID_X} y={SOURCE_BOX.y} name="Grid" lit />
       {showValues && (
-        <ValueLabel
-          label="Grid voltage"
-          text={VOLTAGES.grid.live}
-          x={GRID_X + SOURCE_BOX.w / 2 + 12}
-          y={SOURCE_BOX.y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
-          anchor="start"
-          widest="110 kV"
-        />
+        <>
+          <ValueLabel
+            label="Grid voltage"
+            text={VOLTAGES.grid.live}
+            x={GRID_X - SOURCE_BOX.w / 2 - 12}
+            y={SOURCE_BOX.y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
+            anchor="end"
+            widest="110 kV"
+          />
+          <ValueLabel
+            label="Load setpoint"
+            text={mw(loadSetpoint)}
+            x={GRID_X + SOURCE_BOX.w / 2 + 12}
+            y={SOURCE_BOX.y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
+            anchor="start"
+            widest="000.00 MW"
+          />
+        </>
       )}
     </g>
   )
@@ -464,7 +474,7 @@ function ElectricalOverview() {
             </LensButton>
           </div>
         </foreignObject>
-        <GridSource showValues={showValues} />
+        <GridSource showValues={showValues} loadSetpoint={state.Turbine.loadSetpoint} />
         <GridSupplyColumn closed={state.gridSupplyBreaker} />
         <GeneratorColumn generatorClosed={state.Turbine.generatorBreaker} unitAuxClosed={state.Turbine.unitAuxBreaker} />
         <DieselColumn closed={state.dieselBreaker} showValues={showValues} output={dieselOutput(state)} />

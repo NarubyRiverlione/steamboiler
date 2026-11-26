@@ -118,6 +118,7 @@ describe("electrical overview", () => {
   it("shows the live values: voltages, consumer draws, total, diesel output and UPS charge", () => {
     renderBoard(livePlant())
     expect(text("Grid voltage")).toBe("110 kV")
+    expect(text("Load setpoint")).toBe("0.00 MW")
     expect(text("Auxiliary bus voltage")).toBe("6.0 kV")
     expect(text("Vital bus voltage")).toBe("230 V")
     expect(text("Safety bus voltage")).toBe("110 V DC")
