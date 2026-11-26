@@ -67,8 +67,9 @@ export const CONSUMERS: readonly Consumer[] = [
 
 export const CONSUMER_STEM_X = 120
 export const CONSUMER_BOX = { x: 150, w: 270, h: 36 } as const
-export const consumerY = (index: number): number => 390 + index * 46
-export const TOTAL_Y = 690
+// The Auxiliary load total is the first row below the Auxiliary bus, the consumers follow
+export const TOTAL_Y = 390
+export const consumerY = (index: number): number => TOTAL_Y + (index + 1) * 46
 
 // Vital bus fed from the Auxiliary bus at this x
 export const VITAL_FEED_X = 700

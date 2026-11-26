@@ -408,7 +408,7 @@ function Consumers({
       <text
         className={"board-node-name" + dim(live)}
         x={CONSUMER_BOX.x}
-        y={TOTAL_Y + 18}
+        y={TOTAL_Y + 5}
         style={{ textAnchor: "start" }}
       >
         Auxiliary load
@@ -418,7 +418,7 @@ function Consumers({
           label="Auxiliary load"
           text={mw(draws.reduce((total: number, draw: number) => total + draw, 0))}
           x={CONSUMER_BOX.x + CONSUMER_BOX.w + 12}
-          y={TOTAL_Y}
+          y={TOTAL_Y - VALUE_BOX_HEIGHT / 2}
           anchor="start"
           widest="00.00 MW"
         />
