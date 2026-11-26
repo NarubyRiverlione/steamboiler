@@ -1,4 +1,4 @@
-/** UPS group (#142): the UPS breaker (manual, works with no power), the UPS charge as an analog gauge (the LCDs sit on the vital bus, ADR 0055) and the Control power lamp. Reusable: #144 mounts it on the emergency board (every page) and, breaker only, on the dark board. */
+/** UPS group (#142): the battery (UPS) breaker (manual, works with no power), the UPS charge as an analog gauge (the LCDs sit on the vital bus, ADR 0055) and the Control power lamp. Reusable: #144 mounts it on the emergency board (every page) and, breaker only, on the dark board. */
 
 import { useState } from "react"
 import { isSafetyBusLive } from "../../context/SafetyBus"
@@ -26,7 +26,7 @@ export function UpsGroup({ state, onToggleUpsBreaker, breakerOnly = false }: Ups
     <div className="board-group">
       <h3 className="board-group-title">UPS</h3>
       <BreakerSwitch
-        label="UPS breaker"
+        label="Battery breaker"
         plate="UPS"
         rating="24 V · CB-U1"
         on={state.upsBreaker}
@@ -41,7 +41,7 @@ export function UpsGroup({ state, onToggleUpsBreaker, breakerOnly = false }: Ups
       {!breakerOnly && (
         <>
           <RoundGauge label="UPS charge" unit="%" value={state.upsCharge} min={0} max={100} major={20} minor={10} zones={CHARGE_ZONES} />
-          <Lamp lit={isSafetyBusLive(state)} tone="ok" label="Control power" title="Lit while the safety bus is live (UPS breaker closed and the UPS charged)" />
+          <Lamp lit={isSafetyBusLive(state)} tone="ok" label="Control power" title="Lit while the safety bus is live (the Auxiliary bus is live, or the battery breaker is closed and the battery charged)" />
         </>
       )}
     </div>

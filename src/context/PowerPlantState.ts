@@ -133,7 +133,7 @@ type PowerPlantState = {
   gridSupplyBreaker: boolean // the grid feeds the auxiliary bus while closed; closed in every scenario and a new game (#141, ADR 0053)
   Diesel: DieselState
   dieselBreaker: boolean // the onsite diesel feeds the auxiliary bus while closed; open in every scenario and a new game (#169, ADR 0053)
-  upsBreaker: boolean // the UPS feeds the safety bus while closed; manual, needs no power (#143)
+  upsBreaker: boolean // the battery breaker: the UPS battery feeds the safety bus on a dead Auxiliary bus while closed; manual, needs no power (#143)
   upsCharge: number // percent 0-100; drains with the UPS breaker closed and the Auxiliary bus dead, recharges while it is live
   simulationEnded: boolean // latched when the UPS charge reaches 0%: the tick no longer advances the plant (#143)
   auxiliaryLoad: number // MW, what the pumps and turbine auxiliaries draw (#140); net output = electric output - this

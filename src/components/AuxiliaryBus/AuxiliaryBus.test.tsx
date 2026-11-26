@@ -58,26 +58,31 @@ describe("Auxiliary bus page", () => {
     expect(screen.getByLabelText("Auxiliary load").textContent).toBe("3.5 MW")
   })
 
-  it("toggles the UPS breaker, shows the charge and follows the safety bus", () => {
+  it("toggles the battery breaker, shows the charge and follows the safety bus", () => {
     const fns = renderPage({ upsBreaker: true, upsCharge: 64 })
     expect(screen.getByRole("meter", { name: "UPS charge" }).getAttribute("aria-valuenow")).toBe("64")
     expect(screen.getByRole("img", { name: "Control power: on" })).toBeTruthy()
-    fireEvent.click(liftCover("UPS breaker"))
+    fireEvent.click(liftCover("Battery breaker"))
     expect(fns.toggleUpsBreaker).toHaveBeenCalledTimes(1)
   })
 
-  it("has Control power off with the UPS breaker open or the charge empty", () => {
-    renderPage({ upsBreaker: false, upsCharge: 100 })
+  it("has Control power off with a dead Auxiliary bus and the battery breaker open or the charge empty", () => {
+    renderPage({ gridSupplyBreaker: false, upsBreaker: false, upsCharge: 100 }, false)
     expect(screen.getByRole("img", { name: "Control power: off" })).toBeTruthy()
+  })
+
+  it("has Control power on from the Auxiliary bus with the battery breaker open (#190)", () => {
+    renderPage({ upsBreaker: false })
+    expect(screen.getByRole("img", { name: "Control power: on" })).toBeTruthy()
   })
 })
 
 describe("UpsGroup", () => {
   it("renders on its own with the state and one callback", () => {
     const onToggle = vi.fn()
-    render(<UpsGroup state={{ ...makeInitialState(), upsCharge: 0 }} onToggleUpsBreaker={onToggle} />)
+    render(<UpsGroup state={{ ...makeInitialState(), gridSupplyBreaker: false, upsCharge: 0 }} onToggleUpsBreaker={onToggle} />)
     expect(screen.getByRole("img", { name: "Control power: off" })).toBeTruthy()
-    fireEvent.click(liftCover("UPS breaker"))
+    fireEvent.click(liftCover("Battery breaker"))
     expect(onToggle).toHaveBeenCalledTimes(1)
   })
 })

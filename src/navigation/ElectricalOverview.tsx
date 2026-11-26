@@ -11,7 +11,7 @@ import { consumerDraws } from "../context/AuxiliaryLoad"
 import { dieselOutput } from "../context/Diesel"
 import usePowerPlant from "../context/PowerPlantContext"
 import type PowerPlantState from "../context/PowerPlantState"
-import { isSafetyBusLive, isVitalBusLive } from "../context/SafetyBus"
+import { isBatteryFeeding, isSafetyBusLive, isVitalBusLive } from "../context/SafetyBus"
 import {
   BREAKER_HALF,
   BUSES,
@@ -25,6 +25,7 @@ import {
   SOURCE_BREAKER_Y,
   TOTAL_Y,
   UPS,
+  SAFETY_FEED_X,
   UPS_BREAKER_Y,
   VITAL_FEED_X,
   VOLTAGES,
@@ -404,7 +405,13 @@ function ElectricalOverview() {
           showValues={showValues}
           voltage={voltage(vitalLive, VOLTAGES.vital)}
         />
-        <g className={colour("ups") + dim(safetyLive)} data-feed="safety">
+        <g className={colour("aux") + dim(auxLive)} data-feed="safety-ac">
+          <path
+            className="board-pipe board-electrical-line"
+            d={line(SAFETY_FEED_X, aux.y, SAFETY_FEED_X, safety.y)}
+          />
+        </g>
+        <g className={colour("ups") + dim(isBatteryFeeding(state))} data-feed="safety">
           <path
             className="board-pipe board-electrical-line"
             d={line(UPS.x, UPS_BREAKER_Y, UPS.x, safety.y)}
@@ -429,8 +436,8 @@ function ElectricalOverview() {
             className="board-pipe board-electrical-line"
             d={line(UPS.x, UPS.y + UPS.h, UPS.x, UPS_BREAKER_Y)}
           />
-          <Node part={upsLink} name="UPS breaker">
-            <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={state.upsBreaker} name="UPS breaker" />
+          <Node part={upsLink} name="Battery breaker">
+            <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={state.upsBreaker} name="Battery breaker" />
           </Node>
         </g>
         {showValues && (

@@ -74,7 +74,7 @@ describe("electrical overview", () => {
     expect(screen.getByLabelText("Grid supply breaker: closed")).toBeTruthy()
     expect(screen.getByLabelText("Generator breaker: closed")).toBeTruthy()
     expect(screen.getByLabelText("Diesel generator breaker: open")).toBeTruthy()
-    expect(screen.getByLabelText("UPS breaker: closed")).toBeTruthy()
+    expect(screen.getByLabelText("Battery breaker: closed")).toBeTruthy()
   })
 
   it("lights a source line only while its breaker is closed", () => {
@@ -137,16 +137,38 @@ describe("electrical overview", () => {
     expect(screen.getByLabelText("Boiler feed pump: off")).toBeTruthy()
   })
 
-  it("dims the safety bus with the UPS breaker open or the charge at 0", () => {
+  it("keeps the safety bus lit from the Auxiliary bus with the battery breaker open (#190)", () => {
     const open: PowerPlantState = livePlant()
     open.upsBreaker = false
     renderBoard(open)
+    expect(dimmed(bus("safety"))).toBe(false)
+  })
+
+  it("draws the rectifier feed from the Auxiliary bus, lit with it and dimmed on a dead bus (#190)", () => {
+    renderBoard(livePlant())
+    expect(dimmed(document.querySelector('[data-feed="safety-ac"]'))).toBe(false)
+    cleanup()
+    const state: PowerPlantState = livePlant()
+    state.gridSupplyBreaker = false
+    state.Turbine.generatorBreaker = false
+    renderBare(state)
+    expect(dimmed(document.querySelector('[data-feed="safety-ac"]'))).toBe(true)
+  })
+
+  it("dims the safety bus on a dead Auxiliary bus with the battery breaker open or the charge at 0", () => {
+    const open: PowerPlantState = livePlant()
+    open.gridSupplyBreaker = false
+    open.Turbine.generatorBreaker = false
+    open.upsBreaker = false
+    renderBare(open)
     expect(dimmed(bus("safety"))).toBe(true)
     expect(text("Safety bus voltage")).toBe("0 V DC")
     cleanup()
     const empty: PowerPlantState = livePlant()
+    empty.gridSupplyBreaker = false
+    empty.Turbine.generatorBreaker = false
     empty.upsCharge = 0
-    renderBoard(empty)
+    renderBare(empty)
     expect(dimmed(bus("safety"))).toBe(true)
   })
 
@@ -154,7 +176,7 @@ describe("electrical overview", () => {
     renderBoard(livePlant())
     const hrefOf = (name: string): string | null => screen.getByRole("link", { name }).getAttribute("href")
     expect(hrefOf("Grid supply breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
-    expect(hrefOf("UPS breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
+    expect(hrefOf("Battery breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("UPS, opens Auxiliary bus")).toBe("/auxiliary-bus")
     expect(hrefOf("Generator, opens Generation")).toBe("/generation")
     expect(hrefOf("Generator breaker, opens Generation")).toBe("/generation")
@@ -203,7 +225,7 @@ describe("electrical overview", () => {
     renderBoard(state)
     expect(text("Auxiliary bus voltage")).toBe("")
     expect(text("Boiler feed pump draw")).toBe("")
-    expect(screen.getByLabelText("UPS breaker: closed")).toBeTruthy()
+    expect(screen.getByLabelText("Battery breaker: closed")).toBeTruthy()
     expect(bus("aux")).not.toBeNull()
   })
 })

@@ -117,7 +117,7 @@ The electrical bus fed by the Auxiliary bus that carries the controller controls
 _Avoid_: Control bus, DC bus (the model has no DC distribution)
 
 **Safety bus**:
-The electrical bus fed by the UPS through the UPS breaker that carries breaker control power and the trip reset. Dead when the UPS breaker is open or the UPS charge is 0%.
+The electrical bus that carries breaker control power and the trip reset. Fed by the Auxiliary bus, or on a dead Auxiliary bus by the UPS through the battery breaker. Dead when the Auxiliary bus is dead and the battery breaker is open or the UPS charge is 0%.
 _Avoid_: Emergency bus, DC bus
 
 **Control power**:
@@ -129,11 +129,11 @@ The battery that carries the Safety bus when the Auxiliary bus is dead. It runs 
 _Avoid_: Battery, backup power
 
 **UPS charge**:
-The UPS's stored energy in percent, 0 to 100. Drains at a constant rate while the UPS breaker is closed and the Auxiliary bus is dead; recharges at one fixed rate while the Auxiliary bus is live.
+The UPS's stored energy in percent, 0 to 100. Drains at a constant rate while the battery breaker is closed and the Auxiliary bus is dead; recharges at one fixed rate while the Auxiliary bus is live.
 
-**UPS breaker**:
-The manual breaker that connects the UPS to the Safety bus. It never closes by itself and needs no power.
-_Avoid_: Battery switch
+**Battery breaker**:
+The manual breaker that connects the UPS battery to the Safety bus (`upsBreaker` in the code). It only matters on a dead Auxiliary bus, never closes by itself and needs no power.
+_Avoid_: Battery switch, UPS breaker
 
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.
