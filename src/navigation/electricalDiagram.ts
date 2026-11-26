@@ -27,12 +27,15 @@ export type Busbar = {
   readonly y: number
   readonly x1: number
   readonly x2: number
+  // Where the name stands, clear of the feed lines that join the bus
+  readonly nameX: number
+  readonly nameAnchor: "start" | "end"
 }
 
 export const BUSES: readonly Busbar[] = [
-  { id: "aux", name: "Auxiliary bus", y: 330, x1: 80, x2: 760 },
-  { id: "vital", name: "Vital bus", y: 460, x1: 620, x2: 1040 },
-  { id: "safety", name: "Safety bus", y: 730, x1: 600, x2: 1040 },
+  { id: "aux", name: "Auxiliary bus", y: 330, x1: 80, x2: 760, nameX: GRID_SUPPLY_X - 12, nameAnchor: "end" },
+  { id: "vital", name: "Vital bus", y: 460, x1: 620, x2: 1040, nameX: 620, nameAnchor: "start" },
+  { id: "safety", name: "Safety bus", y: 730, x1: 600, x2: 1040, nameX: 612, nameAnchor: "start" },
 ]
 
 // Each source, the UPS and each bus has its own colour (board-electrical-<id> in board.css)

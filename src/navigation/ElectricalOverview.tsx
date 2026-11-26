@@ -220,8 +220,9 @@ function GridSupplyColumn({ closed }: { readonly closed: boolean }) {
     <g className={colour("grid")} data-source="grid" data-lit={closed}>
       <path
         className={"board-pipe board-electrical-line" + dim(closed)}
-        d={line(GRID_SUPPLY_X, GRID_TIE_Y, GRID_SUPPLY_X, BUSES[0].y)}
+        d={line(GRID_SUPPLY_X, SOURCE_BREAKER_Y, GRID_SUPPLY_X, BUSES[0].y)}
       />
+      <path className="board-pipe board-electrical-line" d={line(GRID_SUPPLY_X, GRID_TIE_Y, GRID_SUPPLY_X, SOURCE_BREAKER_Y)} />
       <Node part="auxiliaryBus" name="Grid supply breaker">
         <BreakerSymbol x={GRID_SUPPLY_X} y={SOURCE_BREAKER_Y} closed={closed} name="Grid supply breaker" />
       </Node>
@@ -247,8 +248,9 @@ function GeneratorColumn({
       <g className={colour("generator")} data-source="generator-tie" data-lit={generatorClosed}>
         <path
           className={"board-pipe board-electrical-line" + dim(generatorClosed)}
-          d={line(GENERATOR_X, GRID_TIE_Y, GENERATOR_X, GENERATOR_BOX_Y)}
+          d={line(GENERATOR_X, SOURCE_BREAKER_Y, GENERATOR_X, GENERATOR_BOX_Y)}
         />
+        <path className="board-pipe board-electrical-line" d={line(GENERATOR_X, GRID_TIE_Y, GENERATOR_X, SOURCE_BREAKER_Y)} />
         <Node part="generation" name="Generator breaker">
           <BreakerSymbol x={GENERATOR_X} y={SOURCE_BREAKER_Y} closed={generatorClosed} name="Generator breaker" />
         </Node>
@@ -318,9 +320,9 @@ function BusLine({
       <path className="board-bus board-electrical-line" d={line(bus.x1, bus.y, bus.x2, bus.y)} />
       <text
         className="board-node-name board-bus-name"
-        x={bus.x1}
+        x={bus.nameX}
         y={bus.y - 14}
-        style={{ textAnchor: "start" }}
+        style={{ textAnchor: bus.nameAnchor }}
       >
         {bus.name}
       </text>

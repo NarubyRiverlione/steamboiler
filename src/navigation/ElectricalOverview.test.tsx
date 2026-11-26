@@ -86,6 +86,14 @@ describe("electrical overview", () => {
     expect(dimmed(sourceLine("generator-tie"))).toBe(true)
     expect(dimmed(sourceLine("generator"))).toBe(true)
     expect(dimmed(sourceLine("diesel"))).toBe(true)
+    // The line above an open breaker is still energised from the grid
+    const upper = (id: string): Element | null => source(id)?.querySelectorAll(".board-pipe")[1] ?? null
+    expect(dimmed(upper("generator-tie"))).toBe(false)
+    state.gridSupplyBreaker = false
+    cleanup()
+    renderBoard(state)
+    expect(dimmed(sourceLine("grid"))).toBe(true)
+    expect(dimmed(upper("grid"))).toBe(false)
   })
 
   it("draws the generator column: the generator breaker to the grid, the unit aux breaker to the Auxiliary bus (#189)", () => {
