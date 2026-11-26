@@ -53,6 +53,18 @@ function TurbineTick(
 const isTripCondition = (rpm: number, condenserPressure: number): boolean =>
   isAboveVacuumLimit(condenserPressure) || isAtOverspeed(rpm)
 
+// The load on the shaft this tick: the setpoint ramp with the generator breaker closed, the auxiliary load in the island, else none
+function shaftLoad(turbine: TurbineState, auxiliaryLoad: number): number {
+  if (turbine.generatorBreaker) return loadAfter(turbine.electricOutput, turbine.loadSetpoint)
+  return turbine.unitAuxBreaker ? auxiliaryLoad : 0
+}
+
+// Both breakers auto-open when the new speed leaves the sync window (ADR 0027, #189)
+const breakersAfter = (turbine: TurbineState, rpm: number): Pick<TurbineState, "generatorBreaker" | "unitAuxBreaker"> => ({
+  generatorBreaker: turbine.generatorBreaker && isAtSyncSpeed(rpm),
+  unitAuxBreaker: turbine.unitAuxBreaker && isAtSyncSpeed(rpm),
+})
+
 type ShaftTick = { ticked: TurbineState; newRPM: number; connected: boolean }
 
 // The shaft and the generator for one tick: the enthalpy drop (less what the extraction steam no longer does after the tap)
@@ -74,15 +86,9 @@ function shaftTick(
     extractionFlow,
     steamTemperature,
   )
-  const load: number = turbineState.generatorBreaker
-    ? loadAfter(turbineState.electricOutput, turbineState.loadSetpoint)
-    : turbineState.unitAuxBreaker
-      ? auxiliaryLoad
-      : 0
+  const load: number = shaftLoad(turbineState, auxiliaryLoad)
   const newRPM: number = calculateRPM(turbineState.rpm, turbineState.turbineSteamFlowOut, enthalpyDrop, load)
-  const inWindow: boolean = isAtSyncSpeed(newRPM)
-  const generatorBreaker: boolean = turbineState.generatorBreaker && inWindow
-  const unitAuxBreaker: boolean = turbineState.unitAuxBreaker && inWindow
+  const { generatorBreaker, unitAuxBreaker } = breakersAfter(turbineState, newRPM)
   const connected: boolean = generatorBreaker || unitAuxBreaker
   const ticked: TurbineState = {
     ...turbineState,
