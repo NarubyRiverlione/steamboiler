@@ -4,7 +4,7 @@ import { PowerPlantContext } from "./PowerPlantContext.tsx"
 import PowerPlantAction from "./PowerPlantActions.ts"
 import { PlaybackSpeed, WallClock, simulatedSeconds, startWallClock, ticksDue } from "./Playback.ts"
 import { makeInitialSimulation, simulationReducer } from "./SimulationReducer.ts"
-import { SpeedMode } from "./PowerPlantState.ts"
+import { EmySelector, SpeedMode } from "./PowerPlantState.ts"
 
 // Provider
 function PowerPlantProvider({ children }: { children: ReactNode }) {
@@ -91,6 +91,9 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   }
   const toggleSafetyFeedBreaker = () => {
     dispatch({ type: state.safetyFeedBreaker ? "OPEN_SAFETY_FEED_BREAKER" : "CLOSE_SAFETY_FEED_BREAKER" })
+  }
+  const setEmySelector = (selector: EmySelector) => {
+    dispatch({ type: "SET_EMY_SELECTOR", payload: { selector } })
   }
   const setDieselRun = (run: boolean) => {
     dispatch({ type: "SET_DIESEL_RUN", payload: { run } })
@@ -185,6 +188,7 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         setDieselRun,
         toggleDieselBreaker,
         toggleVitalFeedBreaker,
+        setEmySelector,
         toggleSafetyFeedBreaker,
         // lube oil action
         toggleOilPump,

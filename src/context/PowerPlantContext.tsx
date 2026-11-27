@@ -1,5 +1,5 @@
 import { Dispatch, createContext, useContext } from "react"
-import PowerPlantState, { SpeedMode } from "./PowerPlantState"
+import PowerPlantState, { EmySelector, SpeedMode } from "./PowerPlantState"
 import { PlaybackSpeed } from "./Playback"
 import PowerPlantAction from "./PowerPlantActions"
 
@@ -24,6 +24,7 @@ type PowerPlantContextType = {
   toggleUnitAuxBreaker: () => void // closes only inside the ±2 rpm window and opens the grid supply breaker with it (#189); with no control power the reducer ignores it
   toggleVitalFeedBreaker: () => void
   toggleSafetyFeedBreaker: () => void
+  setEmySelector: (selector: EmySelector) => void // the EMY diesel selector (#198); the EMY breaker has no control
   // Onsite diesel (#175, ADR 0053)
   setDieselRun: (run: boolean) => void
   toggleDieselBreaker: () => void // never refused here; the reducer ignores a refused close

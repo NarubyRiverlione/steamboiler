@@ -10,7 +10,7 @@ type Ctx = ContextType<typeof PowerPlantContext>
 
 function renderPage(patch: Partial<PowerPlantState> = {}) {
   const state: PowerPlantState = { ...makeInitialState(), ...patch }
-  const fns = { toggleVitalFeedBreaker: vi.fn(), toggleSafetyFeedBreaker: vi.fn() }
+  const fns = { toggleVitalFeedBreaker: vi.fn(), toggleSafetyFeedBreaker: vi.fn(), setEmySelector: vi.fn() }
   render(
     <PowerPlantContext.Provider value={{ state, dispatch: vi.fn(), ...fns } as unknown as Ctx}>
       <EmergencyPower />
@@ -63,6 +63,25 @@ describe("Emergency power page (#196)", () => {
   it("with the grid back and the hand-back not done, Aux→Vital closes and Vital→Safety does not", () => {
     renderPage({ vitalFeedBreaker: false, safetyFeedBreaker: false })
     expect(liftCover("Aux to Vital breaker").getAttribute("aria-disabled")).toBeNull()
+    expect(liftCover("Vital to Safety breaker").getAttribute("aria-disabled")).toBe("true")
+  })
+
+  it("EMY diesel: the selector shows AUTO, a position sets the selector, the lamps follow the set (#198)", () => {
+    const fns = renderPage({ EmergencyDiesel: { status: "running", startElapsed: 0, warmupElapsed: 10 } })
+    expect(screen.getByRole("button", { name: "EMY selector AUTO" }).getAttribute("aria-pressed")).toBe("true")
+    fireEvent.click(screen.getByRole("button", { name: "EMY selector ON" }))
+    expect(fns.setEmySelector).toHaveBeenCalledWith("ON")
+    expect(screen.getByRole("img", { name: "Running: on" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
+  })
+
+  it("Ready to close lights after the warm-up", () => {
+    renderPage({ EmergencyDiesel: { status: "running", startElapsed: 0, warmupElapsed: 60 } })
+    expect(screen.getByRole("img", { name: "Ready to close: on" })).toBeTruthy()
+  })
+
+  it("Vital→Safety is refused on the EMY source before the warm-up", () => {
+    renderPage({ gridSupplyBreaker: false, vitalFeedBreaker: false, safetyFeedBreaker: false, emyBreaker: true, EmergencyDiesel: { status: "running", startElapsed: 0, warmupElapsed: 5 } })
     expect(liftCover("Vital to Safety breaker").getAttribute("aria-disabled")).toBe("true")
   })
 })

@@ -116,7 +116,7 @@ The grid supply breaker, the unit aux breaker and the diesel breaker are all ope
 _Avoid_: Blackout, loss of power
 
 **Vital bus**:
-The electrical bus that carries the controller controls, the board's LCD readouts and the annunciator. Live when the Aux→Vital breaker is closed and the Auxiliary bus is live. It has no battery: a dead Auxiliary bus kills it and the Aux→Vital breaker opens by itself.
+The electrical bus that carries the controller controls, the board's LCD readouts and the annunciator. Live when the Aux→Vital breaker is closed and the Auxiliary bus is live, or when the EMY breaker is closed. It has no battery: a dead Auxiliary bus kills it and the Aux→Vital breaker opens by itself.
 _Avoid_: Control bus, DC bus (the model has no DC distribution)
 
 **Safety bus**:
@@ -137,6 +137,13 @@ The UPS's stored energy in percent, 0 to 100. Drains at a constant rate whenever
 **Battery breaker**:
 The derived breaker that connects the UPS battery to the Safety bus: closed exactly when the Vital→Safety breaker is open. It has no operator control.
 _Avoid_: Battery switch, UPS breaker
+
+**EMY diesel**:
+The standby set on the Vital bus (`EmergencyDiesel`), with a selector OFF / AUTO / ON. AUTO starts it on a dead Vital bus and keeps it running until the selector goes to OFF and back; ON is the test run. No rating, no overload. After the start time a fixed warm-up lights Ready to close.
+_Avoid_: Emergency generator
+
+**EMY breaker**:
+The breaker (`emyBreaker`) from the EMY diesel to the Vital bus. Automatic only, no operator control: it closes when the diesel runs and the Aux→Vital breaker does not feed the Vital bus, and opens when that breaker closes.
 
 **Aux→Vital breaker**:
 The breaker (`vitalFeedBreaker`) that feeds the Vital bus from the Auxiliary bus. It opens by itself on a dead Auxiliary bus; the operator closes it, only while the Auxiliary bus is live, and it needs control power.

@@ -119,6 +119,13 @@
   },
   "dieselBreaker": false,
   "gridSupplyBreaker": true,
+  "EmergencyDiesel": {
+    "status": "stopped",
+    "startElapsed": 0,
+    "warmupElapsed": 0
+  },
+  "emySelector": "AUTO",
+  "emyBreaker": false,
   "vitalFeedBreaker": true,
   "safetyFeedBreaker": true,
   "upsCharge": 100,
