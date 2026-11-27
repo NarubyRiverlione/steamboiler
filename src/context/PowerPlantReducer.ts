@@ -280,9 +280,9 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   //#endregion
 
   //#region Emergency power chain (#196, ADR 0056): the changeover is automatic (the tick), the hand-back is the operator's
-  // Aux→Vital closes only on a live Auxiliary bus and needs control power; Vital→Safety closes only on a live Vital bus and needs none
+  // Aux→Vital closes only on a live Auxiliary bus and needs control power, the operator can always open it; Vital→Safety closes only on a live Vital bus and needs none
   CLOSE_VITAL_FEED_BREAKER: (state) => (isSafetyBusLive(state) && isBusLive(state) ? { ...state, vitalFeedBreaker: true } : state),
-  OPEN_VITAL_FEED_BREAKER: (state) => (isSafetyBusLive(state) ? settleEmergencyChain({ ...state, vitalFeedBreaker: false }) : state),
+  OPEN_VITAL_FEED_BREAKER: (state) => settleEmergencyChain({ ...state, vitalFeedBreaker: false }),
   CLOSE_SAFETY_FEED_BREAKER: (state) => (isVitalBusLive(state) ? { ...state, safetyFeedBreaker: true } : state),
   OPEN_SAFETY_FEED_BREAKER: (state) => ({ ...state, safetyFeedBreaker: false }),
   //#endregion

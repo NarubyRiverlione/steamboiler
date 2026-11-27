@@ -94,9 +94,9 @@ describe("the emergency power chain (#196)", () => {
       expect(opened.safetyFeedBreaker).toBe(false)
       expect(isSafetyBusLive(opened)).toBe(true)
     })
-    test("opening Aux→Vital needs control power", () => {
+    test("opening Aux→Vital needs no control power", () => {
       const noPower: PowerPlantState = { ...base, safetyFeedBreaker: false, upsCharge: 0 }
-      expect(powerPlantReducer(noPower, { type: "OPEN_VITAL_FEED_BREAKER" })).toBe(noPower)
+      expect(powerPlantReducer(noPower, { type: "OPEN_VITAL_FEED_BREAKER" }).vitalFeedBreaker).toBe(false)
     })
     test("Vital→Safety closes by the operator on a live Vital bus, with no control power", () => {
       const flat: PowerPlantState = { ...base, safetyFeedBreaker: false, upsCharge: 0 }
