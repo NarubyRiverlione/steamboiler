@@ -133,7 +133,7 @@ export const CstAuxiliary = {
 // Onsite diesel generator (#169, ADR 0053): no shaft, it holds 50 Hz up to its rating
 export const CstDiesel = {
   StartTime: 10, // s from RUN to running (UNVERIFIED: about 10 s for a standby set)
-  RatedPower: 2.5, // MW: the dark-start peak of 1.99 MW plus a 0.5 MW margin (docs/plant/design-basis.md)
+  RatedPower: 2.5, // MW: the island-start peak of 1.99 MW plus a 0.5 MW margin (docs/plant/design-basis.md)
 }
 
 // Emergency (EMY) diesel (#198, ADR 0056, docs/research/2026-11-emergency-diesel.md): no rating, no overload; the warm-up is a fixed timer

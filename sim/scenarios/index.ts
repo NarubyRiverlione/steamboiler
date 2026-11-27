@@ -2,7 +2,7 @@ import { Scenario } from "../scenario"
 import { boilerHigh } from "./boiler-high"
 import { boilerLow } from "./boiler-low"
 import { bypassLoop } from "./bypass-loop"
-import { darkStart } from "./dark-start"
+import { islandStart } from "./island-start"
 import { dieselOverload } from "./diesel-overload"
 import { deaeratorHigh } from "./deaerator-high"
 import { deaeratorVentClosed } from "./deaerator-vent-closed"
@@ -37,7 +37,7 @@ import { vacuumLoss } from "./vacuum-loss"
 export const goldenPath: Scenario[] = [bypassLoop, turbineRunup, turbineSync, turbineLoad]
 
 // Edge: drive the plant past one limit and check that its protection acts.
-export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, boilerHigh, deaeratorHigh, heatUpAtLimit, lowPressureClose, maxOutput, returnStop, turbineOverspeed, turbineTrip, lubeOilTrip, turningGear, glandSeal, startUpOrder, sealWaterSteady, sealWaterTrip, vacuumLoss, sjaeClosedLoad, sprayStuckClosed, deaeratorVentClosed, deaeratorVentOpen, darkStart, dieselOverload, houseLoadHold, loadRejection, houseLoadShort, unitAuxTransfer]
+export const edge: Scenario[] = [reliefLift, hotwellHigh, hotwellLow, boilerLow, boilerHigh, deaeratorHigh, heatUpAtLimit, lowPressureClose, maxOutput, returnStop, turbineOverspeed, turbineTrip, lubeOilTrip, turningGear, glandSeal, startUpOrder, sealWaterSteady, sealWaterTrip, vacuumLoss, sjaeClosedLoad, sprayStuckClosed, deaeratorVentClosed, deaeratorVentOpen, islandStart, dieselOverload, houseLoadHold, loadRejection, houseLoadShort, unitAuxTransfer]
 
 // Every scenario here is selectable with `pnpm sim <name>` and checked against every invariant.
 export const scenarios: Record<string, Scenario> = Object.fromEntries([...goldenPath, ...edge].map((s) => [s.name, s]))

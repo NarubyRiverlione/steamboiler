@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { CstDiesel } from "../../context/const"
-import { dieselBreakerCloseRefusal, dieselOutput } from "../../context/Diesel"
+import { dieselBreakerCloseRefusal, dieselOutput, hasCoolingPower } from "../../context/Diesel"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { BreakerSwitch } from "../board/BreakerSwitch"
 import { Lamp } from "../board/Lamp"
@@ -37,6 +37,7 @@ function Diesel() {
               setDieselRun(state.Diesel.status === "stopped")
             }}
           />
+          <Lamp lit={hasCoolingPower(state)} tone="ok" label="Cooling power" title="Lit while the Vital bus is live; RUN does nothing without it" />
           <Lamp lit={state.Diesel.status === "starting"} label="Starting" />
           <Lamp lit={state.Diesel.status === "running"} tone="ok" label="Running" />
           <RoundGauge label="Diesel output" unit="MW" value={dieselOutput(state)} min={0} max={SCALE_MAX} major={1} minor={0.5} zones={ZONES} />

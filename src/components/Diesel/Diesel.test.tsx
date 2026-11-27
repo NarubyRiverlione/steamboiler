@@ -27,6 +27,16 @@ const liftCover = (): HTMLElement => {
 const lamp = (name: string, on: boolean): HTMLElement => screen.getByRole("img", { name: `${name}: ${on ? "on" : "off"}` })
 
 describe("Diesel generator page", () => {
+  it("lights Cooling power only while the Vital bus is live (#199)", () => {
+    renderPage("stopped")
+    expect(lamp("Cooling power", false)).toBeTruthy()
+  })
+
+  it("lights Cooling power with the Vital bus fed by the EMY diesel (#199)", () => {
+    renderPage("stopped", { vitalFeedBreaker: false, emyBreaker: true })
+    expect(lamp("Cooling power", true)).toBeTruthy()
+  })
+
   it("starts the diesel with RUN and stops it with STOP", () => {
     const stopped = renderPage("stopped")
     fireEvent.click(screen.getByRole("switch", { name: "Diesel run" }))
