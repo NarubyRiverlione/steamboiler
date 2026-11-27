@@ -8,7 +8,6 @@ import { CstDeaerator } from "../../context/const"
 import Deaerator from "./Deaerator"
 import { PlantValveRamp } from "../board/PlantValveRamp"
 import { RAMP_STEP, RAMP_TICK_MS } from "../board/valveRamp"
-import { warningText } from "./warningText"
 
 type Ctx = ContextType<typeof PowerPlantContext>
 
@@ -120,29 +119,27 @@ describe("Deaerator page", () => {
     vi.useRealTimers()
   })
 
-  it("shows the warning text of the flag that is set", () => {
-    renderDeaerator({ warnVentClosedWithAir: true })
-    const line: HTMLElement = screen.getByRole("status", { name: "Deaerator warning" })
-    expect(line.textContent).toMatch(/closed with air/)
-    expect(line.className).toBe("board-lcd-msg")
+  it("lights the closed-with-air warning lamp only while its flag is set", () => {
+    renderDeaerator({ warnVentClosedWithAir: true, warnVentOpenNoAir: false })
+    expect(screen.getByRole("img", { name: "Vent closed, air in: on" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Vent open, no air: off" })).toBeTruthy()
   })
 
-  it("shows the open-with-no-air warning in the LCD line", () => {
+  it("lights the open-with-no-air warning lamp only while its flag is set", () => {
     renderDeaerator({ warnVentClosedWithAir: false, warnVentOpenNoAir: true })
-    expect(screen.getByRole("status", { name: "Deaerator warning" }).textContent).toMatch(/no air left/)
+    expect(screen.getByRole("img", { name: "Vent open, no air: on" })).toBeTruthy()
+    expect(screen.getByRole("img", { name: "Vent closed, air in: off" })).toBeTruthy()
   })
 
-  it("shows no warning line without a flag", () => {
-    renderDeaerator({ warnVentClosedWithAir: false, warnVentOpenNoAir: false })
-    expect(screen.queryByRole("status", { name: "Deaerator warning" })).toBeNull()
+  it("keeps the warning reason in the lamp tooltip and shows no message line", () => {
+    renderDeaerator({ warnVentClosedWithAir: true })
+    expect(document.querySelector(".board-lcd-msg")).toBeNull()
+    expect(document.querySelector('[title*="closed with air"] .board-lamp-label')?.textContent).toBe("Vent closed, air in")
   })
-})
 
-describe("warningText", () => {
-  it("is empty without a flag and names the mistake for each flag", () => {
-    expect(warningText(false, false)).toBe("")
-    expect(warningText(true, false)).toMatch(/closed with air/)
-    expect(warningText(false, true)).toMatch(/no air left/)
+  it("draws a lit warn lamp in the warn tone", () => {
+    renderDeaerator({ warnVentOpenNoAir: true })
+    expect(document.querySelector(".board-led-warn")).not.toBeNull()
   })
 
   it("lights the Turbine lamp on tap flow and the Boiler lamp on let-down flow", () => {
