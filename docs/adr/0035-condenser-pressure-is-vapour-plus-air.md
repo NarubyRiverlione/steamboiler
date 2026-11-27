@@ -38,13 +38,13 @@ The in-leakage is not one constant: [ADR 0047](0047-gland-seal-steam-sets-the-ai
 
 - **Keep the steam-mass pressure term and add air:** rejected. The term is not derived from anything, and steam mass in a vessel at 30 mbar is a few kg; the pressure is set by the condensing balance, not by the inventory.
 - **Pump capacity as a pressure rate (mbar/s):** rejected. Air removed must be a mass, so that a leak, a pump and a stopped system share one balance and the vacuum loss needs no extra constant.
-- **A pull-down constant to hit one minute:** rejected by the realism rule. The pump is oversized instead, and recorded.
+- **A pull-down constant to hit one minute:** rejected by the realism rule. The pump was first oversized and recorded; since #165 it is the real size, and the playback speed (ADR 0034) covers the wait.
 - **Pumps carry vapour:** rejected for now. It adds a second flow through the pump, and the vapour is already condensed by the exchanger; recorded as an omission.
 
 ## Consequences
 
 - **The vacuum is lost in hours, not minutes (flag for the owner).** The grilling assumed that with the vacuum system stopped the vacuum would go in minutes. With sourced in-leakage and a 450 m³ shell it does not: 31 to 62 mbar takes about 2 hours at 0.0022 kg/s (about 30 minutes at the HEI-class 0.0087), and reaching the 327 mbar trip takes 5 to 60 hours across the sourced range. Real-plant "20 to 25 minutes" needs about 0.13 kg/s, 15 to 190 times a sourced figure, and comes from leakage this model leaves out (opened vacuum breaker; the open glands are modelled since #147, at 0.0347 kg/s). Following the realism rule, the sourced value is used and no leak is inflated. If the owner wants it quicker, the honest levers are a smaller shell volume or a modelled gland seal steam loss, each its own decision. See research (e).
-- A vacuum that holds for hours makes a cold stop and restart cheap to the operator; the playable consequence of the loss is the first pull-down, which is a minute.
+- A vacuum that holds for hours makes a cold stop and restart cheap to the operator; the playable consequence of the loss is the first pull-down, about 30 minutes with the real-size pump since #165.
 - The condenser pressure now depends on the air inventory in every scenario: golden snapshots, the vacuum readout and the turbine back-pressure move. Done in #91: snapshots regenerated, the loop operator holds the cooling water against the condenser pressure.
 - The hood relief ceiling means a lost circulating water flow gives a hard cap on pressure; the turbine has already tripped on the vacuum limit.
 

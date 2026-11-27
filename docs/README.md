@@ -58,7 +58,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0017](adr/0017-burner-trips-on-low-water-level.md) | The burner trips on low water level |
 | [0018](adr/0018-cold-fill-of-the-boiler.md) | The boiler is filled cold to 35% (40% in the app) so it expands to the working level |
 | [0019](adr/0019-boiler-is-one-lumped-vessel.md) | The boiler is one lumped vessel, not a drum with risers and downcomers |
-| [0020](adr/0020-snapshots-compare-with-tolerance.md) | Committed snapshots compare with a relative tolerance (1e-9), not exact digits |
+| [0020](adr/0020-snapshots-compare-with-tolerance.md) | Committed snapshots compare with a relative tolerance (1e-6), not exact digits |
 | [0021](adr/0021-turbine-runup-from-steam-power.md) | The turbine runs up on steam power (physical torque, losses, inertia), paced by a hold-mode run-up rate |
 | [0022](adr/0022-electric-output-from-enthalpy-drop.md) | Electric output from the isentropic enthalpy drop, flow and live condenser pressure |
 | [0023](adr/0023-runner-speed-guard-is-opt-in.md) | The runner speed guard is its own opt-in layer, outside the `dev` gate |
@@ -78,10 +78,12 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0037](adr/0037-deaerator-cold-fill-at-50-percent.md) | The deaerator is filled cold to 50%, so it ends at about 55% hot |
 | [0038](adr/0038-deaerator-air-and-vents.md) | The deaerator holds one amount of air and has two vents; mistakes cost steam, never damage |
 | [0039](adr/0039-latching-controls-are-turn-switches.md) | A control that holds a state is a turn switch with fixed legends; a pushbutton acts or selects |
+| [0040](adr/0040-turbine-trip-on-overspeed.md) | The turbine valve trips at the overspeed limit (3300 rpm) |
 | [0041](adr/0041-boiler-high-high-level-trips-feed-pump-and-turbine.md) | The boiler high-high level (70%) trips the feed pump and the turbine; the alarm is on from 65% |
 | [0042](adr/0042-valve-ramp-lives-above-the-pages.md) | The valve knob ramp lives in a UI context above the pages and paces in real time, so it survives navigation |
 | [0043](adr/0043-trip-reset.md) | Only a trip reset clears a latched trip, once its cause has gone; a RESET button beside each trip tile |
 | [0044](adr/0044-superheater-with-spray-attemperator.md) | A passive flue gas superheater before the boiler stage; one spray attemperator holds the steam at 540 °C; the turbine runs on the superheated steam |
+| [0045](adr/0045-deaerator-high-high-trips-condensation-pump.md) | The deaerator high-high level (85%) trips the condensation pump |
 | [0046](adr/0046-from-island-to-town-grid-in-milestones.md) | From island to the town grid in milestones M1–M7; island means house load operation |
 | [0047](adr/0047-gland-seal-steam-sets-the-air-in-leakage.md) | Gland seal steam: a switch that sets the condenser's air in-leakage between a sealed and an open-gland rate |
 | [0048](adr/0048-from-roll-on-demand-to-a-real-cold-start-in-milestones.md) | From roll on demand to a real cold start in milestones M1–M4: oil and gear, auxiliary steam and gland seals, prewarming the casing, the full start-up |
@@ -113,6 +115,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Nov 2026 | [Turning gear: gear speed and the standstill threshold (UNVERIFIED)](research/2026-11-turning-gear.md) |
 | Nov 2026 | [Turbine lube oil: header pressure, permissive and trip limits (UNVERIFIED)](research/2026-11-lube-oil.md) |
 | Nov 2026 | [Breakers: interlocks, protections and what a real plant lets through (snippet-sourced)](research/2026-11-breaker-interlocks-and-protections.md) |
+| Nov 2026 | [Review of the sim: ADRs, realism, missing components](research/2026-11-review.md) |
 
 ## Agent configuration
 

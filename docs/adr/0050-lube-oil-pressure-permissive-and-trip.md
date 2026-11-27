@@ -16,4 +16,4 @@ The turbine has a **lube oil header** with one **oil pump**, an operator action 
 ## Consequences
 
 - `PowerPlantState` gains `Oil` (`pumpRunning`, `headerPressure`); the cold plant starts with the pump stopped and the header empty. Every scenario that rolls the turbine starts the pump first (`oilPumpOn`); snapshots were regenerated for the new field.
-- The app has no pump switch yet: until the follow-up `ui` ticket the app cannot start the pump, so the turbine cannot be rolled by hand in the app (the At pressure preset starts with the pump running).
+- The oil pump switch is on the Turbine aux page (`LubeOilGroup`); the At pressure preset starts with the pump running.
