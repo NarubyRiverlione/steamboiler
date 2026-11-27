@@ -112,7 +112,7 @@ Bringing the plant up from a dead bus with the diesel generator alone, until the
 _Avoid_: Black start, cold start
 
 **Dead bus**:
-The grid supply breaker, the unit aux breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
+The grid supply breaker, the unit aux breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes. This is the Auxiliary bus only: the Vital bus is dead when the Aux→Vital breaker is open or the Auxiliary bus is dead, and the Safety bus when neither the Vital bus nor the UPS feeds it.
 _Avoid_: Blackout, loss of power
 
 **Vital bus**:
@@ -124,7 +124,7 @@ The electrical bus that carries breaker control power and the trip reset. Fed by
 _Avoid_: Emergency bus, DC bus
 
 **Control power**:
-The power from the safety bus that the breaker coils and the trip reset need. Without it, breaker commands do nothing.
+The power from the safety bus that the breaker coils and the trip reset need. Without it, breaker commands do nothing. Two exceptions: the Vital→Safety breaker needs none (a flat battery stays recoverable), and the local mechanical trips need none. The Aux→Vital breaker needs it to close.
 _Avoid_: DC supply, trip supply
 
 **UPS**:
