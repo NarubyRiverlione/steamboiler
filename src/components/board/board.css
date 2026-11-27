@@ -1807,8 +1807,12 @@ path.board-zone {
   stroke-width: 3;
   stroke-linecap: round;
 }
-.board-breaker-symbol path {
+.board-breaker-symbol path,
+.board-breaker-symbol circle {
   stroke: #111;
+}
+.board-breaker-symbol circle {
+  stroke-width: 2;
 }
 
 /* One colour per source, the UPS and each bus; the generator keeps the power medium yellow */

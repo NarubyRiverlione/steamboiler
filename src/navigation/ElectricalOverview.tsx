@@ -76,11 +76,11 @@ function Node({
   )
 }
 
-// IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a cross on the upper contact. Closed: the blade lies on the line; open: it swings off. Always black. The blade tip and cross are in diagram units inside the breaker footprint.
+// IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a small open circle on each contact. Closed: the blade lies on the line; open: it swings off. Always black. The blade tip and contact radius are in diagram units inside the breaker footprint.
 // The symbol is drawn in the 30 unit footprint and scaled up by 150%
 const BREAKER_SCALE = 1.5
-const BLADE_TIP = 9
-const CROSS = 4
+const BLADE_TIP = 6
+const CONTACT_RADIUS = 2.5
 
 function BreakerSymbol({
   x,
@@ -115,10 +115,11 @@ function BreakerSymbol({
         height={2 * BREAKER_HALF}
       />
       <g className="board-breaker-symbol">
-        <path d={line(0, -BREAKER_HALF, 0, -BLADE_TIP)} />
-        <path d={line(0, BLADE_TIP, 0, BREAKER_HALF)} />
+        <path d={line(0, -BREAKER_HALF, 0, -BLADE_TIP - 2 * CONTACT_RADIUS)} />
+        <path d={line(0, BLADE_TIP + 2 * CONTACT_RADIUS, 0, BREAKER_HALF)} />
         <path d={closed ? line(0, BLADE_TIP, 0, -BLADE_TIP) : line(0, BLADE_TIP, -BLADE_TIP, -BLADE_TIP + 2)} />
-        <path d={line(-CROSS, -BLADE_TIP - CROSS, CROSS, -BLADE_TIP + CROSS) + " " + line(-CROSS, -BLADE_TIP + CROSS, CROSS, -BLADE_TIP - CROSS)} />
+        <circle cx={0} cy={-BLADE_TIP - CONTACT_RADIUS} r={CONTACT_RADIUS} />
+        <circle cx={0} cy={BLADE_TIP + CONTACT_RADIUS} r={CONTACT_RADIUS} />
       </g>
     </g>
   )
