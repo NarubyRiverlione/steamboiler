@@ -46,6 +46,7 @@ const shell = (): Element => {
   if (found === null) throw new Error("no board shell")
   return found
 }
+const lens = (): Element | null => document.querySelector(".board-emergency-lens")
 const head = (): BoundFunctions<typeof queries> => within(screen.getByRole("banner"))
 const annunciator = (): HTMLElement | null => screen.queryByRole("button", { name: "ACK" })
 
@@ -56,14 +57,15 @@ describe("normal board", () => {
     expect(annunciator()).not.toBeNull()
     expect(head().getByLabelText("Boiler pressure").textContent).not.toBe("")
     expect(screen.queryByLabelText("UPS charge")).toBeNull()
-    expect(shell().classList.contains("board-emergency")).toBe(false)
+    expect(lens()).toBeNull()
   })
 })
 
 describe("emergency board", () => {
   it("shows the red lens, keeps the navigation, blanks the LCDs but not the clock, hides the annunciator", () => {
     renderBoard(stateOf(false))
-    expect(shell().classList.contains("board-emergency")).toBe(true)
+    expect(lens()?.getAttribute("aria-hidden")).toBe("true")
+    expect(shell().classList.contains("board-emergency")).toBe(false)
     expect(screen.getByRole("link", { name: "Plant overview" })).toBeTruthy()
     expect(head().getByLabelText("Boiler pressure").textContent).toBe("")
     expect(head().getByLabelText("Output").textContent).toBe("")
@@ -95,7 +97,8 @@ describe("emergency board", () => {
 
   it("is never dark: a dead Vital bus with a flat battery and the simulation not yet ended is still emergency", () => {
     renderBoard({ ...stateOf(false), upsCharge: 0 })
-    expect(shell().classList.contains("board-emergency")).toBe(true)
+    expect(lens()?.getAttribute("aria-hidden")).toBe("true")
+    expect(shell().classList.contains("board-emergency")).toBe(false)
   })
 })
 
@@ -107,6 +110,7 @@ describe("ended board", () => {
     expect(screen.queryByRole("link", { name: "Plant overview" })).toBeNull()
     expect(screen.queryByLabelText("Boiler pressure")).toBeNull()
     expect(screen.queryByLabelText("Simulated clock")).toBeNull()
+    expect(lens()).toBeNull()
     expect(screen.queryByRole("group", { name: "Playback speed" })).toBeNull()
     expect(shell().classList.contains("board-ended")).toBe(true)
   })
