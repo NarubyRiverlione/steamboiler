@@ -86,8 +86,11 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
   const toggleUnitAuxBreaker = () => {
     dispatch({ type: state.Turbine.unitAuxBreaker ? "OPEN_UNIT_AUX_BREAKER" : "CLOSE_UNIT_AUX_BREAKER" })
   }
-  const toggleUpsBreaker = () => {
-    dispatch({ type: state.upsBreaker ? "OPEN_UPS_BREAKER" : "CLOSE_UPS_BREAKER" })
+  const toggleVitalFeedBreaker = () => {
+    dispatch({ type: state.vitalFeedBreaker ? "OPEN_VITAL_FEED_BREAKER" : "CLOSE_VITAL_FEED_BREAKER" })
+  }
+  const toggleSafetyFeedBreaker = () => {
+    dispatch({ type: state.safetyFeedBreaker ? "OPEN_SAFETY_FEED_BREAKER" : "CLOSE_SAFETY_FEED_BREAKER" })
   }
   const setDieselRun = (run: boolean) => {
     dispatch({ type: "SET_DIESEL_RUN", payload: { run } })
@@ -181,7 +184,8 @@ function PowerPlantProvider({ children }: { children: ReactNode }) {
         toggleUnitAuxBreaker,
         setDieselRun,
         toggleDieselBreaker,
-        toggleUpsBreaker,
+        toggleVitalFeedBreaker,
+        toggleSafetyFeedBreaker,
         // lube oil action
         toggleOilPump,
         // turning gear action

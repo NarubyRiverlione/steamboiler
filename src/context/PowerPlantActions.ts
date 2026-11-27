@@ -37,9 +37,11 @@ type PowerPlantAction =
   | { type: "CLOSE_DIESEL_BREAKER" }
   | { type: "OPEN_DIESEL_BREAKER" }
   | { type: "LOCAL_TRIP_DIESEL_BREAKER" }
-  // Battery (UPS) breaker Actions (#143): manual, always available, even on a dead safety bus
-  | { type: "CLOSE_UPS_BREAKER" }
-  | { type: "OPEN_UPS_BREAKER" }
+  // Emergency power chain Actions (#196): Aux→Vital needs control power; Vital→Safety needs none, so a flat battery stays recoverable
+  | { type: "CLOSE_VITAL_FEED_BREAKER" }
+  | { type: "OPEN_VITAL_FEED_BREAKER" }
+  | { type: "CLOSE_SAFETY_FEED_BREAKER" }
+  | { type: "OPEN_SAFETY_FEED_BREAKER" }
   // Lube oil Action (ADR 0050): the oil pump on or off
   | { type: "SET_OIL_PUMP"; payload: { pumpRunning: boolean } }
   // Turning gear Action (ADR 0051): engage or disengage by hand

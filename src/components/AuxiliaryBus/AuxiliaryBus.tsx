@@ -1,4 +1,4 @@
-/** The Auxiliary bus page on the board (#142, ADR 0053): the grid supply breaker, the unit aux breaker (#189), the bus live lamp, the auxiliary load and the UPS group. */
+/** The Auxiliary bus page on the board (#142, ADR 0053): the grid supply breaker, the unit aux breaker (#189), the bus live lamp, and the auxiliary load. The UPS and the Vital/Safety breakers are on the Emergency power page (#196). */
 
 import { useState } from "react"
 import { isBusLive } from "../../context/AuxiliaryBus"
@@ -8,10 +8,9 @@ import { BreakerSwitch } from "../board/BreakerSwitch"
 import { Display } from "../board/Display"
 import { Lamp } from "../board/Lamp"
 import { PanelFrame } from "../board/PanelFrame"
-import { UpsGroup } from "./UpsGroup"
 
 function AuxiliaryBus() {
-  const { state, toggleGridSupplyBreaker, toggleUnitAuxBreaker, toggleUpsBreaker } = usePowerPlant()
+  const { state, toggleGridSupplyBreaker, toggleUnitAuxBreaker } = usePowerPlant()
   const [coverLifted, setCoverLifted] = useState<boolean>(false)
   const [unitAuxCoverLifted, setUnitAuxCoverLifted] = useState<boolean>(false)
   const unitAuxRefusal: string | undefined = unitAuxBreakerCloseRefusal(state.Turbine)
@@ -65,7 +64,6 @@ function AuxiliaryBus() {
             <Display label="Auxiliary load" text={`${state.auxiliaryLoad.toFixed(1)} MW`} widest="99.9 MW" />
           </div>
         </div>
-        <UpsGroup state={state} onToggleUpsBreaker={toggleUpsBreaker} />
       </div>
     </PanelFrame>
   )

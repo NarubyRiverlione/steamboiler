@@ -13,7 +13,7 @@ import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler
 import { resetTrip } from "./tripReset"
 import { isBusLive } from "./AuxiliaryBus"
 import { dieselBreakerCloseRefusal, openDieselBreaker } from "./Diesel"
-import { isSafetyBusLive, isVitalBusLive } from "./SafetyBus"
+import { isSafetyBusLive, isVitalBusLive, settleEmergencyChain } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
 import { isOpeningRefused } from "./Turbine/ValveOpening"
 import { glandSteamRefusal } from "./Turbine/GlandSteam"
@@ -123,16 +123,15 @@ export const makeInitialState = (boilerStartVolume: number = CstBoiler.StartWate
   Diesel: { status: "stopped", startElapsed: 0 },
   dieselBreaker: false,
   gridSupplyBreaker: true, // closed: the grid feeds the auxiliary bus (#141)
-  // The UPS breaker is closed here so every scenario runs as before; the app (makeUiStartState) and dark-start open it
-  upsBreaker: true,
+  vitalFeedBreaker: true, // both closed: the chain starts normal (#196, ADR 0056)
+  safetyFeedBreaker: true,
   upsCharge: 100,
   simulationEnded: false,
   auxiliaryLoad: 0, // MW: no pump runs
 })
 
 // What the app starts from: the cold plant with the drum filled to 40% (ADR 0018)
-// The UPS breaker starts open: the operator closes it from the Auxiliary bus page (ADR 0055); scenarios and snapshots keep makeInitialState
-export const makeUiStartState = (): PowerPlantState => ({ ...makeInitialState(CstBoiler.UiStartWaterVolume), upsBreaker: false })
+export const makeUiStartState = (): PowerPlantState => makeInitialState(CstBoiler.UiStartWaterVolume)
 
 export const initialPowerPlantState: PowerPlantState = makeUiStartState()
 
@@ -280,9 +279,12 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   LOCAL_TRIP_DIESEL_BREAKER: (state) => openDieselBreaker(state),
   //#endregion
 
-  //#region UPS breaker (#143): the one control that needs no power
-  CLOSE_UPS_BREAKER: (state) => ({ ...state, upsBreaker: true }),
-  OPEN_UPS_BREAKER: (state) => ({ ...state, upsBreaker: false }),
+  //#region Emergency power chain (#196, ADR 0056): the changeover is automatic (the tick), the hand-back is the operator's
+  // Aux→Vital closes only on a live Auxiliary bus and needs control power; Vital→Safety closes only on a live Vital bus and needs none
+  CLOSE_VITAL_FEED_BREAKER: (state) => (isSafetyBusLive(state) && isBusLive(state) ? { ...state, vitalFeedBreaker: true } : state),
+  OPEN_VITAL_FEED_BREAKER: (state) => (isSafetyBusLive(state) ? settleEmergencyChain({ ...state, vitalFeedBreaker: false }) : state),
+  CLOSE_SAFETY_FEED_BREAKER: (state) => (isVitalBusLive(state) ? { ...state, safetyFeedBreaker: true } : state),
+  OPEN_SAFETY_FEED_BREAKER: (state) => ({ ...state, safetyFeedBreaker: false }),
   //#endregion
 
   //#region Oil

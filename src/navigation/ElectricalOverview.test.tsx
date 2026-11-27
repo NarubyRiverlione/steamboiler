@@ -16,7 +16,8 @@ function renderBoard(state: PowerPlantState) {
   const value = {
     state,
     dispatch: vi.fn(),
-    toggleUpsBreaker: vi.fn(),
+    toggleVitalFeedBreaker: vi.fn(),
+    toggleSafetyFeedBreaker: vi.fn(),
     simulatedSeconds: 60,
     playbackSpeed: 1,
     setPlaybackSpeed: vi.fn(),
@@ -57,7 +58,6 @@ function livePlant(): PowerPlantState {
   const state: PowerPlantState = makeInitialState()
   state.gridSupplyBreaker = true
   state.Turbine.generatorBreaker = true
-  state.upsBreaker = true
   state.upsCharge = 87.4
   state.Deaerator.feedPumpValvePosition = 0.5
   state.Condenser.condensationPumpValvePosition = 1
@@ -74,7 +74,7 @@ describe("electrical overview", () => {
     expect(screen.getByLabelText("Grid supply breaker: closed")).toBeTruthy()
     expect(screen.getByLabelText("Generator breaker: closed")).toBeTruthy()
     expect(screen.getByLabelText("Diesel generator breaker: open")).toBeTruthy()
-    expect(screen.getByLabelText("Battery breaker: closed")).toBeTruthy()
+    expect(screen.getByLabelText("Battery breaker: open")).toBeTruthy()
   })
 
   it("lights a source line only while its breaker is closed", () => {
@@ -116,7 +116,7 @@ describe("electrical overview", () => {
     state.upsCharge = 0
     renderBare(state)
     const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box, .board-node .board-breaker-symbol"))
-    expect(boxes.length).toBe(14)
+    expect(boxes.length).toBe(15)
     expect(boxes.filter(dimmed)).toEqual([])
     expect(
       dimmed(document.querySelector("[data-grid] .board-node-box:not(.board-node .board-node-box)")),
@@ -175,47 +175,50 @@ describe("electrical overview", () => {
     expect(screen.getByLabelText("Emergency equipment: on")).toBeTruthy()
   })
 
-  it("keeps the safety bus lit from the Auxiliary bus with the battery breaker open (#190)", () => {
-    const open: PowerPlantState = livePlant()
-    open.upsBreaker = false
-    renderBoard(open)
-    expect(dimmed(bus("safety"))).toBe(false)
+  it("draws the chain: Aux→Vital and Vital→Safety closed, the battery breaker open, the feeds lit (#196)", () => {
+    renderBoard(livePlant())
+    expect(screen.getByLabelText("Aux to Vital breaker: closed")).toBeTruthy()
+    expect(screen.getByLabelText("Vital to Safety breaker: closed")).toBeTruthy()
+    expect(screen.getByLabelText("Battery breaker: open")).toBeTruthy()
+    expect(dimmed(document.querySelector('[data-feed="vital"]'))).toBe(false)
+    expect(dimmed(document.querySelector('[data-feed="safety-ac"]'))).toBe(false)
+    expect(dimmed(document.querySelector('[data-feed="safety"]'))).toBe(true)
   })
 
-  it("draws the rectifier feed from the Auxiliary bus, lit with it and dimmed on a dead bus (#190)", () => {
-    renderBoard(livePlant())
-    expect(dimmed(document.querySelector('[data-feed="safety-ac"]'))).toBe(false)
-    cleanup()
+  it("on a lost grid the chain is open, the battery feeds the safety bus and its feed is lit (#196)", () => {
     const state: PowerPlantState = livePlant()
     state.gridSupplyBreaker = false
     state.Turbine.generatorBreaker = false
+    state.vitalFeedBreaker = false
+    state.safetyFeedBreaker = false
     renderBare(state)
+    expect(screen.getByLabelText("Aux to Vital breaker: open")).toBeTruthy()
+    expect(screen.getByLabelText("Vital to Safety breaker: open")).toBeTruthy()
+    expect(screen.getByLabelText("Battery breaker: closed")).toBeTruthy()
+    expect(dimmed(document.querySelector('[data-feed="vital"]'))).toBe(true)
     expect(dimmed(document.querySelector('[data-feed="safety-ac"]'))).toBe(true)
+    expect(dimmed(document.querySelector('[data-feed="safety"]'))).toBe(false)
+    expect(dimmed(bus("vital"))).toBe(true)
+    expect(dimmed(bus("safety"))).toBe(false)
   })
 
-  it("dims the safety bus on a dead Auxiliary bus with the battery breaker open or the charge at 0", () => {
-    const open: PowerPlantState = livePlant()
-    open.gridSupplyBreaker = false
-    open.Turbine.generatorBreaker = false
-    open.upsBreaker = false
-    renderBare(open)
-    expect(dimmed(bus("safety"))).toBe(true)
-    expect(text("Safety bus voltage")).toBe("0 V DC")
-    cleanup()
+  it("dims the safety bus with a flat battery and Vital→Safety open", () => {
     const empty: PowerPlantState = livePlant()
-    empty.gridSupplyBreaker = false
-    empty.Turbine.generatorBreaker = false
+    empty.safetyFeedBreaker = false
     empty.upsCharge = 0
     renderBare(empty)
     expect(dimmed(bus("safety"))).toBe(true)
+    expect(text("Safety bus voltage")).toBe("0 V DC")
   })
 
   it("links the breakers and the diesel to the pages that hold them", () => {
     renderBoard(livePlant())
     const hrefOf = (name: string): string | null => screen.getByRole("link", { name }).getAttribute("href")
     expect(hrefOf("Grid supply breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
-    expect(hrefOf("Battery breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
-    expect(hrefOf("UPS, opens Auxiliary bus")).toBe("/auxiliary-bus")
+    expect(hrefOf("Aux to Vital breaker, opens Emergency power")).toBe("/emergency-power")
+    expect(hrefOf("Vital to Safety breaker, opens Emergency power")).toBe("/emergency-power")
+    expect(hrefOf("UPS, opens Emergency power")).toBe("/emergency-power")
+    expect(screen.queryByRole("link", { name: /^Battery breaker/ })).toBeNull()
     expect(hrefOf("Generator, opens Generation")).toBe("/generation")
     expect(hrefOf("Generator breaker, opens Generation")).toBe("/generation")
     expect(hrefOf("Unit aux breaker, opens Auxiliary bus")).toBe("/auxiliary-bus")
@@ -245,7 +248,8 @@ describe("electrical overview", () => {
     expect(colourOf(bus("aux"))).toBe("board-electrical-aux")
     expect(colourOf(document.querySelector("[data-consumers]"))).toBe("board-electrical-aux")
     expect(colourOf(bus("vital"))).toBe("board-electrical-vital")
-    expect(colourOf(document.querySelector('[data-feed="vital"]'))).toBe("board-electrical-vital")
+    expect(colourOf(document.querySelector('[data-feed="vital"]'))).toBe("board-electrical-aux")
+    expect(colourOf(document.querySelector('[data-feed="safety-ac"]'))).toBe("board-electrical-vital")
     expect(colourOf(bus("safety"))).toBe("board-electrical-safety")
   })
 
@@ -262,6 +266,8 @@ describe("electrical overview", () => {
     const state: PowerPlantState = livePlant()
     state.gridSupplyBreaker = false
     state.Turbine.generatorBreaker = false
+    state.vitalFeedBreaker = false
+    state.safetyFeedBreaker = false
     renderBoard(state)
     expect(text("Auxiliary bus voltage")).toBe("")
     expect(text("Boiler feed pump draw")).toBe("")

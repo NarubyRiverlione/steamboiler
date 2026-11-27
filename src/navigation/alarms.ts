@@ -3,12 +3,13 @@
 import { CstDeaerator, CstOil, CstSimulation, CstSuperheater } from "../context/const"
 import { deaeratorLevel } from "../context/Deaerator/DeaeratorTick"
 import type PowerPlantState from "../context/PowerPlantState"
+import { isBatteryFeeding } from "../context/SafetyBus"
 import { boilerLevel } from "../utils/boilerCalculations"
 import { hotwellLevel } from "../utils/condenserCalculation"
 import { isSealWaterWarning } from "../utils/sealWaterCalculation"
 import type { PartId } from "./plantParts"
 
-export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "airPumpSealWaterHigh" | "airPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh" | "lubeOilPressureLow" | "glandSteamShutOff"
+export type AlarmId = "heatingRateOverLimit" | "burnerTripped" | "condensationPumpTripped" | "airPumpSealWaterHigh" | "airPumpTripped" | "turbineTripped" | "boilerLevelHigh" | "boilerLevelHighTripped" | "hotwellLevelLow" | "hotwellLevelHigh" | "hotwellLevelHighHigh" | "boilerLevelLow" | "deaeratorLevelLow" | "deaeratorLevelHigh" | "feedPumpTripped" | "deaeratorHighHighTripped" | "steamTemperatureHigh" | "lubeOilPressureLow" | "glandSteamShutOff" | "upsOnBattery"
 
 // error = red tile backlight, warning = yellow; every alarm must declare one
 export type AlarmSeverity = "error" | "warning"
@@ -45,5 +46,7 @@ export const ALARMS: readonly Alarm[] = [
   { id: "lubeOilPressureLow", label: "Lube oil pressure low", severity: "warning", part: "turbineAux", active: (s: PowerPlantState) => s.Oil.headerPressure < CstOil.PermissivePressure },
   // The plant flag of the automatic shut-off (ADR 0047): the rotor stopped while the steam was on; the tile opens the Turbine aux page
   { id: "glandSteamShutOff", label: "Gland steam shut off", severity: "warning", part: "turbineAux", active: (s: PowerPlantState) => s.Turbine.glandSteamShutOff },
+  // The battery feeds the Safety bus (Vital→Safety open); the tile shows once the Vital bus is back, the annunciator sits on it (#196)
+  { id: "upsOnBattery", label: "UPS on battery", severity: "warning", part: "emergencyPower", active: (s: PowerPlantState) => isBatteryFeeding(s) },
   { id: "feedPumpTripped", label: "Feed pump trip", severity: "error", part: "deaerator", active: (s: PowerPlantState) => s.Deaerator.feedPumpTripped },
 ]
