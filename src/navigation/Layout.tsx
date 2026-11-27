@@ -1,4 +1,4 @@
-/** The board shell. The board state (#144, ADR 0055, #196) is derived here once: normal, emergency (red lens) or ended (end plate and Presets). No part page knows about the buses. */
+/** The board shell. The board state (#144, ADR 0055, #196) is derived here once: normal, emergency (red lens overlay, #197) or ended (end plate and Presets). No part page knows about the buses. */
 
 import { Outlet } from "react-router-dom"
 import { BoardStateContext } from "../components/board/boardStateContext"
@@ -34,12 +34,13 @@ function Layout() {
     <AnnunciatorProvider>
       <BoardStateContext.Provider value={boardState}>
         <PlantValveRamp>
-          <div className={boardState === "emergency" ? "board-shell board-emergency" : "board-shell"}>
+          <div className="board-shell">
             <Header />
             <main className="board-main">
               <Outlet />
             </main>
           </div>
+          {boardState === "emergency" ? <div className="board-emergency-lens" aria-hidden="true" /> : null}
         </PlantValveRamp>
       </BoardStateContext.Provider>
     </AnnunciatorProvider>

@@ -1760,9 +1760,14 @@ path.board-zone {
 }
 
 /* Board states (#144, ADR 0055) */
-.board-emergency {
-  background: color-mix(in srgb, var(--board-page-bg) 70%, #7a0f0f);
-  box-shadow: inset 0 0 6rem 1rem rgba(200, 20, 20, 0.45);
+/* Red lens (#197): a click-through multiply tint over the whole board, emergency state only */
+.board-emergency-lens {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  background: #ff8a8a;
+  mix-blend-mode: multiply;
 }
 
 .board-ended {
