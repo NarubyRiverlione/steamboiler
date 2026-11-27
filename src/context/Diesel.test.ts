@@ -51,7 +51,7 @@ describe("the onsite diesel (#169)", () => {
     })
 
     test("needs the safety bus; the local trip does not", () => {
-      const noControl: PowerPlantState = { ...running, upsBreaker: false }
+      const noControl: PowerPlantState = { ...running, vitalFeedBreaker: false, safetyFeedBreaker: false, upsCharge: 0 }
       expect(isBusLive(noControl)).toBe(false)
       expect(act(noControl, { type: "CLOSE_DIESEL_BREAKER" }).dieselBreaker).toBe(false)
       const closed: PowerPlantState = { ...noControl, dieselBreaker: true }

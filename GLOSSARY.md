@@ -112,31 +112,39 @@ Bringing the plant up from a dead bus with the diesel generator alone, until the
 _Avoid_: Black start, cold start
 
 **Dead bus**:
-The grid supply breaker, the unit aux breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes.
+The grid supply breaker, the unit aux breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes. This is the Auxiliary bus only: the Vital bus is dead when the Aux→Vital breaker is open or the Auxiliary bus is dead, and the Safety bus when neither the Vital bus nor the UPS feeds it.
 _Avoid_: Blackout, loss of power
 
 **Vital bus**:
-The electrical bus fed by the Auxiliary bus that carries the controller controls, the board's LCD readouts and the annunciator. It has no battery: a dead Auxiliary bus kills it.
+The electrical bus that carries the controller controls, the board's LCD readouts and the annunciator. Live when the Aux→Vital breaker is closed and the Auxiliary bus is live. It has no battery: a dead Auxiliary bus kills it and the Aux→Vital breaker opens by itself.
 _Avoid_: Control bus, DC bus (the model has no DC distribution)
 
 **Safety bus**:
-The electrical bus that carries breaker control power and the trip reset. Fed by the Auxiliary bus, or on a dead Auxiliary bus by the UPS through the battery breaker. Dead when the Auxiliary bus is dead and the battery breaker is open or the UPS charge is 0%.
+The electrical bus that carries breaker control power and the trip reset. Fed by the Vital bus through the Vital→Safety breaker, or by the UPS while that breaker is open. Dead when neither feeds it: the Vital bus is dead and the UPS charge is 0%, or the Vital→Safety breaker is open and the UPS charge is 0%.
 _Avoid_: Emergency bus, DC bus
 
 **Control power**:
-The power from the safety bus that the breaker coils and the trip reset need. Without it, breaker commands do nothing.
+The power from the safety bus that the breaker coils and the trip reset need. Without it, breaker commands do nothing. Two exceptions: the Vital→Safety breaker needs none (a flat battery stays recoverable), and the local mechanical trips need none. The Aux→Vital breaker needs it to close.
 _Avoid_: DC supply, trip supply
 
 **UPS**:
-The battery that carries the Safety bus when the Auxiliary bus is dead. It runs about 30 minutes; at 0% charge the simulation ends.
+The battery that takes the Safety bus by itself when the Vital bus dies. It runs about 30 minutes; at 0% charge with the Vital bus dead the simulation ends.
 _Avoid_: Battery, backup power
 
 **UPS charge**:
-The UPS's stored energy in percent, 0 to 100. Drains at a constant rate while the battery breaker is closed and the Auxiliary bus is dead; recharges at one fixed rate while the Auxiliary bus is live.
+The UPS's stored energy in percent, 0 to 100. Drains at a constant rate whenever the battery feeds the Safety bus (the Vital→Safety breaker is open), also with the Vital bus back; recharges at one fixed rate only while that breaker is closed and the Vital bus is live.
 
 **Battery breaker**:
-The manual breaker that connects the UPS battery to the Safety bus (`upsBreaker` in the code). It only matters on a dead Auxiliary bus, never closes by itself and needs no power.
+The derived breaker that connects the UPS battery to the Safety bus: closed exactly when the Vital→Safety breaker is open. It has no operator control.
 _Avoid_: Battery switch, UPS breaker
+
+**Aux→Vital breaker**:
+The breaker (`vitalFeedBreaker`) that feeds the Vital bus from the Auxiliary bus. It opens by itself on a dead Auxiliary bus; the operator closes it, only while the Auxiliary bus is live, and it needs control power.
+_Avoid_: Vital breaker
+
+**Vital→Safety breaker**:
+The breaker (`safetyFeedBreaker`) that feeds the Safety bus from the Vital bus. It opens by itself when the Vital bus is dead and the battery takes over in the same tick; the operator closes it, only while the Vital bus is live, and it needs no control power.
+_Avoid_: Safety breaker
 
 **Vacuum limit**:
 The highest condenser pressure at which the turbine valve may be open or be opened. Above it the exhaust steam has nowhere to go, so the turbine is not allowed to take steam.

@@ -2,7 +2,7 @@ import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
 import { BusPumps, isBusLive, restorePumps, stopPumps } from "./AuxiliaryBus"
 import { DieselTick } from "./Diesel"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
-import { upsChargeAfter } from "./SafetyBus"
+import { settleEmergencyChain, isVitalBusLive, upsChargeAfter } from "./SafetyBus"
 import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
 import { GlandSteamTick, glandSteamMass } from "./Turbine/GlandSteam"
 import { CondenserTick } from "./Condenser/CondenserTick"
@@ -22,7 +22,8 @@ export default function PowerPlantTick(entry: PowerPlantState): PowerPlantState 
   // The simulation has ended (the UPS ran flat, #143): nothing advances
   if (entry.simulationEnded) return entry
   // The onsite diesel starts up, and its breaker opens on overload before anything is fed this tick (#169)
-  const supplied: PowerPlantState = DieselTick(entry)
+  // The emergency chain changes over by itself: Aux→Vital opens on a dead Auxiliary bus, Vital→Safety on a dead Vital bus (#196)
+  const supplied: PowerPlantState = settleEmergencyChain(DieselTick(entry))
   // Dead bus (#141, ADR 0053): both breakers open, so every pump runs at flow 0 this tick; the operator's positions come back at the end
   const deadBus = !isBusLive(supplied)
   const state: PowerPlantState = deadBus ? { ...supplied, ...stopPumps(supplied) } : supplied
@@ -220,7 +221,7 @@ export default function PowerPlantTick(entry: PowerPlantState): PowerPlantState 
     ...pumps,
   }
   // Auxiliary load (#140): metering only, read from the new state so a trip this tick already stops the pump
-  // UPS (#143): the charge follows the bus of the tick's start; flat with the breaker closed ends the simulation
+  // UPS (#143, #196): the charge follows the breakers of the tick's start; flat with the Vital bus dead ends the simulation
   const upsCharge: number = upsChargeAfter(supplied)
-  return { ...next, upsCharge, simulationEnded: supplied.upsBreaker && upsCharge <= 0, auxiliaryLoad: auxiliaryLoadOf(next) }
+  return { ...next, upsCharge, simulationEnded: !isVitalBusLive(supplied) && upsCharge <= 0, auxiliaryLoad: auxiliaryLoadOf(next) }
 }

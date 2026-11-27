@@ -67,8 +67,8 @@ describe("the unit aux breaker (#189, ADR 0053)", () => {
       expect(reduce({ type: "CLOSE_UNIT_AUX_BREAKER" }, slow)).toBe(slow)
     })
 
-    test("needs the safety bus: dead bus, battery breaker open, does nothing", () => {
-      const dead: PowerPlantState = { ...plant({ grid: false, unitAux: false, generator: false }), upsBreaker: false }
+    test("needs the safety bus: dead bus, flat battery, does nothing", () => {
+      const dead: PowerPlantState = { ...plant({ grid: false, unitAux: false, generator: false }), vitalFeedBreaker: false, safetyFeedBreaker: false, upsCharge: 0 }
       expect(reduce({ type: "CLOSE_UNIT_AUX_BREAKER" }, dead)).toBe(dead)
     })
 

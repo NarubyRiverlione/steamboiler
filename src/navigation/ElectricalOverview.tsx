@@ -34,6 +34,8 @@ import {
   UPS,
   SAFETY_FEED_X,
   UPS_BREAKER_Y,
+  VITAL_FEED_BREAKER_Y,
+  SAFETY_FEED_BREAKER_Y,
   VITAL_FEED_X,
   VOLTAGES,
   consumerY,
@@ -467,7 +469,6 @@ function ElectricalOverview() {
   const safetyLive: boolean = isSafetyBusLive(state)
   const draws: readonly number[] = consumerDraws(state)
   const [aux, vital, safety] = BUSES
-  const upsLink: PartId = "auxiliaryBus"
   const voltage = (live: boolean, v: { readonly live: string; readonly dead: string }): string =>
     live ? v.live : v.dead
   return (
@@ -507,11 +508,11 @@ function ElectricalOverview() {
         <DieselColumn closed={state.dieselBreaker} showValues={showValues} output={dieselOutput(state)} />
         <BusLine bus={aux} live={auxLive} showValues={showValues} voltage={voltage(auxLive, VOLTAGES.aux)} />
         <Consumers draws={draws} live={auxLive} showValues={showValues} />
-        <g className={colour("vital") + dim(vitalLive)} data-feed="vital">
-          <path
-            className="board-pipe board-electrical-line"
-            d={line(VITAL_FEED_X, aux.y, VITAL_FEED_X, vital.y)}
-          />
+        <g className={colour("aux") + dim(auxLive && state.vitalFeedBreaker)} data-feed="vital">
+          <path className="board-pipe board-electrical-line" d={line(VITAL_FEED_X, aux.y, VITAL_FEED_X, vital.y)} />
+          <Node part="emergencyPower" name="Aux to Vital breaker">
+            <BreakerSymbol x={VITAL_FEED_X} y={VITAL_FEED_BREAKER_Y} closed={state.vitalFeedBreaker} name="Aux to Vital breaker" />
+          </Node>
         </g>
         <BusLine
           bus={vital}
@@ -520,11 +521,11 @@ function ElectricalOverview() {
           voltage={voltage(vitalLive, VOLTAGES.vital)}
         />
         <BusLoads vitalLive={vitalLive} safetyLive={safetyLive} />
-        <g className={colour("aux") + dim(auxLive)} data-feed="safety-ac">
-          <path
-            className="board-pipe board-electrical-line"
-            d={line(SAFETY_FEED_X, aux.y, SAFETY_FEED_X, safety.y)}
-          />
+        <g className={colour("vital") + dim(vitalLive && state.safetyFeedBreaker)} data-feed="safety-ac">
+          <path className="board-pipe board-electrical-line" d={line(SAFETY_FEED_X, vital.y, SAFETY_FEED_X, safety.y)} />
+          <Node part="emergencyPower" name="Vital to Safety breaker">
+            <BreakerSymbol x={SAFETY_FEED_X} y={SAFETY_FEED_BREAKER_Y} closed={state.safetyFeedBreaker} name="Vital to Safety breaker" />
+          </Node>
         </g>
         <g className={colour("ups") + dim(isBatteryFeeding(state))} data-feed="safety">
           <path
@@ -533,7 +534,7 @@ function ElectricalOverview() {
           />
         </g>
         <g className={colour("ups")} data-ups>
-          <Node part={upsLink} name="UPS">
+          <Node part="emergencyPower" name="UPS">
             <rect className="board-node-hit" x={UPS.x - UPS.w / 2} y={UPS.y} width={UPS.w} height={UPS.h} />
             <rect
               className="board-node-box board-electrical-line"
@@ -551,9 +552,7 @@ function ElectricalOverview() {
             className="board-pipe board-electrical-line"
             d={line(UPS.x, UPS.y + UPS.h, UPS.x, UPS_BREAKER_Y)}
           />
-          <Node part={upsLink} name="Battery breaker">
-            <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={state.upsBreaker} name="Battery breaker" />
-          </Node>
+          <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={!state.safetyFeedBreaker} name="Battery breaker" />
         </g>
         {showValues && (
           <ValueLabel

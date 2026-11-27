@@ -3,30 +3,30 @@ import { makeInitialState } from "../context/PowerPlantReducer"
 import type PowerPlantState from "../context/PowerPlantState"
 import { deriveBoardState } from "./boardState"
 
-// vital = Auxiliary bus live (grid supply breaker); safety = UPS breaker closed with charge left
-const plant = (vital: boolean, safety: boolean, ended = false): PowerPlantState => ({
+// vital = Auxiliary bus live and Aux→Vital closed; otherwise the grid is lost and the chain opened
+const plant = (vital: boolean, ended = false): PowerPlantState => ({
   ...makeInitialState(),
   gridSupplyBreaker: vital,
-  upsBreaker: safety,
+  vitalFeedBreaker: vital,
+  safetyFeedBreaker: vital,
   upsCharge: 50,
   simulationEnded: ended,
 })
 
-describe("deriveBoardState", () => {
-  it.each([
-    [true, true, "normal"],
-    [true, false, "normal"],
-    [false, true, "emergency"],
-    [false, false, "dark"],
-  ] as const)("vital %s, safety %s gives %s", (vital, safety, expected) => {
-    expect(deriveBoardState(plant(vital, safety))).toBe(expected)
+describe("deriveBoardState (#196: normal, emergency, ended)", () => {
+  it("is normal with the Vital bus live", () => {
+    expect(deriveBoardState(plant(true))).toBe("normal")
+  })
+
+  it("is emergency with the Vital bus dead, the battery feeding", () => {
+    expect(deriveBoardState(plant(false))).toBe("emergency")
+  })
+
+  it("is normal with the Vital bus live and a flat battery: the Safety bus is dead but the board is not", () => {
+    expect(deriveBoardState({ ...plant(true), safetyFeedBreaker: false, upsCharge: 0 })).toBe("normal")
   })
 
   it("is ended whatever the buses say", () => {
-    for (const vital of [true, false]) for (const safety of [true, false]) expect(deriveBoardState(plant(vital, safety, true))).toBe("ended")
-  })
-
-  it("is dark with the UPS breaker closed but the charge at 0", () => {
-    expect(deriveBoardState({ ...plant(false, true), upsCharge: 0 })).toBe("dark")
+    for (const vital of [true, false]) expect(deriveBoardState(plant(vital, true))).toBe("ended")
   })
 })

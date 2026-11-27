@@ -34,7 +34,7 @@ export type Busbar = {
 
 export const BUSES: readonly Busbar[] = [
   { id: "aux", name: "Auxiliary bus", y: 330, x1: 80, x2: 760, nameX: GRID_SUPPLY_X - 12, nameAnchor: "end" },
-  { id: "vital", name: "Vital bus", y: 460, x1: 620, x2: 1040, nameX: 620, nameAnchor: "start" },
+  { id: "vital", name: "Vital bus", y: 460, x1: 590, x2: 1040, nameX: 620, nameAnchor: "start" },
   { id: "safety", name: "Safety bus", y: 730, x1: 600, x2: 1040, nameX: 612, nameAnchor: "start" },
 ]
 
@@ -71,15 +71,17 @@ export const CONSUMER_BOX = { x: 150, w: 270, h: 36 } as const
 export const TOTAL_Y = 390
 export const consumerY = (index: number): number => TOTAL_Y + (index + 1) * 46
 
-// Vital bus fed from the Auxiliary bus at this x
+// Vital bus fed from the Auxiliary bus at this x, through the Aux→Vital breaker (#196)
 export const VITAL_FEED_X = 700
+export const VITAL_FEED_BREAKER_Y = 395
 
-// UPS box, its breaker and the line down to the Safety bus
+// UPS box, its derived battery breaker (closed = Vital→Safety open) and the line down to the Safety bus
 export const UPS = { x: 970, y: 570, w: 140, h: 44 } as const
 export const UPS_BREAKER_Y = 670
 
-// The rectifier feed: a line from the Auxiliary bus down to the Safety bus, left of the Vital bus
+// The Vital→Safety feed: a line from the Vital bus down to the Safety bus, through the Vital→Safety breaker (#196)
 export const SAFETY_FEED_X = 600
+export const SAFETY_FEED_BREAKER_Y = 595
 
 // One load per bus below the Auxiliary bus: Instrumentation on the Vital bus, Emergency equipment on the Safety bus. Plain boxes, no link: each stands for several pages.
 export type BusLoad = {

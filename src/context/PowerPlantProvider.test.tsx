@@ -259,7 +259,8 @@ const rows: Row[] = [
     act: (c) => { c.toggleDieselBreaker(); },
     expected: () => ({ dieselBreaker: false }),
   },
-  { name: "toggleUpsBreaker", act: (c) => { c.toggleUpsBreaker(); }, expected: (s) => ({ upsBreaker: !s.upsBreaker }) },
+  { name: "toggleVitalFeedBreaker", act: (c) => { c.toggleVitalFeedBreaker(); }, expected: (s) => ({ vitalFeedBreaker: !s.vitalFeedBreaker, safetyFeedBreaker: false }) },
+  { name: "toggleSafetyFeedBreaker", act: (c) => { c.toggleSafetyFeedBreaker(); }, expected: (s) => ({ safetyFeedBreaker: !s.safetyFeedBreaker }) },
   { name: "toggleOilPump", act: (c) => { c.toggleOilPump(); }, expected: (s) => ({ "Oil.pumpRunning": !s.Oil.pumpRunning }) },
   {
     name: "toggleTurningGear (engage)",

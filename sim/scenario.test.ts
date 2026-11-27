@@ -120,11 +120,11 @@ describe("cold initial state", () => {
   const rest: Scenario = { name: "test-rest", description: "Nothing on", duration: 600, sampleEvery: 60, actions: [] }
 
   // The scenarios start with the 35% drum, the app with 40% (ADR 0018); everything else is the same cold plant
-  test("is what the scenarios start from, and the UI differs only in the drum fill and the open UPS breaker (#142)", () => {
+  test("is what the scenarios start from, and the UI differs only in the drum fill", () => {
     expect(cold.Boiler.waterVolume).toBe(CstSimulation.CstBoiler.StartWaterVolume)
     expect(initialPowerPlantState).toEqual(makeUiStartState())
     expect(initialPowerPlantState.Boiler.waterVolume).toBe(CstSimulation.CstBoiler.UiStartWaterVolume)
-    expect({ ...initialPowerPlantState, Boiler: cold.Boiler, upsBreaker: true }).toEqual(cold)
+    expect({ ...initialPowerPlantState, Boiler: cold.Boiler }).toEqual(cold)
   })
 
   // 35 t of water at 4.196 kJ/kg·K plus 100 t of steel at 0.5 kJ/kg·K, 20 K above 0 °C: about 2932 + 1000 MJ

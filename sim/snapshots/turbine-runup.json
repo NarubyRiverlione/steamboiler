@@ -119,7 +119,8 @@
   },
   "dieselBreaker": false,
   "gridSupplyBreaker": true,
-  "upsBreaker": true,
+  "vitalFeedBreaker": true,
+  "safetyFeedBreaker": true,
   "upsCharge": 100,
   "simulationEnded": false,
   "auxiliaryLoad": 0.7423476172410206
