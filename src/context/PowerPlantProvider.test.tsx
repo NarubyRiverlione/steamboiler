@@ -261,6 +261,7 @@ const rows: Row[] = [
   },
   { name: "toggleVitalFeedBreaker", act: (c) => { c.toggleVitalFeedBreaker(); }, expected: (s) => ({ vitalFeedBreaker: !s.vitalFeedBreaker, safetyFeedBreaker: false }) },
   { name: "toggleSafetyFeedBreaker", act: (c) => { c.toggleSafetyFeedBreaker(); }, expected: (s) => ({ safetyFeedBreaker: !s.safetyFeedBreaker }) },
+  { name: "setEmySelector", act: (c) => { c.setEmySelector("ON"); }, expected: () => ({ emySelector: "ON" }) },
   { name: "toggleOilPump", act: (c) => { c.toggleOilPump(); }, expected: (s) => ({ "Oil.pumpRunning": !s.Oil.pumpRunning }) },
   {
     name: "toggleTurningGear (engage)",

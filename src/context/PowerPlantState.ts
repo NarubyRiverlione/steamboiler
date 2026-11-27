@@ -124,6 +124,12 @@ export type DieselState = {
   startElapsed: number // s since RUN while starting, 0 otherwise
 }
 
+export type EmySelector = "OFF" | "AUTO" | "ON"
+
+export type EmergencyDieselState = DieselState & {
+  warmupElapsed: number // s since running, 0 while not running; Ready to close once it reaches CstEmergencyDiesel.WarmUpTime (#198)
+}
+
 type PowerPlantState = {
   Boiler: BoilerState
   Deaerator: DeaeratorState
@@ -134,6 +140,9 @@ type PowerPlantState = {
   gridSupplyBreaker: boolean // the grid feeds the auxiliary bus while closed; closed in every scenario and a new game (#141, ADR 0053)
   Diesel: DieselState
   dieselBreaker: boolean // the onsite diesel feeds the auxiliary bus while closed; open in every scenario and a new game (#169, ADR 0053)
+  EmergencyDiesel: EmergencyDieselState // the EMY diesel on the Vital bus: no rating, no overload (#198, ADR 0056)
+  emySelector: EmySelector // OFF never starts, AUTO starts on a dead Vital bus and keeps running, ON is the test run (#198)
+  emyBreaker: boolean // EMY diesel to Vital bus: automatic only, closes on a dead Vital bus once the diesel runs (#198)
   vitalFeedBreaker: boolean // Aux→Vital: opens by itself on a dead Auxiliary bus; the operator closes it on a live one, with control power (#196, ADR 0056)
   safetyFeedBreaker: boolean // Vital→Safety: opens by itself on a dead Vital bus, the battery takes over; the operator closes it on a live Vital bus, no control power (#196)
   upsCharge: number // percent 0-100; drains while the battery feeds (Vital→Safety open), recharges only with it closed on a live Vital bus

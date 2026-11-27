@@ -116,7 +116,7 @@ describe("electrical overview", () => {
     state.upsCharge = 0
     renderBare(state)
     const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box, .board-node .board-breaker-symbol"))
-    expect(boxes.length).toBe(15)
+    expect(boxes.length).toBe(16)
     expect(boxes.filter(dimmed)).toEqual([])
     expect(
       dimmed(document.querySelector("[data-grid] .board-node-box:not(.board-node .board-node-box)")),

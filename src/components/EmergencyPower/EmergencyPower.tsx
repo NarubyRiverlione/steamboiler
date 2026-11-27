@@ -1,11 +1,14 @@
 /** The Emergency power page on the board (#196, ADR 0056): the Aux→Vital and Vital→Safety breakers, the UPS charge and the Control power and On battery lamps. The changeover is automatic, the hand-back is the operator's. */
 
 import { useState } from "react"
+import { isEmyWarmedUp, isReadyToClose } from "../../context/EmergencyDiesel"
+import type { EmySelector } from "../../context/PowerPlantState"
 import { isBusLive } from "../../context/AuxiliaryBus"
 import usePowerPlant from "../../context/PowerPlantContext"
 import { isBatteryFeeding, isSafetyBusLive, isVitalBusLive } from "../../context/SafetyBus"
 import { BreakerSwitch } from "../board/BreakerSwitch"
 import { Lamp } from "../board/Lamp"
+import { LensButton } from "../board/LensButton"
 import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 
@@ -15,14 +18,16 @@ const CHARGE_ZONES: readonly GaugeZone[] = [
   { from: 10, to: 100, tone: "ok" },
 ]
 
+const SELECTOR_POSITIONS: readonly EmySelector[] = ["OFF", "AUTO", "ON"]
+
 function EmergencyPower() {
-  const { state, toggleVitalFeedBreaker, toggleSafetyFeedBreaker } = usePowerPlant()
+  const { state, toggleVitalFeedBreaker, toggleSafetyFeedBreaker, setEmySelector } = usePowerPlant()
   const [vitalCoverLifted, setVitalCoverLifted] = useState<boolean>(false)
   const [safetyCoverLifted, setSafetyCoverLifted] = useState<boolean>(false)
   const controlPower: boolean = isSafetyBusLive(state)
   // Closing Aux→Vital needs a live Auxiliary bus and control power; Vital→Safety needs a live Vital bus and no control power
   const vitalCloseRefused: boolean = !state.vitalFeedBreaker && !(isBusLive(state) && controlPower)
-  const safetyCloseRefused: boolean = !state.safetyFeedBreaker && !isVitalBusLive(state)
+  const safetyCloseRefused: boolean = !state.safetyFeedBreaker && !(isVitalBusLive(state) && isReadyToClose(state))
   return (
     <PanelFrame title="Emergency power">
       <div className="board-page-groups">
@@ -53,7 +58,7 @@ function EmergencyPower() {
             on={state.safetyFeedBreaker}
             onToggle={toggleSafetyFeedBreaker}
             disabled={safetyCloseRefused}
-            title={safetyCloseRefused ? "Closes only while the Vital bus is live" : undefined}
+            title={safetyCloseRefused ? "Closes only while the Vital bus is live and, on the EMY diesel, once it is ready" : undefined}
             guard={{
               lifted: safetyCoverLifted,
               onToggleCover: () => {
@@ -61,6 +66,26 @@ function EmergencyPower() {
               },
             }}
           />
+        </div>
+        <div className="board-group">
+          <h3 className="board-group-title">EMY diesel</h3>
+          <div role="radiogroup" aria-label="EMY diesel selector">
+            {SELECTOR_POSITIONS.map((position: EmySelector) => (
+              <LensButton
+                key={position}
+                pressed={state.emySelector === position}
+                aria-label={"EMY selector " + position}
+                onClick={() => {
+                  setEmySelector(position)
+                }}
+              >
+                {position}
+              </LensButton>
+            ))}
+          </div>
+          <Lamp lit={state.EmergencyDiesel.status === "starting"} label="Starting" />
+          <Lamp lit={state.EmergencyDiesel.status === "running"} tone="ok" label="Running" />
+          <Lamp lit={isEmyWarmedUp(state)} tone="ok" label="Ready to close" title="Lit when the EMY diesel is warmed up: the interlock on Vital→Safety while it feeds the Vital bus" />
         </div>
         <div className="board-group">
           <h3 className="board-group-title">UPS</h3>

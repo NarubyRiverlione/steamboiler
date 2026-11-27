@@ -1,4 +1,4 @@
-import PowerPlantState, { SpeedMode } from "./PowerPlantState"
+import PowerPlantState, { EmySelector, SpeedMode } from "./PowerPlantState"
 import type { TripId } from "./tripReset"
 
 type PowerPlantAction =
@@ -42,6 +42,7 @@ type PowerPlantAction =
   | { type: "OPEN_VITAL_FEED_BREAKER" }
   | { type: "CLOSE_SAFETY_FEED_BREAKER" }
   | { type: "OPEN_SAFETY_FEED_BREAKER" }
+  | { type: "SET_EMY_SELECTOR"; payload: { selector: EmySelector } }
   // Lube oil Action (ADR 0050): the oil pump on or off
   | { type: "SET_OIL_PUMP"; payload: { pumpRunning: boolean } }
   // Turning gear Action (ADR 0051): engage or disengage by hand

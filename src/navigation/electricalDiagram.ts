@@ -75,6 +75,11 @@ export const consumerY = (index: number): number => TOTAL_Y + (index + 1) * 46
 export const VITAL_FEED_X = 700
 export const VITAL_FEED_BREAKER_Y = 395
 
+// The EMY diesel (#198): a source box right of the Auxiliary bus, its automatic EMY breaker and the line down to the Vital bus
+export const EMY_X = 900
+export const EMY_BOX_Y = 330
+export const EMY_BREAKER_Y = 405
+
 // UPS box, its derived battery breaker (closed = Vital→Safety open) and the line down to the Safety bus
 export const UPS = { x: 970, y: 570, w: 140, h: 44 } as const
 export const UPS_BREAKER_Y = 670
