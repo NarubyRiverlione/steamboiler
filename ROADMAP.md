@@ -11,7 +11,7 @@ Next: the first ready ticket with nothing under Waiting on, in the theme you pic
 
 ## Electrical: auxiliary load, grid supply, vital bus, UPS
 
-Next: [#196](https://github.com/NarubyRiverlione/steamboiler/issues/196) UPS changes over automatically: remove the battery breaker, no dark board, no UPS strip on the emergency board
+Next: [#196](https://github.com/NarubyRiverlione/steamboiler/issues/196) UPS: automatic changeover to the battery, manual hand-back through a safety feed breaker; no dark board, no emergency UPS strip
 
 | # | Ticket | Status | Waiting on | Unblocks |
 | - | ------ | ------ | ---------- | -------- |
@@ -19,7 +19,7 @@ Next: [#196](https://github.com/NarubyRiverlione/steamboiler/issues/196) UPS cha
 | 2 | [#186](https://github.com/NarubyRiverlione/steamboiler/issues/186) Diesel generator fuel: a day tank and run time | needs-triage |  |  |
 | 3 | [#193](https://github.com/NarubyRiverlione/steamboiler/issues/193) Local mechanical trips have no case left now the safety bus is fed from the Auxiliary bus | needs-triage |  |  |
 | 4 | [#194](https://github.com/NarubyRiverlione/steamboiler/issues/194) Unit aux breaker: local mechanical trip | needs-triage |  |  |
-| 5 | [#196](https://github.com/NarubyRiverlione/steamboiler/issues/196) UPS changes over automatically: remove the battery breaker, no dark board, no UPS strip on the emergency board | ready-for-agent |  |  |
+| 5 | [#196](https://github.com/NarubyRiverlione/steamboiler/issues/196) UPS: automatic changeover to the battery, manual hand-back through a safety feed breaker; no dark board, no emergency UPS strip | ready-for-agent |  |  |
 
 ## Turbine auxiliaries: lube oil, turning gear, gland steam
 
