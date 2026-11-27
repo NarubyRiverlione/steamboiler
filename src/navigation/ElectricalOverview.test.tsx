@@ -211,6 +211,50 @@ describe("electrical overview", () => {
     expect(text("Safety bus voltage")).toBe("0 V DC")
   })
 
+  it("marks the EMY and Battery breakers automatic with an A; they and the other interlocked breakers get a dashed frame, no other breaker", () => {
+    renderBoard(livePlant())
+    const breakers: Element[] = Array.from(document.querySelectorAll("[data-closed]"))
+    const automatic: (string | null)[] = breakers
+      .filter((b) => b.getAttribute("data-automatic") === "true")
+      .map((b) => b.getAttribute("aria-label"))
+    expect(automatic.map((n) => n?.split(":")[0]).sort()).toEqual(["Battery breaker", "EMY breaker"])
+    for (const b of breakers) {
+      const auto: boolean = b.getAttribute("data-automatic") === "true"
+      const partner: boolean = /^(Aux to Vital|Vital to Safety|Grid supply|Unit aux) breaker:/.test(b.getAttribute("aria-label") ?? "")
+      expect(b.querySelector(".board-breaker-frame") !== null).toBe(auto || partner)
+      expect(b.querySelector(".board-breaker-auto")?.textContent ?? null).toBe(auto ? "A" : null)
+    }
+  })
+
+  it("joins each pair of interlocked breakers by a dashed line, from frame edge to frame edge", () => {
+    renderBoard(livePlant())
+    const centre = (name: string): [number, number] => {
+      const transform: string = screen.getByLabelText(new RegExp("^" + name + ": ")).getAttribute("transform") ?? ""
+      const match: RegExpMatchArray | null = /translate\(([\d.]+) ([\d.]+)\)/.exec(transform)
+      return [Number(match?.[1]), Number(match?.[2])]
+    }
+    // On the edge of the drawn breaker footprint (half size 15 × 150%)
+    const onEdge = ([px, py]: number[], name: string): boolean => {
+      const [cx, cy] = centre(name)
+      return Math.max(Math.abs(px - cx), Math.abs(py - cy)) === 22.5
+    }
+    const lines: Element[] = Array.from(document.querySelectorAll("[data-interlock]"))
+    expect(lines.map((l) => l.getAttribute("data-breakers"))).toEqual([
+      "EMY breaker|Aux to Vital breaker",
+      "Battery breaker|Vital to Safety breaker",
+      "Grid supply breaker|Unit aux breaker",
+    ])
+    for (const l of lines) {
+      const [from, to] = (l.getAttribute("data-breakers") ?? "").split("|")
+      const points: number[][] = (l.getAttribute("d") ?? "")
+        .replace("M ", "")
+        .split(" L ")
+        .map((p) => p.split(" ").map(Number))
+      expect(onEdge(points[0], from)).toBe(true)
+      expect(onEdge(points[points.length - 1], to)).toBe(true)
+    }
+  })
+
   it("links the breakers and the diesel to the pages that hold them", () => {
     renderBoard(livePlant())
     const hrefOf = (name: string): string | null => screen.getByRole("link", { name }).getAttribute("href")

@@ -12,12 +12,17 @@ export type SourceId = "grid" | "generator" | "diesel"
 export const SOURCE_BOX = { y: 30, w: 150, h: 44 } as const
 export const SOURCE_BREAKER_Y = 150
 export const BREAKER_HALF = 15
+// The breaker symbol is drawn in its 30 unit footprint and scaled up by 150%; BREAKER_DRAWN_HALF is the half size as it stands on the diagram
+export const BREAKER_SCALE = 1.5
+export const BREAKER_DRAWN_HALF = BREAKER_HALF * BREAKER_SCALE
 export const GRID_X = 280
 export const GRID_TIE_Y = 100
 export const GRID_SUPPLY_X = 160
 export const GENERATOR_X = 400
 export const GENERATOR_BOX_Y = 200
 export const UNIT_AUX_BREAKER_Y = 287
+// The grid supply breaker stands level with the unit aux breaker it is interlocked with
+export const GRID_SUPPLY_BREAKER_Y = UNIT_AUX_BREAKER_Y
 export const DIESEL_X = 640
 
 // The busbars: horizontal lines at `y` from `x1` to `x2`
@@ -30,10 +35,18 @@ export type Busbar = {
   // Where the name stands, clear of the feed lines that join the bus
   readonly nameX: number
   readonly nameAnchor: "start" | "end"
+  // The name and readouts stand in a row below the bus instead of above it, clear of what runs above (the Auxiliary bus: the grid supply interlock line)
+  readonly labelsBelow?: boolean
 }
 
+// The stem the consumers hang from, down from the left end of the Auxiliary bus
+export const CONSUMER_STEM_X = 120
+
+// The row below the Auxiliary bus: its name right of the consumer stem, then its voltage and the Auxiliary load total
+export const AUX_ROW = { gap: 12, nameX: CONSUMER_STEM_X + 14, voltageX: 260, loadX: 420 } as const
+
 export const BUSES: readonly Busbar[] = [
-  { id: "aux", name: "Auxiliary bus", y: 330, x1: 80, x2: 760, nameX: GRID_SUPPLY_X - 12, nameAnchor: "end" },
+  { id: "aux", name: "Auxiliary bus", y: 330, x1: 80, x2: 760, nameX: AUX_ROW.nameX, nameAnchor: "start", labelsBelow: true },
   { id: "vital", name: "Vital bus", y: 460, x1: 590, x2: 1040, nameX: 620, nameAnchor: "start" },
   { id: "safety", name: "Safety bus", y: 730, x1: 600, x2: 1040, nameX: 612, nameAnchor: "start" },
 ]
@@ -65,11 +78,10 @@ export const CONSUMERS: readonly Consumer[] = [
   { name: "Turning gear motor", part: "turbineAux" },
 ]
 
-export const CONSUMER_STEM_X = 120
 export const CONSUMER_BOX = { x: 150, w: 270, h: 36 } as const
-// The Auxiliary load total is the first row below the Auxiliary bus, the consumers follow
-export const TOTAL_Y = 390
-export const consumerY = (index: number): number => TOTAL_Y + (index + 1) * 46
+// The consumers follow the readout row below the Auxiliary bus
+export const FIRST_CONSUMER_Y = 400
+export const consumerY = (index: number): number => FIRST_CONSUMER_Y + index * 46
 
 // Vital bus fed from the Auxiliary bus at this x, through the Aux→Vital breaker (#196)
 export const VITAL_FEED_X = 700
@@ -84,9 +96,52 @@ export const EMY_BREAKER_Y = 405
 export const UPS = { x: 970, y: 570, w: 140, h: 44 } as const
 export const UPS_BREAKER_Y = 670
 
-// The Vital→Safety feed: a line from the Vital bus down to the Safety bus, through the Vital→Safety breaker (#196)
+// The Vital→Safety feed: a line from the Vital bus down to the Safety bus, through the Vital→Safety breaker (#196), level with the Battery breaker it is interlocked with
 export const SAFETY_FEED_X = 600
-export const SAFETY_FEED_BREAKER_Y = 595
+export const SAFETY_FEED_BREAKER_Y = UPS_BREAKER_Y
+
+// Two interlocked breakers, joined by a dashed line from the edge of one (the automatic one, when there is one) to the edge of the other.
+// EMY: closes only while the Aux→Vital breaker is open, and closing Aux→Vital opens it (ADR 0056). Battery: closed exactly while Vital→Safety is open.
+// Grid supply and unit aux: closing one opens the other (#189), both by hand.
+export type Interlock = {
+  readonly id: "emy" | "battery" | "aux-supply"
+  readonly from: string
+  readonly to: string
+  readonly points: readonly (readonly [number, number])[]
+}
+
+// Straight across between the two breakers, at a height inside both footprints
+const EMY_INTERLOCK_Y = (VITAL_FEED_BREAKER_Y + EMY_BREAKER_Y) / 2
+
+export const INTERLOCKS: readonly Interlock[] = [
+  {
+    id: "emy",
+    from: "EMY breaker",
+    to: "Aux to Vital breaker",
+    points: [
+      [EMY_X - BREAKER_DRAWN_HALF, EMY_INTERLOCK_Y],
+      [VITAL_FEED_X + BREAKER_DRAWN_HALF, EMY_INTERLOCK_Y],
+    ],
+  },
+  {
+    id: "battery",
+    from: "Battery breaker",
+    to: "Vital to Safety breaker",
+    points: [
+      [UPS.x - BREAKER_DRAWN_HALF, UPS_BREAKER_Y],
+      [SAFETY_FEED_X + BREAKER_DRAWN_HALF, SAFETY_FEED_BREAKER_Y],
+    ],
+  },
+  {
+    id: "aux-supply",
+    from: "Grid supply breaker",
+    to: "Unit aux breaker",
+    points: [
+      [GRID_SUPPLY_X + BREAKER_DRAWN_HALF, GRID_SUPPLY_BREAKER_Y],
+      [GENERATOR_X - BREAKER_DRAWN_HALF, UNIT_AUX_BREAKER_Y],
+    ],
+  },
+]
 
 // One load per bus below the Auxiliary bus: Instrumentation on the Vital bus, Emergency equipment on the Safety bus. Plain boxes, no link: each stands for several pages.
 export type BusLoad = {

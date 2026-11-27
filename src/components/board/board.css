@@ -1812,8 +1812,36 @@ path.board-zone {
   stroke-width: 3;
   stroke-linecap: round;
 }
-.board-breaker-symbol path {
+/* A breaker without a link draws no hit area; inside a link .board-node .board-node-hit keeps it transparent */
+.board-breaker-hit {
+  fill: none;
+  stroke: none;
+}
+/* An automatic breaker and its interlocked partner: a thin dashed frame on the footprint; the automatic one also an A in its lower right corner */
+.board-breaker-frame {
   stroke: #111;
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+.board-overview .board-breaker-auto {
+  fill: #111;
+  font-size: 7px;
+  font-weight: 700;
+  text-anchor: end;
+}
+/* The dashed line from an automatic breaker to the breaker it is interlocked with, in the frame's weight (the symbol is scaled 150%) */
+.board-interlock {
+  fill: none;
+  stroke: #111;
+  stroke-width: 1.5;
+  stroke-dasharray: 4.5 3;
+}
+.board-breaker-symbol path,
+.board-breaker-symbol circle {
+  stroke: #111;
+}
+.board-breaker-symbol circle {
+  stroke-width: 2;
 }
 
 /* One colour per source, the UPS and each bus; the generator keeps the power medium yellow */
