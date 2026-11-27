@@ -38,7 +38,7 @@ The full state and the plan that follows from it: the [review of 27 November 202
 
 ## Where we are going
 
-**Next: the boiler as tubes.** The boiler is one lumped vessel today ([ADR 0019](docs/adr/0019-boiler-is-one-lumped-vessel.md)). The plan is a tube model, which brings swell and shrink, a drum level with real meaning and real thermal stress, and resets the boiler volume and metal mass. No new plant systems are added before its impact is seen; small fixes from the review go on meanwhile.
+**Next: the boiler as tubes** (proposed, [ADR 0057](docs/adr/0057-boiler-as-a-tube-model.md)). The boiler is one lumped vessel today ([ADR 0019](docs/adr/0019-boiler-is-one-lumped-vessel.md)). The plan is a tube model, which brings swell and shrink, a drum level with real meaning and real thermal stress, and resets the boiler volume and metal mass. No new plant systems are added before its impact is seen; small fixes from the review go on meanwhile.
 
 Then three ladders, each in milestones:
 
