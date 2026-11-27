@@ -27,12 +27,15 @@ export type Busbar = {
   readonly y: number
   readonly x1: number
   readonly x2: number
+  // Where the name stands, clear of the feed lines that join the bus
+  readonly nameX: number
+  readonly nameAnchor: "start" | "end"
 }
 
 export const BUSES: readonly Busbar[] = [
-  { id: "aux", name: "Auxiliary bus", y: 330, x1: 80, x2: 760 },
-  { id: "vital", name: "Vital bus", y: 460, x1: 620, x2: 1040 },
-  { id: "safety", name: "Safety bus", y: 730, x1: 600, x2: 1040 },
+  { id: "aux", name: "Auxiliary bus", y: 330, x1: 80, x2: 760, nameX: GRID_SUPPLY_X - 12, nameAnchor: "end" },
+  { id: "vital", name: "Vital bus", y: 460, x1: 620, x2: 1040, nameX: 620, nameAnchor: "start" },
+  { id: "safety", name: "Safety bus", y: 730, x1: 600, x2: 1040, nameX: 612, nameAnchor: "start" },
 ]
 
 // Each source, the UPS and each bus has its own colour (board-electrical-<id> in board.css)
@@ -64,8 +67,9 @@ export const CONSUMERS: readonly Consumer[] = [
 
 export const CONSUMER_STEM_X = 120
 export const CONSUMER_BOX = { x: 150, w: 270, h: 36 } as const
-export const consumerY = (index: number): number => 390 + index * 46
-export const TOTAL_Y = 690
+// The Auxiliary load total is the first row below the Auxiliary bus, the consumers follow
+export const TOTAL_Y = 390
+export const consumerY = (index: number): number => TOTAL_Y + (index + 1) * 46
 
 // Vital bus fed from the Auxiliary bus at this x
 export const VITAL_FEED_X = 700
@@ -76,3 +80,18 @@ export const UPS_BREAKER_Y = 670
 
 // The rectifier feed: a line from the Auxiliary bus down to the Safety bus, left of the Vital bus
 export const SAFETY_FEED_X = 600
+
+// One load per bus below the Auxiliary bus: Instrumentation on the Vital bus, Emergency equipment on the Safety bus. Plain boxes, no link: each stands for several pages.
+export type BusLoad = {
+  readonly bus: "vital" | "safety"
+  readonly name: string
+  readonly stemX: number
+  readonly y: number
+}
+
+export const BUS_LOAD_BOX = { w: 230, h: 36, gap: 30 } as const
+
+export const BUS_LOADS: readonly BusLoad[] = [
+  { bus: "vital", name: "Instrumentation", stemX: 640, y: 510 },
+  { bus: "safety", name: "Emergency equipment", stemX: 640, y: 780 },
+]

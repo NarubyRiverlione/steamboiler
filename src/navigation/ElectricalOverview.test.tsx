@@ -86,6 +86,14 @@ describe("electrical overview", () => {
     expect(dimmed(sourceLine("generator-tie"))).toBe(true)
     expect(dimmed(sourceLine("generator"))).toBe(true)
     expect(dimmed(sourceLine("diesel"))).toBe(true)
+    // The line above an open breaker is still energised from the grid
+    const upper = (id: string): Element | null => source(id)?.querySelectorAll(".board-pipe")[1] ?? null
+    expect(dimmed(upper("generator-tie"))).toBe(false)
+    state.gridSupplyBreaker = false
+    cleanup()
+    renderBoard(state)
+    expect(dimmed(sourceLine("grid"))).toBe(true)
+    expect(dimmed(upper("grid"))).toBe(false)
   })
 
   it("draws the generator column: the generator breaker to the grid, the unit aux breaker to the Auxiliary bus (#189)", () => {
@@ -107,7 +115,7 @@ describe("electrical overview", () => {
     state.Turbine.generatorBreaker = false
     state.upsCharge = 0
     renderBare(state)
-    const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box"))
+    const boxes: Element[] = Array.from(document.querySelectorAll(".board-node .board-node-box, .board-node .board-breaker-symbol"))
     expect(boxes.length).toBe(14)
     expect(boxes.filter(dimmed)).toEqual([])
     expect(
@@ -118,6 +126,8 @@ describe("electrical overview", () => {
   it("shows the live values: voltages, consumer draws, total, diesel output and UPS charge", () => {
     renderBoard(livePlant())
     expect(text("Grid voltage")).toBe("110 kV")
+    expect(text("Load setpoint")).toBe("0.00 MW")
+    expect(text("Generator output")).toBe("0.00 MW")
     expect(text("Auxiliary bus voltage")).toBe("6.0 kV")
     expect(text("Vital bus voltage")).toBe("230 V")
     expect(text("Safety bus voltage")).toBe("110 V DC")
@@ -149,6 +159,20 @@ describe("electrical overview", () => {
     expect(text("Vital bus voltage")).toBe("0 V")
     expect(text("Boiler feed pump draw")).toBe("0.00 MW")
     expect(screen.getByLabelText("Boiler feed pump: off")).toBeTruthy()
+  })
+
+  it("shows Instrumentation on the vital bus and Emergency equipment on the safety bus, lit with their bus", () => {
+    renderBoard(livePlant())
+    expect(screen.getByLabelText("Instrumentation: on")).toBeTruthy()
+    expect(screen.getByLabelText("Emergency equipment: on")).toBeTruthy()
+    cleanup()
+    const dead: PowerPlantState = livePlant()
+    dead.gridSupplyBreaker = false
+    dead.Turbine.generatorBreaker = false
+    renderBare(dead)
+    expect(screen.getByLabelText("Instrumentation: off")).toBeTruthy()
+    expect(dimmed(document.querySelector('[data-bus-load="vital"]'))).toBe(true)
+    expect(screen.getByLabelText("Emergency equipment: on")).toBeTruthy()
   })
 
   it("keeps the safety bus lit from the Auxiliary bus with the battery breaker open (#190)", () => {

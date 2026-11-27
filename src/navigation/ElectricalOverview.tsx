@@ -14,6 +14,8 @@ import { isBatteryFeeding, isSafetyBusLive, isVitalBusLive } from "../context/Sa
 import {
   BREAKER_HALF,
   BUSES,
+  BUS_LOADS,
+  BUS_LOAD_BOX,
   CONSUMERS,
   CONSUMER_BOX,
   CONSUMER_STEM_X,
@@ -36,6 +38,7 @@ import {
   VOLTAGES,
   consumerY,
   type Busbar,
+  type BusLoad,
   type Consumer,
   type ElectricalColour,
 } from "./electricalDiagram"
@@ -68,7 +71,12 @@ function Node({
   )
 }
 
-// A breaker symbol: filled while closed, hollow with a gap while open
+// IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a cross on the upper contact. Closed: the blade lies on the line; open: it swings off. Always black. The blade tip and cross are in diagram units inside the breaker footprint.
+// The symbol is drawn in the 30 unit footprint and scaled up by 150%
+const BREAKER_SCALE = 1.5
+const BLADE_TIP = 9
+const CROSS = 4
+
 function BreakerSymbol({
   x,
   y,
@@ -85,7 +93,7 @@ function BreakerSymbol({
       role="img"
       aria-label={name + ": " + (closed ? "closed" : "open")}
       data-closed={closed}
-      transform={"translate(" + String(x) + " " + String(y) + ")"}
+      transform={"translate(" + String(x) + " " + String(y) + ") scale(" + String(BREAKER_SCALE) + ")"}
     >
       <rect
         className="board-node-hit"
@@ -95,23 +103,18 @@ function BreakerSymbol({
         height={2 * BREAKER_HALF + 12}
       />
       <rect
-        className={
-          closed
-            ? "board-node-box board-electrical-line board-breaker-closed"
-            : "board-node-box board-electrical-line"
-        }
+        className="board-overview-bg"
         x={-BREAKER_HALF}
         y={-BREAKER_HALF}
         width={2 * BREAKER_HALF}
         height={2 * BREAKER_HALF}
-        rx={3}
       />
-      {!closed && (
-        <path
-          className="board-electrical-line"
-          d={line(-BREAKER_HALF + 4, BREAKER_HALF - 4, BREAKER_HALF - 4, -BREAKER_HALF + 4)}
-        />
-      )}
+      <g className="board-breaker-symbol">
+        <path d={line(0, -BREAKER_HALF, 0, -BLADE_TIP)} />
+        <path d={line(0, BLADE_TIP, 0, BREAKER_HALF)} />
+        <path d={closed ? line(0, BLADE_TIP, 0, -BLADE_TIP) : line(0, BLADE_TIP, -BLADE_TIP, -BLADE_TIP + 2)} />
+        <path d={line(-CROSS, -BLADE_TIP - CROSS, CROSS, -BLADE_TIP + CROSS) + " " + line(-CROSS, -BLADE_TIP + CROSS, CROSS, -BLADE_TIP - CROSS)} />
+      </g>
     </g>
   )
 }
@@ -181,21 +184,31 @@ function SourceBox({
 }
 
 // The grid box on top with the tie rail the grid supply and the generator breaker hang on: the grid is always up for now (#189)
-function GridSource({ showValues }: { readonly showValues: boolean }) {
+function GridSource({ showValues, loadSetpoint }: { readonly showValues: boolean; readonly loadSetpoint: number }) {
   return (
     <g className={colour("grid")} data-grid>
       <path className="board-pipe board-electrical-line" d={line(GRID_X, SOURCE_BOX.y + SOURCE_BOX.h, GRID_X, GRID_TIE_Y)} />
       <path className="board-pipe board-electrical-line" d={line(GRID_SUPPLY_X, GRID_TIE_Y, GENERATOR_X, GRID_TIE_Y)} />
       <SourceBox x={GRID_X} y={SOURCE_BOX.y} name="Grid" lit />
       {showValues && (
-        <ValueLabel
-          label="Grid voltage"
-          text={VOLTAGES.grid.live}
-          x={GRID_X + SOURCE_BOX.w / 2 + 12}
-          y={SOURCE_BOX.y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
-          anchor="start"
-          widest="110 kV"
-        />
+        <>
+          <ValueLabel
+            label="Grid voltage"
+            text={VOLTAGES.grid.live}
+            x={GRID_X - SOURCE_BOX.w / 2 - 12}
+            y={SOURCE_BOX.y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
+            anchor="end"
+            widest="110 kV"
+          />
+          <ValueLabel
+            label="Load setpoint"
+            text={mw(loadSetpoint)}
+            x={GRID_X + SOURCE_BOX.w / 2 + 12}
+            y={SOURCE_BOX.y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
+            anchor="start"
+            widest="000.00 MW"
+          />
+        </>
       )}
     </g>
   )
@@ -207,8 +220,9 @@ function GridSupplyColumn({ closed }: { readonly closed: boolean }) {
     <g className={colour("grid")} data-source="grid" data-lit={closed}>
       <path
         className={"board-pipe board-electrical-line" + dim(closed)}
-        d={line(GRID_SUPPLY_X, GRID_TIE_Y, GRID_SUPPLY_X, BUSES[0].y)}
+        d={line(GRID_SUPPLY_X, SOURCE_BREAKER_Y, GRID_SUPPLY_X, BUSES[0].y)}
       />
+      <path className="board-pipe board-electrical-line" d={line(GRID_SUPPLY_X, GRID_TIE_Y, GRID_SUPPLY_X, SOURCE_BREAKER_Y)} />
       <Node part="auxiliaryBus" name="Grid supply breaker">
         <BreakerSymbol x={GRID_SUPPLY_X} y={SOURCE_BREAKER_Y} closed={closed} name="Grid supply breaker" />
       </Node>
@@ -217,15 +231,26 @@ function GridSupplyColumn({ closed }: { readonly closed: boolean }) {
 }
 
 // The generator column: the generator breaker ties the Generator to the grid (the export), the unit aux breaker lets it feed the Auxiliary bus (#189)
-function GeneratorColumn({ generatorClosed, unitAuxClosed }: { readonly generatorClosed: boolean; readonly unitAuxClosed: boolean }) {
+function GeneratorColumn({
+  generatorClosed,
+  unitAuxClosed,
+  output,
+  showValues,
+}: {
+  readonly generatorClosed: boolean
+  readonly unitAuxClosed: boolean
+  readonly output: number
+  readonly showValues: boolean
+}) {
   const boxBottom: number = GENERATOR_BOX_Y + SOURCE_BOX.h
   return (
     <>
       <g className={colour("generator")} data-source="generator-tie" data-lit={generatorClosed}>
         <path
           className={"board-pipe board-electrical-line" + dim(generatorClosed)}
-          d={line(GENERATOR_X, GRID_TIE_Y, GENERATOR_X, GENERATOR_BOX_Y)}
+          d={line(GENERATOR_X, SOURCE_BREAKER_Y, GENERATOR_X, GENERATOR_BOX_Y)}
         />
+        <path className="board-pipe board-electrical-line" d={line(GENERATOR_X, GRID_TIE_Y, GENERATOR_X, SOURCE_BREAKER_Y)} />
         <Node part="generation" name="Generator breaker">
           <BreakerSymbol x={GENERATOR_X} y={SOURCE_BREAKER_Y} closed={generatorClosed} name="Generator breaker" />
         </Node>
@@ -236,6 +261,16 @@ function GeneratorColumn({ generatorClosed, unitAuxClosed }: { readonly generato
           d={line(GENERATOR_X, boxBottom, GENERATOR_X, BUSES[0].y)}
         />
         <SourceBox x={GENERATOR_X} y={GENERATOR_BOX_Y} name="Generator" part="generation" lit />
+        {showValues && (
+          <ValueLabel
+            label="Generator output"
+            text={mw(output)}
+            x={GENERATOR_X + SOURCE_BOX.w / 2 + 12}
+            y={GENERATOR_BOX_Y + (SOURCE_BOX.h - VALUE_BOX_HEIGHT) / 2}
+            anchor="start"
+            widest="000.00 MW"
+          />
+        )}
         <Node part="auxiliaryBus" name="Unit aux breaker">
           <BreakerSymbol x={GENERATOR_X} y={UNIT_AUX_BREAKER_Y} closed={unitAuxClosed} name="Unit aux breaker" />
         </Node>
@@ -285,9 +320,9 @@ function BusLine({
       <path className="board-bus board-electrical-line" d={line(bus.x1, bus.y, bus.x2, bus.y)} />
       <text
         className="board-node-name board-bus-name"
-        x={bus.x1}
+        x={bus.nameX}
         y={bus.y - 14}
-        style={{ textAnchor: "start" }}
+        style={{ textAnchor: bus.nameAnchor }}
       >
         {bus.name}
       </text>
@@ -373,7 +408,7 @@ function Consumers({
       <text
         className={"board-node-name" + dim(live)}
         x={CONSUMER_BOX.x}
-        y={TOTAL_Y + 18}
+        y={TOTAL_Y + 5}
         style={{ textAnchor: "start" }}
       >
         Auxiliary load
@@ -383,12 +418,44 @@ function Consumers({
           label="Auxiliary load"
           text={mw(draws.reduce((total: number, draw: number) => total + draw, 0))}
           x={CONSUMER_BOX.x + CONSUMER_BOX.w + 12}
-          y={TOTAL_Y}
+          y={TOTAL_Y - VALUE_BOX_HEIGHT / 2}
           anchor="start"
           widest="00.00 MW"
         />
       )}
     </g>
+  )
+}
+
+function BusLoads({ vitalLive, safetyLive }: { readonly vitalLive: boolean; readonly safetyLive: boolean }) {
+  return (
+    <>
+      {BUS_LOADS.map(({ bus, name, stemX, y }: BusLoad) => {
+        const live: boolean = bus === "vital" ? vitalLive : safetyLive
+        const busY: number = BUSES.find((b: Busbar) => b.id === bus)?.y ?? y
+        const x: number = stemX + BUS_LOAD_BOX.gap
+        return (
+          <g key={name} className={colour(bus) + dim(live)} data-bus-load={bus}>
+            <path className="board-pipe board-electrical-line" d={line(stemX, busY, stemX, y)} />
+            <path className="board-pipe board-electrical-line" d={line(stemX, y, x, y)} />
+            <rect
+              className="board-node-box board-electrical-line"
+              x={x}
+              y={y - BUS_LOAD_BOX.h / 2}
+              width={BUS_LOAD_BOX.w}
+              height={BUS_LOAD_BOX.h}
+              rx={4}
+            />
+            <g transform={"translate(" + String(x + 22) + " " + String(y) + ")"}>
+              <Led lit={live} tone="ok" label={name} />
+            </g>
+            <text className="board-node-name" x={x + 46} y={y + 5} style={{ textAnchor: "start" }}>
+              {name}
+            </text>
+          </g>
+        )
+      })}
+    </>
   )
 }
 
@@ -429,9 +496,14 @@ function ElectricalOverview() {
             </LensButton>
           </div>
         </foreignObject>
-        <GridSource showValues={showValues} />
+        <GridSource showValues={showValues} loadSetpoint={state.Turbine.loadSetpoint} />
         <GridSupplyColumn closed={state.gridSupplyBreaker} />
-        <GeneratorColumn generatorClosed={state.Turbine.generatorBreaker} unitAuxClosed={state.Turbine.unitAuxBreaker} />
+        <GeneratorColumn
+          generatorClosed={state.Turbine.generatorBreaker}
+          unitAuxClosed={state.Turbine.unitAuxBreaker}
+          output={state.Turbine.electricOutput}
+          showValues={showValues}
+        />
         <DieselColumn closed={state.dieselBreaker} showValues={showValues} output={dieselOutput(state)} />
         <BusLine bus={aux} live={auxLive} showValues={showValues} voltage={voltage(auxLive, VOLTAGES.aux)} />
         <Consumers draws={draws} live={auxLive} showValues={showValues} />
@@ -447,6 +519,7 @@ function ElectricalOverview() {
           showValues={showValues}
           voltage={voltage(vitalLive, VOLTAGES.vital)}
         />
+        <BusLoads vitalLive={vitalLive} safetyLive={safetyLive} />
         <g className={colour("aux") + dim(auxLive)} data-feed="safety-ac">
           <path
             className="board-pipe board-electrical-line"
