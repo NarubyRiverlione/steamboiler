@@ -13,7 +13,6 @@ import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { ValveControl } from "../board/ValveControl"
 import { waterKgPerSecond } from "../../utils/flowUnits"
-import { warningText } from "./warningText"
 
 const STEAM_SOURCE_MIN_FLOW = 0.5 // kg/s, about 1% of a valve: below it the source lamp stays off
 const PRESSURE_MAX = 5 // bar, top of the dial: the relief valve lifts at 4
@@ -54,7 +53,6 @@ function Deaerator() {
 
   const level: number = waterVolume / CstDeaerator.TotalVolume
   const smoothWaterChange: number = useEMA(deltaWaterMass / CstSimulation.DeltaTime, CstSimulation.ReadoutSmoothingSeconds)
-  const warning: string = warningText(warnVentClosedWithAir, warnVentOpenNoAir)
 
   return (
     <PanelFrame
@@ -149,17 +147,24 @@ function Deaerator() {
                   label="Safe to close"
                   title="The air is out: the start-up vent can be closed"
                 />
+                <Lamp
+                  lit={warnVentClosedWithAir}
+                  tone="warn"
+                  label="Vent closed, air in"
+                  title="The vent is closed with air still in the deaerator: steam cannot push the air out, so the pressure climbs and heating is slow"
+                />
+                <Lamp
+                  lit={warnVentOpenNoAir}
+                  tone="warn"
+                  label="Vent open, no air"
+                  title="The vent is open with no air left: only steam passes, pressure cannot build and the temperature stalls near 100 °C"
+                />
               </div>
               <div className="board-instrument">
                 <span className="board-readout-label">Relief valve</span>
                 <Lamp lit={reliefValveOpen} label="Relief open" title="The 4 bar relief valve is lifted" />
               </div>
             </div>
-            {warning !== "" && (
-              <p className="board-lcd-msg" role="status" aria-label="Deaerator warning">
-                {warning}
-              </p>
-            )}
           </div>
 
           <div className="board-group board-group-plain board-steam-source">

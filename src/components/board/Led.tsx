@@ -5,7 +5,7 @@ import "./board.css"
 type LedProps = {
   readonly lit: boolean
   readonly label: string
-  readonly tone?: "alarm" | "ok"
+  readonly tone?: "alarm" | "ok" | "warn"
 }
 
 export function Led({ lit, label, tone = "alarm" }: LedProps) {

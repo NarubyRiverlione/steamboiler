@@ -7,7 +7,7 @@ type LampProps = {
   readonly lit: boolean
   readonly label: string
   readonly title?: string
-  readonly tone?: "alarm" | "ok"
+  readonly tone?: "alarm" | "ok" | "warn"
 }
 
 export function Lamp({ lit, label, title, tone }: LampProps) {
