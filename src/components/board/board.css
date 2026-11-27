@@ -1142,6 +1142,11 @@ path.board-zone {
   filter: drop-shadow(0 0 4px var(--board-zone-ok));
 }
 
+.board-led-warn {
+  fill: var(--board-zone-warn);
+  filter: drop-shadow(0 0 4px var(--board-zone-warn));
+}
+
 .board-valve-knob {
   justify-items: center;
 }
