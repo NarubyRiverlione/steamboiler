@@ -9,7 +9,7 @@ import { isAtSyncSpeed } from "../utils/turbineCalculations"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { CstDiesel, CstSimulation } from "./const"
 import PowerPlantState, { DieselState } from "./PowerPlantState"
-import { isVitalBusLive } from "./SafetyBus"
+import { isVitalBusLive, settleEmergencyChain } from "./SafetyBus"
 
 // The cooling power (a stand-in for the cooling fans and water, tbd): the Vital bus is live
 export const hasCoolingPower = (state: PowerPlantState): boolean => isVitalBusLive(state)
@@ -45,7 +45,9 @@ const advance = ({ status, startElapsed }: DieselState): DieselState => {
 
 // One tick: no cooling power stops the diesel; else the start progresses, and a sole-supply diesel past its rating opens its breaker
 export function DieselTick(state: PowerPlantState): PowerPlantState {
-  if (state.Diesel.status !== "stopped" && !hasCoolingPower(state)) return stopDiesel(state)
   const overloaded: boolean = isDieselSole(state) && auxiliaryLoadOf(state) > CstDiesel.RatedPower
-  return { ...(overloaded ? openDieselBreaker(state) : state), Diesel: advance(state.Diesel) }
+  const next: PowerPlantState = overloaded ? openDieselBreaker(state) : state
+  // The cooling power is read after the chain settles and after an overload opened the breaker, so a Vital bus that dies this tick stops the diesel this tick
+  if (next.Diesel.status !== "stopped" && !hasCoolingPower(settleEmergencyChain(next))) return stopDiesel(next)
+  return { ...next, Diesel: advance(next.Diesel) }
 }

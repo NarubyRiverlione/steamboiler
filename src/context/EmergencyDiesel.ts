@@ -14,6 +14,14 @@ export const isVitalFedByAux = (state: PowerPlantState): boolean => state.vitalF
 // The Vital bus is fed by the EMY diesel: its breaker closed and the Auxiliary bus not feeding it
 export const isVitalFedByEmy = (state: PowerPlantState): boolean => state.emyBreaker && !isVitalFedByAux(state)
 
+// A start-state builder (scenarios and tests): the EMY diesel runs and feeds the Vital bus through its breaker, the Aux→Vital breaker open
+export const withEmyFeedingVital = (state: PowerPlantState): PowerPlantState => ({
+  ...state,
+  vitalFeedBreaker: false,
+  emyBreaker: true,
+  EmergencyDiesel: { status: "running", startElapsed: 0, warmupElapsed: 0 },
+})
+
 // The warm-up is done: the set runs and the timer reached WarmUpTime
 export const isEmyWarmedUp = ({ EmergencyDiesel: { status, warmupElapsed } }: PowerPlantState): boolean => status === "running" && warmupElapsed >= CstEmergencyDiesel.WarmUpTime - 1e-9
 

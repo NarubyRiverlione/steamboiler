@@ -1,4 +1,5 @@
 import PowerPlantAction from "../../src/context/PowerPlantActions"
+import { withEmyFeedingVital } from "../../src/context/EmergencyDiesel"
 import { makeInitialState } from "../../src/context/PowerPlantReducer"
 import { Scenario } from "../scenario"
 
@@ -17,13 +18,7 @@ export const dieselOverload: Scenario = {
   duration: 60,
   sampleEvery: 0.1,
   // The EMY diesel already feeds the Vital bus: the big diesel's cooling power (#199); without it the overload would kill the Vital bus and stop the diesel
-  initial: {
-    ...makeInitialState(),
-    gridSupplyBreaker: false,
-    vitalFeedBreaker: false,
-    emyBreaker: true,
-    EmergencyDiesel: { status: "running", startElapsed: 0, warmupElapsed: 0 },
-  },
+  initial: withEmyFeedingVital({ ...makeInitialState(), gridSupplyBreaker: false }),
   actions: [
     act(RunAt, { type: "SET_DIESEL_RUN", payload: { run: true } }),
     act(CloseAt, { type: "CLOSE_DIESEL_BREAKER" }),

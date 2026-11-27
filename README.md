@@ -37,7 +37,7 @@ Not there yet: the plant is an island, with no grid to sync to, no load demand a
 The direction is a plant that serves a **town grid** whose demand follows a day-night cycle ([ADR 0046](docs/adr/0046-from-island-to-town-grid-in-milestones.md)), in milestones:
 
 1. **M1:** on the grid with auto-sync, a MW load controller, reverse power trip
-2. **M2:** the plant's own power: auxiliary load, grid supply, diesel dark start
+2. **M2:** the plant's own power: auxiliary load, grid supply, diesel island start
 3. **M3:** the town grid: finite inertia, frequency from the balance of demand and supply, governor droop
 4. **M4:** manual sync with a synchroscope
 5. **M5:** operating for the town: load set from frequency and demand

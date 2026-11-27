@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { CstOil } from "../../src/context/const"
+import { isVitalBusLive } from "../../src/context/SafetyBus"
 import { runChecked } from "../scenario-checks"
 import { CloseAt, EarlyCloseAt, EarlyUpsCloseAt, islandStart, PumpsAskedAt, RefusedRunAt, RunAt, SelectorOffAt, UpsCloseAt, VitalFeedAt } from "../scenarios/island-start"
 
@@ -22,6 +23,11 @@ describe("island-start", () => {
     expect(at(RefusedRunAt + 1).Diesel.status).toBe("stopped")
     expect(at(RefusedRunAt + 1).EmergencyDiesel.status).toBe("starting")
     expect(at(20).emyBreaker).toBe(true)
+  })
+
+  test("Aux→Vital is refused while the Auxiliary bus is dead", () => {
+    expect(at(VitalFeedAt - 10).vitalFeedBreaker).toBe(false)
+    expect(at(CloseAt - 1).vitalFeedBreaker).toBe(false)
   })
 
   test("Vital→Safety is refused during the warm-up and closes after it", () => {
@@ -50,6 +56,8 @@ describe("island-start", () => {
     expect(handed.Diesel.status).toBe("running")
     expect(handed.safetyFeedBreaker).toBe(true)
     expect(at(SelectorOffAt + 1).EmergencyDiesel.status).toBe("stopped")
+    expect(at(SelectorOffAt + 1).emyBreaker).toBe(false)
+    expect(isVitalBusLive(at(SelectorOffAt + 1))).toBe(true)
   })
 
   test("goal: the pumps deliver flow after the big diesel's breaker closes, at the positions the operator set", () => {

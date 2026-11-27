@@ -27,7 +27,7 @@ const liftCover = (): HTMLElement => {
 const lamp = (name: string, on: boolean): HTMLElement => screen.getByRole("img", { name: `${name}: ${on ? "on" : "off"}` })
 
 describe("Diesel generator page", () => {
-  it("lights Cooling power only while the Vital bus is live (#199)", () => {
+  it("leaves Cooling power dark while the Vital bus is dead (#199)", () => {
     renderPage("stopped")
     expect(lamp("Cooling power", false)).toBeTruthy()
   })
