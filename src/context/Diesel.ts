@@ -2,12 +2,17 @@
  * Onsite diesel generator (#169, ADR 0053): a third supply for the auxiliary bus, for a dark start. No shaft: running, it holds
  * 50 Hz up to its rating. RUN is starting for CstDiesel.StartTime, then running; starting needs no plant bus. The stiffer source
  * carries the bus (grid over generator over diesel), so the diesel carries the auxiliary load only as the sole supply, and then
- * its breaker opens on that tick when the load passes the rating (not a latched trip; the diesel keeps running).
+ * its breaker opens on that tick when the load passes the rating (not a latched trip; the diesel keeps running). Its cooling needs the
+ * Vital bus (#199, ADR 0056): RUN does nothing while the Vital bus is dead, and a start or run in progress stops on that tick.
  */
 import { isAtSyncSpeed } from "../utils/turbineCalculations"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { CstDiesel, CstSimulation } from "./const"
 import PowerPlantState, { DieselState } from "./PowerPlantState"
+import { isVitalBusLive, settleEmergencyChain } from "./SafetyBus"
+
+// The cooling power (a stand-in for the cooling fans and water, tbd): the Vital bus is live
+export const hasCoolingPower = (state: PowerPlantState): boolean => isVitalBusLive(state)
 
 // The diesel is the sole supply: the grid supply breaker and the unit aux breaker are open
 export const isDieselSole = ({ gridSupplyBreaker, dieselBreaker, Turbine }: PowerPlantState): boolean =>
@@ -28,6 +33,9 @@ export function dieselBreakerCloseRefusal(state: PowerPlantState): string | unde
 // The one open path: the normal open, the STOP and the local trip all use it
 export const openDieselBreaker = (state: PowerPlantState): PowerPlantState => (state.dieselBreaker ? { ...state, dieselBreaker: false } : state)
 
+// STOP and the loss of cooling power: the breaker opens as part of the stop
+export const stopDiesel = (state: PowerPlantState): PowerPlantState => ({ ...openDieselBreaker(state), Diesel: { status: "stopped", startElapsed: 0 } })
+
 const advance = ({ status, startElapsed }: DieselState): DieselState => {
   if (status !== "starting") return { status, startElapsed: 0 }
   const elapsed: number = startElapsed + CstSimulation.DeltaTime
@@ -35,8 +43,11 @@ const advance = ({ status, startElapsed }: DieselState): DieselState => {
   return elapsed >= CstDiesel.StartTime - 1e-9 ? { status: "running", startElapsed: 0 } : { status, startElapsed: elapsed }
 }
 
-// One tick: the start progresses, and a sole-supply diesel past its rating opens its breaker
+// One tick: no cooling power stops the diesel; else the start progresses, and a sole-supply diesel past its rating opens its breaker
 export function DieselTick(state: PowerPlantState): PowerPlantState {
   const overloaded: boolean = isDieselSole(state) && auxiliaryLoadOf(state) > CstDiesel.RatedPower
-  return { ...(overloaded ? openDieselBreaker(state) : state), Diesel: advance(state.Diesel) }
+  const next: PowerPlantState = overloaded ? openDieselBreaker(state) : state
+  // The cooling power is read after the chain settles and after an overload opened the breaker, so a Vital bus that dies this tick stops the diesel this tick
+  if (next.Diesel.status !== "stopped" && !hasCoolingPower(settleEmergencyChain(next))) return stopDiesel(next)
+  return { ...next, Diesel: advance(next.Diesel) }
 }

@@ -13,7 +13,7 @@ import { isAtBoilerHighHigh, isBelowBurnerLowLow, metalEnergyOf } from "./Boiler
 import { resetTrip } from "./tripReset"
 import { isBusLive } from "./AuxiliaryBus"
 import { isReadyToClose } from "./EmergencyDiesel"
-import { dieselBreakerCloseRefusal, openDieselBreaker } from "./Diesel"
+import { dieselBreakerCloseRefusal, hasCoolingPower, openDieselBreaker, stopDiesel } from "./Diesel"
 import { isSafetyBusLive, isVitalBusLive, settleEmergencyChain } from "./SafetyBus"
 import { turningGearRefusal } from "./Turbine/TurningGear"
 import { isOpeningRefused } from "./Turbine/ValveOpening"
@@ -273,10 +273,10 @@ const handlers: { [T in ActionType]: Handler<T> } = {
   OPEN_UNIT_AUX_BREAKER: (state) => (isSafetyBusLive(state) ? openUnitAuxBreaker(state) : state),
   //#endregion
 
-  //#region Onsite diesel generator (#169): starting needs no plant bus; the breaker needs the safety bus, the local trip does not
+  //#region Onsite diesel generator (#169): RUN needs the Vital bus for cooling (#199); the breaker needs the safety bus, the local trip does not
   SET_DIESEL_RUN: (state, { payload: { run } }) => {
-    if (run) return state.Diesel.status === "stopped" ? { ...state, Diesel: { status: "starting", startElapsed: 0 } } : state
-    return { ...openDieselBreaker(state), Diesel: { status: "stopped", startElapsed: 0 } }
+    if (run) return state.Diesel.status === "stopped" && hasCoolingPower(state) ? { ...state, Diesel: { status: "starting", startElapsed: 0 } } : state
+    return stopDiesel(state)
   },
   CLOSE_DIESEL_BREAKER: (state) => (!isSafetyBusLive(state) || dieselBreakerCloseRefusal(state) ? state : { ...state, dieselBreaker: true }),
   OPEN_DIESEL_BREAKER: (state) => (isSafetyBusLive(state) ? openDieselBreaker(state) : state),

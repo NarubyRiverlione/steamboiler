@@ -100,16 +100,16 @@ The generator carries only the auxiliary bus, with the unit aux breaker closed a
 _Avoid_: Island mode, islanding
 
 **Diesel generator**:
-The onsite standby generator that can feed the auxiliary bus on its own, for a dark start. It is sized for the auxiliary load at start-up flows, so the plant cannot run at full output on it.
+The onsite standby generator that can feed the auxiliary bus on its own, for an island start. It needs the Vital bus as cooling power: RUN does nothing while it is dead, and the diesel stops when it dies. It is sized for the auxiliary load at start-up flows, so the plant cannot run at full output on it.
 _Avoid_: Emergency generator, black-start unit, diesel set
 
 **Diesel breaker**:
 The breaker through which the diesel generator feeds the auxiliary bus.
 _Avoid_: Emergency breaker
 
-**Dark start**:
-Bringing the plant up from a dead bus with the diesel generator alone, until the generator carries the auxiliary bus and the diesel is stopped.
-_Avoid_: Black start, cold start
+**Island start**:
+Bringing the plant up from every source dead: the EMY diesel gives the Vital bus, the big diesel starts on its cooling power and closes onto the dead Auxiliary bus, Aux→Vital takes the Vital bus over and the EMY selector goes to OFF. Scenario `island-start`.
+_Avoid_: Dark start, black start, cold start
 
 **Dead bus**:
 The grid supply breaker, the unit aux breaker and the diesel breaker are all open: the auxiliary bus has no supply and every pump stops. The pumps resume at their set positions when a breaker closes. This is the Auxiliary bus only: the Vital bus is dead when the Aux→Vital breaker is open or the Auxiliary bus is dead, and the Safety bus when neither the Vital bus nor the UPS feeds it.

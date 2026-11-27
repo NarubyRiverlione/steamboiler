@@ -2,14 +2,18 @@ import { describe, expect, test } from "vitest"
 import { CstAuxiliary, CstDiesel, CstSimulation } from "./const"
 import { isBusLive } from "./AuxiliaryBus"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
-import { dieselBreakerCloseRefusal, dieselOutput } from "./Diesel"
+import { dieselBreakerCloseRefusal, dieselOutput, hasCoolingPower } from "./Diesel"
+import { withEmyFeedingVital } from "./EmergencyDiesel"
+import { isVitalBusLive } from "./SafetyBus"
 import { makeInitialState, powerPlantReducer } from "./PowerPlantReducer"
 import PowerPlantState from "./PowerPlantState"
 import PowerPlantTick from "./PowerPlantTick"
 
 const cold: PowerPlantState = makeInitialState()
 const dead: PowerPlantState = { ...cold, gridSupplyBreaker: false }
-const running: PowerPlantState = { ...dead, Diesel: { status: "running", startElapsed: 0 } }
+// The Vital bus fed by the EMY diesel: the cooling power the big diesel needs (#199)
+const vitalLive: PowerPlantState = withEmyFeedingVital(dead)
+const running: PowerPlantState = { ...vitalLive, Diesel: { status: "running", startElapsed: 0 } }
 const ticksOfStart: number = Math.round(CstDiesel.StartTime / CstSimulation.DeltaTime)
 const SyncRPM: number = CstSimulation.CstTurbine.SyncRPM
 const act = powerPlantReducer
@@ -21,7 +25,7 @@ describe("the onsite diesel (#169)", () => {
   })
 
   test("RUN starts it, it runs after the start time, with no plant bus", () => {
-    let state: PowerPlantState = act(dead, { type: "SET_DIESEL_RUN", payload: { run: true } })
+    let state: PowerPlantState = act(vitalLive, { type: "SET_DIESEL_RUN", payload: { run: true } })
     expect(state.Diesel.status).toBe("starting")
     for (let i = 0; i < ticksOfStart - 1; i++) state = PowerPlantTick(state)
     expect(state.Diesel.status).toBe("starting")
@@ -29,9 +33,48 @@ describe("the onsite diesel (#169)", () => {
     expect(state.Diesel.status).toBe("running")
   })
 
+  describe("cooling power from the Vital bus (#199)", () => {
+    test("RUN does nothing while the Vital bus is dead", () => {
+      expect(isVitalBusLive(dead)).toBe(false)
+      expect(act(dead, { type: "SET_DIESEL_RUN", payload: { run: true } }).Diesel.status).toBe("stopped")
+    })
+
+    test("a start in progress or a running diesel stops on the tick the Vital bus dies, its breaker opens with it", () => {
+      const starting: PowerPlantState = act(vitalLive, { type: "SET_DIESEL_RUN", payload: { run: true } })
+      const emyDown = { emyBreaker: false, emySelector: "OFF" as const, EmergencyDiesel: { status: "stopped" as const, startElapsed: 0, warmupElapsed: 0 } }
+      expect(PowerPlantTick({ ...starting, ...emyDown }).Diesel.status).toBe("stopped")
+      const carrying: PowerPlantState = PowerPlantTick({ ...running, dieselBreaker: true, ...emyDown })
+      expect(carrying.Diesel.status).toBe("stopped")
+      expect(carrying.dieselBreaker).toBe(false)
+    })
+
+    test("it stops on the tick the Auxiliary bus dies when that bus fed the Vital bus, and on the tick an overload opens its own breaker", () => {
+      const onAux: PowerPlantState = { ...cold, vitalFeedBreaker: true, Diesel: { status: "running", startElapsed: 0 }, dieselBreaker: true, gridSupplyBreaker: false }
+      expect(PowerPlantTick(onAux).Diesel.status).toBe("running")
+      const auxLost: PowerPlantState = { ...onAux, dieselBreaker: false }
+      expect(isVitalBusLive(auxLost)).toBe(false)
+      expect(PowerPlantTick(auxLost).Diesel.status).toBe("stopped")
+      const overloaded: PowerPlantState = { ...onAux, Deaerator: { ...onAux.Deaerator, feedPumpValvePosition: (CstDiesel.RatedPower + 0.5) / CstAuxiliary.FeedPump } }
+      const next: PowerPlantState = PowerPlantTick(overloaded)
+      expect(next.dieselBreaker).toBe(false)
+      expect(next.Diesel.status).toBe("stopped")
+    })
+
+    test("it keeps running while the Vital bus lives, from the EMY diesel or from the Auxiliary bus it feeds", () => {
+      expect(PowerPlantTick({ ...running, dieselBreaker: true }).Diesel.status).toBe("running")
+      const handedOver: PowerPlantState = { ...running, dieselBreaker: true, vitalFeedBreaker: true, emyBreaker: false }
+      expect(PowerPlantTick(handedOver).Diesel.status).toBe("running")
+    })
+
+    test("the cooling power lamp follows the Vital bus", () => {
+      expect(hasCoolingPower(vitalLive)).toBe(true)
+      expect(hasCoolingPower(dead)).toBe(false)
+    })
+  })
+
   describe("closing the breaker", () => {
     test("is refused with a reason while stopped or starting, allowed once running onto a dead bus", () => {
-      const starting: PowerPlantState = act(dead, { type: "SET_DIESEL_RUN", payload: { run: true } })
+      const starting: PowerPlantState = act(vitalLive, { type: "SET_DIESEL_RUN", payload: { run: true } })
       expect(dieselBreakerCloseRefusal(dead)).toBeTypeOf("string")
       expect(dieselBreakerCloseRefusal(starting)).toBeTypeOf("string")
       expect(act(starting, { type: "CLOSE_DIESEL_BREAKER" }).dieselBreaker).toBe(false)

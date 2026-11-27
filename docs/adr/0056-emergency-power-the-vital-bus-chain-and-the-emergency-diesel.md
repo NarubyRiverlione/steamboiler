@@ -1,6 +1,6 @@
 # Emergency power: the vital bus chain and the emergency diesel
 
-**Status: accepted.** Decided with the owner after #143 and #190. Replaces parts of [ADR 0055](0055-the-vital-bus-and-the-safety-bus.md) (the Vital bus equals the Auxiliary bus; the Safety bus is fed from the Auxiliary bus; a manual battery breaker; four board states) and the diesel paragraph of [ADR 0053](0053-the-auxiliary-bus-is-fed-by-the-grid-or-the-generator.md) once #196, #198 and #199 land; each ticket edits 0055 and 0053 in place in its own commits. #196 has landed (the chain, the derived battery breaker, three board states, the Emergency power page): 0055 and 0053 are edited in place for it; #198 has landed too (`src/context/EmergencyDiesel.ts`, the selector on the Emergency power page, the EMY breaker on the overview); #199 follows.
+**Status: accepted.** Decided with the owner after #143 and #190. Replaces parts of [ADR 0055](0055-the-vital-bus-and-the-safety-bus.md) (the Vital bus equals the Auxiliary bus; the Safety bus is fed from the Auxiliary bus; a manual battery breaker; four board states) and the diesel paragraph of [ADR 0053](0053-the-auxiliary-bus-is-fed-by-the-grid-or-the-generator.md) once #196, #198 and #199 land; each ticket edits 0055 and 0053 in place in its own commits. #196 has landed (the chain, the derived battery breaker, three board states, the Emergency power page): 0055 and 0053 are edited in place for it; #198 has landed too (`src/context/EmergencyDiesel.ts`, the selector on the Emergency power page, the EMY breaker on the overview); #199 has landed too (the Cooling power prerequisite in `Diesel.ts`, the `island-start` scenario).
 
 The point of a UPS is an uninterrupted bus, and a real plant's emergency power works one way: **the changeover to the emergency source is automatic, the hand-back is manual.** An operator checks that the normal supply is sound, and that the emergency source is ready, before the plant is reconnected. The buses become a chain, with an emergency diesel beside the big one.
 
@@ -36,5 +36,5 @@ Island:      the big diesel feeds Aux; its cooling is a load on the Vital bus
 
 - `PowerPlantState` gains `vitalFeedBreaker`, `safetyFeedBreaker`, the EMY diesel state with its selector, and loses `upsBreaker`; snapshots are regenerated in #196.
 - The local mechanical trips (#193) and the controller controls on a dead Vital bus (#188) get a case again, since the Safety or the Vital bus can be dead while the Auxiliary bus is live.
-- `dark-start` becomes `island-start` (#199); two edge scenarios, `grid-loss` and `ups-flat`, are #200.
+- `dark-start` became `island-start` (#199); two edge scenarios, `grid-loss` and `ups-flat`, are #200.
 - A realism cost, recorded in `design-basis.md` as the tickets land: the UPS runs 30 minutes, the EMY diesel has no load model, and the big diesel stops at once without cooling.
