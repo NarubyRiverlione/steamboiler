@@ -92,6 +92,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0053](adr/0053-the-auxiliary-bus-is-fed-by-the-grid-or-the-generator.md) | The auxiliary bus is fed by the grid or the generator |
 | [0054](adr/0054-status-by-lamps-not-text.md) | Status by lamps, not text: permissive lamps beside a control instead of message lines; tooltips stay; one mode |
 | [0055](adr/0055-the-vital-bus-and-the-safety-bus.md) | The vital bus and the safety bus: the UPS carries breaker control, 0% ends the simulation |
+| [0056](adr/0056-emergency-power-the-vital-bus-chain-and-the-emergency-diesel.md) | Emergency power: the vital bus chain, the automatic UPS changeover with a manual hand-back, the EMY diesel |
 
 ## Research (dated, frozen)
 
