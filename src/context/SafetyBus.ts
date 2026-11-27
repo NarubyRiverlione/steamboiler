@@ -6,11 +6,12 @@
  * Vital bus; at 0% with the Vital bus dead the simulation ends.
  */
 import { isBusLive } from "./AuxiliaryBus"
+import { isVitalFedByAux } from "./EmergencyDiesel"
 import { CstSimulation, CstUps } from "./const"
 import PowerPlantState from "./PowerPlantState"
 
-// The Vital bus (controller controls, readouts, annunciator): the Aux→Vital breaker closed on a live Auxiliary bus
-export const isVitalBusLive = (state: PowerPlantState): boolean => state.vitalFeedBreaker && isBusLive(state)
+// The Vital bus (controller controls, readouts, annunciator): fed by the Auxiliary bus through Aux→Vital, or by the EMY diesel through its breaker (#198)
+export const isVitalBusLive = (state: PowerPlantState): boolean => isVitalFedByAux(state) || state.emyBreaker
 
 // The Vital bus feeds the Safety bus: Vital→Safety closed on a live Vital bus
 const isFedThroughVital = (state: PowerPlantState): boolean => state.safetyFeedBreaker && isVitalBusLive(state)
@@ -22,12 +23,16 @@ export const isBatteryFeeding = (state: PowerPlantState): boolean => !isFedThrou
 // The Safety bus (breaker control power, the reset coils): through Vital→Safety from a live Vital bus, or from the battery
 export const isSafetyBusLive = (state: PowerPlantState): boolean => isFedThroughVital(state) || isBatteryFeeding(state)
 
-// The automatic changeover, applied at the start of every tick: a breaker opens when the bus it takes from is dead, top down, never closes
+// The automatic changeover, applied at the start of every tick, top down. A breaker opens when the bus it takes from is dead; the EMY breaker
+// (no operator control) closes when the set runs and the Auxiliary bus does not feed the Vital bus, and opens when either stops being true.
+// Vital→Safety opens when the Vital bus was dead before the EMY breaker closed, so the battery bridges and the hand-back stays the operator's.
 export function settleEmergencyChain(state: PowerPlantState): PowerPlantState {
   const vitalFeedBreaker: boolean = state.vitalFeedBreaker && isBusLive(state)
-  const safetyFeedBreaker: boolean = state.safetyFeedBreaker && vitalFeedBreaker
-  if (vitalFeedBreaker === state.vitalFeedBreaker && safetyFeedBreaker === state.safetyFeedBreaker) return state
-  return { ...state, vitalFeedBreaker, safetyFeedBreaker }
+  const fedByAux: boolean = vitalFeedBreaker
+  const emyBreaker: boolean = state.EmergencyDiesel.status === "running" && !fedByAux
+  const safetyFeedBreaker: boolean = state.safetyFeedBreaker && (fedByAux || (state.emyBreaker && emyBreaker))
+  if (vitalFeedBreaker === state.vitalFeedBreaker && safetyFeedBreaker === state.safetyFeedBreaker && emyBreaker === state.emyBreaker) return state
+  return { ...state, vitalFeedBreaker, safetyFeedBreaker, emyBreaker }
 }
 
 // The UPS charge after one tick, 0-100: one fixed rate each way, set by the breakers at the start of the tick

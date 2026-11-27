@@ -136,6 +136,12 @@ export const CstDiesel = {
   RatedPower: 2.5, // MW: the dark-start peak of 1.99 MW plus a 0.5 MW margin (docs/plant/design-basis.md)
 }
 
+// Emergency (EMY) diesel (#198, ADR 0056, docs/research/2026-11-emergency-diesel.md): no rating, no overload; the warm-up is a fixed timer
+export const CstEmergencyDiesel = {
+  StartTime: 10, // s from start to running (sourced: ready to load in 10 s or less from ambient)
+  WarmUpTime: 60, // s from running to Ready to close (UNVERIFIED, playability: far under the UPS runtime)
+}
+
 // UPS (#143, ADR 0055, docs/research/2026-11-ups-runtime.md): the charge is 0-100 %, simulated seconds; a deliberate reduction from real station batteries (hours)
 export const CstUps = {
   NominalRuntime: 1800, // s the UPS carries the safety bus with the Auxiliary bus dead: 30 minutes (real: 8-10 h, reduced for playability)

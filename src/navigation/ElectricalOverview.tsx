@@ -22,6 +22,9 @@ import {
   ELECTRICAL_HEIGHT,
   ELECTRICAL_WIDTH,
   DIESEL_X,
+  EMY_BOX_Y,
+  EMY_BREAKER_Y,
+  EMY_X,
   GENERATOR_BOX_Y,
   GENERATOR_X,
   GRID_SUPPLY_X,
@@ -306,6 +309,17 @@ function DieselColumn({ closed, showValues, output }: { readonly closed: boolean
   )
 }
 
+// The EMY diesel box and its breaker (#198): the breaker has no operator control, the box links to the Emergency power page
+function EmyColumn({ closed, running }: { readonly closed: boolean; readonly running: boolean }) {
+  return (
+    <g className={colour("diesel")} data-source="emy-diesel" data-lit={closed}>
+      <path className={"board-pipe board-electrical-line" + dim(closed)} d={line(EMY_X, EMY_BOX_Y + SOURCE_BOX.h, EMY_X, BUSES[1].y)} />
+      <SourceBox x={EMY_X} y={EMY_BOX_Y} name="EMY diesel" part="emergencyPower" lit={running} />
+      <BreakerSymbol x={EMY_X} y={EMY_BREAKER_Y} closed={closed} name="EMY breaker" />
+    </g>
+  )
+}
+
 function BusLine({
   bus,
   live,
@@ -506,6 +520,7 @@ function ElectricalOverview() {
           showValues={showValues}
         />
         <DieselColumn closed={state.dieselBreaker} showValues={showValues} output={dieselOutput(state)} />
+        <EmyColumn closed={state.emyBreaker} running={state.EmergencyDiesel.status === "running"} />
         <BusLine bus={aux} live={auxLive} showValues={showValues} voltage={voltage(auxLive, VOLTAGES.aux)} />
         <Consumers draws={draws} live={auxLive} showValues={showValues} />
         <g className={colour("aux") + dim(auxLive && state.vitalFeedBreaker)} data-feed="vital">

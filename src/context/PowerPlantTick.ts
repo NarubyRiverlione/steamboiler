@@ -1,6 +1,7 @@
 import { isAtOilPermissive, OilTick } from "./Oil/OilTick"
 import { BusPumps, isBusLive, restorePumps, stopPumps } from "./AuxiliaryBus"
 import { DieselTick } from "./Diesel"
+import { EmergencyDieselTick } from "./EmergencyDiesel"
 import { auxiliaryLoadOf } from "./AuxiliaryLoad"
 import { settleEmergencyChain, isVitalBusLive, upsChargeAfter } from "./SafetyBus"
 import { rotorTurns, TurningGearTick } from "./Turbine/TurningGear"
@@ -23,7 +24,7 @@ export default function PowerPlantTick(entry: PowerPlantState): PowerPlantState 
   if (entry.simulationEnded) return entry
   // The onsite diesel starts up, and its breaker opens on overload before anything is fed this tick (#169)
   // The emergency chain changes over by itself: Aux→Vital opens on a dead Auxiliary bus, Vital→Safety on a dead Vital bus (#196)
-  const supplied: PowerPlantState = settleEmergencyChain(DieselTick(entry))
+  const supplied: PowerPlantState = settleEmergencyChain(EmergencyDieselTick(DieselTick(entry)))
   // Dead bus (#141, ADR 0053): both breakers open, so every pump runs at flow 0 this tick; the operator's positions come back at the end
   const deadBus = !isBusLive(supplied)
   const state: PowerPlantState = deadBus ? { ...supplied, ...stopPumps(supplied) } : supplied
