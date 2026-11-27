@@ -12,7 +12,9 @@ import { dieselOutput } from "../context/Diesel"
 import usePowerPlant from "../context/PowerPlantContext"
 import { isBatteryFeeding, isSafetyBusLive, isVitalBusLive } from "../context/SafetyBus"
 import {
+  AUX_ROW,
   BREAKER_HALF,
+  BREAKER_SCALE,
   BUSES,
   BUS_LOADS,
   BUS_LOAD_BOX,
@@ -27,13 +29,14 @@ import {
   EMY_X,
   GENERATOR_BOX_Y,
   GENERATOR_X,
+  GRID_SUPPLY_BREAKER_Y,
   GRID_SUPPLY_X,
   GRID_TIE_Y,
   GRID_X,
+  INTERLOCKS,
   SOURCE_BOX,
   SOURCE_BREAKER_Y,
   UNIT_AUX_BREAKER_Y,
-  TOTAL_Y,
   UPS,
   SAFETY_FEED_X,
   UPS_BREAKER_Y,
@@ -76,39 +79,45 @@ function Node({
   )
 }
 
-// IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a small open circle on each contact. Closed: the blade lies on the line; open: it swings off. Always black. The blade tip and contact radius are in diagram units inside the breaker footprint.
-// The symbol is drawn in the 30 unit footprint and scaled up by 150%
-const BREAKER_SCALE = 1.5
+// IEC 60617 circuit breaker: the line broken by a switch blade pivoting at the lower contact, a small open circle on each contact. Closed: the blade lies on the line; open: it swings off. Always black. An automatic breaker (no operator control, no link) is framed by a thin dashed line on its footprint, clear of the box above it, with an A in the lower right corner; every other interlocked breaker gets the same frame without the A. The blade tip and contact radius are in diagram units inside the breaker footprint.
 const BLADE_TIP = 6
 const CONTACT_RADIUS = 2.5
+// The A of an automatic breaker stands this far inside the lower right corner of its frame
+const AUTO_INSET = 2
 
 function BreakerSymbol({
   x,
   y,
   closed,
   name,
+  automatic = false,
+  interlocked = false,
 }: {
   readonly x: number
   readonly y: number
   readonly closed: boolean
   readonly name: string
+  readonly automatic?: boolean
+  // Interlocked with another breaker: framed, so the interlock line meets a box at both ends
+  readonly interlocked?: boolean
 }) {
   return (
     <g
       role="img"
       aria-label={name + ": " + (closed ? "closed" : "open")}
       data-closed={closed}
+      data-automatic={automatic}
       transform={"translate(" + String(x) + " " + String(y) + ") scale(" + String(BREAKER_SCALE) + ")"}
     >
       <rect
-        className="board-node-hit"
+        className="board-node-hit board-breaker-hit"
         x={-BREAKER_HALF - 6}
         y={-BREAKER_HALF - 6}
         width={2 * BREAKER_HALF + 12}
         height={2 * BREAKER_HALF + 12}
       />
       <rect
-        className="board-overview-bg"
+        className={"board-overview-bg" + (automatic || interlocked ? " board-breaker-frame" : "")}
         x={-BREAKER_HALF}
         y={-BREAKER_HALF}
         width={2 * BREAKER_HALF}
@@ -121,6 +130,11 @@ function BreakerSymbol({
         <circle cx={0} cy={-BLADE_TIP - CONTACT_RADIUS} r={CONTACT_RADIUS} />
         <circle cx={0} cy={BLADE_TIP + CONTACT_RADIUS} r={CONTACT_RADIUS} />
       </g>
+      {automatic && (
+        <text className="board-breaker-auto" x={BREAKER_HALF - AUTO_INSET} y={BREAKER_HALF - AUTO_INSET}>
+          A
+        </text>
+      )}
     </g>
   )
 }
@@ -226,11 +240,11 @@ function GridSupplyColumn({ closed }: { readonly closed: boolean }) {
     <g className={colour("grid")} data-source="grid" data-lit={closed}>
       <path
         className={"board-pipe board-electrical-line" + dim(closed)}
-        d={line(GRID_SUPPLY_X, SOURCE_BREAKER_Y, GRID_SUPPLY_X, BUSES[0].y)}
+        d={line(GRID_SUPPLY_X, GRID_SUPPLY_BREAKER_Y, GRID_SUPPLY_X, BUSES[0].y)}
       />
-      <path className="board-pipe board-electrical-line" d={line(GRID_SUPPLY_X, GRID_TIE_Y, GRID_SUPPLY_X, SOURCE_BREAKER_Y)} />
+      <path className="board-pipe board-electrical-line" d={line(GRID_SUPPLY_X, GRID_TIE_Y, GRID_SUPPLY_X, GRID_SUPPLY_BREAKER_Y)} />
       <Node part="auxiliaryBus" name="Grid supply breaker">
-        <BreakerSymbol x={GRID_SUPPLY_X} y={SOURCE_BREAKER_Y} closed={closed} name="Grid supply breaker" />
+        <BreakerSymbol x={GRID_SUPPLY_X} y={GRID_SUPPLY_BREAKER_Y} closed={closed} name="Grid supply breaker" interlocked />
       </Node>
     </g>
   )
@@ -278,7 +292,7 @@ function GeneratorColumn({
           />
         )}
         <Node part="auxiliaryBus" name="Unit aux breaker">
-          <BreakerSymbol x={GENERATOR_X} y={UNIT_AUX_BREAKER_Y} closed={unitAuxClosed} name="Unit aux breaker" />
+          <BreakerSymbol x={GENERATOR_X} y={UNIT_AUX_BREAKER_Y} closed={unitAuxClosed} name="Unit aux breaker" interlocked />
         </Node>
       </g>
     </>
@@ -316,7 +330,7 @@ function EmyColumn({ closed, running }: { readonly closed: boolean; readonly run
     <g className={colour("diesel")} data-source="emy-diesel" data-lit={closed}>
       <path className={"board-pipe board-electrical-line" + dim(closed)} d={line(EMY_X, EMY_BOX_Y + SOURCE_BOX.h, EMY_X, BUSES[1].y)} />
       <SourceBox x={EMY_X} y={EMY_BOX_Y} name="EMY diesel" part="emergencyPower" lit={running} />
-      <BreakerSymbol x={EMY_X} y={EMY_BREAKER_Y} closed={closed} name="EMY breaker" />
+      <BreakerSymbol x={EMY_X} y={EMY_BREAKER_Y} closed={closed} name="EMY breaker" automatic />
     </g>
   )
 }
@@ -338,7 +352,7 @@ function BusLine({
       <text
         className="board-node-name board-bus-name"
         x={bus.nameX}
-        y={bus.y - 14}
+        y={bus.labelsBelow === true ? bus.y + AUX_ROW.gap + VALUE_BOX_HEIGHT / 2 + 5 : bus.y - 14}
         style={{ textAnchor: bus.nameAnchor }}
       >
         {bus.name}
@@ -347,8 +361,8 @@ function BusLine({
         <ValueLabel
           label={bus.name + " voltage"}
           text={voltage}
-          x={bus.x1 + 140}
-          y={bus.y - 38}
+          x={bus.labelsBelow === true ? AUX_ROW.voltageX : bus.x1 + 140}
+          y={bus.labelsBelow === true ? bus.y + AUX_ROW.gap : bus.y - 38}
           anchor="start"
           widest="110 V DC"
         />
@@ -422,20 +436,12 @@ function Consumers({
           </g>
         )
       })}
-      <text
-        className={"board-node-name" + dim(live)}
-        x={CONSUMER_BOX.x}
-        y={TOTAL_Y + 5}
-        style={{ textAnchor: "start" }}
-      >
-        Auxiliary load
-      </text>
       {showValues && (
         <ValueLabel
           label="Auxiliary load"
           text={mw(draws.reduce((total: number, draw: number) => total + draw, 0))}
-          x={CONSUMER_BOX.x + CONSUMER_BOX.w + 12}
-          y={TOTAL_Y - VALUE_BOX_HEIGHT / 2}
+          x={AUX_ROW.loadX}
+          y={BUSES[0].y + AUX_ROW.gap}
           anchor="start"
           widest="00.00 MW"
         />
@@ -527,7 +533,7 @@ function ElectricalOverview() {
         <g className={colour("aux") + dim(auxLive && state.vitalFeedBreaker)} data-feed="vital">
           <path className="board-pipe board-electrical-line" d={line(VITAL_FEED_X, aux.y, VITAL_FEED_X, vital.y)} />
           <Node part="emergencyPower" name="Aux to Vital breaker">
-            <BreakerSymbol x={VITAL_FEED_X} y={VITAL_FEED_BREAKER_Y} closed={state.vitalFeedBreaker} name="Aux to Vital breaker" />
+            <BreakerSymbol x={VITAL_FEED_X} y={VITAL_FEED_BREAKER_Y} closed={state.vitalFeedBreaker} name="Aux to Vital breaker" interlocked />
           </Node>
         </g>
         <BusLine
@@ -540,7 +546,7 @@ function ElectricalOverview() {
         <g className={colour("vital") + dim(vitalLive && state.safetyFeedBreaker)} data-feed="safety-ac">
           <path className="board-pipe board-electrical-line" d={line(SAFETY_FEED_X, vital.y, SAFETY_FEED_X, safety.y)} />
           <Node part="emergencyPower" name="Vital to Safety breaker">
-            <BreakerSymbol x={SAFETY_FEED_X} y={SAFETY_FEED_BREAKER_Y} closed={state.safetyFeedBreaker} name="Vital to Safety breaker" />
+            <BreakerSymbol x={SAFETY_FEED_X} y={SAFETY_FEED_BREAKER_Y} closed={state.safetyFeedBreaker} name="Vital to Safety breaker" interlocked />
           </Node>
         </g>
         <g className={colour("ups") + dim(isBatteryFeeding(state))} data-feed="safety">
@@ -568,7 +574,7 @@ function ElectricalOverview() {
             className="board-pipe board-electrical-line"
             d={line(UPS.x, UPS.y + UPS.h, UPS.x, UPS_BREAKER_Y)}
           />
-          <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={!state.safetyFeedBreaker} name="Battery breaker" />
+          <BreakerSymbol x={UPS.x} y={UPS_BREAKER_Y} closed={!state.safetyFeedBreaker} name="Battery breaker" automatic />
         </g>
         {showValues && (
           <ValueLabel
@@ -580,6 +586,15 @@ function ElectricalOverview() {
             widest="100 %"
           />
         )}
+        {INTERLOCKS.map((interlock) => (
+          <path
+            key={interlock.id}
+            className="board-interlock"
+            data-interlock={interlock.id}
+            data-breakers={interlock.from + "|" + interlock.to}
+            d={"M " + interlock.points.map(([px, py]) => String(px) + " " + String(py)).join(" L ")}
+          />
+        ))}
         <BusLine
           bus={safety}
           live={safetyLive}
