@@ -13,12 +13,12 @@ import { PanelFrame } from "../board/PanelFrame"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 
 // Red at the bottom: the battery is nearly flat (a UX choice, not modelled)
-const SELECTOR_POSITIONS: readonly EmySelector[] = ["OFF", "AUTO", "ON"]
-
 const CHARGE_ZONES: readonly GaugeZone[] = [
   { from: 0, to: 10, tone: "alarm" },
   { from: 10, to: 100, tone: "ok" },
 ]
+
+const SELECTOR_POSITIONS: readonly EmySelector[] = ["OFF", "AUTO", "ON"]
 
 function EmergencyPower() {
   const { state, toggleVitalFeedBreaker, toggleSafetyFeedBreaker, setEmySelector } = usePowerPlant()

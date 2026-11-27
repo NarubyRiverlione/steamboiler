@@ -17,7 +17,7 @@ export const isVitalFedByEmy = (state: PowerPlantState): boolean => state.emyBre
 // The warm-up is done: the set runs and the timer reached WarmUpTime
 export const isEmyWarmedUp = ({ EmergencyDiesel: { status, warmupElapsed } }: PowerPlantState): boolean => status === "running" && warmupElapsed >= CstEmergencyDiesel.WarmUpTime - 1e-9
 
-// The Ready to close lamp, the interlock of Vital→Safety: always with the Auxiliary bus as source, after the warm-up on the EMY diesel
+// The interlock of Vital→Safety (the lamp itself shows isEmyWarmedUp): always with the Auxiliary bus as source, after the warm-up on the EMY diesel
 export const isReadyToClose = (state: PowerPlantState): boolean => !isVitalFedByEmy(state) || isEmyWarmedUp(state)
 
 const advance = ({ status, startElapsed, warmupElapsed }: EmergencyDieselState): EmergencyDieselState => {

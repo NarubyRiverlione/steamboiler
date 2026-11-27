@@ -23,9 +23,7 @@ export const isBatteryFeeding = (state: PowerPlantState): boolean => !isFedThrou
 // The Safety bus (breaker control power, the reset coils): through Vital→Safety from a live Vital bus, or from the battery
 export const isSafetyBusLive = (state: PowerPlantState): boolean => isFedThroughVital(state) || isBatteryFeeding(state)
 
-// The automatic changeover, applied at the start of every tick, top down. A breaker opens when the bus it takes from is dead; the EMY breaker
-// (no operator control) closes when the set runs and the Auxiliary bus does not feed the Vital bus, and opens when either stops being true.
-// Vital→Safety opens when the Vital bus was dead before the EMY breaker closed, so the battery bridges and the hand-back stays the operator's.
+// The automatic changeover at the start of every tick, top down: breakers open on a dead source, the EMY breaker closes by itself (ADR 0056)
 export function settleEmergencyChain(state: PowerPlantState): PowerPlantState {
   const vitalFeedBreaker: boolean = state.vitalFeedBreaker && isBusLive(state)
   const fedByAux: boolean = vitalFeedBreaker

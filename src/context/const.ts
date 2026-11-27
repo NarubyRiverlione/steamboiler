@@ -138,7 +138,7 @@ export const CstDiesel = {
 
 // Emergency (EMY) diesel (#198, ADR 0056, docs/research/2026-11-emergency-diesel.md): no rating, no overload; the warm-up is a fixed timer
 export const CstEmergencyDiesel = {
-  StartTime: 10, // s from start to running (sourced: ready to load in 10 s or less from ambient)
+  StartTime: 10, // s from start to running (UNVERIFIED: search snippets say ready to load in 10 s or less)
   WarmUpTime: 60, // s from running to Ready to close (UNVERIFIED, playability: far under the UPS runtime)
 }
 

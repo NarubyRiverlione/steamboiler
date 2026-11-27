@@ -8,8 +8,8 @@ Frozen research record. The plant as built is in [plant/design-basis.md](../plan
 
 | Figure | Real plant | In the model | Basis |
 |---|---|---|---|
-| Start time (start signal to ready to load) | 10 s or less from ambient (nuclear EDG surveillance wording, NFPA 110 "Type 10") | **10 s** (`CstEmergencyDiesel.StartTime`) | sourced for the start; the same figure as the big diesel (`CstDiesel.StartTime`) |
-| Warm-up before the hand-back to the Safety bus | not found: no NRC technical specification sets one; real sets load at once | **60 s** (`CstEmergencyDiesel.WarmUpTime`) | **UNVERIFIED**, the owner's rule: a fixed timer, no temperature model; far under the UPS runtime of 30 minutes (1800 s) |
+| Start time (start signal to ready to load) | 10 s or less from ambient (nuclear EDG surveillance wording, NFPA 110 "Type 10") | **10 s** (`CstEmergencyDiesel.StartTime`) | from NRC and NFPA search snippets, not re-read (**UNVERIFIED** for this plant); the same figure as the big diesel (`CstDiesel.StartTime`) |
+| Warm-up before the hand-back to the Safety bus | not found: no NRC technical specification sets one; real sets load at once | **60 s** (`CstEmergencyDiesel.WarmUpTime`) | **UNVERIFIED**, an estimate for playability: a fixed timer, no temperature model; far under the UPS runtime of 30 minutes (1800 s) |
 
 ## Notes
 

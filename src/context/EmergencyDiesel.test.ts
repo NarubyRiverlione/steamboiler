@@ -107,4 +107,15 @@ describe("the EMY diesel (#198)", () => {
       expect(isSafetyBusLive(s)).toBe(true)
     })
   })
+
+  describe("re-arming and the warm-up timer", () => {
+    test("OFF then AUTO on a dead Vital bus starts the set again, with the warm-up from zero", () => {
+      const warm: PowerPlantState = ticks(gridLost(), StartTime + WarmUpTime + 1)
+      expect(isReadyToClose(warm)).toBe(true)
+      const off: PowerPlantState = ticks(select(warm, "OFF"), 1)
+      expect(off.EmergencyDiesel.warmupElapsed).toBe(0)
+      expect(ticks(select(off, "AUTO"), 1).EmergencyDiesel.status).toBe("starting")
+      expect(isReadyToClose(ticks(select(off, "AUTO"), StartTime + 5))).toBe(false)
+    })
+  })
 })
