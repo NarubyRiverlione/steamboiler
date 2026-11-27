@@ -1766,7 +1766,7 @@ path.board-zone {
   inset: 0;
   z-index: 1000;
   pointer-events: none;
-  background: #ff8a8a;
+  background: #ffb0b0;
   mix-blend-mode: multiply;
 }
 
