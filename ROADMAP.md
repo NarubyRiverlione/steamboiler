@@ -17,7 +17,7 @@ Next: nothing ready (every ticket is waiting or needs triage).
 | - | ------ | ------ | ---------- | -------- |
 | 1 | [#185](https://github.com/NarubyRiverlione/steamboiler/issues/185) Diesel generator shaft model: inertia, governor, overload as a speed fall | needs-triage |  |  |
 | 2 | [#186](https://github.com/NarubyRiverlione/steamboiler/issues/186) Diesel generator fuel: a day tank and run time | needs-triage |  |  |
-| 3 | [#193](https://github.com/NarubyRiverlione/steamboiler/issues/193) Local mechanical trips have no case left now the safety bus is fed from the Auxiliary bus | needs-triage |  |  |
+| 3 | [#193](https://github.com/NarubyRiverlione/steamboiler/issues/193) Local mechanical trips: their case is back since #196 (Safety bus dead with the Auxiliary bus live) | needs-triage |  |  |
 | 4 | [#194](https://github.com/NarubyRiverlione/steamboiler/issues/194) Unit aux breaker: local mechanical trip | needs-triage |  |  |
 
 ## Turbine auxiliaries: lube oil, turning gear, gland steam
