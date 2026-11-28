@@ -20,7 +20,7 @@ function Page() {
       >
         toggle
       </button>
-      {shown && <ValveControl ValveId="Makeup" Label="Makeup" Position={position} Step={5} />}
+      {shown && <ValveControl Medium="water" ValveId="Makeup" Label="Makeup" Position={position} Step={5} />}
       <output aria-label="plant makeup">{position.toFixed(2)}</output>
     </>
   )
@@ -65,7 +65,7 @@ describe("PlantValveRamp", () => {
           >
             manual
           </button>
-          <ValveControl ValveId="Spray valve" Label="Spray" Position={plant.state.Boiler.sprayValvePosition} Step={5} />
+          <ValveControl Medium="water" ValveId="Spray valve" Label="Spray" Position={plant.state.Boiler.sprayValvePosition} Step={5} />
         </>
       )
     }

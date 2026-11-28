@@ -1,11 +1,10 @@
 /** Two-position turn switch for a control that holds a state (valve, pump). The label never changes: the legends name the two positions, and the selected one is lit like a lit lens button. An optional flip cover blocks the switch until it is lifted. Designed in the prototype of #124. */
 
+import type { Medium } from "../../navigation/plantDiagram"
 import "./board.css"
 import { switchName, type SwitchGuard } from "./switchInput"
 import { CoverLayer, Lever, Plate, PLATE_CENTRE_X, Ticks } from "./TurnSwitchParts"
 import { useSwitchInput } from "./useSwitchInput"
-
-type SwitchTone = "valve" | "machine"
 
 type TurnSwitchProps = {
   readonly label: string
@@ -13,7 +12,7 @@ type TurnSwitchProps = {
   readonly onLabel: string
   readonly on: boolean
   readonly onToggle: () => void
-  readonly tone?: SwitchTone // the rim: brass for a valve, blue for a machine
+  readonly medium: Medium // the rim takes the overview colour of the component the switch sets
   readonly disabled?: boolean
   readonly title?: string // the reason a disabled switch refuses
   readonly guard?: SwitchGuard // a flip cover over the switch
@@ -25,13 +24,13 @@ export function TurnSwitch({
   onLabel,
   on,
   onToggle,
-  tone = "valve",
+  medium,
   disabled = false,
   title,
   guard,
 }: TurnSwitchProps) {
   const handlers = useSwitchInput({ disabled, guard, onToggle })
-  const classes: string = ["board-switch", `board-switch-${tone}`, disabled ? "board-switch-disabled" : ""]
+  const classes: string = ["board-switch", `board-medium-${medium}`, disabled ? "board-switch-disabled" : ""]
     .filter((c: string) => c !== "")
     .join(" ")
   return (

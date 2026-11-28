@@ -29,6 +29,7 @@ export function SteamFlowGroup({
       <div className="board-group-row" role="group" aria-label="Main steam valve">
         <TurnSwitch
           label="Main steam valve"
+          medium="steam"
           offLabel="CLOSED"
           onLabel="OPEN"
           on={turbine.mainSteamValve}
@@ -45,6 +46,7 @@ export function SteamFlowGroup({
         <ValveControl
           ValveId="Bypass valve"
           Label="Bypass valve"
+          Medium="steam"
           Value={`${turbine.bypassSteamFlowOut.toFixed(1)} kg/s`}
           ValueWidest="999.9 kg/s"
           Position={turbine.bypassValvePosition}
@@ -53,6 +55,7 @@ export function SteamFlowGroup({
         <ValveControl
           ValveId="Turbine valve"
           Label="Turbine valve"
+          Medium="steam"
           Value={`${turbine.turbineSteamFlowOut.toFixed(1)} kg/s`}
           ValueWidest="999.9 kg/s"
           Position={turbine.turbineValvePosition}

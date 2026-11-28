@@ -37,8 +37,8 @@ function Plant({
   })
   return (
     <ValveRampProvider valves={{ V: handle("V"), W: handle("W") }}>
-      {page && <ValveControl ValveId="V" Label="V" Position={positions.V} Step={5} />}
-      {page && both && <ValveControl ValveId="W" Label="W" Position={positions.W} Step={5} />}
+      {page && <ValveControl Medium="water" ValveId="V" Label="V" Position={positions.V} Step={5} />}
+      {page && both && <ValveControl Medium="water" ValveId="W" Label="W" Position={positions.W} Step={5} />}
     </ValveRampProvider>
   )
 }
@@ -67,17 +67,17 @@ afterEach(() => {
 
 describe("ValveControl", () => {
   it("moves the command by the knob's own step with the − and + buttons, snapping an off-grid command first", () => {
-    const { unmount } = renderValve(<ValveControl ValveId="V" Label="P" Position={0.064} Step={1} Pump />)
+    const { unmount } = renderValve(<ValveControl Medium="water" ValveId="V" Label="P" Position={0.064} Step={1} Pump />)
     fireEvent.click(screen.getByRole("button", { name: "P knob increase" }))
     expect(screen.getByRole("slider", { name: "P knob" }).getAttribute("aria-valuenow")).toBe("7")
     unmount()
-    renderValve(<ValveControl ValveId="V" Label="V" Position={0.064} Step={5} />)
+    renderValve(<ValveControl Medium="water" ValveId="V" Label="V" Position={0.064} Step={5} />)
     fireEvent.click(screen.getByRole("button", { name: "V knob decrease" }))
     expect(knob().getAttribute("aria-valuenow")).toBe("0")
   })
 
   it("with a Disabled reason shows it, disables − and +, and turns the knob display-only", () => {
-    renderValve(<ValveControl ValveId="V" Label="V" Position={0.5} Step={5} Disabled="Locked by auto" />)
+    renderValve(<ValveControl Medium="water" ValveId="V" Label="V" Position={0.5} Step={5} Disabled="Locked by auto" />)
     expect(screen.getByText("Locked by auto")).toBeTruthy()
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "V knob decrease" }).disabled).toBe(true)
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "V knob increase" }).disabled).toBe(true)
@@ -86,24 +86,29 @@ describe("ValveControl", () => {
   })
 
   it("disables − at 0 and + at 100", () => {
-    const { unmount } = renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)
+    const { unmount } = renderValve(<ValveControl Medium="water" ValveId="V" Label="V" Position={0} Step={5} />)
     expect(screen.getByRole("button", { name: "V knob decrease" })).toHaveProperty("disabled", true)
     expect(screen.getByRole("button", { name: "V knob increase" })).toHaveProperty("disabled", false)
     unmount()
-    renderValve(<ValveControl ValveId="V" Label="V" Position={1} Step={5} />)
+    renderValve(<ValveControl Medium="water" ValveId="V" Label="V" Position={1} Step={5} />)
     expect(screen.getByRole("button", { name: "V knob increase" })).toHaveProperty("disabled", true)
   })
 
-  it("marks a pump knob so it reads apart from a valve knob", () => {
-    const { unmount } = renderValve(<ValveControl ValveId="V" Label="P" Position={0} Step={5} Pump />)
+  it("marks a pump knob so it turns a quarter as far", () => {
+    const { unmount } = renderValve(<ValveControl ValveId="V" Label="P" Position={0} Step={5} Medium="water" Pump />)
     expect(screen.getByRole("slider", { name: "P knob" }).classList.contains("board-knob-pump")).toBe(true)
     unmount()
-    renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)
+    renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} Medium="water" />)
     expect(screen.getByRole("slider", { name: "V knob" }).classList.contains("board-knob-pump")).toBe(false)
   })
 
+  it("takes the rim of its medium, pump or valve alike", () => {
+    renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} Medium="steam" />)
+    expect(knob().classList.contains("board-medium-steam")).toBe(true)
+  })
+
   it("shows only the flow when there is one: no position LCD, the position is on the knob", () => {
-    renderValve(<ValveControl ValveId="V" Label="P" Value="5.0 l/s" Position={0.5} Step={5} />)
+    renderValve(<ValveControl Medium="water" ValveId="V" Label="P" Value="5.0 l/s" Position={0.5} Step={5} />)
     expect(screen.getByLabelText("P flow").textContent).toBe("5.0 l/s")
     expect(screen.queryByLabelText("P position")).toBeNull()
     expect(screen.getByRole("slider", { name: "P knob" }).getAttribute("aria-valuenow")).toBe("50")
@@ -121,11 +126,11 @@ describe("ValveControl", () => {
   })
 
   it("shows the flow only when given", () => {
-    const { rerender } = renderValve(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)
+    const { rerender } = renderValve(<ValveControl Medium="water" ValveId="V" Label="V" Position={0} Step={5} />)
     expect(screen.queryByLabelText("V flow")).toBeNull()
     rerender(
       <ValveRampProvider valves={{}}>
-        <ValveControl ValveId="V" Label="V" Value="3.0 kg/s" Position={0} Step={5} />
+        <ValveControl Medium="water" ValveId="V" Label="V" Value="3.0 kg/s" Position={0} Step={5} />
       </ValveRampProvider>,
     )
     expect(screen.getByLabelText("V flow").textContent).toBe("3.0 kg/s")
@@ -272,7 +277,7 @@ describe("ValveControl", () => {
 
   it("needs a ValveRampProvider", () => {
     const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined)
-    expect(() => render(<ValveControl ValveId="V" Label="V" Position={0} Step={5} />)).toThrow(
+    expect(() => render(<ValveControl Medium="water" ValveId="V" Label="V" Position={0} Step={5} />)).toThrow(
       "ValveRampProvider",
     )
     quiet.mockRestore()

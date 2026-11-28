@@ -50,9 +50,9 @@ export function GlandSteamGroup({ turbine, condenser, onToggleGlandSteam }: Glan
       <div className="board-group-row" role="group" aria-label="Gland steam">
         <TurnSwitch
           label="Gland steam"
+          medium="steam"
           offLabel="OFF"
           onLabel="ON"
-          tone="machine"
           on={on}
           onToggle={toggle}
           disabled={refusal !== undefined}
