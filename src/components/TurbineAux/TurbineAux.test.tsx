@@ -27,6 +27,15 @@ function renderAux(
   return fns
 }
 
+const makeCtx = (s: PowerPlantState): Ctx =>
+  ({
+    state: s,
+    dispatch: vi.fn(),
+    toggleOilPump: vi.fn(),
+    toggleTurningGear: vi.fn(),
+    toggleGlandSteam: vi.fn(),
+  }) as unknown as Ctx
+
 describe("Turbine aux page", () => {
   it("has the page heading and the lube oil group", () => {
     renderAux()
@@ -114,6 +123,27 @@ describe("Turbine aux page", () => {
       expect(screen.getByRole("img", { name: "Aux bus live: on" })).toBeTruthy()
     })
 
+    it.each([
+      ["a dead aux bus", false, 1, 0, "Aux bus live"],
+      ["oil below the permissive", true, 0, 0, "Oil pressure OK"],
+      ["a rotor above standstill", true, 1, 150, "Rotor at standstill"],
+    ])("darks exactly one lamp and disables the switch with %s", (_name, bus, pressure, rpm, dark) => {
+      const state: PowerPlantState = makeInitialState()
+      state.gridSupplyBreaker = bus
+      state.dieselBreaker = false
+      state.Turbine = { ...state.Turbine, unitAuxBreaker: false, turningGearEngaged: false, rpm }
+      state.Oil = { ...state.Oil, pumpRunning: pressure > 0, headerPressure: pressure }
+      render(
+        <PowerPlantContext.Provider value={makeCtx(state)}>
+          <TurbineAux />
+        </PowerPlantContext.Provider>,
+      )
+      for (const name of ["Aux bus live", "Oil pressure OK", "Rotor at standstill"]) {
+        expect(screen.getByRole("img", { name: `${name}: ${name === dark ? "off" : "on"}` })).toBeTruthy()
+      }
+      expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-disabled")).toBe("true")
+    })
+
     it("still lets the operator disengage when the oil is gone", () => {
       const fns = renderAux({ pumpRunning: false, headerPressure: 0 }, { turningGearEngaged: true, rpm: 3 })
       fireEvent.click(screen.getByRole("switch", { name: "Turning gear" }))
@@ -142,7 +172,9 @@ describe("Gland steam group", () => {
     const sw: HTMLElement = screen.getByRole("switch", { name: "Gland steam" })
     fireEvent.click(sw)
     expect(fns.toggleGlandSteam).not.toHaveBeenCalled()
-    expect(sw.querySelector("title")?.textContent).toBe("The rotor must be turning: engage the turning gear first")
+    expect(sw.querySelector("title")?.textContent).toBe(
+      "The rotor must be turning: engage the turning gear first",
+    )
     expect(screen.getByRole("img", { name: "Rotor turning: off" })).toBeTruthy()
   })
 
