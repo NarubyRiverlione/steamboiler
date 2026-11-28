@@ -1,4 +1,4 @@
-/** Generator Breaker group: the breaker (a rocker `BreakerSwitch`) under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp, the reason it is blocked, and the turbine speed beside the breaker, so it can be closed with the speed in view. */
+/** Generator Breaker group: the breaker (a rocker `BreakerSwitch`) under its flip cover (UI state: the cover is lifted or down), the Ready to close lamp (its one permissive; the reason it is blocked is only the breaker's tooltip, ADR 0054), and the turbine speed beside the breaker, so it can be closed with the speed in view. */
 
 import { useState } from "react"
 import { generatorBreakerCloseRefusal, isAtSyncSpeed } from "../../utils/turbineCalculations"
@@ -46,7 +46,6 @@ export function GeneratorBreakerGroup({ turbine, onToggleBreaker }: GeneratorBre
         label="Ready to close"
         title="Lit when the speed is inside the synchronising window"
       />
-      {refusal && <p className="board-lcd-msg">{refusal}</p>}
     </div>
   )
 }

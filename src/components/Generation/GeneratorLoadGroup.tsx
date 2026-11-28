@@ -1,9 +1,10 @@
-/** Generator Load group: the MW dial (actual load and setpoint), the load setpoint knob and the field the setpoint is typed into. */
+/** Generator Load group: the MW dial (actual load and setpoint), the load setpoint knob, the field the setpoint is typed into and the Breaker closed permissive lamp (ADR 0054). */
 
 import { useState } from "react"
 import { CstSimulation } from "../../context/const"
 import { loadSetpointRefusal, ratedOutputMW } from "../../utils/turbineCalculations"
 import { Knob } from "../board/Knob"
+import { Lamp } from "../board/Lamp"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import type { TurbineState } from "../Turbine/types"
 
@@ -35,7 +36,7 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
     setDraft("")
   }
 
-  // The knob sets whole MW through the same action as the field; with the breaker open it is not given onChange, so it stays inert
+  // The knob sets whole MW through the same action as the field; with the breaker open it is not given onChange, so it stays inert and the Breaker closed lamp is dark
   const turnKnob = (value: number): void => {
     setDraft("")
     onSetLoadSetpoint(Math.round(value))
@@ -87,7 +88,7 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
           if (event.key === "Enter") applyLoad()
         }}
       />
-      {loadRefusal !== undefined && <p className="board-lcd-msg">{loadRefusal}</p>}
+      <Lamp lit={turbine.generatorBreaker} tone="ok" label="Breaker closed" />
     </div>
   )
 }
