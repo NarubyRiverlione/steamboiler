@@ -5,8 +5,12 @@ import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
 import AuxiliaryBus from "./AuxiliaryBus"
+import { CstSimulation } from "../../context/const"
 
 type Ctx = ContextType<typeof PowerPlantContext>
+
+const OutsideWindow = "Speed is outside the synchronising window"
+const { SyncRPM, BreakerRPMMargin } = CstSimulation.CstTurbine
 
 function renderPage(patch: Partial<PowerPlantState> = {}, unitAuxBreaker = false, rpm = 3000) {
   const state: PowerPlantState = { ...makeInitialState(), ...patch }
@@ -64,9 +68,14 @@ describe("Auxiliary bus page", () => {
     renderPage({}, false, 1500)
     const breaker: HTMLElement = liftCover("Unit aux breaker")
     expect(breaker.getAttribute("aria-disabled")).toBe("true")
-    expect(breaker.getAttribute("title")).toBe("Speed is outside the synchronising window")
+    expect(breaker.getAttribute("title")).toBe(OutsideWindow)
     expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
-    expect(screen.queryByText("Speed is outside the synchronising window")).toBeNull()
+    expect(screen.queryByText(OutsideWindow)).toBeNull()
+  })
+
+  it("gives the unit aux breaker no refusal tooltip inside the sync window", () => {
+    renderPage()
+    expect(liftCover("Unit aux breaker").getAttribute("title")).toBeNull()
   })
 
   it.each([1500, 3000])("has no message line on the page at %i rpm (#204, ADR 0054)", (rpm: number) => {
@@ -74,12 +83,12 @@ describe("Auxiliary bus page", () => {
     expect(document.querySelector(".board-lcd-msg")).toBeNull()
   })
 
-  it.each([
-    [2997, "off"],
-    [2998, "on"],
-    [3002, "on"],
-    [3003, "off"],
-  ])("lights Ready to close exactly inside the ±2 rpm window: %i rpm is %s", (rpm: number, lamp: string) => {
+  it.each<[number, "on" | "off"]>([
+    [SyncRPM - BreakerRPMMargin - 1, "off"],
+    [SyncRPM - BreakerRPMMargin, "on"],
+    [SyncRPM + BreakerRPMMargin, "on"],
+    [SyncRPM + BreakerRPMMargin + 1, "off"],
+  ])("lights Ready to close exactly inside the sync window: %i rpm is %s", (rpm: number, lamp: "on" | "off") => {
     renderPage({}, false, rpm)
     expect(screen.getByRole("img", { name: `Ready to close: ${lamp}` })).toBeTruthy()
   })
