@@ -154,9 +154,9 @@ function Condenser() {
             <div className="board-instrument">
               <TurnSwitch
                 label="Air extraction pump"
+                medium="vacuum"
                 offLabel="STOP"
                 onLabel="RUN"
-                tone="machine"
                 on={isAirExtractionPumpEnabled}
                 onToggle={toggleAirExtractionPump}
               />
@@ -165,9 +165,9 @@ function Condenser() {
             <div className="board-instrument">
               <TurnSwitch
                 label="Steam jet air extraction"
+                medium="vacuum"
                 offLabel="OFF"
                 onLabel="ON"
-                tone="machine"
                 on={isSjaeEnabled}
                 onToggle={toggleSjae}
               />
@@ -175,6 +175,7 @@ function Condenser() {
               <ValveControl
                 ValveId="SJAE valve"
                 Label="SJAE valve"
+                Medium="vacuum"
                 Caption="Position:"
                 Position={sjaeValvePosition}
                 Step={SJAE_ValveStep}
@@ -190,6 +191,7 @@ function Condenser() {
           <ValveControl
             ValveId="Recirculation pump"
             Label="Recirculation pump"
+            Medium="cooling"
             Pump
             Caption="Flow rate:"
             Position={recirculationPumpValvePosition}
@@ -203,6 +205,7 @@ function Condenser() {
           <ValveControl
             ValveId="Condensation pump"
             Label="Condensation pump"
+            Medium="water"
             Pump
             Caption="Flow rate:"
             Position={condensationPumpValvePosition}
@@ -223,6 +226,7 @@ function Condenser() {
             <ValveControl
               ValveId="Makeup"
               Label="Makeup"
+              Medium="water"
               Caption="Makeup:"
               Position={makeupValvePosition}
               Value={`${waterKgPerSecond(makeupValvePosition * Makeup_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}
@@ -232,6 +236,7 @@ function Condenser() {
             <ValveControl
               ValveId="Reject"
               Label="Reject"
+              Medium="water"
               Caption="Reject:"
               Position={rejectValvePosition}
               Value={`${waterKgPerSecond(rejectValvePosition * Reject_MaxFlowRate, hotwellTemperature).toFixed(1)} kg/s`}

@@ -6,7 +6,7 @@ import { knobValueFromDrag, PUMP_DRAG_FULL_SWEEP_PX } from "./knobTravel"
 const DEAD_ZONE = 0.05
 
 function renderRateKnob(value: number, onChange: (value: number) => void = vi.fn()) {
-  render(<Knob mode="centre-zero" label="Gas knob" value={value} deadZone={DEAD_ZONE} onChange={onChange} />)
+  render(<Knob medium="heat" mode="centre-zero" label="Gas knob" value={value} deadZone={DEAD_ZONE} onChange={onChange} />)
   return screen.getByRole("slider", { name: "Gas knob" })
 }
 
@@ -20,16 +20,16 @@ describe("Knob centre-zero", () => {
 
   it("says in words whether it raises, lowers or holds", () => {
     const { unmount } = render(
-      <Knob mode="centre-zero" label="K" value={0.4} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
+      <Knob medium="heat" mode="centre-zero" label="K" value={0.4} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
     )
     expect(screen.getByRole("slider").getAttribute("aria-valuetext")).toBe("Raising")
     unmount()
     const { unmount: second } = render(
-      <Knob mode="centre-zero" label="K" value={-0.4} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
+      <Knob medium="heat" mode="centre-zero" label="K" value={-0.4} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
     )
     expect(screen.getByRole("slider").getAttribute("aria-valuetext")).toBe("Lowering")
     second()
-    render(<Knob mode="centre-zero" label="K" value={0.03} deadZone={DEAD_ZONE} onChange={vi.fn()} />)
+    render(<Knob medium="heat" mode="centre-zero" label="K" value={0.03} deadZone={DEAD_ZONE} onChange={vi.fn()} />)
     expect(screen.getByRole("slider").getAttribute("aria-valuetext")).toBe("Holding")
   })
 
@@ -42,21 +42,21 @@ describe("Knob centre-zero", () => {
 
   it("lights the centre detent only while the rate is zero", () => {
     const { container, rerender } = render(
-      <Knob mode="centre-zero" label="K" value={0.03} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
+      <Knob medium="heat" mode="centre-zero" label="K" value={0.03} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
     )
     expect(container.querySelector(".board-detent-lit")).not.toBeNull()
-    rerender(<Knob mode="centre-zero" label="K" value={0.5} deadZone={DEAD_ZONE} onChange={vi.fn()} />)
+    rerender(<Knob medium="heat" mode="centre-zero" label="K" value={0.5} deadZone={DEAD_ZONE} onChange={vi.fn()} />)
     expect(container.querySelector(".board-detent-lit")).toBeNull()
     expect(container.querySelector(".board-detent")).not.toBeNull()
   })
 
   it("draws the bipolar arc only off-centre and the cap tint that sets it apart from a valve knob", () => {
     const { container, rerender } = render(
-      <Knob mode="centre-zero" label="K" value={0} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
+      <Knob medium="heat" mode="centre-zero" label="K" value={0} deadZone={DEAD_ZONE} onChange={vi.fn()} />,
     )
     expect(container.querySelector(".board-knob-arc")).toBeNull()
     expect(container.querySelector(".board-knob-cap-rate")).not.toBeNull()
-    rerender(<Knob mode="centre-zero" label="K" value={-0.7} deadZone={DEAD_ZONE} onChange={vi.fn()} />)
+    rerender(<Knob medium="heat" mode="centre-zero" label="K" value={-0.7} deadZone={DEAD_ZONE} onChange={vi.fn()} />)
     expect(container.querySelector(".board-knob-arc")).not.toBeNull()
   })
 
@@ -134,14 +134,14 @@ describe("knobValueFromDrag", () => {
 
 describe("Knob absolute", () => {
   it("is a display-only meter without onChange", () => {
-    render(<Knob label="K" value={30} min={0} max={100} ends={["0", "100"]} />)
+    render(<Knob medium="heat" label="K" value={30} min={0} max={100} ends={["0", "100"]} />)
     expect(screen.getByRole("meter", { name: "K" }).getAttribute("aria-valuenow")).toBe("30")
     expect(screen.queryByRole("slider")).toBeNull()
   })
 
   it("is a slider with onChange, turned by keys, wheel and drag, clamped to its ends", () => {
     const onChange = vi.fn()
-    render(<Knob label="K" value={98} min={0} max={100} ends={["0", "100"]} step={5} onChange={onChange} />)
+    render(<Knob medium="heat" label="K" value={98} min={0} max={100} ends={["0", "100"]} step={5} onChange={onChange} />)
     const knob: HTMLElement = screen.getByRole("slider", { name: "K" })
     fireEvent.keyDown(knob, { key: "ArrowUp" })
     fireEvent.keyDown(knob, { key: "ArrowRight" })
@@ -158,12 +158,20 @@ describe("Knob absolute", () => {
 
   it("turns a pump knob a quarter as far for the same drag", () => {
     const onChange = vi.fn()
-    render(<Knob label="P" value={50} min={0} max={100} ends={["0", "100"]} onChange={onChange} tone="pump" />)
+    render(<Knob medium="heat" label="P" value={50} min={0} max={100} ends={["0", "100"]} onChange={onChange} tone="pump" />)
     const knob: HTMLElement = screen.getByRole("slider", { name: "P" })
     knob.setPointerCapture = vi.fn()
     fireEvent.pointerDown(knob, { clientX: 0, clientY: 0, pointerId: 1 })
     fireEvent.pointerMove(knob, { clientX: 120, clientY: 0 })
     fireEvent.pointerUp(knob, { pointerId: 1 })
     expect(onChange.mock.calls).toEqual([[75]])
+  })
+
+  it("takes the rim class of its medium, in every mode", () => {
+    const { unmount } = render(<Knob label="A" value={30} min={0} max={100} ends={["0", "100"]} medium="oil" />)
+    expect(screen.getByRole("meter", { name: "A" }).classList.contains("board-medium-oil")).toBe(true)
+    unmount()
+    render(<Knob mode="centre-zero" label="R" value={0} deadZone={DEAD_ZONE} onChange={vi.fn()} medium="heat" />)
+    expect(screen.getByRole("slider", { name: "R" }).classList.contains("board-medium-heat")).toBe(true)
   })
 })

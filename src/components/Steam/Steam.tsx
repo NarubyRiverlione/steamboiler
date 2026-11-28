@@ -45,6 +45,7 @@ function Steam() {
           <ValveControl
             ValveId="Spray valve"
             Label="Spray valve"
+            Medium="steam"
             Caption="Attemperator spray"
             Position={sprayValvePosition}
             Value={`${sprayFlow.toFixed(1)} kg/s`}
@@ -55,9 +56,9 @@ function Steam() {
           <div className="board-instrument">
             <TurnSwitch
               label="Attemperator"
+              medium="steam"
               offLabel="MANUAL"
               onLabel="AUTO"
-              tone="machine"
               on={attemperatorAuto}
               onToggle={() => {
                 setAttemperatorAuto(!attemperatorAuto)

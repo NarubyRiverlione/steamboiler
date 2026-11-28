@@ -16,6 +16,7 @@ function renderSwitch(options: RenderOptions = {}) {
   render(
     <TurnSwitch
       label="Vent"
+      medium="water"
       offLabel="CLOSED"
       onLabel="OPEN"
       on={options.on ?? false}
@@ -114,5 +115,10 @@ describe("tickAt", () => {
     expect(right.y1).toBeCloseTo(0)
     expect(right.x2).toBeCloseTo(20)
     expect(right.y2).toBeCloseTo(0)
+  })
+
+  it("takes the rim class of its medium", () => {
+    const { sw } = renderSwitch()
+    expect(sw.classList.contains("board-medium-water")).toBe(true)
   })
 })

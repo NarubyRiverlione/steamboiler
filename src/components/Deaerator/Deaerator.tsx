@@ -107,6 +107,7 @@ function Deaerator() {
           <ValveControl
             ValveId="Feed pump"
             Label="Feed pump"
+            Medium="water"
             Pump
             Caption="Flow rate:"
             Position={feedPumpValvePosition}
@@ -135,6 +136,7 @@ function Deaerator() {
               <div className="board-instrument">
                 <TurnSwitch
                   label="Start-up vent"
+                  medium="water"
                   offLabel="CLOSED"
                   onLabel="OPEN"
                   on={startUpVentOpen}

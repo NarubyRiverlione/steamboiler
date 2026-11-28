@@ -236,6 +236,7 @@ function Boiler() {
           <Knob
             mode="centre-zero"
             label="Gas knob"
+            medium="heat"
             value={gasRateCommand}
             deadZone={GasRateDeadZone}
             onChange={setGasRate}
@@ -259,6 +260,7 @@ function Boiler() {
             <h3 className="board-group-title">Water Valve Control</h3>
             <TurnSwitch
               label="Drain valve"
+              medium="water"
               offLabel="CLOSED"
               onLabel="OPEN"
               on={drainValveOpen}

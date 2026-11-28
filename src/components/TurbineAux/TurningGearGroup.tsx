@@ -30,9 +30,9 @@ export function TurningGearGroup({ turbine, oil, busLive, onToggleTurningGear }:
       <div className="board-group-row" role="group" aria-label="Turning gear">
         <TurnSwitch
           label="Turning gear"
+          medium="oil"
           offLabel="OUT"
           onLabel="IN"
-          tone="machine"
           on={engaged}
           onToggle={onToggleTurningGear}
           disabled={refusal !== undefined}

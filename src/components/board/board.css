@@ -45,9 +45,6 @@
   --board-knob-pointer: #cfd2d6;
   --board-knob-rate-cap: #1c2b3a; /* the rate knob's own tint: neither red nor a lamp colour (ADR 0015) */
   --board-knob-rate-arc: #5d8fb8;
-  --board-knob-valve-rim: #a38b5a; /* a valve knob: a muted brass rim */
-  --board-knob-gas-rim: #b4504a; /* the gas rate knob: a muted red rim, softer than the alarm red */
-  --board-knob-pump-rim: #5d8fb8; /* a pump knob: a blue rim round the cap, the cap itself stays as on a valve */
   --board-panel-edge: #ffffff;
   --board-screw-bg: #c4c4c4;
   --board-screw-edge: #8f8f8f;
@@ -1069,16 +1066,40 @@ path.board-zone {
   fill: var(--board-knob-rate-cap);
 }
 
-.board-knob-turn .board-knob-bezel {
-  fill: var(--board-knob-valve-rim);
+/* The rim follows the overview medium of the component (#167) */
+.board-medium-heat .board-knob-bezel,
+.board-medium-heat .board-switch-rim {
+  fill: var(--board-mimic-heat);
 }
 
-.board-knob-rate .board-knob-bezel {
-  fill: var(--board-knob-gas-rim);
+.board-medium-steam .board-knob-bezel,
+.board-medium-steam .board-switch-rim {
+  fill: var(--board-mimic-steam);
 }
 
-.board-knob-pump .board-knob-bezel {
-  fill: var(--board-knob-pump-rim);
+.board-medium-water .board-knob-bezel,
+.board-medium-water .board-switch-rim {
+  fill: var(--board-mimic-water);
+}
+
+.board-medium-cooling .board-knob-bezel,
+.board-medium-cooling .board-switch-rim {
+  fill: var(--board-mimic-cooling);
+}
+
+.board-medium-power .board-knob-bezel,
+.board-medium-power .board-switch-rim {
+  fill: var(--board-mimic-power);
+}
+
+.board-medium-vacuum .board-knob-bezel,
+.board-medium-vacuum .board-switch-rim {
+  fill: var(--board-mimic-vacuum);
+}
+
+.board-medium-oil .board-knob-bezel,
+.board-medium-oil .board-switch-rim {
+  fill: var(--board-mimic-oil);
 }
 
 .board-knob-rate {
@@ -1393,14 +1414,6 @@ path.board-zone {
 .board-switch-disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.board-switch-valve .board-switch-rim {
-  fill: var(--board-knob-valve-rim);
-}
-
-.board-switch-machine .board-switch-rim {
-  fill: var(--board-knob-pump-rim);
 }
 
 .board-switch-rim {
