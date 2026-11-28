@@ -5,8 +5,12 @@ import { PowerPlantContext } from "../../context/PowerPlantContext"
 import { makeInitialState } from "../../context/PowerPlantReducer"
 import type PowerPlantState from "../../context/PowerPlantState"
 import AuxiliaryBus from "./AuxiliaryBus"
+import { CstSimulation } from "../../context/const"
 
 type Ctx = ContextType<typeof PowerPlantContext>
+
+const OutsideWindow = "Speed is outside the synchronising window"
+const { SyncRPM, BreakerRPMMargin } = CstSimulation.CstTurbine
 
 function renderPage(patch: Partial<PowerPlantState> = {}, unitAuxBreaker = false, rpm = 3000) {
   const state: PowerPlantState = { ...makeInitialState(), ...patch }
@@ -60,11 +64,33 @@ describe("Auxiliary bus page", () => {
     expect(screen.getByRole("img", { name: "Ready to close: on" })).toBeTruthy()
   })
 
-  it("blocks closing the unit aux breaker outside the sync window, with the reason", () => {
+  it("blocks closing the unit aux breaker outside the sync window, the reason in its tooltip only (#204)", () => {
     renderPage({}, false, 1500)
-    expect(liftCover("Unit aux breaker").getAttribute("aria-disabled")).toBe("true")
+    const breaker: HTMLElement = liftCover("Unit aux breaker")
+    expect(breaker.getAttribute("aria-disabled")).toBe("true")
+    expect(breaker.getAttribute("title")).toBe(OutsideWindow)
     expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
-    expect(screen.getByText("Speed is outside the synchronising window")).toBeTruthy()
+    expect(screen.queryByText(OutsideWindow)).toBeNull()
+  })
+
+  it("gives the unit aux breaker no refusal tooltip inside the sync window", () => {
+    renderPage()
+    expect(liftCover("Unit aux breaker").getAttribute("title")).toBeNull()
+  })
+
+  it.each([1500, 3000])("has no message line on the page at %i rpm (#204, ADR 0054)", (rpm: number) => {
+    renderPage({}, false, rpm)
+    expect(document.querySelector(".board-lcd-msg")).toBeNull()
+  })
+
+  it.each<[number, "on" | "off"]>([
+    [SyncRPM - BreakerRPMMargin - 1, "off"],
+    [SyncRPM - BreakerRPMMargin, "on"],
+    [SyncRPM + BreakerRPMMargin, "on"],
+    [SyncRPM + BreakerRPMMargin + 1, "off"],
+  ])("lights Ready to close exactly inside the sync window: %i rpm is %s", (rpm: number, lamp: "on" | "off") => {
+    renderPage({}, false, rpm)
+    expect(screen.getByRole("img", { name: `Ready to close: ${lamp}` })).toBeTruthy()
   })
 
   it("shows the auxiliary load in MW", () => {

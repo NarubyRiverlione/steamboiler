@@ -1,4 +1,4 @@
-/** The Auxiliary bus page on the board (#142, ADR 0053): the grid supply breaker, the unit aux breaker (#189), the bus live lamp, and the auxiliary load. The UPS and the Vital/Safety breakers are on the Emergency power page (#196). */
+/** The Auxiliary bus page on the board (#142, ADR 0053): the grid supply breaker, the unit aux breaker (#189) with its Ready to close permissive lamp (#204, ADR 0054: no message line), the bus live lamp, and the auxiliary load. The UPS and the Vital/Safety breakers are on the Emergency power page (#196). */
 
 import { useState } from "react"
 import { isBusLive } from "../../context/AuxiliaryBus"
@@ -55,7 +55,6 @@ function AuxiliaryBus() {
             <Display label="Turbine speed" text={`${state.Turbine.rpm.toFixed(0)} RPM`} widest="9999 RPM" />
           </div>
           <Lamp lit={isAtSyncSpeed(state.Turbine.rpm)} tone="ok" label="Ready to close" title="Lit when the speed is inside the synchronising window" />
-          {unitAuxRefusal && <p className="board-lcd-msg">{unitAuxRefusal}</p>}
         </div>
         <div className="board-group">
           <Lamp lit={isBusLive(state)} tone="ok" label="Auxiliary bus live" title="Lit while a breaker feeds the bus" />
