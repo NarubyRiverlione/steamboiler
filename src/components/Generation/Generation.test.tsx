@@ -13,12 +13,12 @@ function renderGeneration(patch: Partial<PowerPlantState["Turbine"]> = {}, top: 
   state.Turbine = { ...state.Turbine, ...patch }
   const fns = { toggleGeneratorBreaker: vi.fn(), setLoadSetpoint: vi.fn() }
   const value = { state, dispatch: vi.fn(), ...fns } as unknown as Ctx
-  render(
+  const { container } = render(
     <PowerPlantContext.Provider value={value}>
       <Generation />
     </PowerPlantContext.Provider>,
   )
-  return fns
+  return { ...fns, container }
 }
 
 describe("Generation page", () => {
@@ -80,14 +80,44 @@ describe("Generation page", () => {
     expect(Number.isInteger(value)).toBe(true)
   })
 
-  it("leaves the knob inert with the breaker open and shows the reason", () => {
+  it("leaves the knob inert with the breaker open", () => {
     const fns = renderGeneration({ generatorBreaker: false })
     const knob: HTMLElement = screen.getByRole("meter", { name: "Load setpoint knob" })
     fireEvent.keyDown(knob, { key: "ArrowUp" })
     fireEvent.wheel(knob, { deltaY: -100 })
     expect(fns.setLoadSetpoint).not.toHaveBeenCalled()
     expect(screen.queryByRole("slider", { name: "Load setpoint knob" })).toBeNull()
-    expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
+  })
+
+  it("has no message line, whatever the breaker and the speed (ADR 0054)", () => {
+    const cases: readonly Partial<PowerPlantState["Turbine"]>[] = [
+      { rpm: 2500, generatorBreaker: false },
+      { rpm: 3000, generatorBreaker: false },
+      { rpm: 2500, generatorBreaker: true },
+      { rpm: 3000, generatorBreaker: true },
+    ]
+    for (const patch of cases) {
+      const { container } = renderGeneration(patch)
+      expect(container.querySelector(".board-lcd-msg")).toBeNull()
+      cleanup()
+    }
+  })
+
+  it("lights Breaker closed exactly while the generator breaker is closed, also in house load operation", () => {
+    renderGeneration({ generatorBreaker: true })
+    expect(screen.getByRole("img", { name: "Breaker closed: on" })).toBeTruthy()
+    cleanup()
+    renderGeneration({ generatorBreaker: false })
+    expect(screen.getByRole("img", { name: "Breaker closed: off" })).toBeTruthy()
+    cleanup()
+    renderGeneration({ generatorBreaker: false, unitAuxBreaker: true }, { gridSupplyBreaker: false })
+    expect(screen.getByRole("img", { name: "Breaker closed: off" })).toBeTruthy()
+  })
+
+  it("puts the Breaker closed lamp in the Generator Load group", () => {
+    renderGeneration({ generatorBreaker: true })
+    const group: HTMLElement | null = screen.getByRole("heading", { name: "Generator Load" }).closest(".board-group")
+    expect(group?.querySelector("[aria-label='Breaker closed: on']")).not.toBeNull()
   })
 
   it("has no speed gauge, trip lamp or speed controls", () => {
@@ -107,10 +137,10 @@ describe("Generation page", () => {
     expect(screen.getByRole("switch", { name: "Generator breaker, cover up" })).toBeTruthy()
     fireEvent.click(screen.getByRole("switch", { name: "Generator breaker, cover up" }))
     expect(fns.toggleGeneratorBreaker).toHaveBeenCalledTimes(1)
-    expect(screen.queryByText(/outside the synchronising window/)).toBeNull()
+    expect(screen.getByRole("switch", { name: "Generator breaker, cover up" }).getAttribute("title")).toBeNull()
   })
 
-  it("blocks the breaker outside the band and says why", () => {
+  it("blocks the breaker outside the band, the reason as its tooltip", () => {
     const fns = renderGeneration({ rpm: 2500, generatorBreaker: false })
     expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
     const blocked: HTMLElement = screen.getByRole("switch", { name: "Generator breaker, cover down" })
@@ -119,7 +149,9 @@ describe("Generation page", () => {
     expect(screen.getByRole("switch", { name: "Generator breaker, cover up" })).toBeTruthy() // the cover still lifts
     fireEvent.click(screen.getByRole("switch", { name: "Generator breaker, cover up" }))
     expect(fns.toggleGeneratorBreaker).not.toHaveBeenCalled() // only the handle refuses
-    expect(screen.getByText("Speed is outside the synchronising window")).toBeTruthy()
+    expect(screen.getByRole("switch", { name: "Generator breaker, cover up" }).getAttribute("title")).toBe(
+      "Speed is outside the synchronising window",
+    )
   })
 
   it("can always open a closed breaker", () => {
@@ -150,11 +182,11 @@ describe("Generation page", () => {
     expect(fns.setLoadSetpoint).toHaveBeenCalledWith(55)
   })
 
-  it("disables the load setpoint with the reason when the breaker is open", () => {
+  it("disables the load setpoint with the reason as its tooltip when the breaker is open", () => {
     renderGeneration({ generatorBreaker: false })
     const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
     expect(field.disabled).toBe(true)
-    expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
+    expect(field.title).toBe("Close the generator breaker first")
   })
 
   it("shows the net output, negative by its minus sign only", () => {
@@ -179,7 +211,7 @@ describe("Generation page", () => {
     const fns = renderGeneration({ generatorBreaker: false, unitAuxBreaker: true }, { gridSupplyBreaker: false })
     const field: HTMLInputElement = screen.getByLabelText("Load setpoint (MW)")
     expect(field.disabled).toBe(true)
-    expect(screen.getByText("Close the generator breaker first")).toBeTruthy()
+    expect(field.title).toBe("Close the generator breaker first")
     fireEvent.keyDown(screen.getByRole("meter", { name: "Load setpoint knob" }), { key: "ArrowUp" })
     expect(fns.setLoadSetpoint).not.toHaveBeenCalled()
   })
