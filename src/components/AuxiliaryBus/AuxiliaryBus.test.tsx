@@ -60,11 +60,28 @@ describe("Auxiliary bus page", () => {
     expect(screen.getByRole("img", { name: "Ready to close: on" })).toBeTruthy()
   })
 
-  it("blocks closing the unit aux breaker outside the sync window, with the reason", () => {
+  it("blocks closing the unit aux breaker outside the sync window, the reason in its tooltip only (#204)", () => {
     renderPage({}, false, 1500)
-    expect(liftCover("Unit aux breaker").getAttribute("aria-disabled")).toBe("true")
+    const breaker: HTMLElement = liftCover("Unit aux breaker")
+    expect(breaker.getAttribute("aria-disabled")).toBe("true")
+    expect(breaker.getAttribute("title")).toBe("Speed is outside the synchronising window")
     expect(screen.getByRole("img", { name: "Ready to close: off" })).toBeTruthy()
-    expect(screen.getByText("Speed is outside the synchronising window")).toBeTruthy()
+    expect(screen.queryByText("Speed is outside the synchronising window")).toBeNull()
+  })
+
+  it.each([1500, 3000])("has no message line on the page at %i rpm (#204, ADR 0054)", (rpm: number) => {
+    renderPage({}, false, rpm)
+    expect(document.querySelector(".board-lcd-msg")).toBeNull()
+  })
+
+  it.each([
+    [2997, "off"],
+    [2998, "on"],
+    [3002, "on"],
+    [3003, "off"],
+  ])("lights Ready to close exactly inside the ±2 rpm window: %i rpm is %s", (rpm: number, lamp: string) => {
+    renderPage({}, false, rpm)
+    expect(screen.getByRole("img", { name: `Ready to close: ${lamp}` })).toBeTruthy()
   })
 
   it("shows the auxiliary load in MW", () => {
