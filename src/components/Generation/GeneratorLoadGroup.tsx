@@ -36,7 +36,7 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
     setDraft("")
   }
 
-  // The knob sets whole MW through the same action as the field; with the breaker open it is not given onChange, so it stays inert and the Breaker closed lamp is dark
+  // The knob sets whole MW through the same action as the field; with the breaker open it is not given onChange, so it stays inert
   const turnKnob = (value: number): void => {
     setDraft("")
     onSetLoadSetpoint(Math.round(value))
