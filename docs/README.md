@@ -65,7 +65,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | [0024](adr/0024-tickets-ordered-by-theme.md) | Tickets are ordered by theme; only broken and wrong jump the queue |
 | [0025](adr/0025-finer-steam-table-for-density-slope.md) | A finer steam table above 300 °C smooths the steam density slope |
 | [0026](adr/0026-valve-flow-follows-pressure.md) | Valve flow follows boiler pressure; the main steam valve closes at low pressure |
-| [0027](adr/0027-generator-load-is-a-resisting-torque.md) | The generator load is a resisting torque on a free-running shaft; electric output is the load carried |
+| [0027](adr/0027-generator-load-is-a-resisting-torque.md) | On the grid the speed is held and the output comes from the steam (MW controller, reverse power, auto-sync; M1, decided, being built); off the grid the load is a resisting torque |
 | [0028](adr/0028-exhaust-splits-by-quality-at-condenser-intake.md) | The turbine exhaust splits by its quality at the condenser intake |
 | [0029](adr/0029-boiler-efficiency-from-flue-gas-heat-balance.md) | Boiler efficiency follows from a two-stage flue gas heat balance |
 | [0030](adr/0030-return-pays-real-enthalpy.md) | The Return pays its real enthalpy, and rated steam flow follows what full gas makes |
@@ -117,6 +117,7 @@ What the simulator is and why: the [README](../README.md). Domain terms: [GLOSSA
 | Nov 2026 | [Turbine lube oil: header pressure, permissive and trip limits (UNVERIFIED)](research/2026-11-lube-oil.md) |
 | Nov 2026 | [Breakers: interlocks, protections and what a real plant lets through (snippet-sourced)](research/2026-11-breaker-interlocks-and-protections.md) |
 | Nov 2026 | [Review of the sim: ADRs, realism, missing components](research/2026-11-review.md) |
+| Nov 2026 | [On the grid (Electrical M1): reverse power, load control, auto-sync, stiff grid (partly UNVERIFIED)](research/2026-11-grid-m1.md) |
 
 ## Agent configuration
 
