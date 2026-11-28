@@ -95,7 +95,7 @@ export function shaftWorkFraction(rpm: number): number {
   return Math.max(0, Math.min(1, speedRatio * (2 - speedRatio)))
 }
 
-/** Rated electric output in MW (123.0): it sizes the shaft and is the base of the load rate. */
+/** Rated electric output in MW (152.4 since #113): it sizes the shaft and is the base of the load rate. */
 export const ratedOutputMW: number = ratedOutput / 1e6
 
 // Load setpoint step per tick in MW: the load moves at one fixed rate, up and down (ADR 0027)

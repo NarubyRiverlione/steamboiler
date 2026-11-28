@@ -169,16 +169,16 @@ export const CstHeater = {
 // Deaerator vessel (ADR 0036, ADR 0037, figures in docs/plant/design-basis.md and docs/plant/deaerator.md); all estimates
 // to confirm in the headless runner
 export const CstDeaerator = {
-  TotalVolume: 150e3, // liters: 5 minutes of rated feedwater (192 kg/s) from the 50% working level down to the 38% low-low trip
+  TotalVolume: 150e3, // liters: sized on 5 minutes of the old 192 kg/s feedwater between the 50% working level and a 38% low-low (#112); the rated flow is 134 kg/s since #113 and the low-low is 12%, so the 38 points now hold about 7 minutes
   WorkingLevel: 0.5, // share of TotalVolume the vessel holds at 3 bar: the target line on the level gauge (ADR 0037)
-  LowLowLevel: 0.12, // share of TotalVolume: below it the boiler feed pump trips; 5 minutes of rated feedwater (38% of the volume) below the 50% working level (#112, design-basis.md)
+  LowLowLevel: 0.12, // share of TotalVolume: below it the boiler feed pump trips; the 38 points between it and the 50% working level hold about 7 minutes of the 134 kg/s rated feedwater (#112, design-basis.md)
   LowLevel: 0.25, // share of TotalVolume: the low level zone on the gauge starts here; its warning tile is on below it (UNVERIFIED estimate, #54, #137, see design-basis.md)
-  HighLevel: 0.75, // share of TotalVolume: the high level zone on the gauge starts here; its warning tile is on from it (UNVERIFIED estimate, #54, #137); no trip yet (#129)
-  HighHighLevel: 0.85, // share of TotalVolume: the red zone on the gauge starts here; display only, 22 m³ of headroom (UNVERIFIED estimate, #54, #129)
+  HighLevel: 0.75, // share of TotalVolume: the high level zone on the gauge starts here; its warning tile is on from it (UNVERIFIED estimate, #54, #137); no trip of its own, the trip is the high-high level (#129)
+  HighHighLevel: 0.85, // share of TotalVolume: the red zone on the gauge starts here; from it the condensation pump trips and latches (#129, ADR 0045); 22 m³ of headroom (UNVERIFIED estimate, #54)
   WorkingLow: 0.45, // share of TotalVolume: lower end of the green band on the level gauge, the 50% working level minus 5 points (UNVERIFIED estimate, #54)
   WorkingHigh: 0.55, // share of TotalVolume: upper end of the green band
-  FeedPump_Step: 100 / 300, // % per click, wheel notch or arrow key: 1 l/s (about 1 kg/s), #138; the pump flow is the CondensationPump_MaxFlowRate times the position (206 L/s needed at 192 kg/s and 134 °C, #112)
-  StartLevel: 0.5, // share of TotalVolume filled cold at ambient, in the app and in the scenarios: ends at about 59% at 3 bar (ADR 0037)
+  FeedPump_Step: 100 / 300, // % per click, wheel notch or arrow key: 1 l/s (about 1 kg/s), #138; the pump flow is the CondensationPump_MaxFlowRate times the position (about 144 L/s needed at the rated 134 kg/s and 134 °C, #112, #113)
+  StartLevel: 0.5, // share of TotalVolume filled cold at ambient, in the app and in the scenarios: peaks at about 54% at 3 bar in bypass-loop before the level hold (55.1% in deaerator.md; ADR 0037)
   Pressure: 3, // bar, held by the steam inlet valve (about 134 °C)
   ExtractionValveCapacity: 60, // kg/s the extraction valve passes: over-dimensioned, about 35 kg/s are needed at rated flow (design-basis.md)
   ExtractionOpeningRange: 0.5, // share of the setpoint the tap pressure must rise above it for the non-return valve to pass its full capacity: flow rises with the pressure margin, so no step when the tap crosses 3 bar (design-basis.md)

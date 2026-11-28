@@ -29,7 +29,7 @@ const SecondsPerMinute = 60
  * @param extractionFlow - The steam (kg/s) the heater took at the tap in the last tick, which no longer does work after the tap (ADR 0031).
  * @param steamTemperature - The steam temperature (°C) after the superheater (ADR 0044); saturated steam when left out.
  * @param rollPermissive - False below the lube oil permissive pressure (ADR 0050) or on a stopped rotor off the turning gear (ADR 0051): the Ramp up / Hold PID may not open the valve.
- * @param houseLoad - The auxiliary load (MW) in house load operation (#182): the generator carries it at once and the load setpoint is ignored; undefined with the grid supply breaker closed.
+ * @param auxiliaryLoad - The plant's auxiliary load (MW), defaults to 0: with the unit auxiliary breaker closed (`unitAuxBreaker`, house load operation, #182) the generator carries it at once and the load setpoint is ignored; otherwise it is not carried by the shaft.
  * @returns The updated turbine state.
  */
 function TurbineTick(
