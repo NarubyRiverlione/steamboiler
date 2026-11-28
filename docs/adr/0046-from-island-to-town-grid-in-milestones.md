@@ -19,7 +19,7 @@ The plant runs as an island today: with the breaker closed, the load is a resist
   - **Side track, any time after M2:** vital bus, safety bus and UPS (#143, [ADR 0055](0055-the-vital-bus-and-the-safety-bus.md), #144).
 - **Stiff grid before the moving frequency:** M1 holds the speed, so the load controller and the protections are built against a fixed frequency first.
 - **Auto-sync before manual sync:** manual sync only gets interesting with a moving frequency (M3).
-- **Reverse power trips:** a generator that motors with too little steam overheats the last turbine stages by windage; past a short delay it trips the turbine and opens the breaker. The delay and threshold come from a research note in M1. Real plants also use it the other way round (a sequential trip): after a turbine trip the breaker waits for reverse power before it opens, so the unloaded shaft cannot overspeed; the M1 ticket decides whether the sim follows that order.
+- **Reverse power trips:** a generator that motors with too little steam overheats the last turbine stages by windage; past a short delay it trips the turbine and opens the breaker. The delay and threshold come from a research note in M1 (what is already written and what that note must cover: the [review of 27 November 2026](../research/2026-11-review.md#the-grid-goes-ahead-what-is-written-what-is-missing)). Real plants also use it the other way round (a sequential trip): after a turbine trip the breaker waits for reverse power before it opens, so the unloaded shaft cannot overspeed; the M1 ticket decides whether the sim follows that order.
 
 ## Considered options
 
