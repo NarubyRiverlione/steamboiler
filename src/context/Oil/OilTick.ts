@@ -1,6 +1,6 @@
 /**
  * Turbine lube oil (ADR 0050): one oil pump builds the header pressure and the pressure decays when it stops, each as a
- * first-order lag. The pump has no electrical dependency yet (#141). Figures and their UNVERIFIED status: docs/research/2026-11-lube-oil.md.
+ * first-order lag. A dead bus stops the pump: AuxiliaryBus runs the tick with it off. Figures and their UNVERIFIED status: docs/research/2026-11-lube-oil.md.
  */
 import { CstOil, CstSimulation } from "../const"
 import { OilState, TurbineState } from "../PowerPlantState"
