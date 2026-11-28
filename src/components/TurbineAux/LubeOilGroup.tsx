@@ -8,7 +8,7 @@ import { Lamp } from "../board/Lamp"
 import { RoundGauge, type GaugeZone } from "../board/RoundGauge"
 import { TurnSwitch } from "../board/TurnSwitch"
 
-const { NominalPressure, PermissivePressure, TripPressure } = CstOil
+const { PermissivePressure, TripPressure } = CstOil
 
 const PRESSURE_SCALE_MAX = 1.5 // bar g, dial end: past the nominal pressure so the green zone has room
 
@@ -59,10 +59,6 @@ export function LubeOilGroup({ oil, onToggleOilPump }: LubeOilGroupProps) {
         <span>Header pressure</span>
         <Display label="Header pressure" text={`${smoothPressure.toFixed(2)} bar g`} widest="9.99 bar g" />
       </div>
-      <p className="board-lcd-msg">
-        Permissive {PermissivePressure.toFixed(1)} bar g, trip {TripPressure.toFixed(1)} bar g (nominal{" "}
-        {NominalPressure.toFixed(1)})
-      </p>
     </div>
   )
 }
