@@ -27,9 +27,6 @@ function renderAux(
   return fns
 }
 
-const makeCtx = (s: PowerPlantState): Ctx =>
-  ({ state: s, dispatch: vi.fn(), toggleOilPump: vi.fn(), toggleTurningGear: vi.fn(), toggleGlandSteam: vi.fn() }) as unknown as Ctx
-
 describe("Turbine aux page", () => {
   it("has the page heading and the lube oil group", () => {
     renderAux()
@@ -58,7 +55,6 @@ describe("Turbine aux page", () => {
     expect(dial.querySelector("path[data-tone='alarm']")).not.toBeNull()
     expect(dial.querySelector("path[data-tone='warn']")).not.toBeNull()
     expect(dial.querySelector("path[data-tone='ok']")).not.toBeNull()
-    expect(screen.getByText(/Permissive 0\.7 bar g, trip 0\.4 bar g/)).toBeTruthy()
   })
 
   it("lights the Oil pressure low lamp below the permissive pressure only", () => {
@@ -91,19 +87,31 @@ describe("Turbine aux page", () => {
       expect(screen.getByLabelText("Rotor speed").textContent).toBe("3.0 rpm")
     })
 
-    it("refuses engaging without lube oil pressure and says why", () => {
+    it("refuses engaging without lube oil pressure", () => {
       const fns = renderAux({ pumpRunning: false, headerPressure: 0 }, { turningGearEngaged: false, rpm: 0 })
       const gear: HTMLElement = screen.getByRole("switch", { name: "Turning gear" })
       expect(gear.getAttribute("aria-disabled")).toBe("true")
-      expect(screen.getByText("Lube oil pressure is below the permissive", { selector: "p" })).toBeTruthy()
+      expect(gear.querySelector("title")?.textContent).toBe("Lube oil pressure is below the permissive")
       fireEvent.click(gear)
       expect(fns.toggleTurningGear).not.toHaveBeenCalled()
     })
 
-    it("shows no refusal when the gear can be engaged", () => {
+    it("lights the three permissive lamps and enables the switch when the gear can be engaged", () => {
       renderAux({ pumpRunning: true, headerPressure: 1 }, { turningGearEngaged: false, rpm: 0 })
-      expect(screen.queryByText(/permissive$/, { selector: "p" })).toBeNull()
+      for (const name of ["Aux bus live", "Oil pressure OK", "Rotor at standstill"]) {
+        expect(screen.getByRole("img", { name: `${name}: on` })).toBeTruthy()
+      }
+      expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-disabled")).not.toBe(
+        "true",
+      )
       expect(screen.getByRole("switch", { name: "Turning gear" }).getAttribute("aria-checked")).toBe("false")
+    })
+
+    it("darks the oil lamp without oil and the standstill lamp on a turning rotor", () => {
+      renderAux({ pumpRunning: false, headerPressure: 0 }, { turningGearEngaged: false, rpm: 150 })
+      expect(screen.getByRole("img", { name: "Oil pressure OK: off" })).toBeTruthy()
+      expect(screen.getByRole("img", { name: "Rotor at standstill: off" })).toBeTruthy()
+      expect(screen.getByRole("img", { name: "Aux bus live: on" })).toBeTruthy()
     })
 
     it("still lets the operator disengage when the oil is gone", () => {
@@ -129,12 +137,23 @@ describe("Gland steam group", () => {
     expect(fns.toggleGlandSteam).toHaveBeenCalledTimes(1)
   })
 
-  it("refuses the admission on a stopped rotor and says why", () => {
+  it("refuses the admission on a stopped rotor with the Rotor turning lamp dark", () => {
     const fns = renderAux({}, { turningGearEngaged: false, rpm: 0 })
     const sw: HTMLElement = screen.getByRole("switch", { name: "Gland steam" })
     fireEvent.click(sw)
     expect(fns.toggleGlandSteam).not.toHaveBeenCalled()
-    expect(screen.getByText("The rotor must be turning: engage the turning gear first", { selector: "p" })).toBeTruthy()
+    expect(sw.querySelector("title")?.textContent).toBe("The rotor must be turning: engage the turning gear first")
+    expect(screen.getByRole("img", { name: "Rotor turning: off" })).toBeTruthy()
+  })
+
+  it("lights the Rotor turning lamp while the gear holds the rotor", () => {
+    renderAux({}, { turningGearEngaged: true })
+    expect(screen.getByRole("img", { name: "Rotor turning: on" })).toBeTruthy()
+  })
+
+  it("has no message line on the page", () => {
+    renderAux({}, { turningGearEngaged: false, rpm: 0 })
+    expect(document.querySelector(".board-lcd-msg")).toBeNull()
   })
 
   it("always lets the steam be shut off", () => {
@@ -154,37 +173,5 @@ describe("Gland steam group", () => {
     renderAux({}, { glandSteamOn: false, turningGearEngaged: true })
     expect(screen.getByLabelText("Seal state").textContent).toContain("Unsealed")
     expect(screen.getByLabelText("Air in-leakage").textContent).toContain("High")
-  })
-
-  it("shows the automatic shut-off when the rotor stops while the steam was on", () => {
-    const state: PowerPlantState = makeInitialState()
-    state.Turbine = { ...state.Turbine, glandSteamOn: true, turningGearEngaged: true }
-    const { rerender } = render(<PowerPlantContext.Provider value={makeCtx(state)}><TurbineAux /></PowerPlantContext.Provider>)
-    expect(screen.queryByText(/Gland steam shut off/)).toBeNull()
-    const stopped: PowerPlantState = { ...state, Turbine: { ...state.Turbine, glandSteamOn: false, turningGearEngaged: false, rpm: 0 } }
-    rerender(<PowerPlantContext.Provider value={makeCtx(stopped)}><TurbineAux /></PowerPlantContext.Provider>)
-    expect(screen.getByText(/Gland steam shut off: the rotor stopped turning/)).toBeTruthy()
-    const back: PowerPlantState = { ...stopped, Turbine: { ...stopped.Turbine, turningGearEngaged: true, glandSteamOn: true } }
-    rerender(<PowerPlantContext.Provider value={makeCtx(back)}><TurbineAux /></PowerPlantContext.Provider>)
-    expect(screen.queryByText(/Gland steam shut off/)).toBeNull()
-  })
-
-  it("does not report a shut-off when the operator switched the steam off on a stopped rotor", () => {
-    const state: PowerPlantState = makeInitialState()
-    state.Turbine = { ...state.Turbine, glandSteamOn: true, turningGearEngaged: false, rpm: 0 }
-    const { rerender } = render(<PowerPlantContext.Provider value={makeCtx(state)}><TurbineAux /></PowerPlantContext.Provider>)
-    fireEvent.click(screen.getByRole("switch", { name: "Gland steam" }))
-    const off: PowerPlantState = { ...state, Turbine: { ...state.Turbine, glandSteamOn: false } }
-    rerender(<PowerPlantContext.Provider value={makeCtx(off)}><TurbineAux /></PowerPlantContext.Provider>)
-    expect(screen.queryByText(/Gland steam shut off/)).toBeNull()
-  })
-
-  it("does not report a shut-off when the operator switched the steam off", () => {
-    const state: PowerPlantState = makeInitialState()
-    state.Turbine = { ...state.Turbine, glandSteamOn: true, turningGearEngaged: true }
-    const { rerender } = render(<PowerPlantContext.Provider value={makeCtx(state)}><TurbineAux /></PowerPlantContext.Provider>)
-    const off: PowerPlantState = { ...state, Turbine: { ...state.Turbine, glandSteamOn: false } }
-    rerender(<PowerPlantContext.Provider value={makeCtx(off)}><TurbineAux /></PowerPlantContext.Provider>)
-    expect(screen.queryByText(/Gland steam shut off/)).toBeNull()
   })
 })
