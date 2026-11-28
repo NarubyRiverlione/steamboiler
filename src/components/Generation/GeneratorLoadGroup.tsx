@@ -60,6 +60,7 @@ export function GeneratorLoadGroup({ turbine, onSetLoadSetpoint }: GeneratorLoad
       </label>
       <Knob
         label="Load setpoint knob"
+        medium="power"
         value={Math.round(turbine.loadSetpoint)}
         min={0}
         max={LoadSetpointLimit}

@@ -5,6 +5,7 @@
  * a second pointer and the LCD show the actual position.
  */
 
+import type { Medium } from "../../navigation/plantDiagram"
 import { Display } from "./Display"
 import { fineStep, MAX_PERCENT, MIN_PERCENT } from "./fineStep"
 import { Knob } from "./Knob"
@@ -20,7 +21,8 @@ type ValveControlProps = {
   readonly ValueWidest?: string // widest text of Value, so its LCD keeps its width
   readonly Position: number // 0..1, how much the valve is actually open
   readonly Step: number // percent per arrow key press or wheel notch
-  readonly Pump?: boolean // a pump knob has its own cap tint
+  readonly Medium: Medium // the rim takes the overview colour of the component
+  readonly Pump?: boolean // a pump knob turns a quarter as far for the same drag
   readonly Caption?: string // visible heading of the knob, when it differs from Label
   readonly Notice?: string // a reason shown without locking the valve, as an opening the plant refuses while closing stays allowed
   readonly Disabled?: string // the reason the operator cannot move the valve (the plant moves it): the knob turns display-only, the buttons disabled, the reason shown
@@ -88,6 +90,7 @@ export function ValveControl({
   Caption,
   Disabled,
   Notice,
+  Medium,
   Pump = false,
 }: ValveControlProps) {
   const { commanded, command } = useValveRamp(ValveId)
@@ -118,6 +121,7 @@ export function ValveControl({
           ends={["0", "100"]}
           step={Step}
           size={100}
+          medium={Medium}
           tone={Pump ? "pump" : "valve"}
           onChange={
             locked

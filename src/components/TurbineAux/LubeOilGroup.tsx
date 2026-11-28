@@ -32,9 +32,9 @@ export function LubeOilGroup({ oil, onToggleOilPump }: LubeOilGroupProps) {
       <div className="board-group-row" role="group" aria-label="Oil pump">
         <TurnSwitch
           label="Oil pump"
+          medium="oil"
           offLabel="STOP"
           onLabel="RUN"
-          tone="machine"
           on={oil.pumpRunning}
           onToggle={onToggleOilPump}
         />

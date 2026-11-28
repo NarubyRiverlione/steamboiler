@@ -29,9 +29,9 @@ function Diesel() {
           <h3 className="board-group-title">Diesel</h3>
           <TurnSwitch
             label="Diesel run"
+            medium="power"
             offLabel="STOP"
             onLabel="RUN"
-            tone="machine"
             on={state.Diesel.status !== "stopped"}
             onToggle={() => {
               setDieselRun(state.Diesel.status === "stopped")

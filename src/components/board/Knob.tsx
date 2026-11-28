@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject, type SVGProps } from "react"
 import { clampTravel, DRAG_FULL_SWEEP_PX, knobValueFromDrag, PUMP_DRAG_FULL_SWEEP_PX, SWEEP_END } from "./knobTravel"
+import type { Medium } from "../../navigation/plantDiagram"
 import "./board.css"
 
 type AbsoluteKnobProps = {
@@ -24,7 +25,8 @@ type AbsoluteKnobProps = {
   readonly onChange?: (value: number) => void // makes the knob a slider
   readonly step?: number // value per arrow key press or wheel notch, default 5
   readonly actual?: number // second pointer: the real position while the knob shows the command
-  readonly tone?: "valve" | "pump" // pump: a blue rim, so a pump knob reads apart from a valve knob
+  readonly medium: Medium // the rim takes the overview colour of the component the knob sets
+  readonly tone?: "valve" | "pump" // pump: a quarter of the drag sweep; the rim colour is the medium's
 }
 
 type CentreZeroKnobProps = {
@@ -33,6 +35,7 @@ type CentreZeroKnobProps = {
   readonly value: number // -1 to 1, 0 holds
   readonly deadZone: number // share of the travel either side of the centre that counts as zero rate
   readonly onChange: (value: number) => void
+  readonly medium: Medium
   readonly size?: number
 }
 
@@ -66,7 +69,7 @@ function arcPath(radius: number, deg: number): string {
   return `M ${String(x0)} ${String(y0)} A ${String(radius)} ${String(radius)} 0 0 ${deg > 0 ? "1" : "0"} ${String(x1)} ${String(y1)}`
 }
 
-function CentreZeroKnob({ label, value, deadZone, onChange, size = 150 }: Omit<CentreZeroKnobProps, "mode">) {
+function CentreZeroKnob({ label, value, deadZone, onChange, medium, size = 150 }: Omit<CentreZeroKnobProps, "mode">) {
   const ref = useRef<SVGSVGElement>(null)
   const drag = useRef<{ startX: number; startValue: number } | null>(null)
 
@@ -103,7 +106,7 @@ function CentreZeroKnob({ label, value, deadZone, onChange, size = 150 }: Omit<C
   return (
     <svg
       ref={ref}
-      className="board-knob board-knob-rate"
+      className={`board-knob board-knob-rate board-medium-${medium}`}
       viewBox="0 0 170 170"
       width={size}
       height={size}
@@ -317,6 +320,7 @@ function AbsoluteKnob({
   onChange,
   step = DEFAULT_STEP,
   actual,
+  medium,
   tone = "valve",
 }: AbsoluteKnobProps) {
   const range: Range = { min, max }
@@ -326,7 +330,7 @@ function AbsoluteKnob({
   return (
     <svg
       {...input}
-      className={isPump(tone) ? `${input.className ?? ""} board-knob-pump` : input.className}
+      className={`${input.className ?? ""} board-medium-${medium}${isPump(tone) ? " board-knob-pump" : ""}`}
       viewBox="0 0 170 170"
       width={size}
       height={size}
